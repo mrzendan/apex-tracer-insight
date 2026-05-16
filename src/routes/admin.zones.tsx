@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import vodBg from "@/assets/hsv-samples/worlds-edge.png";
 import cameraBg from "@/assets/zones-samples/camera.png";
 
@@ -44,6 +44,17 @@ function ZonesAdmin() {
   const [vodZones, setVodZones] = useState<Zone[]>(initialVod);
   const [camZones, setCamZones] = useState<Zone[]>(initialCamera);
   const [sel, setSel] = useState<string | null>(initialVod[0]?.id ?? null);
+  const svgRef = useRef<SVGSVGElement | null>(null);
+  const dragRef = useRef<
+    | null
+    | {
+        id: string;
+        mode: "move" | "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
+        startX: number;
+        startY: number;
+        orig: Zone;
+      }
+  >(null);
 
   const W = 1920, H = 1080;
   const zones = mode === "vod" ? vodZones : camZones;
@@ -71,6 +82,60 @@ function ZonesAdmin() {
     if (sel === id) setSel(null);
   };
 
+  const toSvg = (clientX: number, clientY: number) => {
+    const svg = svgRef.current;
+    if (!svg) return { x: 0, y: 0 };
+    const rect = svg.getBoundingClientRect();
+    return {
+      x: ((clientX - rect.left) / rect.width) * W,
+      y: ((clientY - rect.top) / rect.height) * H,
+    };
+  };
+
+  const onPointerDown = (
+    e: React.PointerEvent,
+    zone: Zone,
+    mode: "move" | "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw",
+  ) => {
+    e.stopPropagation();
+    (e.target as Element).setPointerCapture?.(e.pointerId);
+    setSel(zone.id);
+    const p = toSvg(e.clientX, e.clientY);
+    dragRef.current = { id: zone.id, mode, startX: p.x, startY: p.y, orig: { ...zone } };
+  };
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    const d = dragRef.current;
+    if (!d) return;
+    const p = toSvg(e.clientX, e.clientY);
+    const dx = p.x - d.startX;
+    const dy = p.y - d.startY;
+    let { x, y, w, h } = d.orig;
+    const min = 20;
+    if (d.mode === "move") {
+      x = Math.max(0, Math.min(W - w, d.orig.x + dx));
+      y = Math.max(0, Math.min(H - h, d.orig.y + dy));
+    } else {
+      if (d.mode.includes("e")) w = Math.max(min, d.orig.w + dx);
+      if (d.mode.includes("s")) h = Math.max(min, d.orig.h + dy);
+      if (d.mode.includes("w")) {
+        const nw = Math.max(min, d.orig.w - dx);
+        x = d.orig.x + (d.orig.w - nw);
+        w = nw;
+      }
+      if (d.mode.includes("n")) {
+        const nh = Math.max(min, d.orig.h - dy);
+        y = d.orig.y + (d.orig.h - nh);
+        h = nh;
+      }
+    }
+    update(d.id, { x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h) });
+  };
+
+  const onPointerUp = () => {
+    dragRef.current = null;
+  };
+
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-surface px-6">
@@ -89,7 +154,6 @@ function ZonesAdmin() {
               </button>
             ))}
           </div>
-          <button onClick={addZone} className="rounded-sm border border-border bg-surface-2 px-3 py-1.5 text-xs font-semibold hover:bg-muted">+ Add zone</button>
           <button className="rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">Save</button>
         </div>
       </header>
@@ -99,19 +163,57 @@ function ZonesAdmin() {
           <div className="hud-panel-strong relative overflow-hidden" style={{ width: "min(100%, 1280px)", aspectRatio: `${W}/${H}` }}>
             <img src={bg} alt="" className="absolute inset-0 h-full w-full object-cover opacity-90" draggable={false} />
             <div className="absolute inset-0 bg-background/10" />
-            <svg viewBox={`0 0 ${W} ${H}`} className="absolute inset-0 h-full w-full">
+            <svg
+              ref={svgRef}
+              viewBox={`0 0 ${W} ${H}`}
+              className="absolute inset-0 h-full w-full touch-none select-none"
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+              onPointerLeave={onPointerUp}
+            >
               {zones.map((z) => {
                 const active = z.id === sel;
                 const c = TAG_COLOR[z.tag];
+                const handle = 22;
+                const handles: { m: "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw"; cx: number; cy: number; cur: string }[] = [
+                  { m: "nw", cx: z.x,         cy: z.y,         cur: "nwse-resize" },
+                  { m: "ne", cx: z.x + z.w,   cy: z.y,         cur: "nesw-resize" },
+                  { m: "sw", cx: z.x,         cy: z.y + z.h,   cur: "nesw-resize" },
+                  { m: "se", cx: z.x + z.w,   cy: z.y + z.h,   cur: "nwse-resize" },
+                  { m: "n",  cx: z.x + z.w/2, cy: z.y,         cur: "ns-resize" },
+                  { m: "s",  cx: z.x + z.w/2, cy: z.y + z.h,   cur: "ns-resize" },
+                  { m: "w",  cx: z.x,         cy: z.y + z.h/2, cur: "ew-resize" },
+                  { m: "e",  cx: z.x + z.w,   cy: z.y + z.h/2, cur: "ew-resize" },
+                ];
                 return (
-                  <g key={z.id} style={{ cursor: "pointer" }} onClick={() => setSel(z.id)}>
-                    <rect x={z.x} y={z.y} width={z.w} height={z.h}
+                  <g key={z.id}>
+                    <rect
+                      x={z.x} y={z.y} width={z.w} height={z.h}
                       fill={active ? `${c}33` : `${c}1a`}
-                      stroke={c} strokeWidth={active ? 4 : 2.5} />
-                    <rect x={z.x} y={z.y - 32} width={Math.max(160, z.name.length * 11 + 90)} height={28} fill={c} />
-                    <text x={z.x + 8} y={z.y - 11} fontSize={16} fontWeight={800} fill="#0a0a0a" fontFamily="Manrope, sans-serif">
+                      stroke={c} strokeWidth={active ? 4 : 2.5}
+                      style={{ cursor: "move" }}
+                      onPointerDown={(e) => onPointerDown(e, z, "move")}
+                    />
+                    <rect x={z.x} y={z.y - 32} width={Math.max(160, z.name.length * 11 + 90)} height={28} fill={c}
+                      style={{ cursor: "move" }}
+                      onPointerDown={(e) => onPointerDown(e, z, "move")} />
+                    <text x={z.x + 8} y={z.y - 11} fontSize={16} fontWeight={800} fill="#0a0a0a" fontFamily="Manrope, sans-serif" pointerEvents="none">
                       {z.name} · {z.tag}
                     </text>
+                    {active && handles.map((h) => (
+                      <rect
+                        key={h.m}
+                        x={h.cx - handle/2}
+                        y={h.cy - handle/2}
+                        width={handle}
+                        height={handle}
+                        fill="#0a0a0a"
+                        stroke={c}
+                        strokeWidth={3}
+                        style={{ cursor: h.cur }}
+                        onPointerDown={(e) => onPointerDown(e, z, h.m)}
+                      />
+                    ))}
                   </g>
                 );
               })}
@@ -120,7 +222,13 @@ function ZonesAdmin() {
         </div>
 
         <aside className="w-[320px] shrink-0 border-l border-border bg-surface p-3 overflow-y-auto">
-          <div className="label-eyebrow mb-2">Zones ({zones.length})</div>
+          <div className="mb-2 flex items-center justify-between">
+            <div className="label-eyebrow">Zones ({zones.length})</div>
+            <button onClick={addZone}
+              className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-[11px] font-semibold hover:bg-muted">
+              + Add
+            </button>
+          </div>
           {zones.map((z) => (
             <div key={z.id}
               className={`mb-1 flex items-center gap-1 rounded-sm border px-2 py-1.5 transition-colors ${
