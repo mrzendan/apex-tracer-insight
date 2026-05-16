@@ -4,7 +4,10 @@ export const Route = createFileRoute("/admin")({ component: AdminLayout });
 
 const navItems = [
   { to: "/admin",          label: "Dashboard",   exact: true,  hint: "Overview" },
-  { to: "/admin/matches",  label: "Matches",     hint: "Tournaments & games" },
+  { to: "/admin/tournaments", label: "Tournaments", hint: "Series & events" },
+  { to: "/admin/matches",  label: "Matches",     hint: "Games per tournament" },
+  { to: "/admin/maps",     label: "Maps",        hint: "Map pool" },
+  { to: "/admin/teams",    label: "Teams",       hint: "Rosters & colors" },
   { to: "/admin/hsv",      label: "HSV",         hint: "Team color calibration" },
   { to: "/admin/zones",    label: "Zones",       hint: "HUD areas (1920×1080)" },
   { to: "/admin/polygons", label: "Polygons",    hint: "Map areas" },
