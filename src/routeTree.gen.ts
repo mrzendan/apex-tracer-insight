@@ -23,6 +23,7 @@ import { Route as AdminHsvRouteImport } from './routes/admin.hsv'
 import { Route as AdminCameraRouteImport } from './routes/admin.camera'
 import { Route as AdminTeamsTeamIdRouteImport } from './routes/admin.teams.$teamId'
 import { Route as AdminMatchesMatchIdRouteImport } from './routes/admin.matches.$matchId'
+import { Route as AdminMapsMapIdRouteImport } from './routes/admin.maps.$mapId'
 
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
@@ -94,13 +95,18 @@ const AdminMatchesMatchIdRoute = AdminMatchesMatchIdRouteImport.update({
   path: '/$matchId',
   getParentRoute: () => AdminMatchesRoute,
 } as any)
+const AdminMapsMapIdRoute = AdminMapsMapIdRouteImport.update({
+  id: '/$mapId',
+  path: '/$mapId',
+  getParentRoute: () => AdminMapsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/admin/camera': typeof AdminCameraRoute
   '/admin/hsv': typeof AdminHsvRoute
-  '/admin/maps': typeof AdminMapsRoute
+  '/admin/maps': typeof AdminMapsRouteWithChildren
   '/admin/matches': typeof AdminMatchesRouteWithChildren
   '/admin/minimap': typeof AdminMinimapRoute
   '/admin/polygons': typeof AdminPolygonsRoute
@@ -108,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/admin/tournaments': typeof AdminTournamentsRoute
   '/admin/zones': typeof AdminZonesRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/maps/$mapId': typeof AdminMapsMapIdRoute
   '/admin/matches/$matchId': typeof AdminMatchesMatchIdRoute
   '/admin/teams/$teamId': typeof AdminTeamsTeamIdRoute
 }
@@ -115,7 +122,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin/camera': typeof AdminCameraRoute
   '/admin/hsv': typeof AdminHsvRoute
-  '/admin/maps': typeof AdminMapsRoute
+  '/admin/maps': typeof AdminMapsRouteWithChildren
   '/admin/matches': typeof AdminMatchesRouteWithChildren
   '/admin/minimap': typeof AdminMinimapRoute
   '/admin/polygons': typeof AdminPolygonsRoute
@@ -123,6 +130,7 @@ export interface FileRoutesByTo {
   '/admin/tournaments': typeof AdminTournamentsRoute
   '/admin/zones': typeof AdminZonesRoute
   '/admin': typeof AdminIndexRoute
+  '/admin/maps/$mapId': typeof AdminMapsMapIdRoute
   '/admin/matches/$matchId': typeof AdminMatchesMatchIdRoute
   '/admin/teams/$teamId': typeof AdminTeamsTeamIdRoute
 }
@@ -132,7 +140,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/admin/camera': typeof AdminCameraRoute
   '/admin/hsv': typeof AdminHsvRoute
-  '/admin/maps': typeof AdminMapsRoute
+  '/admin/maps': typeof AdminMapsRouteWithChildren
   '/admin/matches': typeof AdminMatchesRouteWithChildren
   '/admin/minimap': typeof AdminMinimapRoute
   '/admin/polygons': typeof AdminPolygonsRoute
@@ -140,6 +148,7 @@ export interface FileRoutesById {
   '/admin/tournaments': typeof AdminTournamentsRoute
   '/admin/zones': typeof AdminZonesRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/maps/$mapId': typeof AdminMapsMapIdRoute
   '/admin/matches/$matchId': typeof AdminMatchesMatchIdRoute
   '/admin/teams/$teamId': typeof AdminTeamsTeamIdRoute
 }
@@ -158,6 +167,7 @@ export interface FileRouteTypes {
     | '/admin/tournaments'
     | '/admin/zones'
     | '/admin/'
+    | '/admin/maps/$mapId'
     | '/admin/matches/$matchId'
     | '/admin/teams/$teamId'
   fileRoutesByTo: FileRoutesByTo
@@ -173,6 +183,7 @@ export interface FileRouteTypes {
     | '/admin/tournaments'
     | '/admin/zones'
     | '/admin'
+    | '/admin/maps/$mapId'
     | '/admin/matches/$matchId'
     | '/admin/teams/$teamId'
   id:
@@ -189,6 +200,7 @@ export interface FileRouteTypes {
     | '/admin/tournaments'
     | '/admin/zones'
     | '/admin/'
+    | '/admin/maps/$mapId'
     | '/admin/matches/$matchId'
     | '/admin/teams/$teamId'
   fileRoutesById: FileRoutesById
@@ -298,8 +310,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMatchesMatchIdRouteImport
       parentRoute: typeof AdminMatchesRoute
     }
+    '/admin/maps/$mapId': {
+      id: '/admin/maps/$mapId'
+      path: '/$mapId'
+      fullPath: '/admin/maps/$mapId'
+      preLoaderRoute: typeof AdminMapsMapIdRouteImport
+      parentRoute: typeof AdminMapsRoute
+    }
   }
 }
+
+interface AdminMapsRouteChildren {
+  AdminMapsMapIdRoute: typeof AdminMapsMapIdRoute
+}
+
+const AdminMapsRouteChildren: AdminMapsRouteChildren = {
+  AdminMapsMapIdRoute: AdminMapsMapIdRoute,
+}
+
+const AdminMapsRouteWithChildren = AdminMapsRoute._addFileChildren(
+  AdminMapsRouteChildren,
+)
 
 interface AdminMatchesRouteChildren {
   AdminMatchesMatchIdRoute: typeof AdminMatchesMatchIdRoute
@@ -328,7 +359,7 @@ const AdminTeamsRouteWithChildren = AdminTeamsRoute._addFileChildren(
 interface AdminRouteChildren {
   AdminCameraRoute: typeof AdminCameraRoute
   AdminHsvRoute: typeof AdminHsvRoute
-  AdminMapsRoute: typeof AdminMapsRoute
+  AdminMapsRoute: typeof AdminMapsRouteWithChildren
   AdminMatchesRoute: typeof AdminMatchesRouteWithChildren
   AdminMinimapRoute: typeof AdminMinimapRoute
   AdminPolygonsRoute: typeof AdminPolygonsRoute
@@ -341,7 +372,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminCameraRoute: AdminCameraRoute,
   AdminHsvRoute: AdminHsvRoute,
-  AdminMapsRoute: AdminMapsRoute,
+  AdminMapsRoute: AdminMapsRouteWithChildren,
   AdminMatchesRoute: AdminMatchesRouteWithChildren,
   AdminMinimapRoute: AdminMinimapRoute,
   AdminPolygonsRoute: AdminPolygonsRoute,
