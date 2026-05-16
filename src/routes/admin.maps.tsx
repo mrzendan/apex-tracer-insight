@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
 import { maps as seed, type ApexMap } from "@/lib/mock-match";
 import { useAdminStore } from "@/lib/admin-store";
@@ -10,6 +10,10 @@ function MapsAdmin() {
   const [rows] = useState<ApexMap[]>(seed);
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  if (pathname !== "/admin/maps" && pathname !== "/admin/maps/") {
+    return <Outlet />;
+  }
   const q = query.trim().toLowerCase();
   const filtered = q ? rows.filter((r) => r.name.toLowerCase().includes(q)) : rows;
 
