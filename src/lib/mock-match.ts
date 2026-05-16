@@ -20,6 +20,18 @@ export type Tournament = {
   region: TournamentRegion;
 };
 export type Match = { id: string; name: string; tournamentId: string; mapId: string; durationSec: number };
+
+/** Extended fields layered on top of Match for the admin UI. */
+export type MatchExtras = {
+  vodLink?: string;
+  /** Ordered list of maps played within this match. Falls back to [mapId]. */
+  mapIds?: string[];
+  /** Per-team POV VOD links (YouTube URLs). */
+  teamVods?: Record<string, string>;
+  /** Teams that participated. */
+  teamIds?: string[];
+};
+export type MatchFull = Match & MatchExtras;
 export type ApexMap = { id: string; name: string; image: string };
 
 export const tournaments: Tournament[] = [
@@ -51,6 +63,8 @@ export type Team = {
   tag: string;
   name: string;
   color: string;
+  /** Optional logo URL. When absent, the UI falls back to the site logo. */
+  logo?: string;
   players: string[];
   placement: number;
   kills: number;
