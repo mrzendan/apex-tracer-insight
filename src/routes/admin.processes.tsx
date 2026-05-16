@@ -533,3 +533,53 @@ function ProcessEditor({
     </div>
   );
 }
+
+function TeamProgressList({
+  process, teams, matchTeamIds,
+}: {
+  process: AnalysisProcess;
+  teams: Team[];
+  matchTeamIds: string[];
+}) {
+  const rows = (process.teamProgress && process.teamProgress.length > 0)
+    ? process.teamProgress
+    : matchTeamIds.map((tid) => ({ teamId: tid, ring: 0, start: 0, camera: 0 }));
+
+  if (rows.length === 0) {
+    return <div className="text-[10px] text-muted-foreground">No teams associated with this match.</div>;
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <div className="grid grid-cols-[1fr_repeat(3,minmax(120px,1fr))] gap-3 px-2 label-eyebrow text-[9px]">
+        <div>Team</div>
+        <div>Ring tracking</div>
+        <div>Start detection</div>
+        <div>Camera tracking</div>
+      </div>
+      {rows.map((tp) => {
+        const team = teams.find((t) => t.id === tp.teamId);
+        return (
+          <div key={tp.teamId} className="grid grid-cols-[1fr_repeat(3,minmax(120px,1fr))] items-center gap-3 rounded-sm border border-border bg-background px-2 py-1.5">
+            <div className="flex items-center gap-2 text-xs font-semibold">
+              {team && <TeamLogo team={team} size={18} />}
+              <span className="truncate">{team?.name ?? tp.teamId}</span>
+            </div>
+            <ProgressCell value={tp.ring} />
+            <ProgressCell value={tp.start} />
+            <ProgressCell value={tp.camera} />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function ProgressCell({ value }: { value: number }) {
+  return (
+    <div className="flex items-center gap-2">
+      <Progress value={value} className="h-1.5 flex-1" />
+      <span className="w-9 text-right text-mono text-[10px] text-muted-foreground">{value}%</span>
+    </div>
+  );
+}
