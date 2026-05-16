@@ -413,27 +413,27 @@ function MapCanvas({
                       <circle r={6 / view.scale} fill={t.color} stroke="rgba(0,0,0,0.8)" strokeWidth={1 / view.scale} />
                     </g>
                     {showLabels && (
-                      <g transform={`translate(${10 / view.scale} ${-7 / view.scale})`}>
+                      <g transform={`translate(${14 / view.scale} ${-14 / view.scale})`}>
                         <rect
                           x={0}
                           y={0}
-                          rx={2 / view.scale}
-                          ry={2 / view.scale}
-                          width={(t.tag.length * 7 + 6) / view.scale}
-                          height={14 / view.scale}
+                          rx={3 / view.scale}
+                          ry={3 / view.scale}
+                          width={(t.tag.length * 14 + 12) / view.scale}
+                          height={28 / view.scale}
                           fill="rgba(0,0,0,0.78)"
                           stroke={t.color}
-                          strokeWidth={1 / view.scale}
+                          strokeWidth={2 / view.scale}
                         />
                         <text
-                          x={(t.tag.length * 7 + 6) / (2 * view.scale)}
-                          y={10 / view.scale}
+                          x={(t.tag.length * 14 + 12) / (2 * view.scale)}
+                          y={20 / view.scale}
                           textAnchor="middle"
-                          fontSize={11 / view.scale}
+                          fontSize={22 / view.scale}
                           fontWeight={800}
                           fill="#fff"
                           fontFamily="Manrope, sans-serif"
-                          style={{ letterSpacing: `${0.3 / view.scale}px` }}
+                          style={{ letterSpacing: `${0.6 / view.scale}px` }}
                         >
                           {t.tag}
                         </text>
