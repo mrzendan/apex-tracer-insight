@@ -387,6 +387,24 @@ function ProcessEditor({
   };
 
   const matchOptions = matches.filter((m) => m.tournamentId === value.tournamentId);
+  const createNewMatch = () => {
+    const name = prompt("New Match (Day) name", value.day ? `Day ${value.day}${value.matchup ? ` — ${value.matchup}` : ""}` : "New Day");
+    if (!name) return;
+    const id = `m-${Date.now()}`;
+    const newMatch: MatchFull = {
+      id,
+      name,
+      tournamentId: value.tournamentId,
+      mapId: "",
+      durationSec: value.videoDurationSec ?? 0,
+      mapIds: value.maps.map((mp) => mp.mapId).filter(Boolean),
+      vodLink: value.streamUrl,
+      teamIds: teams.map((t) => t.id),
+      teamVods: {},
+    };
+    addMatch(newMatch);
+    onChange({ ...value, matchId: id });
+  };
   const povBtn = (pov: ProcessPov, label: string) => (
     <button
       onClick={() => set("pov", pov)}
