@@ -375,6 +375,13 @@ function MapCanvas({
 
             {ring && (
               <>
+                {/* Static preview of all 6 ring phases */}
+                {ringPhases.map((p, i) => (
+                  <circle key={`prev-${i}`} cx={p.cx * 1000} cy={p.cy * 1000} r={p.r * 1000}
+                    fill="none" stroke="rgba(255,255,255,0.28)"
+                    strokeWidth={1 / view.scale}
+                    strokeDasharray={`${3 / view.scale} ${4 / view.scale}`} />
+                ))}
                 <circle cx={ring.cx * 1000} cy={ring.cy * 1000} r={ring.r * 1000}
                   fill="rgba(255,91,18,0.05)" stroke="rgba(255,91,18,0.85)" strokeWidth={2 / view.scale} strokeDasharray={`${8 / view.scale} ${5 / view.scale}`} />
                 <circle cx={ring.cx * 1000} cy={ring.cy * 1000} r={3 / view.scale} fill="#ff5b12" />
@@ -403,12 +410,31 @@ function MapCanvas({
                     <circle r={11 / view.scale} fill="none" stroke={t.color} strokeWidth={1 / view.scale} opacity={0.5} />
                     <circle r={6 / view.scale} fill={t.color} stroke="rgba(0,0,0,0.8)" strokeWidth={1 / view.scale} />
                     {showLabels && (
-                      <text x={10 / view.scale} y={4 / view.scale}
-                        fontSize={11 / view.scale} fontWeight={700} fill="#fff"
-                        fontFamily="Manrope, sans-serif"
-                        stroke="rgba(0,0,0,0.8)" strokeWidth={3 / view.scale} paintOrder="stroke">
-                        {t.tag}
-                      </text>
+                      <g transform={`translate(${10 / view.scale} ${-7 / view.scale})`}>
+                        <rect
+                          x={0}
+                          y={0}
+                          rx={2 / view.scale}
+                          ry={2 / view.scale}
+                          width={(t.tag.length * 7 + 6) / view.scale}
+                          height={14 / view.scale}
+                          fill="rgba(0,0,0,0.78)"
+                          stroke={t.color}
+                          strokeWidth={1 / view.scale}
+                        />
+                        <text
+                          x={(t.tag.length * 7 + 6) / (2 * view.scale)}
+                          y={10 / view.scale}
+                          textAnchor="middle"
+                          fontSize={11 / view.scale}
+                          fontWeight={800}
+                          fill="#fff"
+                          fontFamily="Manrope, sans-serif"
+                          style={{ letterSpacing: `${0.3 / view.scale}px` }}
+                        >
+                          {t.tag}
+                        </text>
+                      </g>
                     )}
                   </g>
                 </g>
