@@ -10,7 +10,7 @@ const navItems = [
   { to: "/admin/polygons", label: "Polygons",    hint: "Map areas" },
   { to: "/admin/camera",   label: "Camera",      hint: "Camera tracking" },
   { to: "/admin/minimap",  label: "Minimap",     hint: "Minimap detection" },
-] as const;
+] as { to: string; label: string; hint: string; exact?: boolean }[];
 
 function AdminLayout() {
   return (
