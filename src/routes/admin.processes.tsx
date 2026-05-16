@@ -24,6 +24,61 @@ const STATUS_COLORS: Record<AnalysisProcess["status"], string> = {
 const mmss = (s: number) =>
   `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
 
+const hhmmss = (s: number) => {
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
+};
+const parseHMS = (str: string): number | null => {
+  const m = str.trim().match(/^(?:(\d+):)?(\d{1,2}):(\d{2})$/);
+  if (!m) return null;
+  const h = +(m[1] ?? 0), mm = +m[2], ss = +m[3];
+  return h * 3600 + mm * 60 + ss;
+};
+
+/** Parse a typical ALGS-style stream title + description block. */
+function parseAlgsTitle(text: string): {
+  region?: string;
+  tournamentName?: string;
+  day?: string;
+  matchup?: string;
+  timings?: { label: string; sec: number }[];
+} {
+  const out: ReturnType<typeof parseAlgsTitle> = {};
+  const region = text.match(/Region:\s*([^\n]+)/i)?.[1]?.trim();
+  const tour = text.match(/Tournament:\s*([^\n]+)/i)?.[1]?.trim();
+  const day = text.match(/Day:\s*([^\n]+)/i)?.[1]?.trim();
+  const matchup = text.match(/Matchup:\s*([^\n]+)/i)?.[1]?.trim();
+  if (region) out.region = region;
+  if (tour) out.tournamentName = tour;
+  if (day) out.day = day;
+  if (matchup) out.matchup = matchup;
+
+  // Fallback: parse from "ALGS Map POV - Americas - Split 1 - Americas Day 6 (Group B vs C) - May 3, 2026"
+  if (!region || !tour) {
+    const parts = text.split(/[-–]/).map((s) => s.trim());
+    if (parts.length >= 4) {
+      out.region ??= parts[1];
+      out.tournamentName ??= `${parts[2]} - ${parts[1]}`;
+      const dm = parts[3]?.match(/Day\s*(\d+)/i);
+      if (dm) out.day ??= dm[1];
+      const mm = text.match(/\(([^)]+)\)/);
+      if (mm) out.matchup ??= mm[1];
+    }
+  }
+
+  const timings: { label: string; sec: number }[] = [];
+  const re = /(\d{1,2}:\d{2}:\d{2})\s*[-–]\s*([^\n]+)/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) {
+    const sec = parseHMS(m[1]);
+    if (sec != null) timings.push({ label: m[2].trim(), sec });
+  }
+  if (timings.length) out.timings = timings;
+  return out;
+}
+
 /** Mock metadata fetch — derives info from URL deterministically. */
 function fetchVideoMeta(url: string): {
   title: string;
@@ -32,6 +87,10 @@ function fetchVideoMeta(url: string): {
   tournamentHint?: string;
   matchHint?: string;
   maps?: MapTiming[];
+  rawDescription?: string;
+  region?: string;
+  day?: string;
+  matchup?: string;
 } | null {
   if (!/^https?:\/\//i.test(url)) return null;
   const lower = url.toLowerCase();
@@ -41,17 +100,39 @@ function fetchVideoMeta(url: string): {
       ? "esl-pro-league-12"
       : "scrims-eu-week-4";
   const guessMatch = (lower.match(/game[-_ ]?(\d+)/)?.[1] ?? "1");
+  const mockDescription = `ALGS Map POV - Americas - Split 1 - Americas Day 6 (Group B vs C) - May 3, 2026
+
+Region: Americas
+Tournament: Split 1 - Americas
+Day: 6
+Matchup: Group B vs C
+
+Timestamps:
+00:00:00 - Pregame
+00:06:57 - Game 1
+00:34:17 - Game 2
+01:08:30 - Game 3
+01:46:45 - Game 4
+02:13:04 - Game 5
+02:41:27 - Game 6`;
+  const parsed = parseAlgsTitle(mockDescription);
+  const games = (parsed.timings ?? []).filter((t) => /game/i.test(t.label));
+  const mapsParsed: MapTiming[] = games.map((g, i) => {
+    const next = games[i + 1];
+    const end = next ? next.sec : g.sec + 1500;
+    return { mapId: allMaps[i % allMaps.length].id, startSec: g.sec, endSec: end };
+  });
   return {
-    title: `Apex Stream · auto-detected (${url.slice(-12)})`,
+    title: mockDescription.split("\n")[0],
     channel: lower.includes("twitch") ? "Twitch · Official" : "YouTube · Caster",
-    durationSec: 5400,
+    durationSec: 10800,
     tournamentHint,
     matchHint: `Game ${guessMatch}`,
-    maps: [
-      { mapId: "worlds-edge", startSec: 120, endSec: 1440 },
-      { mapId: "storm-point", startSec: 1700, endSec: 3120 },
-      { mapId: "broken-moon", startSec: 3400, endSec: 4720 },
-    ],
+    maps: mapsParsed.length ? mapsParsed : undefined,
+    rawDescription: mockDescription,
+    region: parsed.region,
+    day: parsed.day,
+    matchup: parsed.matchup,
   };
 }
 
