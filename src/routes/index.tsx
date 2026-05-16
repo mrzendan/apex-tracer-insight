@@ -463,12 +463,42 @@ function MapCanvas({
               const opacity = dimOthers ? 0.15 : 1;
               const trail = upTo.slice(-60);
               const d = trail.map((p, i) => `${i === 0 ? "M" : "L"}${p.x * 1000} ${p.y * 1000}`).join(" ");
+              const dwells = (dwellsByTeam[t.id] ?? []).filter((dw) => dw.tStart <= time);
+              const labelW = t.tag.length * (cfg.labelSize * 0.64) + cfg.labelSize * 0.55;
+              const labelH = cfg.labelSize * 1.28;
 
               return (
                 <g key={t.id} opacity={opacity}>
+                  {/* Dwell clusters */}
+                  {dwells.map((dw, di) => {
+                    const dur = Math.round(dw.tEnd - dw.tStart);
+                    return (
+                      <g key={`dw-${di}`} transform={`translate(${dw.x * 1000} ${dw.y * 1000})`}>
+                        <circle r={cfg.dwellRadius * 1000} fill={t.color} fillOpacity={0.1}
+                          stroke={t.color} strokeOpacity={0.6}
+                          strokeWidth={1.2 / view.scale}
+                          strokeDasharray={`${3 / view.scale} ${3 / view.scale}`} />
+                        <circle r={5 / view.scale} fill={t.color} stroke="#000" strokeWidth={0.8 / view.scale} />
+                        <g transform={`translate(0 ${cfg.dwellRadius * 1000 + 14 / view.scale})`}>
+                          <rect
+                            x={-32 / view.scale} y={-9 / view.scale}
+                            width={64 / view.scale} height={18 / view.scale}
+                            rx={2 / view.scale} ry={2 / view.scale}
+                            fill={`rgba(0,0,0,${cfg.labelBg})`}
+                            stroke={t.color} strokeWidth={1 / view.scale}
+                          />
+                          <text x={0} y={4 / view.scale} textAnchor="middle"
+                            fontSize={11 / view.scale} fontWeight={700} fill="#fff"
+                            fontFamily="Manrope, sans-serif">
+                            {formatTime(dw.tStart)} · {dur}s
+                          </text>
+                        </g>
+                      </g>
+                    );
+                  })}
                   {showTrails && (
                     <path d={d} fill="none" stroke={t.color}
-                      strokeWidth={2 / view.scale} strokeOpacity={0.7}
+                      strokeWidth={cfg.trailWidth / view.scale} strokeOpacity={0.75}
                       strokeLinecap="round" strokeLinejoin="round" />
                   )}
                   <g transform={`translate(${head.x * 1000} ${head.y * 1000})`}>
@@ -477,23 +507,23 @@ function MapCanvas({
                       <circle r={6 / view.scale} fill={t.color} stroke="rgba(0,0,0,0.8)" strokeWidth={1 / view.scale} />
                     </g>
                     {showLabels && (
-                      <g transform={`translate(${14 / view.scale} ${-14 / view.scale})`}>
+                      <g transform={`translate(${14 / view.scale} ${-(labelH / 2) / view.scale})`}>
                         <rect
                           x={0}
                           y={0}
                           rx={3 / view.scale}
                           ry={3 / view.scale}
-                          width={(t.tag.length * 14 + 12) / view.scale}
-                          height={28 / view.scale}
-                          fill="rgba(0,0,0,0.78)"
+                          width={labelW / view.scale}
+                          height={labelH / view.scale}
+                          fill={`rgba(0,0,0,${cfg.labelBg})`}
                           stroke={t.color}
                           strokeWidth={2 / view.scale}
                         />
                         <text
-                          x={(t.tag.length * 14 + 12) / (2 * view.scale)}
-                          y={20 / view.scale}
+                          x={(labelW / 2) / view.scale}
+                          y={(labelH * 0.72) / view.scale}
                           textAnchor="middle"
-                          fontSize={22 / view.scale}
+                          fontSize={cfg.labelSize / view.scale}
                           fontWeight={800}
                           fill="#fff"
                           fontFamily="Manrope, sans-serif"
