@@ -131,13 +131,44 @@ export function generateTrajectory(seed: number, durationSec: number): Trajector
 
 export type RingPhase = { startSec: number; endSec: number; cx: number; cy: number; r: number };
 
-export const ringPhases: RingPhase[] = [
-  { startSec: 0,    endSec: 240,  cx: 0.50, cy: 0.50, r: 0.48 },
-  { startSec: 240,  endSec: 540,  cx: 0.48, cy: 0.52, r: 0.34 },
-  { startSec: 540,  endSec: 840,  cx: 0.45, cy: 0.50, r: 0.22 },
-  { startSec: 840,  endSec: 1140, cx: 0.46, cy: 0.49, r: 0.13 },
-  { startSec: 1140, endSec: 1480, cx: 0.47, cy: 0.49, r: 0.06 },
+/**
+ * Six concentric ring phases. Each child ring is half the radius of its parent
+ * and sits fully inside the parent at a fixed offset (not centered).
+ */
+const RING_OFFSETS: { fx: number; fy: number }[] = [
+  { fx: 0.0,  fy: 0.0  },
+  { fx: 0.35, fy: -0.2 },
+  { fx: -0.3, fy: 0.25 },
+  { fx: 0.2,  fy: 0.3  },
+  { fx: -0.25,fy: -0.15},
+  { fx: 0.15, fy: 0.1  },
 ];
+
+function buildRingPhases(): RingPhase[] {
+  const PHASE_BOUNDS: [number, number][] = [
+    [0,    220 ],
+    [220,  480 ],
+    [480,  740 ],
+    [740,  980 ],
+    [980,  1200],
+    [1200, 1480],
+  ];
+  const rings: RingPhase[] = [];
+  let cx = 0.5, cy = 0.5, r = 0.46;
+  for (let i = 0; i < 6; i++) {
+    if (i > 0) {
+      const parent = rings[i - 1];
+      const off = RING_OFFSETS[i];
+      r = parent.r / 2;
+      cx = parent.cx + parent.r * off.fx;
+      cy = parent.cy + parent.r * off.fy;
+    }
+    rings.push({ startSec: PHASE_BOUNDS[i][0], endSec: PHASE_BOUNDS[i][1], cx, cy, r });
+  }
+  return rings;
+}
+
+export const ringPhases: RingPhase[] = buildRingPhases();
 
 export type GameEvent = {
   t: number;
