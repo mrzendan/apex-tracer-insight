@@ -433,7 +433,7 @@ function ProcessEditor({
               </select>
             </div>
             <div>
-              <div className="label-eyebrow mb-1.5 text-[10px]">Match</div>
+              <div className="label-eyebrow mb-1.5 text-[10px]">Match (Day)</div>
               <select value={value.matchId} onChange={(e) => set("matchId", e.target.value)} className="w-full rounded-sm border border-border bg-background px-2 py-1.5 text-xs">
                 {matchOptions.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
                 {matchOptions.length === 0 && <option value="">No matches in tournament</option>}
@@ -456,7 +456,7 @@ function ProcessEditor({
               <div className="label-eyebrow text-[10px]">Map timings</div>
               <div className="flex items-center gap-2">
                 <label className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                  Maps count
+                  Games count
                   <input
                     type="number"
                     min={0}
@@ -465,7 +465,7 @@ function ProcessEditor({
                     onChange={(e) => {
                       const n = Math.max(0, Math.min(20, +e.target.value || 0));
                       const next: MapTiming[] = Array.from({ length: n }, (_, i) =>
-                        value.maps[i] ?? { mapId: allMaps[i % allMaps.length].id, startSec: 0, endSec: 1200 },
+                        value.maps[i] ?? { mapId: "", startSec: 0, endSec: 1200 },
                       );
                       onChange({ ...value, mapCount: n, maps: next });
                     }}
@@ -473,7 +473,7 @@ function ProcessEditor({
                   />
                 </label>
                 <button
-                  onClick={() => onChange({ ...value, maps: [...value.maps, { mapId: allMaps[value.maps.length % allMaps.length].id, startSec: 0, endSec: 1200 }], mapCount: (value.mapCount ?? value.maps.length) + 1 })}
+                  onClick={() => onChange({ ...value, maps: [...value.maps, { mapId: "", startSec: 0, endSec: 1200 }], mapCount: (value.mapCount ?? value.maps.length) + 1 })}
                   className="text-xs text-primary hover:underline"
                 >+ Add</button>
               </div>
@@ -488,6 +488,7 @@ function ProcessEditor({
                     onChange={(e) => onChange({ ...value, maps: value.maps.map((x, j) => j === i ? { ...x, mapId: e.target.value } : x) })}
                     className="flex-1 rounded-sm border border-border bg-background px-2 py-1 text-xs"
                   >
+                    <option value="">— Unknown map —</option>
                     {allMaps.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
                   </select>
                   <input
