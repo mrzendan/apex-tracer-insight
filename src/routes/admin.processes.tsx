@@ -101,7 +101,7 @@ function fetchVideoMeta(url: string): {
     : lower.includes("esl")
       ? "esl-pro-league-12"
       : "scrims-eu-week-4";
-  const guessMatch = (lower.match(/game[-_ ]?(\d+)/)?.[1] ?? "1");
+  // (matches are days, not games — matchHint below uses Day)
   const mockDescription = `ALGS Map POV - Americas - Split 1 - Americas Day 6 (Group B vs C) - May 3, 2026
 
 Region: Americas
@@ -118,18 +118,20 @@ Timestamps:
 02:13:04 - Game 5
 02:41:27 - Game 6`;
   const parsed = parseAlgsTitle(mockDescription);
-  const games = (parsed.timings ?? []).filter((t) => /game/i.test(t.label));
+  // Only Game 1..n become map timings — exclude Pregame, breaks, intros.
+  const games = (parsed.timings ?? []).filter((t) => /^\s*game\s*\d+/i.test(t.label));
   const mapsParsed: MapTiming[] = games.map((g, i) => {
     const next = games[i + 1];
     const end = next ? next.sec : g.sec + 1500;
-    return { mapId: allMaps[i % allMaps.length].id, startSec: g.sec, endSec: end };
+    // mapId left empty — operator chooses which map this game was on.
+    return { mapId: "", startSec: g.sec, endSec: end };
   });
   return {
     title: mockDescription.split("\n")[0],
     channel: lower.includes("twitch") ? "Twitch · Official" : "YouTube · Caster",
     durationSec: 10800,
     tournamentHint,
-    matchHint: `Game ${guessMatch}`,
+    matchHint: parsed.day ? `Day ${parsed.day}` : undefined,
     maps: mapsParsed.length ? mapsParsed : undefined,
     rawDescription: mockDescription,
     region: parsed.region,
@@ -431,7 +433,7 @@ function ProcessEditor({
               </select>
             </div>
             <div>
-              <div className="label-eyebrow mb-1.5 text-[10px]">Match</div>
+              <div className="label-eyebrow mb-1.5 text-[10px]">Match (Day)</div>
               <select value={value.matchId} onChange={(e) => set("matchId", e.target.value)} className="w-full rounded-sm border border-border bg-background px-2 py-1.5 text-xs">
                 {matchOptions.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
                 {matchOptions.length === 0 && <option value="">No matches in tournament</option>}
@@ -454,7 +456,7 @@ function ProcessEditor({
               <div className="label-eyebrow text-[10px]">Map timings</div>
               <div className="flex items-center gap-2">
                 <label className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                  Maps count
+                  Games count
                   <input
                     type="number"
                     min={0}
@@ -463,7 +465,7 @@ function ProcessEditor({
                     onChange={(e) => {
                       const n = Math.max(0, Math.min(20, +e.target.value || 0));
                       const next: MapTiming[] = Array.from({ length: n }, (_, i) =>
-                        value.maps[i] ?? { mapId: allMaps[i % allMaps.length].id, startSec: 0, endSec: 1200 },
+                        value.maps[i] ?? { mapId: "", startSec: 0, endSec: 1200 },
                       );
                       onChange({ ...value, mapCount: n, maps: next });
                     }}
@@ -471,7 +473,7 @@ function ProcessEditor({
                   />
                 </label>
                 <button
-                  onClick={() => onChange({ ...value, maps: [...value.maps, { mapId: allMaps[value.maps.length % allMaps.length].id, startSec: 0, endSec: 1200 }], mapCount: (value.mapCount ?? value.maps.length) + 1 })}
+                  onClick={() => onChange({ ...value, maps: [...value.maps, { mapId: "", startSec: 0, endSec: 1200 }], mapCount: (value.mapCount ?? value.maps.length) + 1 })}
                   className="text-xs text-primary hover:underline"
                 >+ Add</button>
               </div>
@@ -486,6 +488,7 @@ function ProcessEditor({
                     onChange={(e) => onChange({ ...value, maps: value.maps.map((x, j) => j === i ? { ...x, mapId: e.target.value } : x) })}
                     className="flex-1 rounded-sm border border-border bg-background px-2 py-1 text-xs"
                   >
+                    <option value="">— Unknown map —</option>
                     {allMaps.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
                   </select>
                   <input
