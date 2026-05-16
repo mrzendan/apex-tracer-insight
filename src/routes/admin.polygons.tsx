@@ -189,33 +189,52 @@ function PolygonsAdmin() {
                           onMouseDown={(e) => { e.stopPropagation(); setDrag({ polyId: p.id, pointIdx: i }); }}
                           onDoubleClick={(e) => {
                             e.stopPropagation();
-                            // Decide side from where the click landed relative to the circle center.
-                            const target = e.currentTarget as SVGCircleElement;
-                            const rect = target.getBoundingClientRect();
-                            const midX = rect.left + rect.width / 2;
-                            const side: 1 | -1 = e.clientX >= midX ? 1 : -1;
-                            // Spawn a small quad polygon offset to that side of the vertex.
-                            const off = 0.06;
-                            const cx = Math.max(0.04, Math.min(0.96, pt.x + side * off));
-                            const cy = pt.y;
-                            const size = 0.05;
-                            const newPoly: Polygon = {
-                              id: `pg-${Date.now()}`,
-                              mapId: p.mapId,
-                              tag: p.tag,
-                              name: `${p.tag === "forbidden" ? "Forbidden" : "Safe"} ${mapPolys.length + 1}`,
-                              points: [
-                                { x: cx - size, y: cy - size },
-                                { x: cx + size, y: cy - size },
-                                { x: cx + size, y: cy + size },
-                                { x: cx - size, y: cy + size },
-                              ],
-                            };
-                            addPolygon(newPoly);
-                            setSelectedId(newPoly.id);
+                            if (p.points.length <= 3) return;
+                            const next = p.points.filter((_, idx) => idx !== i);
+                            updatePolygon(p.id, { points: next });
                           }}
                         />
                       ))}
+                      {active && mode === "idle" && p.points.map((pt, i) => {
+                        const next = p.points[(i + 1) % p.points.length];
+                        const mx = (pt.x + next.x) / 2;
+                        const my = (pt.y + next.y) / 2;
+                        return (
+                          <g key={`mid-${i}`}>
+                            <circle
+                              cx={mx * 1000}
+                              cy={my * 1000}
+                              r={6}
+                              fill={strokeFor(p.tag)}
+                              fillOpacity={0.25}
+                              stroke={strokeFor(p.tag)}
+                              strokeWidth={1.5}
+                              strokeDasharray="2 2"
+                              style={{ cursor: "copy" }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const insertAt = i + 1;
+                                const newPts = [
+                                  ...p.points.slice(0, insertAt),
+                                  { x: mx, y: my },
+                                  ...p.points.slice(insertAt),
+                                ];
+                                updatePolygon(p.id, { points: newPts });
+                              }}
+                            >
+                              <title>Click to insert vertex · double-click vertex to remove</title>
+                            </circle>
+                            <text
+                              x={mx * 1000}
+                              y={my * 1000 + 3}
+                              textAnchor="middle"
+                              fontSize={10}
+                              fill={strokeFor(p.tag)}
+                              style={{ pointerEvents: "none", userSelect: "none" }}
+                            >+</text>
+                          </g>
+                        );
+                      })}
                     </g>
                   );
                 })}
