@@ -13,6 +13,16 @@ function MatchesAdmin() {
   const [editing, setEditing] = useState<MatchFull | null>(null);
   const [vodTeamId, setVodTeamId] = useState<{ matchId: string; teamId: string } | null>(null);
   const [vodValue, setVodValue] = useState("");
+  const [query, setQuery] = useState("");
+
+  const q = query.trim().toLowerCase();
+  const filteredMatches = q
+    ? matches.filter((m) => {
+        const tn = tournaments.find((t) => t.id === m.tournamentId)?.name ?? "";
+        const mp = allMaps.find((x) => x.id === m.mapId)?.name ?? "";
+        return [m.name, m.id, tn, mp].some((v) => v.toLowerCase().includes(q));
+      })
+    : matches;
 
   const startCreate = () =>
     setEditing({
@@ -60,7 +70,15 @@ function MatchesAdmin() {
     <div className="flex h-full flex-col overflow-hidden">
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-surface px-6">
         <h1 className="text-sm font-bold uppercase tracking-wider">Matches</h1>
-        <button onClick={startCreate} className="rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">+ New</button>
+        <div className="flex items-center gap-2">
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search matches…"
+            className="w-64 rounded-sm border border-border bg-background px-2 py-1.5 text-xs"
+          />
+          <button onClick={startCreate} className="rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">+ New</button>
+        </div>
       </header>
       <div className="flex-1 overflow-auto p-6">
         <div className="hud-panel overflow-hidden">
@@ -78,13 +96,16 @@ function MatchesAdmin() {
               </tr>
             </thead>
             <tbody>
-              {matches.map((m) => {
+              {filteredMatches.map((m) => {
                 const isOpen = expandedId === m.id;
                 const tournament = tournaments.find((t) => t.id === m.tournamentId);
                 const mapIds = m.mapIds && m.mapIds.length > 0 ? m.mapIds : [m.mapId];
                 const matchTeams = (m.teamIds ?? teams.map((t) => t.id))
                   .map((id) => teams.find((t) => t.id === id))
                   .filter(Boolean) as typeof teams;
+                const topTeams = [...matchTeams].sort((a, b) => a.placement - b.placement).slice(0, 3);
+                const totalMapSec = mapIds.length * m.durationSec;
+                const mm = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
                 return (
                   <Fragment key={m.id}>
                     <tr
@@ -115,7 +136,24 @@ function MatchesAdmin() {
                     {isOpen && (
                       <tr className="border-b border-border bg-background">
                         <td colSpan={8} className="p-0">
-                          <div className="grid gap-4 p-5 md:grid-cols-2">
+                          <div className="grid gap-4 p-5 md:grid-cols-3">
+                            <div className="hud-panel p-3">
+                              <div className="label-eyebrow mb-2 text-[10px]">Top 3 teams</div>
+                              <ol className="space-y-1.5">
+                                {topTeams.map((t, i) => (
+                                  <li key={t.id} className="flex items-center gap-2 rounded-sm border border-border bg-surface px-2 py-1.5 text-xs">
+                                    <span className="w-5 text-mono text-[10px] text-muted-foreground">#{i + 1}</span>
+                                    <TeamLogo team={t} size={22} />
+                                    <span className="flex-1 truncate font-semibold">{t.tag} · {t.name}</span>
+                                    <span className="text-mono text-[10px] tabular-nums text-muted-foreground">{t.kills}K</span>
+                                  </li>
+                                ))}
+                              </ol>
+                              <div className="mt-3 grid grid-cols-2 gap-2">
+                                <Stat label="Map duration" value={mm(m.durationSec)} />
+                                <Stat label="Match total" value={mm(totalMapSec)} />
+                              </div>
+                            </div>
                             <div className="hud-panel p-3">
                               <div className="label-eyebrow mb-2 text-[10px]">Map order ({mapIds.length})</div>
                               <ol className="space-y-2">
@@ -126,11 +164,45 @@ function MatchesAdmin() {
                                     <li key={`${id}-${i}`} className="flex items-center gap-3 rounded-sm border border-border bg-surface p-2">
                                       <span className="text-mono text-[10px] text-muted-foreground">#{i + 1}</span>
                                       <img src={mp.image} alt={mp.name} className="h-10 w-14 rounded-sm object-cover" />
-                                      <div className="text-xs font-semibold">{mp.name}</div>
+                                      <div className="flex-1 text-xs font-semibold">{mp.name}</div>
+                                      <div className="flex flex-col gap-0.5">
+                                        <button
+                                          onClick={(e) => { e.stopPropagation(); if (i === 0) return; const next = [...mapIds]; [next[i - 1], next[i]] = [next[i], next[i - 1]]; updateMatch(m.id, { mapIds: next, mapId: next[0] }); }}
+                                          disabled={i === 0}
+                                          className="rounded-sm border border-border bg-surface px-1 text-[10px] hover:bg-muted disabled:opacity-30"
+                                        >▲</button>
+                                        <button
+                                          onClick={(e) => { e.stopPropagation(); if (i === mapIds.length - 1) return; const next = [...mapIds]; [next[i + 1], next[i]] = [next[i], next[i + 1]]; updateMatch(m.id, { mapIds: next, mapId: next[0] }); }}
+                                          disabled={i === mapIds.length - 1}
+                                          className="rounded-sm border border-border bg-surface px-1 text-[10px] hover:bg-muted disabled:opacity-30"
+                                        >▼</button>
+                                      </div>
+                                      <button
+                                        onClick={(e) => { e.stopPropagation(); const next = mapIds.filter((_, idx) => idx !== i); if (next.length === 0) return; updateMatch(m.id, { mapIds: next, mapId: next[0] }); }}
+                                        className="rounded-sm border border-destructive/40 bg-surface px-1.5 text-[10px] text-destructive hover:bg-destructive/10"
+                                      >×</button>
                                     </li>
                                   );
                                 })}
                               </ol>
+                              <div className="mt-2 flex items-center gap-2">
+                                <select
+                                  defaultValue=""
+                                  onClick={(e) => e.stopPropagation()}
+                                  onChange={(e) => {
+                                    e.stopPropagation();
+                                    const v = e.target.value;
+                                    if (!v) return;
+                                    const next = [...mapIds, v];
+                                    updateMatch(m.id, { mapIds: next, mapId: next[0] });
+                                    e.currentTarget.value = "";
+                                  }}
+                                  className="flex-1 rounded-sm border border-border bg-background px-2 py-1 text-xs"
+                                >
+                                  <option value="">+ Add map…</option>
+                                  {allMaps.map((mp) => <option key={mp.id} value={mp.id}>{mp.name}</option>)}
+                                </select>
+                              </div>
                             </div>
                             <div className="hud-panel p-3">
                               <div className="label-eyebrow mb-2 text-[10px]">Teams ({matchTeams.length}) · POV VODs</div>
@@ -160,7 +232,7 @@ function MatchesAdmin() {
                   </Fragment>
                 );
               })}
-              {matches.length === 0 && (
+              {filteredMatches.length === 0 && (
                 <tr><td colSpan={8} className="px-3 py-6 text-center text-xs text-muted-foreground">No matches</td></tr>
               )}
             </tbody>
@@ -284,5 +356,14 @@ function YoutubeIcon({ className = "" }: { className?: string }) {
     <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
       <path d="M23.5 6.5a3 3 0 0 0-2.1-2.1C19.5 4 12 4 12 4s-7.5 0-9.4.4A3 3 0 0 0 .5 6.5 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.5 3 3 0 0 0 2.1 2.1C4.5 20 12 20 12 20s7.5 0 9.4-.4a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.5zM9.75 15.5v-7l6 3.5-6 3.5z" />
     </svg>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-sm border border-border bg-surface px-2 py-1">
+      <div className="label-eyebrow text-[9px]">{label}</div>
+      <div className="text-mono text-xs tabular-nums">{value}</div>
+    </div>
   );
 }

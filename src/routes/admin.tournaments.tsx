@@ -29,6 +29,15 @@ function TournamentsAdmin() {
   const [rows, setRows] = useState<Tournament[]>(seedT);
   const [editing, setEditing] = useState<Tournament | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? rows.filter((r) =>
+        [r.name, r.region, r.type, `year ${r.year}`].some((v) =>
+          String(v).toLowerCase().includes(q),
+        ),
+      )
+    : rows;
 
   const startCreate = () =>
     setEditing({
@@ -60,12 +69,20 @@ function TournamentsAdmin() {
     <div className="flex h-full flex-col overflow-hidden">
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-surface px-6">
         <h1 className="text-sm font-bold uppercase tracking-wider">Tournaments</h1>
-        <button
-          onClick={startCreate}
-          className="rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110"
-        >
-          + New
-        </button>
+        <div className="flex items-center gap-2">
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search tournaments…"
+            className="w-64 rounded-sm border border-border bg-background px-2 py-1.5 text-xs"
+          />
+          <button
+            onClick={startCreate}
+            className="rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110"
+          >
+            + New
+          </button>
+        </div>
       </header>
 
       <div className="flex-1 overflow-auto p-6">
@@ -83,7 +100,7 @@ function TournamentsAdmin() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => {
+              {filtered.map((row) => {
                 const isOpen = expandedId === row.id;
                 const tMatches = allMatches.filter((m) => m.tournamentId === row.id);
                 const tMapIds = Array.from(new Set(tMatches.map((m) => m.mapId)));
@@ -178,7 +195,7 @@ function TournamentsAdmin() {
                   </Fragment>
                 );
               })}
-              {rows.length === 0 && (
+              {filtered.length === 0 && (
                 <tr><td colSpan={7} className="px-3 py-6 text-center text-xs text-muted-foreground">No tournaments</td></tr>
               )}
             </tbody>

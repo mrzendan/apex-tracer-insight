@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useAdminStore, setTeams } from "@/lib/admin-store";
 import type { Team } from "@/lib/mock-match";
 import { TeamLogo } from "@/components/admin/TeamLogo";
@@ -7,9 +7,37 @@ import { TeamLogo } from "@/components/admin/TeamLogo";
 export const Route = createFileRoute("/admin/teams")({ component: TeamsAdmin });
 
 function TeamsAdmin() {
-  const { teams } = useAdminStore();
+  const { teams, matches, tournaments } = useAdminStore();
   const navigate = useNavigate();
   const [editing, setEditing] = useState<Team | null>(null);
+  const [query, setQuery] = useState("");
+
+  const today = new Date().toISOString().slice(0, 10);
+  const tIndex = useMemo(() => new Map(tournaments.map((t) => [t.id, t])), [tournaments]);
+
+  function teamSchedule(teamId: string) {
+    const ms = matches.filter((m) => m.teamIds?.includes(teamId));
+    type Item = { match: typeof ms[number]; tour: typeof tournaments[number] | undefined; start: string; end: string };
+    const items: Item[] = ms.map((m) => {
+      const tour = tIndex.get(m.tournamentId);
+      return { match: m, tour, start: tour?.startDate ?? "", end: tour?.endDate ?? "" };
+    });
+    const live = items.find((i) => i.start && i.end && i.start <= today && today <= i.end);
+    const past = items
+      .filter((i) => i.end && i.end < today)
+      .sort((a, b) => b.end.localeCompare(a.end))[0];
+    const upcoming = items
+      .filter((i) => i.start && i.start > today)
+      .sort((a, b) => a.start.localeCompare(b.start))[0];
+    return { live, last: past ?? items[0], next: live ?? upcoming };
+  }
+
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? teams.filter((t) =>
+        [t.tag, t.name, ...(t.players ?? [])].some((v) => String(v).toLowerCase().includes(q)),
+      )
+    : teams;
 
   const startCreate = () =>
     setEditing({
@@ -43,39 +71,76 @@ function TeamsAdmin() {
     <div className="flex h-full flex-col overflow-hidden">
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-surface px-6">
         <h1 className="text-sm font-bold uppercase tracking-wider">Teams</h1>
-        <button onClick={startCreate} className="rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">
-          + New
-        </button>
+        <div className="flex items-center gap-2">
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search teams or players…"
+            className="w-64 rounded-sm border border-border bg-background px-2 py-1.5 text-xs"
+          />
+          <button onClick={startCreate} className="rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">
+            + New
+          </button>
+        </div>
       </header>
       <div className="flex-1 overflow-auto p-6">
         <div className="hud-panel overflow-hidden">
           <table className="w-full text-sm">
             <thead className="border-b border-border bg-surface-2">
               <tr className="label-eyebrow text-left text-[10px]">
+                <th className="px-3 py-2 w-[64px]">Logo</th>
                 <th className="px-3 py-2 w-[100px]">Tag</th>
                 <th className="px-3 py-2">Name</th>
-                <th className="px-3 py-2 w-[120px]">Logo</th>
+                <th className="px-3 py-2 w-[260px]">Last match</th>
+                <th className="px-3 py-2 w-[260px]">Next match</th>
                 <th className="px-3 py-2 w-[160px] text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {teams.map((t) => (
-                <tr
-                  key={t.id}
-                  onClick={() => navigate({ to: "/admin/teams/$teamId" as "/admin/teams", params: { teamId: t.id } as never })}
-                  className="cursor-pointer border-b border-border last:border-0 hover:bg-surface-2"
-                >
-                  <td className="px-3 py-2 text-xs text-mono font-bold">{t.tag}</td>
-                  <td className="px-3 py-2 text-xs">{t.name}</td>
-                  <td className="px-3 py-2"><TeamLogo team={t} size={28} /></td>
-                  <td className="px-3 py-2 text-right text-xs">
-                    <button onClick={(e) => startEdit(e, t)} className="mr-1 rounded-sm border border-border bg-surface px-2 py-1 hover:bg-muted">Edit</button>
-                    <button onClick={(e) => remove(e, t.id)} className="rounded-sm border border-destructive/40 bg-surface px-2 py-1 text-destructive hover:bg-destructive/10">Delete</button>
-                  </td>
-                </tr>
-              ))}
-              {teams.length === 0 && (
-                <tr><td colSpan={4} className="px-3 py-6 text-center text-xs text-muted-foreground">No teams</td></tr>
+              {filtered.map((t) => {
+                const sched = teamSchedule(t.id);
+                return (
+                  <tr
+                    key={t.id}
+                    onClick={() => navigate({ to: "/admin/teams/$teamId" as "/admin/teams", params: { teamId: t.id } as never })}
+                    className="cursor-pointer border-b border-border last:border-0 hover:bg-surface-2"
+                  >
+                    <td className="px-3 py-2"><TeamLogo team={t} size={32} /></td>
+                    <td className="px-3 py-2 text-xs text-mono font-bold">{t.tag}</td>
+                    <td className="px-3 py-2 text-xs">{t.name}</td>
+                    <td className="px-3 py-2 text-xs">
+                      {sched.last ? (
+                        <div>
+                          <div className="font-semibold truncate">{sched.last.match.name}</div>
+                          <div className="text-[10px] text-muted-foreground truncate">{sched.last.tour?.name ?? "—"}</div>
+                        </div>
+                      ) : <span className="text-muted-foreground">—</span>}
+                    </td>
+                    <td className="px-3 py-2 text-xs">
+                      {sched.next ? (
+                        <div className={sched.live ? "rounded-sm border border-destructive/40 bg-destructive/10 px-2 py-1" : ""}>
+                          <div className="flex items-center gap-1.5 font-semibold truncate">
+                            {sched.live && (
+                              <span className="inline-flex items-center gap-1 rounded-sm bg-destructive px-1 py-[1px] text-[9px] font-bold uppercase tracking-wider text-destructive-foreground">
+                                <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-current" />
+                                LIVE
+                              </span>
+                            )}
+                            <span className="truncate">{sched.next.match.name}</span>
+                          </div>
+                          <div className="text-[10px] text-muted-foreground truncate">{sched.next.tour?.name ?? "—"}</div>
+                        </div>
+                      ) : <span className="text-muted-foreground">—</span>}
+                    </td>
+                    <td className="px-3 py-2 text-right text-xs">
+                      <button onClick={(e) => startEdit(e, t)} className="mr-1 rounded-sm border border-border bg-surface px-2 py-1 hover:bg-muted">Edit</button>
+                      <button onClick={(e) => remove(e, t.id)} className="rounded-sm border border-destructive/40 bg-surface px-2 py-1 text-destructive hover:bg-destructive/10">Delete</button>
+                    </td>
+                  </tr>
+                );
+              })}
+              {filtered.length === 0 && (
+                <tr><td colSpan={6} className="px-3 py-6 text-center text-xs text-muted-foreground">No teams</td></tr>
               )}
             </tbody>
           </table>
