@@ -474,10 +474,26 @@ function ProcessEditor({
             </div>
             <div>
               <div className="label-eyebrow mb-1.5 text-[10px]">Match (Day)</div>
-              <select value={value.matchId} onChange={(e) => set("matchId", e.target.value)} className="w-full rounded-sm border border-border bg-background px-2 py-1.5 text-xs">
-                {matchOptions.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-                {matchOptions.length === 0 && <option value="">No matches in tournament</option>}
-              </select>
+              <div className="flex gap-1.5">
+                <select
+                  value={value.matchId}
+                  onChange={(e) => {
+                    if (e.target.value === "__new__") { createNewMatch(); return; }
+                    set("matchId", e.target.value);
+                  }}
+                  className="flex-1 rounded-sm border border-border bg-background px-2 py-1.5 text-xs"
+                >
+                  {matchOptions.length === 0 && <option value="">— No matches —</option>}
+                  {matchOptions.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                  <option value="__new__">+ New Match (Day)…</option>
+                </select>
+                <button
+                  type="button"
+                  onClick={createNewMatch}
+                  className="rounded-sm border border-border bg-surface-2 px-2 text-xs hover:bg-muted"
+                  title="Create a new Match (Day) in this tournament"
+                >+ New</button>
+              </div>
             </div>
           </div>
 
