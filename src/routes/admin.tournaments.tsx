@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import {
   tournaments as seedT,
   matches as seedM,
@@ -88,9 +88,8 @@ function TournamentsAdmin() {
                 const tMapIds = Array.from(new Set(tMatches.map((m) => m.mapId)));
                 const tMaps = tMapIds.map((id) => seedMaps.find((mp) => mp.id === id)).filter(Boolean) as typeof seedMaps;
                 return (
-                  <>
+                  <Fragment key={row.id}>
                     <tr
-                      key={row.id}
                       onClick={() => setExpandedId(isOpen ? null : row.id)}
                       className={`cursor-pointer border-b border-border hover:bg-surface-2 ${isOpen ? "bg-surface-2" : ""}`}
                     >
@@ -163,7 +162,7 @@ function TournamentsAdmin() {
                         </td>
                       </tr>
                     )}
-                  </>
+                  </Fragment>
                 );
               })}
               {rows.length === 0 && (
