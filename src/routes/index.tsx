@@ -248,7 +248,7 @@ function TeamRow({ team, active, hovered, onToggle, onHover }: {
         active ? "border-border-strong bg-surface-2" : "border-transparent bg-transparent opacity-50"
       } ${hovered ? "ring-1 ring-primary/40" : ""}`} onClick={onToggle}>
       <span className="h-2.5 w-2.5 shrink-0 rounded-sm"
-        style={{ backgroundColor: team.color, boxShadow: active ? `0 0 8px ${team.color}80` : "none" }} />
+        style={{ backgroundColor: team.color }} />
       <span className="text-mono w-6 text-[10px] tabular-nums text-muted-foreground">#{team.placement}</span>
       <span className="min-w-0 flex-1 truncate text-xs font-semibold">{team.tag}</span>
       <span className="text-mono text-[10px] text-muted-foreground">{team.kills}K</span>
@@ -375,6 +375,13 @@ function MapCanvas({
 
             {ring && (
               <>
+                {/* Static preview of all 6 ring phases */}
+                {ringPhases.map((p, i) => (
+                  <circle key={`prev-${i}`} cx={p.cx * 1000} cy={p.cy * 1000} r={p.r * 1000}
+                    fill="none" stroke="rgba(255,255,255,0.28)"
+                    strokeWidth={1 / view.scale}
+                    strokeDasharray={`${3 / view.scale} ${4 / view.scale}`} />
+                ))}
                 <circle cx={ring.cx * 1000} cy={ring.cy * 1000} r={ring.r * 1000}
                   fill="rgba(255,91,18,0.05)" stroke="rgba(255,91,18,0.85)" strokeWidth={2 / view.scale} strokeDasharray={`${8 / view.scale} ${5 / view.scale}`} />
                 <circle cx={ring.cx * 1000} cy={ring.cy * 1000} r={3 / view.scale} fill="#ff5b12" />
@@ -399,16 +406,37 @@ function MapCanvas({
                       strokeWidth={2 / view.scale} strokeOpacity={0.7}
                       strokeLinecap="round" strokeLinejoin="round" />
                   )}
-                  <g transform={`translate(${head.x * 1000} ${head.y * 1000})`} filter="url(#glow)">
-                    <circle r={11 / view.scale} fill="none" stroke={t.color} strokeWidth={1 / view.scale} opacity={0.5} />
-                    <circle r={6 / view.scale} fill={t.color} stroke="rgba(0,0,0,0.8)" strokeWidth={1 / view.scale} />
+                  <g transform={`translate(${head.x * 1000} ${head.y * 1000})`}>
+                    <g filter="url(#glow)">
+                      <circle r={11 / view.scale} fill="none" stroke={t.color} strokeWidth={1 / view.scale} opacity={0.5} />
+                      <circle r={6 / view.scale} fill={t.color} stroke="rgba(0,0,0,0.8)" strokeWidth={1 / view.scale} />
+                    </g>
                     {showLabels && (
-                      <text x={10 / view.scale} y={4 / view.scale}
-                        fontSize={11 / view.scale} fontWeight={700} fill="#fff"
-                        fontFamily="Manrope, sans-serif"
-                        stroke="rgba(0,0,0,0.8)" strokeWidth={3 / view.scale} paintOrder="stroke">
-                        {t.tag}
-                      </text>
+                      <g transform={`translate(${10 / view.scale} ${-7 / view.scale})`}>
+                        <rect
+                          x={0}
+                          y={0}
+                          rx={2 / view.scale}
+                          ry={2 / view.scale}
+                          width={(t.tag.length * 7 + 6) / view.scale}
+                          height={14 / view.scale}
+                          fill="rgba(0,0,0,0.78)"
+                          stroke={t.color}
+                          strokeWidth={1 / view.scale}
+                        />
+                        <text
+                          x={(t.tag.length * 7 + 6) / (2 * view.scale)}
+                          y={10 / view.scale}
+                          textAnchor="middle"
+                          fontSize={11 / view.scale}
+                          fontWeight={800}
+                          fill="#fff"
+                          fontFamily="Manrope, sans-serif"
+                          style={{ letterSpacing: `${0.3 / view.scale}px` }}
+                        >
+                          {t.tag}
+                        </text>
+                      </g>
                     )}
                   </g>
                 </g>

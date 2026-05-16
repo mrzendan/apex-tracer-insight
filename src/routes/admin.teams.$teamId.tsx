@@ -80,8 +80,8 @@ function TeamDetail() {
 
   // Per-map deterministic placement sampler (1..20) — stable per (mapId, matchId, teamId).
   function pseudoPlacement(mapId: string, matchId: string): number {
-    let h = team.placement * 7;
-    const s = mapId + matchId + team.id;
+    let h = team!.placement * 7;
+    const s = mapId + matchId + team!.id;
     for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
     return 1 + (h % 20);
   }
