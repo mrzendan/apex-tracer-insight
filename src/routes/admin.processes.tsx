@@ -262,13 +262,19 @@ function ProcessesAdmin() {
               {processes.map((p) => {
                 const m = matches.find((x) => x.id === p.matchId);
                 const t = tournaments.find((x) => x.id === p.tournamentId);
+                const isOpen = expanded === p.id;
                 return (
-                  <tr key={p.id} className="border-b border-border">
+                  <Fragment key={p.id}>
+                  <tr className="border-b border-border">
                     <td className="px-3 py-2 text-xs">
                       <span className="rounded-sm border border-border bg-background px-1.5 py-0.5 text-mono uppercase">{p.pov} POV</span>
                       {p.live && <span className="ml-1 rounded-sm bg-destructive px-1.5 py-0.5 text-[10px] font-bold text-destructive-foreground">LIVE</span>}
                     </td>
-                    <td className="px-3 py-2 text-xs font-semibold">{m?.name ?? p.matchId}</td>
+                    <td className="px-3 py-2 text-xs font-semibold">
+                      <button onClick={() => setExpanded(isOpen ? null : p.id)} className="hover:text-primary">
+                        {isOpen ? "▼" : "▶"} {m?.name ?? p.matchId}
+                      </button>
+                    </td>
                     <td className="px-3 py-2 text-xs">{t?.name ?? p.tournamentId}</td>
                     <td className="px-3 py-2 text-xs text-muted-foreground truncate max-w-[260px]" title={p.streamUrl}>{p.streamUrl || "—"}</td>
                     <td className="px-3 py-2 text-mono text-[10px]">{p.maps.length}</td>
@@ -278,6 +284,14 @@ function ProcessesAdmin() {
                       <button onClick={() => { if (confirm("Delete process?")) removeProcess(p.id); }} className="text-xs text-destructive hover:underline">Delete</button>
                     </td>
                   </tr>
+                  {isOpen && (
+                    <tr className="border-b border-border bg-surface-2/40">
+                      <td colSpan={7} className="px-4 py-3">
+                        <TeamProgressList process={p} teams={teams} matchTeamIds={m?.teamIds ?? []} />
+                      </td>
+                    </tr>
+                  )}
+                  </Fragment>
                 );
               })}
             </tbody>
