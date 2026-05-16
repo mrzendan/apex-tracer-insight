@@ -5,11 +5,13 @@ import {
   addProcess,
   updateProcess,
   removeProcess,
+  addMatch,
   type AnalysisProcess,
   type ProcessPov,
   type MapTiming,
+  type MapAnalysis,
 } from "@/lib/admin-store";
-import { maps as allMaps, type Team } from "@/lib/mock-match";
+import { maps as allMaps, type Team, type MatchFull } from "@/lib/mock-match";
 import { Progress } from "@/components/ui/progress";
 import { TeamLogo } from "@/components/admin/TeamLogo";
 
@@ -182,26 +184,46 @@ function ProcessesAdmin() {
   const save = (run: boolean) => {
     if (!editing) return;
     const exists = processes.some((p) => p.id === editing.id);
-    const teamProgress = run
-      ? (matches.find((m) => m.id === editing.matchId)?.teamIds ?? []).slice(0, 20).map((tid) => ({
-          teamId: tid, ring: 0, start: 0, camera: 0,
+    const teamIds = matches.find((m) => m.id === editing.matchId)?.teamIds ?? [];
+    const mapAnalyses: MapAnalysis[] | undefined = run
+      ? editing.maps.map((_, mi) => ({
+          mapIndex: mi,
+          ring: 0,
+          start: 0,
+          camera: 0,
+          teams: teamIds.slice(0, 20).map((tid) => ({ teamId: tid, progress: 0 })),
         }))
-      : editing.teamProgress;
-    const next: AnalysisProcess = { ...editing, status: run ? "queued" : editing.status, teamProgress };
+      : editing.mapAnalyses;
+    const next: AnalysisProcess = { ...editing, status: run ? "queued" : editing.status, mapAnalyses };
     if (exists) updateProcess(editing.id, next);
     else addProcess(next);
     if (run) {
       setTimeout(() => updateProcess(next.id, { status: "running" }), 600);
+      // Each task is independent: separate random multipliers per map per task.
+      const rng = (seed: number) => {
+        let s = seed >>> 0;
+        return () => {
+          s = (s * 1664525 + 1013904223) >>> 0;
+          return s / 0xffffffff;
+        };
+      };
       const tick = (pct: number) => updateProcess(next.id, {
-        teamProgress: (teamProgress ?? []).map((tp, i) => ({
-          ...tp,
-          ring: Math.min(100, Math.round(pct * (0.7 + (i % 5) * 0.06))),
-          start: Math.min(100, Math.round(pct * (0.9 + (i % 3) * 0.04))),
-          camera: Math.min(100, Math.round(pct * (0.5 + (i % 7) * 0.07))),
-        })),
+        mapAnalyses: (mapAnalyses ?? []).map((ma) => {
+          const r = rng(ma.mapIndex * 7 + 1);
+          return {
+            ...ma,
+            ring: Math.min(100, Math.round(pct * (0.5 + r() * 0.7))),
+            start: Math.min(100, Math.round(pct * (0.5 + r() * 0.7))),
+            camera: Math.min(100, Math.round(pct * (0.5 + r() * 0.7))),
+            teams: ma.teams.map((tp, ti) => {
+              const rt = rng(ma.mapIndex * 31 + ti * 13 + 5);
+              return { ...tp, progress: Math.min(100, Math.round(pct * (0.4 + rt() * 0.9))) };
+            }),
+          };
+        }),
       });
-      [10, 25, 40, 60, 80, 100].forEach((p, i) => setTimeout(() => tick(p), 800 + i * 500));
-      setTimeout(() => updateProcess(next.id, { status: "done" }), 4200);
+      [15, 30, 50, 70, 90, 100].forEach((p, i) => setTimeout(() => tick(p), 800 + i * 600));
+      setTimeout(() => updateProcess(next.id, { status: "done" }), 5000);
     }
     setEditing(null);
   };
