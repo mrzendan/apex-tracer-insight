@@ -25,6 +25,12 @@ export type ZoneMode = "vod" | "camera";
 export type ProcessPov = "map" | "team";
 export type ProcessStatus = "draft" | "queued" | "running" | "done" | "failed";
 export type MapTiming = { mapId: string; startSec: number; endSec: number };
+export type TeamProgress = {
+  teamId: string;
+  ring: number;   // 0..100
+  start: number;  // 0..100
+  camera: number; // 0..100
+};
 export type AnalysisProcess = {
   id: string;
   pov: ProcessPov;
@@ -33,10 +39,15 @@ export type AnalysisProcess = {
   videoTitle?: string;
   videoChannel?: string;
   videoDurationSec?: number;
+  region?: string;
+  day?: string;
+  matchup?: string;
   tournamentId: string;
   matchId: string;
   teamId?: string;
+  mapCount?: number;
   maps: MapTiming[];
+  teamProgress?: TeamProgress[];
   status: ProcessStatus;
   createdAt: number;
 };
