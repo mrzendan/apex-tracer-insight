@@ -333,13 +333,22 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
   );
 }
 
+type Cfg = { trailWidth: number; labelSize: number; labelBg: number; dwellWindow: number; dwellRadius: number };
+type Dwell = { x: number; y: number; tStart: number; tEnd: number };
+
 /* ---------- MAP with pan/zoom ---------- */
 function MapCanvas({
-  time, ring, trajectories, selectedTeams, hoverTeam, showTrails, showLabels,
+  time, ring, trajectories, dwellsByTeam, cfg, onCfg, showConfig, setShowConfig,
+  selectedTeams, hoverTeam, showTrails, showLabels,
   mapImage, mapName, aliveTeams, totalKills, ringIndex, ringCount, controls,
 }: {
   time: number; ring: RingPhase | null;
   trajectories: Record<string, { t: number; x: number; y: number }[]>;
+  dwellsByTeam: Record<string, Dwell[]>;
+  cfg: Cfg;
+  onCfg: (next: Cfg) => void;
+  showConfig: boolean;
+  setShowConfig: (v: boolean) => void;
   selectedTeams: Set<string>; hoverTeam: string | null;
   showTrails: boolean; showLabels: boolean;
   mapImage: string; mapName: string;
