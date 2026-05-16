@@ -324,6 +324,25 @@ function LayerToggle({ label, active, onChange }: { label: string; active: boole
   );
 }
 
+function CfgSlider({ label, value, min, max, step, onChange }: {
+  label: string; value: number; min: number; max: number; step: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <label className="block">
+      <div className="flex items-center justify-between mb-0.5">
+        <span className="label-eyebrow text-[10px]">{label}</span>
+        <span className="text-mono text-[10px] text-muted-foreground tabular-nums">
+          {Number.isInteger(step) ? value : value.toFixed(2)}
+        </span>
+      </div>
+      <input type="range" min={min} max={max} step={step} value={value}
+        onChange={(e) => onChange(parseFloat(e.target.value))}
+        className="w-full accent-primary" />
+    </label>
+  );
+}
+
 function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
     <div className="hud-panel-strong px-3 py-1.5">
