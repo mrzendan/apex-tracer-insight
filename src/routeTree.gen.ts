@@ -15,6 +15,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminZonesRouteImport } from './routes/admin.zones'
 import { Route as AdminTournamentsRouteImport } from './routes/admin.tournaments'
 import { Route as AdminTeamsRouteImport } from './routes/admin.teams'
+import { Route as AdminProcessesRouteImport } from './routes/admin.processes'
 import { Route as AdminPolygonsRouteImport } from './routes/admin.polygons'
 import { Route as AdminMinimapRouteImport } from './routes/admin.minimap'
 import { Route as AdminMatchesRouteImport } from './routes/admin.matches'
@@ -53,6 +54,11 @@ const AdminTournamentsRoute = AdminTournamentsRouteImport.update({
 const AdminTeamsRoute = AdminTeamsRouteImport.update({
   id: '/teams',
   path: '/teams',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminProcessesRoute = AdminProcessesRouteImport.update({
+  id: '/processes',
+  path: '/processes',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminPolygonsRoute = AdminPolygonsRouteImport.update({
@@ -110,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/admin/matches': typeof AdminMatchesRouteWithChildren
   '/admin/minimap': typeof AdminMinimapRoute
   '/admin/polygons': typeof AdminPolygonsRoute
+  '/admin/processes': typeof AdminProcessesRoute
   '/admin/teams': typeof AdminTeamsRouteWithChildren
   '/admin/tournaments': typeof AdminTournamentsRoute
   '/admin/zones': typeof AdminZonesRoute
@@ -126,6 +133,7 @@ export interface FileRoutesByTo {
   '/admin/matches': typeof AdminMatchesRouteWithChildren
   '/admin/minimap': typeof AdminMinimapRoute
   '/admin/polygons': typeof AdminPolygonsRoute
+  '/admin/processes': typeof AdminProcessesRoute
   '/admin/teams': typeof AdminTeamsRouteWithChildren
   '/admin/tournaments': typeof AdminTournamentsRoute
   '/admin/zones': typeof AdminZonesRoute
@@ -144,6 +152,7 @@ export interface FileRoutesById {
   '/admin/matches': typeof AdminMatchesRouteWithChildren
   '/admin/minimap': typeof AdminMinimapRoute
   '/admin/polygons': typeof AdminPolygonsRoute
+  '/admin/processes': typeof AdminProcessesRoute
   '/admin/teams': typeof AdminTeamsRouteWithChildren
   '/admin/tournaments': typeof AdminTournamentsRoute
   '/admin/zones': typeof AdminZonesRoute
@@ -163,6 +172,7 @@ export interface FileRouteTypes {
     | '/admin/matches'
     | '/admin/minimap'
     | '/admin/polygons'
+    | '/admin/processes'
     | '/admin/teams'
     | '/admin/tournaments'
     | '/admin/zones'
@@ -179,6 +189,7 @@ export interface FileRouteTypes {
     | '/admin/matches'
     | '/admin/minimap'
     | '/admin/polygons'
+    | '/admin/processes'
     | '/admin/teams'
     | '/admin/tournaments'
     | '/admin/zones'
@@ -196,6 +207,7 @@ export interface FileRouteTypes {
     | '/admin/matches'
     | '/admin/minimap'
     | '/admin/polygons'
+    | '/admin/processes'
     | '/admin/teams'
     | '/admin/tournaments'
     | '/admin/zones'
@@ -252,6 +264,13 @@ declare module '@tanstack/react-router' {
       path: '/teams'
       fullPath: '/admin/teams'
       preLoaderRoute: typeof AdminTeamsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/processes': {
+      id: '/admin/processes'
+      path: '/processes'
+      fullPath: '/admin/processes'
+      preLoaderRoute: typeof AdminProcessesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/polygons': {
@@ -363,6 +382,7 @@ interface AdminRouteChildren {
   AdminMatchesRoute: typeof AdminMatchesRouteWithChildren
   AdminMinimapRoute: typeof AdminMinimapRoute
   AdminPolygonsRoute: typeof AdminPolygonsRoute
+  AdminProcessesRoute: typeof AdminProcessesRoute
   AdminTeamsRoute: typeof AdminTeamsRouteWithChildren
   AdminTournamentsRoute: typeof AdminTournamentsRoute
   AdminZonesRoute: typeof AdminZonesRoute
@@ -376,6 +396,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminMatchesRoute: AdminMatchesRouteWithChildren,
   AdminMinimapRoute: AdminMinimapRoute,
   AdminPolygonsRoute: AdminPolygonsRoute,
+  AdminProcessesRoute: AdminProcessesRoute,
   AdminTeamsRoute: AdminTeamsRouteWithChildren,
   AdminTournamentsRoute: AdminTournamentsRoute,
   AdminZonesRoute: AdminZonesRoute,

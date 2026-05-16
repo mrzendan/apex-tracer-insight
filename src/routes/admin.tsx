@@ -13,6 +13,7 @@ const dataItems: NavItem[] = [
 ];
 
 const toolItems: NavItem[] = [
+  { to: "/admin/processes", label: "Processes", hint: "Analysis & tracking" },
   { to: "/admin/hsv",      label: "HSV",      hint: "Team color calibration" },
   { to: "/admin/zones",    label: "Zones",    hint: "HUD areas (1920×1080)" },
   { to: "/admin/polygons", label: "Polygons", hint: "Map areas" },
