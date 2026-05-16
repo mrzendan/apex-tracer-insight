@@ -162,6 +162,11 @@ function MatchViewer() {
             time={time}
             ring={showRing ? ring : null}
             trajectories={trajectories}
+            dwellsByTeam={dwellsByTeam}
+            cfg={cfg}
+            onCfg={setCfg}
+            showConfig={showConfig}
+            setShowConfig={setShowConfig}
             selectedTeams={selectedTeams}
             hoverTeam={hoverTeam}
             showTrails={showTrails}
