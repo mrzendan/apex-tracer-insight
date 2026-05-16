@@ -187,6 +187,33 @@ function PolygonsAdmin() {
                           strokeWidth={2}
                           style={{ cursor: "grab" }}
                           onMouseDown={(e) => { e.stopPropagation(); setDrag({ polyId: p.id, pointIdx: i }); }}
+                          onDoubleClick={(e) => {
+                            e.stopPropagation();
+                            // Decide side from where the click landed relative to the circle center.
+                            const target = e.currentTarget as SVGCircleElement;
+                            const rect = target.getBoundingClientRect();
+                            const midX = rect.left + rect.width / 2;
+                            const side: 1 | -1 = e.clientX >= midX ? 1 : -1;
+                            // Spawn a small quad polygon offset to that side of the vertex.
+                            const off = 0.06;
+                            const cx = Math.max(0.04, Math.min(0.96, pt.x + side * off));
+                            const cy = pt.y;
+                            const size = 0.05;
+                            const newPoly: Polygon = {
+                              id: `pg-${Date.now()}`,
+                              mapId: p.mapId,
+                              tag: p.tag,
+                              name: `${p.tag === "forbidden" ? "Forbidden" : "Safe"} ${mapPolys.length + 1}`,
+                              points: [
+                                { x: cx - size, y: cy - size },
+                                { x: cx + size, y: cy - size },
+                                { x: cx + size, y: cy + size },
+                                { x: cx - size, y: cy + size },
+                              ],
+                            };
+                            addPolygon(newPoly);
+                            setSelectedId(newPoly.id);
+                          }}
                         />
                       ))}
                     </g>
