@@ -8,14 +8,24 @@ import brokenMoonImg from "@/assets/maps/broken-moon.png";
 import olympusImg from "@/assets/maps/olympus.png";
 import eDistrictImg from "@/assets/maps/e-district.png";
 
-export type Tournament = { id: string; name: string };
+export type TournamentType = "LAN" | "Online" | "Qualifier";
+export type TournamentRegion = "EMEA" | "APAC" | "North America" | "South America";
+export type Tournament = {
+  id: string;
+  name: string;
+  startDate: string; // ISO yyyy-mm-dd
+  endDate: string;   // ISO yyyy-mm-dd
+  year: number;      // 1..6
+  type: TournamentType;
+  region: TournamentRegion;
+};
 export type Match = { id: string; name: string; tournamentId: string; mapId: string; durationSec: number };
 export type ApexMap = { id: string; name: string; image: string };
 
 export const tournaments: Tournament[] = [
-  { id: "algs-2026-split-1", name: "ALGS 2026 — Split 1 Playoffs" },
-  { id: "esl-pro-league-12", name: "ESL Apex Pro League S12" },
-  { id: "scrims-eu-week-4", name: "EU Pro Scrims — Week 4" },
+  { id: "algs-2026-split-1", name: "ALGS 2026 — Split 1 Playoffs", startDate: "2026-02-14", endDate: "2026-02-18", year: 6, type: "LAN",       region: "North America" },
+  { id: "esl-pro-league-12", name: "ESL Apex Pro League S12",      startDate: "2026-03-02", endDate: "2026-03-29", year: 6, type: "Online",    region: "EMEA" },
+  { id: "scrims-eu-week-4",  name: "EU Pro Scrims — Week 4",       startDate: "2026-04-06", endDate: "2026-04-10", year: 6, type: "Qualifier", region: "EMEA" },
 ];
 
 export const maps: ApexMap[] = [
