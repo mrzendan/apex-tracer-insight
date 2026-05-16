@@ -248,7 +248,7 @@ function TeamRow({ team, active, hovered, onToggle, onHover }: {
         active ? "border-border-strong bg-surface-2" : "border-transparent bg-transparent opacity-50"
       } ${hovered ? "ring-1 ring-primary/40" : ""}`} onClick={onToggle}>
       <span className="h-2.5 w-2.5 shrink-0 rounded-sm"
-        style={{ backgroundColor: team.color, boxShadow: active ? `0 0 8px ${team.color}80` : "none" }} />
+        style={{ backgroundColor: team.color }} />
       <span className="text-mono w-6 text-[10px] tabular-nums text-muted-foreground">#{team.placement}</span>
       <span className="min-w-0 flex-1 truncate text-xs font-semibold">{team.tag}</span>
       <span className="text-mono text-[10px] text-muted-foreground">{team.kills}K</span>
