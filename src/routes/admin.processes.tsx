@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import {
   useAdminStore,
   addProcess,
@@ -9,7 +9,9 @@ import {
   type ProcessPov,
   type MapTiming,
 } from "@/lib/admin-store";
-import { maps as allMaps } from "@/lib/mock-match";
+import { maps as allMaps, type Team } from "@/lib/mock-match";
+import { Progress } from "@/components/ui/progress";
+import { TeamLogo } from "@/components/admin/TeamLogo";
 
 export const Route = createFileRoute("/admin/processes")({ component: ProcessesAdmin });
 
@@ -24,6 +26,61 @@ const STATUS_COLORS: Record<AnalysisProcess["status"], string> = {
 const mmss = (s: number) =>
   `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
 
+const hhmmss = (s: number) => {
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
+};
+const parseHMS = (str: string): number | null => {
+  const m = str.trim().match(/^(?:(\d+):)?(\d{1,2}):(\d{2})$/);
+  if (!m) return null;
+  const h = +(m[1] ?? 0), mm = +m[2], ss = +m[3];
+  return h * 3600 + mm * 60 + ss;
+};
+
+/** Parse a typical ALGS-style stream title + description block. */
+function parseAlgsTitle(text: string): {
+  region?: string;
+  tournamentName?: string;
+  day?: string;
+  matchup?: string;
+  timings?: { label: string; sec: number }[];
+} {
+  const out: ReturnType<typeof parseAlgsTitle> = {};
+  const region = text.match(/Region:\s*([^\n]+)/i)?.[1]?.trim();
+  const tour = text.match(/Tournament:\s*([^\n]+)/i)?.[1]?.trim();
+  const day = text.match(/Day:\s*([^\n]+)/i)?.[1]?.trim();
+  const matchup = text.match(/Matchup:\s*([^\n]+)/i)?.[1]?.trim();
+  if (region) out.region = region;
+  if (tour) out.tournamentName = tour;
+  if (day) out.day = day;
+  if (matchup) out.matchup = matchup;
+
+  // Fallback: parse from "ALGS Map POV - Americas - Split 1 - Americas Day 6 (Group B vs C) - May 3, 2026"
+  if (!region || !tour) {
+    const parts = text.split(/[-–]/).map((s) => s.trim());
+    if (parts.length >= 4) {
+      out.region ??= parts[1];
+      out.tournamentName ??= `${parts[2]} - ${parts[1]}`;
+      const dm = parts[3]?.match(/Day\s*(\d+)/i);
+      if (dm) out.day ??= dm[1];
+      const mm = text.match(/\(([^)]+)\)/);
+      if (mm) out.matchup ??= mm[1];
+    }
+  }
+
+  const timings: { label: string; sec: number }[] = [];
+  const re = /(\d{1,2}:\d{2}:\d{2})\s*[-–]\s*([^\n]+)/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) {
+    const sec = parseHMS(m[1]);
+    if (sec != null) timings.push({ label: m[2].trim(), sec });
+  }
+  if (timings.length) out.timings = timings;
+  return out;
+}
+
 /** Mock metadata fetch — derives info from URL deterministically. */
 function fetchVideoMeta(url: string): {
   title: string;
@@ -32,6 +89,10 @@ function fetchVideoMeta(url: string): {
   tournamentHint?: string;
   matchHint?: string;
   maps?: MapTiming[];
+  rawDescription?: string;
+  region?: string;
+  day?: string;
+  matchup?: string;
 } | null {
   if (!/^https?:\/\//i.test(url)) return null;
   const lower = url.toLowerCase();
@@ -41,23 +102,46 @@ function fetchVideoMeta(url: string): {
       ? "esl-pro-league-12"
       : "scrims-eu-week-4";
   const guessMatch = (lower.match(/game[-_ ]?(\d+)/)?.[1] ?? "1");
+  const mockDescription = `ALGS Map POV - Americas - Split 1 - Americas Day 6 (Group B vs C) - May 3, 2026
+
+Region: Americas
+Tournament: Split 1 - Americas
+Day: 6
+Matchup: Group B vs C
+
+Timestamps:
+00:00:00 - Pregame
+00:06:57 - Game 1
+00:34:17 - Game 2
+01:08:30 - Game 3
+01:46:45 - Game 4
+02:13:04 - Game 5
+02:41:27 - Game 6`;
+  const parsed = parseAlgsTitle(mockDescription);
+  const games = (parsed.timings ?? []).filter((t) => /game/i.test(t.label));
+  const mapsParsed: MapTiming[] = games.map((g, i) => {
+    const next = games[i + 1];
+    const end = next ? next.sec : g.sec + 1500;
+    return { mapId: allMaps[i % allMaps.length].id, startSec: g.sec, endSec: end };
+  });
   return {
-    title: `Apex Stream · auto-detected (${url.slice(-12)})`,
+    title: mockDescription.split("\n")[0],
     channel: lower.includes("twitch") ? "Twitch · Official" : "YouTube · Caster",
-    durationSec: 5400,
+    durationSec: 10800,
     tournamentHint,
     matchHint: `Game ${guessMatch}`,
-    maps: [
-      { mapId: "worlds-edge", startSec: 120, endSec: 1440 },
-      { mapId: "storm-point", startSec: 1700, endSec: 3120 },
-      { mapId: "broken-moon", startSec: 3400, endSec: 4720 },
-    ],
+    maps: mapsParsed.length ? mapsParsed : undefined,
+    rawDescription: mockDescription,
+    region: parsed.region,
+    day: parsed.day,
+    matchup: parsed.matchup,
   };
 }
 
 function ProcessesAdmin() {
   const { processes, matches, tournaments, teams } = useAdminStore();
   const [editing, setEditing] = useState<AnalysisProcess | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   // Suggestions: matches whose tournament endDate is in the past and no process exists.
   const suggestions = useMemo(() => {
@@ -81,6 +165,7 @@ function ProcessesAdmin() {
       tournamentId: tId,
       matchId: mId,
       teamId: undefined,
+      mapCount: 0,
       maps: [],
       status: "draft",
       createdAt: Date.now(),
@@ -95,13 +180,26 @@ function ProcessesAdmin() {
   const save = (run: boolean) => {
     if (!editing) return;
     const exists = processes.some((p) => p.id === editing.id);
-    const next: AnalysisProcess = { ...editing, status: run ? "queued" : editing.status };
+    const teamProgress = run
+      ? (matches.find((m) => m.id === editing.matchId)?.teamIds ?? []).slice(0, 20).map((tid) => ({
+          teamId: tid, ring: 0, start: 0, camera: 0,
+        }))
+      : editing.teamProgress;
+    const next: AnalysisProcess = { ...editing, status: run ? "queued" : editing.status, teamProgress };
     if (exists) updateProcess(editing.id, next);
     else addProcess(next);
     if (run) {
-      // Simulate processing lifecycle
       setTimeout(() => updateProcess(next.id, { status: "running" }), 600);
-      setTimeout(() => updateProcess(next.id, { status: "done" }), 3000);
+      const tick = (pct: number) => updateProcess(next.id, {
+        teamProgress: (teamProgress ?? []).map((tp, i) => ({
+          ...tp,
+          ring: Math.min(100, Math.round(pct * (0.7 + (i % 5) * 0.06))),
+          start: Math.min(100, Math.round(pct * (0.9 + (i % 3) * 0.04))),
+          camera: Math.min(100, Math.round(pct * (0.5 + (i % 7) * 0.07))),
+        })),
+      });
+      [10, 25, 40, 60, 80, 100].forEach((p, i) => setTimeout(() => tick(p), 800 + i * 500));
+      setTimeout(() => updateProcess(next.id, { status: "done" }), 4200);
     }
     setEditing(null);
   };
@@ -166,13 +264,19 @@ function ProcessesAdmin() {
               {processes.map((p) => {
                 const m = matches.find((x) => x.id === p.matchId);
                 const t = tournaments.find((x) => x.id === p.tournamentId);
+                const isOpen = expanded === p.id;
                 return (
-                  <tr key={p.id} className="border-b border-border">
+                  <Fragment key={p.id}>
+                  <tr className="border-b border-border">
                     <td className="px-3 py-2 text-xs">
                       <span className="rounded-sm border border-border bg-background px-1.5 py-0.5 text-mono uppercase">{p.pov} POV</span>
                       {p.live && <span className="ml-1 rounded-sm bg-destructive px-1.5 py-0.5 text-[10px] font-bold text-destructive-foreground">LIVE</span>}
                     </td>
-                    <td className="px-3 py-2 text-xs font-semibold">{m?.name ?? p.matchId}</td>
+                    <td className="px-3 py-2 text-xs font-semibold">
+                      <button onClick={() => setExpanded(isOpen ? null : p.id)} className="hover:text-primary">
+                        {isOpen ? "▼" : "▶"} {m?.name ?? p.matchId}
+                      </button>
+                    </td>
                     <td className="px-3 py-2 text-xs">{t?.name ?? p.tournamentId}</td>
                     <td className="px-3 py-2 text-xs text-muted-foreground truncate max-w-[260px]" title={p.streamUrl}>{p.streamUrl || "—"}</td>
                     <td className="px-3 py-2 text-mono text-[10px]">{p.maps.length}</td>
@@ -182,6 +286,14 @@ function ProcessesAdmin() {
                       <button onClick={() => { if (confirm("Delete process?")) removeProcess(p.id); }} className="text-xs text-destructive hover:underline">Delete</button>
                     </td>
                   </tr>
+                  {isOpen && (
+                    <tr className="border-b border-border bg-surface-2/40">
+                      <td colSpan={7} className="px-4 py-3">
+                        <TeamProgressList process={p} teams={teams} matchTeamIds={m?.teamIds ?? []} />
+                      </td>
+                    </tr>
+                  )}
+                  </Fragment>
                 );
               })}
             </tbody>
@@ -234,14 +346,19 @@ function ProcessEditor({
     const matchByHint = meta.matchHint
       ? matches.find((m) => m.tournamentId === tournamentId && m.name.toLowerCase().includes(meta.matchHint!.toLowerCase()))
       : undefined;
+    const maps = meta.maps ?? value.maps;
     onChange({
       ...value,
       videoTitle: meta.title,
       videoChannel: meta.channel,
       videoDurationSec: meta.durationSec,
+      region: meta.region ?? value.region,
+      day: meta.day ?? value.day,
+      matchup: meta.matchup ?? value.matchup,
       tournamentId,
       matchId: matchByHint?.id ?? value.matchId,
-      maps: meta.maps ?? value.maps,
+      maps,
+      mapCount: maps.length || value.mapCount,
     });
   };
 
@@ -295,6 +412,13 @@ function ProcessEditor({
               <div className="mt-1.5 rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-[10px] text-muted-foreground">
                 <div className="text-foreground">{value.videoTitle}</div>
                 <div>{value.videoChannel} · {value.videoDurationSec ? mmss(value.videoDurationSec) : "—"}</div>
+                {(value.region || value.day || value.matchup) && (
+                  <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
+                    {value.region && <span><span className="text-foreground/60">Region:</span> {value.region}</span>}
+                    {value.day && <span><span className="text-foreground/60">Day:</span> {value.day}</span>}
+                    {value.matchup && <span><span className="text-foreground/60">Matchup:</span> {value.matchup}</span>}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -328,15 +452,35 @@ function ProcessEditor({
           <div>
             <div className="mb-1.5 flex items-center justify-between">
               <div className="label-eyebrow text-[10px]">Map timings</div>
-              <button
-                onClick={() => onChange({ ...value, maps: [...value.maps, { mapId: allMaps[0].id, startSec: 0, endSec: 1200 }] })}
-                className="text-xs text-primary hover:underline"
-              >+ Add map</button>
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                  Maps count
+                  <input
+                    type="number"
+                    min={0}
+                    max={20}
+                    value={value.mapCount ?? value.maps.length}
+                    onChange={(e) => {
+                      const n = Math.max(0, Math.min(20, +e.target.value || 0));
+                      const next: MapTiming[] = Array.from({ length: n }, (_, i) =>
+                        value.maps[i] ?? { mapId: allMaps[i % allMaps.length].id, startSec: 0, endSec: 1200 },
+                      );
+                      onChange({ ...value, mapCount: n, maps: next });
+                    }}
+                    className="w-14 rounded-sm border border-border bg-background px-1.5 py-0.5 text-xs text-mono"
+                  />
+                </label>
+                <button
+                  onClick={() => onChange({ ...value, maps: [...value.maps, { mapId: allMaps[value.maps.length % allMaps.length].id, startSec: 0, endSec: 1200 }], mapCount: (value.mapCount ?? value.maps.length) + 1 })}
+                  className="text-xs text-primary hover:underline"
+                >+ Add</button>
+              </div>
             </div>
             <div className="space-y-1.5">
-              {value.maps.length === 0 && <div className="text-[10px] text-muted-foreground">No maps configured. Fetch metadata or add manually.</div>}
+              {value.maps.length === 0 && <div className="text-[10px] text-muted-foreground">No maps configured. Set maps count, fetch metadata, or add manually.</div>}
               {value.maps.map((mp, i) => (
                 <div key={i} className="flex items-center gap-1.5">
+                  <span className="w-6 text-[10px] text-muted-foreground text-mono">#{i + 1}</span>
                   <select
                     value={mp.mapId}
                     onChange={(e) => onChange({ ...value, maps: value.maps.map((x, j) => j === i ? { ...x, mapId: e.target.value } : x) })}
@@ -345,20 +489,27 @@ function ProcessEditor({
                     {allMaps.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
                   </select>
                   <input
-                    type="number"
-                    value={mp.startSec}
-                    onChange={(e) => onChange({ ...value, maps: value.maps.map((x, j) => j === i ? { ...x, startSec: +e.target.value } : x) })}
-                    className="w-20 rounded-sm border border-border bg-background px-2 py-1 text-xs text-mono"
-                    placeholder="start s"
+                    type="text"
+                    value={hhmmss(mp.startSec)}
+                    onChange={(e) => {
+                      const s = parseHMS(e.target.value);
+                      if (s != null) onChange({ ...value, maps: value.maps.map((x, j) => j === i ? { ...x, startSec: s } : x) });
+                    }}
+                    className="w-24 rounded-sm border border-border bg-background px-2 py-1 text-xs text-mono"
+                    placeholder="hh:mm:ss"
                   />
+                  <span className="text-[10px] text-muted-foreground">→</span>
                   <input
-                    type="number"
-                    value={mp.endSec}
-                    onChange={(e) => onChange({ ...value, maps: value.maps.map((x, j) => j === i ? { ...x, endSec: +e.target.value } : x) })}
-                    className="w-20 rounded-sm border border-border bg-background px-2 py-1 text-xs text-mono"
-                    placeholder="end s"
+                    type="text"
+                    value={hhmmss(mp.endSec)}
+                    onChange={(e) => {
+                      const s = parseHMS(e.target.value);
+                      if (s != null) onChange({ ...value, maps: value.maps.map((x, j) => j === i ? { ...x, endSec: s } : x) });
+                    }}
+                    className="w-24 rounded-sm border border-border bg-background px-2 py-1 text-xs text-mono"
+                    placeholder="hh:mm:ss"
                   />
-                  <button onClick={() => onChange({ ...value, maps: value.maps.filter((_, j) => j !== i) })} className="text-xs text-destructive">✕</button>
+                  <button onClick={() => onChange({ ...value, maps: value.maps.filter((_, j) => j !== i), mapCount: Math.max(0, (value.mapCount ?? value.maps.length) - 1) })} className="text-xs text-destructive">✕</button>
                 </div>
               ))}
             </div>
@@ -379,6 +530,56 @@ function ProcessEditor({
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function TeamProgressList({
+  process, teams, matchTeamIds,
+}: {
+  process: AnalysisProcess;
+  teams: Team[];
+  matchTeamIds: string[];
+}) {
+  const rows = (process.teamProgress && process.teamProgress.length > 0)
+    ? process.teamProgress
+    : matchTeamIds.map((tid) => ({ teamId: tid, ring: 0, start: 0, camera: 0 }));
+
+  if (rows.length === 0) {
+    return <div className="text-[10px] text-muted-foreground">No teams associated with this match.</div>;
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <div className="grid grid-cols-[1fr_repeat(3,minmax(120px,1fr))] gap-3 px-2 label-eyebrow text-[9px]">
+        <div>Team</div>
+        <div>Ring tracking</div>
+        <div>Start detection</div>
+        <div>Camera tracking</div>
+      </div>
+      {rows.map((tp) => {
+        const team = teams.find((t) => t.id === tp.teamId);
+        return (
+          <div key={tp.teamId} className="grid grid-cols-[1fr_repeat(3,minmax(120px,1fr))] items-center gap-3 rounded-sm border border-border bg-background px-2 py-1.5">
+            <div className="flex items-center gap-2 text-xs font-semibold">
+              {team && <TeamLogo team={team} size={18} />}
+              <span className="truncate">{team?.name ?? tp.teamId}</span>
+            </div>
+            <ProgressCell value={tp.ring} />
+            <ProgressCell value={tp.start} />
+            <ProgressCell value={tp.camera} />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function ProgressCell({ value }: { value: number }) {
+  return (
+    <div className="flex items-center gap-2">
+      <Progress value={value} className="h-1.5 flex-1" />
+      <span className="w-9 text-right text-mono text-[10px] text-muted-foreground">{value}%</span>
     </div>
   );
 }
