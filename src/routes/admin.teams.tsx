@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useAdminStore, setTeams } from "@/lib/admin-store";
 import type { Team } from "@/lib/mock-match";
@@ -11,6 +11,10 @@ function TeamsAdmin() {
   const navigate = useNavigate();
   const [editing, setEditing] = useState<Team | null>(null);
   const [query, setQuery] = useState("");
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  if (pathname !== "/admin/teams" && pathname !== "/admin/teams/") {
+    return <Outlet />;
+  }
 
   const today = new Date().toISOString().slice(0, 10);
   const tIndex = useMemo(() => new Map(tournaments.map((t) => [t.id, t])), [tournaments]);
