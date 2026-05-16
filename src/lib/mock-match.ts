@@ -1,9 +1,16 @@
 // Mock data for the Apex Stats Match Viewer.
 // Coordinates are normalized in [0..1] over the map viewport.
 
+import worldsEdgeImg from "@/assets/maps/worlds-edge.png";
+import kingsCanyonImg from "@/assets/maps/kings-canyon.png";
+import stormPointImg from "@/assets/maps/storm-point.png";
+import brokenMoonImg from "@/assets/maps/broken-moon.png";
+import olympusImg from "@/assets/maps/olympus.png";
+import eDistrictImg from "@/assets/maps/e-district.png";
+
 export type Tournament = { id: string; name: string };
 export type Match = { id: string; name: string; tournamentId: string; mapId: string; durationSec: number };
-export type ApexMap = { id: string; name: string };
+export type ApexMap = { id: string; name: string; image: string };
 
 export const tournaments: Tournament[] = [
   { id: "algs-2026-split-1", name: "ALGS 2026 — Split 1 Playoffs" },
@@ -12,23 +19,28 @@ export const tournaments: Tournament[] = [
 ];
 
 export const maps: ApexMap[] = [
-  { id: "worlds-edge", name: "World's Edge" },
-  { id: "kings-canyon", name: "King's Canyon" },
-  { id: "storm-point", name: "Storm Point" },
-  { id: "broken-moon", name: "Broken Moon" },
+  { id: "worlds-edge",  name: "World's Edge",  image: worldsEdgeImg },
+  { id: "kings-canyon", name: "King's Canyon", image: kingsCanyonImg },
+  { id: "storm-point",  name: "Storm Point",   image: stormPointImg },
+  { id: "broken-moon",  name: "Broken Moon",   image: brokenMoonImg },
+  { id: "olympus",      name: "Olympus",       image: olympusImg },
+  { id: "e-district",   name: "E-District",    image: eDistrictImg },
 ];
 
 export const matches: Match[] = [
   { id: "m-001", name: "Game 1 — World's Edge", tournamentId: "algs-2026-split-1", mapId: "worlds-edge", durationSec: 1320 },
-  { id: "m-002", name: "Game 2 — Storm Point", tournamentId: "algs-2026-split-1", mapId: "storm-point", durationSec: 1480 },
-  { id: "m-003", name: "Game 3 — Broken Moon", tournamentId: "algs-2026-split-1", mapId: "broken-moon", durationSec: 1190 },
+  { id: "m-002", name: "Game 2 — Storm Point",  tournamentId: "algs-2026-split-1", mapId: "storm-point", durationSec: 1480 },
+  { id: "m-003", name: "Game 3 — Broken Moon",  tournamentId: "algs-2026-split-1", mapId: "broken-moon", durationSec: 1190 },
+  { id: "m-004", name: "Game 4 — E-District",   tournamentId: "algs-2026-split-1", mapId: "e-district",  durationSec: 1260 },
+  { id: "m-005", name: "Game 5 — Olympus",      tournamentId: "esl-pro-league-12", mapId: "olympus",     durationSec: 1400 },
+  { id: "m-006", name: "Game 6 — King's Canyon",tournamentId: "esl-pro-league-12", mapId: "kings-canyon",durationSec: 1320 },
 ];
 
 export type Team = {
   id: string;
   tag: string;
   name: string;
-  color: string; // hex
+  color: string;
   players: string[];
   placement: number;
   kills: number;
@@ -36,21 +48,28 @@ export type Team = {
 };
 
 export const teams: Team[] = [
-  { id: "t-tsm",  tag: "TSM",  name: "TSM",            color: "#ff5b12", players: ["ImperialHal", "Verhulst", "Reps"],     placement: 1, kills: 11, alive: true },
-  { id: "t-drg",  tag: "DRG",  name: "DarkZero",       color: "#22c4f5", players: ["Zer0", "Gild", "Sharky"],               placement: 2, kills: 9,  alive: true },
-  { id: "t-noc",  tag: "NOC",  name: "NRG",            color: "#ffd23f", players: ["Sweet", "Gent", "nafen"],               placement: 3, kills: 7,  alive: true },
-  { id: "t-c9",   tag: "C9",   name: "Cloud9",         color: "#a78bfa", players: ["Wxltzy", "Genburten", "Mande"],         placement: 5, kills: 6,  alive: true },
-  { id: "t-fa",   tag: "FA",   name: "Furia",          color: "#f87171", players: ["Pandxrz", "Albralelie", "Rambeau"],     placement: 8, kills: 4,  alive: false },
-  { id: "t-lg",   tag: "LG",   name: "Luminosity",     color: "#34d399", players: ["Knoqd", "Monsoon", "Lou"],              placement: 11, kills: 5, alive: false },
-  { id: "t-flq",  tag: "FLQ",  name: "FaZe Clan",      color: "#fb923c", players: ["Sikezz", "rpr", "Snip3down"],           placement: 6, kills: 3,  alive: true },
-  { id: "t-100t", tag: "100T", name: "100 Thieves",    color: "#fde68a", players: ["Pandxrz", "Senoxe", "Keon"],            placement: 14, kills: 2, alive: false },
-  { id: "t-sen",  tag: "SEN",  name: "Sentinels",      color: "#e879f9", players: ["Naghz", "Zenoo", "Ojrein"],             placement: 4, kills: 8,  alive: true },
-  { id: "t-tl",   tag: "TL",   name: "Team Liquid",    color: "#60a5fa", players: ["Hakis", "Yuki", "Keon"],                placement: 7, kills: 5,  alive: true },
-  { id: "t-mv",   tag: "MV",   name: "Moist Esports",  color: "#86efac", players: ["Xeratricky", "Frexs", "Effect"],        placement: 9, kills: 3,  alive: true },
-  { id: "t-ofg",  tag: "OFG",  name: "Oxygen",         color: "#fca5a5", players: ["Sweetdreams", "Reptar", "rkn"],         placement: 13, kills: 1, alive: false },
+  { id: "t-tsm",  tag: "TSM",  name: "TSM",            color: "#ff5b12", players: ["ImperialHal", "Verhulst", "Reps"],     placement: 1,  kills: 11, alive: true  },
+  { id: "t-drg",  tag: "DZ",   name: "DarkZero",       color: "#22c4f5", players: ["Zer0", "Gild", "Sharky"],              placement: 2,  kills: 9,  alive: true  },
+  { id: "t-nrg",  tag: "NRG",  name: "NRG",            color: "#ffd23f", players: ["Sweet", "Gent", "nafen"],              placement: 3,  kills: 7,  alive: true  },
+  { id: "t-sen",  tag: "SEN",  name: "Sentinels",      color: "#e879f9", players: ["Naghz", "Zenoo", "Ojrein"],            placement: 4,  kills: 8,  alive: true  },
+  { id: "t-c9",   tag: "C9",   name: "Cloud9",         color: "#a78bfa", players: ["Wxltzy", "Genburten", "Mande"],        placement: 5,  kills: 6,  alive: true  },
+  { id: "t-faze", tag: "FAZE", name: "FaZe Clan",      color: "#fb923c", players: ["Sikezz", "rpr", "Snip3down"],          placement: 6,  kills: 3,  alive: true  },
+  { id: "t-tl",   tag: "TL",   name: "Team Liquid",    color: "#60a5fa", players: ["Hakis", "Yuki", "Keon"],               placement: 7,  kills: 5,  alive: true  },
+  { id: "t-fa",   tag: "FA",   name: "Furia",          color: "#f87171", players: ["Pandxrz", "Albralelie", "Rambeau"],    placement: 8,  kills: 4,  alive: true  },
+  { id: "t-mv",   tag: "MV",   name: "Moist Esports",  color: "#86efac", players: ["Xeratricky", "Frexs", "Effect"],       placement: 9,  kills: 3,  alive: true  },
+  { id: "t-aw",   tag: "AW",   name: "Alliance",       color: "#38bdf8", players: ["Vaifs", "Reptar", "Yuki"],             placement: 10, kills: 4,  alive: true  },
+  { id: "t-lg",   tag: "LG",   name: "Luminosity",     color: "#34d399", players: ["Knoqd", "Monsoon", "Lou"],             placement: 11, kills: 5,  alive: false },
+  { id: "t-vk",   tag: "VK",   name: "Vexed Gaming",   color: "#facc15", players: ["Taisheen", "rynnv", "Bjornfot"],       placement: 12, kills: 4,  alive: false },
+  { id: "t-ofg",  tag: "OXG",  name: "Oxygen",         color: "#fca5a5", players: ["Sweetdreams", "Reptar", "rkn"],        placement: 13, kills: 1,  alive: false },
+  { id: "t-100t", tag: "100T", name: "100 Thieves",    color: "#fde68a", players: ["Pandxrz", "Senoxe", "Keon"],           placement: 14, kills: 2,  alive: false },
+  { id: "t-ssg",  tag: "SSG",  name: "Spacestation",   color: "#22d3ee", players: ["Frexs", "RamBeau", "noiizyy"],         placement: 15, kills: 3,  alive: false },
+  { id: "t-dz2",  tag: "ROC",  name: "Rocket",         color: "#f472b6", players: ["Cl0udyy", "Pioneer", "Ulvi"],          placement: 16, kills: 2,  alive: false },
+  { id: "t-eg",   tag: "EG",   name: "Evil Geniuses",  color: "#84cc16", players: ["Dropped", "Ras", "Snowy"],             placement: 17, kills: 2,  alive: false },
+  { id: "t-aft",  tag: "AFT",  name: "Aftershock",     color: "#c084fc", players: ["LamoBro", "Xera", "Zac"],              placement: 18, kills: 1,  alive: false },
+  { id: "t-ssg2", tag: "WTL",  name: "Wettle",         color: "#fb7185", players: ["Wettle", "Garrik", "Pollen"],          placement: 19, kills: 0,  alive: false },
+  { id: "t-xyz",  tag: "XYZ",  name: "Crazy Raccoon",  color: "#5eead4", players: ["MatuFps", "Suzaku", "Ryotsu"],         placement: 20, kills: 1,  alive: false },
 ];
 
-// Generate a deterministic trajectory per team across the map.
 function seedRand(seed: number) {
   let s = seed;
   return () => {
@@ -68,7 +87,7 @@ export function generateTrajectory(seed: number, durationSec: number): Trajector
   let y = 0.15 + rnd() * 0.7;
   let vx = (rnd() - 0.5) * 0.01;
   let vy = (rnd() - 0.5) * 0.01;
-  const step = 6; // seconds
+  const step = 6;
   for (let t = 0; t <= durationSec; t += step) {
     vx += (rnd() - 0.5) * 0.006;
     vy += (rnd() - 0.5) * 0.006;
@@ -76,7 +95,6 @@ export function generateTrajectory(seed: number, durationSec: number): Trajector
     vy = Math.max(-0.012, Math.min(0.012, vy));
     x += vx;
     y += vy;
-    // shrink toward center over time (ring effect)
     const ringPull = 0.0009 * (t / durationSec);
     x += (0.5 - x) * ringPull;
     y += (0.5 - y) * ringPull;
@@ -106,15 +124,15 @@ export type GameEvent = {
 
 export const events: GameEvent[] = [
   { t: 38,   type: "ring",  label: "Ring 1 closing" },
-  { t: 142,  type: "kill",  team: "TSM",  label: "TSM eliminates OFG player" },
-  { t: 215,  type: "knock", team: "DRG",  label: "DRG knock on C9" },
+  { t: 142,  type: "kill",  team: "TSM",  label: "TSM eliminates OXG player" },
+  { t: 215,  type: "knock", team: "DZ",   label: "DarkZero knock on C9" },
   { t: 260,  type: "ring",  label: "Ring 2 closing" },
   { t: 388,  type: "wipe",  team: "TSM",  label: "TSM wipes 100T" },
   { t: 510,  type: "care",  label: "Care package dropped" },
   { t: 612,  type: "kill",  team: "SEN",  label: "Sentinels triple kill" },
   { t: 730,  type: "ring",  label: "Ring 3 closing" },
-  { t: 845,  type: "wipe",  team: "DRG",  label: "DRG wipes FA" },
-  { t: 980,  type: "kill",  team: "NOC",  label: "NRG eliminates LG" },
+  { t: 845,  type: "wipe",  team: "DZ",   label: "DarkZero wipes FA" },
+  { t: 980,  type: "kill",  team: "NRG",  label: "NRG eliminates LG" },
   { t: 1080, type: "ring",  label: "Ring 4 closing" },
   { t: 1210, type: "wipe",  team: "TSM",  label: "TSM wipes MV — endgame" },
 ];
