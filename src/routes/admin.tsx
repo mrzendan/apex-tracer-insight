@@ -20,12 +20,20 @@ const toolItems: NavItem[] = [
   { to: "/admin/minimap",  label: "Minimap",  hint: "Minimap detection" },
 ];
 
+const planningItems: NavItem[] = [
+  { to: "/admin/planning/architecture", label: "Architecture", hint: "Project diagrams" },
+  { to: "/admin/planning/database",     label: "Database",     hint: "Schema & ER diagrams" },
+  { to: "/admin/planning/slides",       label: "Slides",       hint: "Presentation deck" },
+];
+
 function AdminLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const dataActive = dataItems.some((i) => pathname.startsWith(i.to));
   const toolsActive = toolItems.some((i) => pathname.startsWith(i.to));
+  const planningActive = planningItems.some((i) => pathname.startsWith(i.to));
   const [openData, setOpenData] = useState<boolean>(true);
   const [openTools, setOpenTools] = useState<boolean>(true);
+  const [openPlanning, setOpenPlanning] = useState<boolean>(true);
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
@@ -68,6 +76,14 @@ function AdminLayout() {
             open={openTools || toolsActive}
             onToggle={() => setOpenTools((v) => !v)}
             items={toolItems}
+          />
+
+          <NavGroup
+            label="Planning"
+            count={planningItems.length}
+            open={openPlanning || planningActive}
+            onToggle={() => setOpenPlanning((v) => !v)}
+            items={planningItems}
           />
         </nav>
 
