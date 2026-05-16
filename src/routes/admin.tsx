@@ -32,7 +32,7 @@ function AdminLayout() {
     <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
       <aside className="flex w-[240px] shrink-0 flex-col border-r border-border bg-surface">
         <Link to="/" className="flex h-14 shrink-0 items-center gap-2.5 border-b border-border px-4">
-          <div className="flex h-7 w-7 items-center justify-center rounded-sm bg-primary text-primary-foreground">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm bg-primary text-primary-foreground">
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.5}>
               <path d="M12 3 L21 20 H3 Z" />
             </svg>
