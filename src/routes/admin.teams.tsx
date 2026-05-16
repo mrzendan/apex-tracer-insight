@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useAdminStore, setTeams } from "@/lib/admin-store";
 import type { Team } from "@/lib/mock-match";
 import { TeamLogo } from "@/components/admin/TeamLogo";
@@ -17,7 +17,7 @@ function TeamsAdmin() {
   }
 
   const today = new Date().toISOString().slice(0, 10);
-  const tIndex = useMemo(() => new Map(tournaments.map((t) => [t.id, t])), [tournaments]);
+  const tIndex = new Map(tournaments.map((t) => [t.id, t]));
 
   function teamSchedule(teamId: string) {
     const ms = matches.filter((m) => m.teamIds?.includes(teamId));
