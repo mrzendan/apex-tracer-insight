@@ -1,14 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Fragment, useState } from "react";
 import {
   tournaments as seedT,
-  matches as seedM,
   maps as seedMaps,
-  teams as seedTeams,
   type Tournament,
   type TournamentType,
   type TournamentRegion,
 } from "@/lib/mock-match";
+import { useAdminStore } from "@/lib/admin-store";
+import { TeamLogo } from "@/components/admin/TeamLogo";
 
 export const Route = createFileRoute("/admin/tournaments")({ component: TournamentsAdmin });
 
@@ -25,6 +25,7 @@ function fmtRange(a: string, b: string) {
 }
 
 function TournamentsAdmin() {
+  const { matches: allMatches, teams: allTeams } = useAdminStore();
   const [rows, setRows] = useState<Tournament[]>(seedT);
   const [editing, setEditing] = useState<Tournament | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -84,9 +85,13 @@ function TournamentsAdmin() {
             <tbody>
               {rows.map((row) => {
                 const isOpen = expandedId === row.id;
-                const tMatches = seedM.filter((m) => m.tournamentId === row.id);
+                const tMatches = allMatches.filter((m) => m.tournamentId === row.id);
                 const tMapIds = Array.from(new Set(tMatches.map((m) => m.mapId)));
                 const tMaps = tMapIds.map((id) => seedMaps.find((mp) => mp.id === id)).filter(Boolean) as typeof seedMaps;
+                const tTeamIds = Array.from(new Set(tMatches.flatMap((m) => m.teamIds ?? [])));
+                const tTeams = (tTeamIds.length ? tTeamIds : allTeams.map((t) => t.id))
+                  .map((id) => allTeams.find((t) => t.id === id))
+                  .filter(Boolean) as typeof allTeams;
                 return (
                   <Fragment key={row.id}>
                     <tr
@@ -118,9 +123,15 @@ function TournamentsAdmin() {
                                   {tMatches.map((m) => {
                                     const mp = seedMaps.find((x) => x.id === m.mapId);
                                     return (
-                                      <li key={m.id} className="flex items-center justify-between rounded-sm border border-border bg-surface px-2 py-1.5 text-xs">
-                                        <span className="font-semibold">{m.name}</span>
-                                        <span className="text-muted-foreground">{mp?.name ?? m.mapId}</span>
+                                      <li key={m.id}>
+                                        <Link
+                                          to={"/admin/matches/$matchId" as "/admin/matches"}
+                                          params={{ matchId: m.id } as never}
+                                          className="flex items-center justify-between rounded-sm border border-border bg-surface px-2 py-1.5 text-xs hover:bg-muted"
+                                        >
+                                          <span className="font-semibold">{m.name}</span>
+                                          <span className="text-muted-foreground">{mp?.name ?? m.mapId}</span>
+                                        </Link>
                                       </li>
                                     );
                                   })}
@@ -128,17 +139,19 @@ function TournamentsAdmin() {
                               )}
                             </Panel>
 
-                            <Panel title={`Teams (${seedTeams.length})`}>
+                            <Panel title={`Teams (${tTeams.length})`}>
                               <ul className="grid grid-cols-2 gap-1">
-                                {seedTeams.map((t) => (
-                                  <li key={t.id} className="flex items-center gap-2 rounded-sm border border-border bg-surface px-2 py-1.5 text-xs">
-                                    <span
-                                      className="text-mono flex h-6 w-8 items-center justify-center rounded-sm text-[10px] font-bold text-black"
-                                      style={{ background: t.color }}
+                                {tTeams.map((t) => (
+                                  <li key={t.id}>
+                                    <Link
+                                      to="/admin/teams/$teamId"
+                                      params={{ teamId: t.id }}
+                                      className="flex items-center gap-2 rounded-sm border border-border bg-surface px-2 py-1.5 text-xs hover:bg-muted"
                                     >
-                                      {t.tag}
-                                    </span>
-                                    <span className="truncate">{t.name}</span>
+                                      <TeamLogo team={t} size={22} />
+                                      <span className="text-mono text-[10px] font-bold">{t.tag}</span>
+                                      <span className="truncate">{t.name}</span>
+                                    </Link>
                                   </li>
                                 ))}
                               </ul>
