@@ -22,6 +22,7 @@ import { Route as AdminMapsRouteImport } from './routes/admin.maps'
 import { Route as AdminHsvRouteImport } from './routes/admin.hsv'
 import { Route as AdminCameraRouteImport } from './routes/admin.camera'
 import { Route as AdminTeamsTeamIdRouteImport } from './routes/admin.teams.$teamId'
+import { Route as AdminPlanningDatabaseRouteImport } from './routes/admin.planning.database'
 import { Route as AdminPlanningArchitectureRouteImport } from './routes/admin.planning.architecture'
 import { Route as AdminMatchesMatchIdRouteImport } from './routes/admin.matches.$matchId'
 
@@ -90,6 +91,11 @@ const AdminTeamsTeamIdRoute = AdminTeamsTeamIdRouteImport.update({
   path: '/$teamId',
   getParentRoute: () => AdminTeamsRoute,
 } as any)
+const AdminPlanningDatabaseRoute = AdminPlanningDatabaseRouteImport.update({
+  id: '/planning/database',
+  path: '/planning/database',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminPlanningArchitectureRoute =
   AdminPlanningArchitectureRouteImport.update({
     id: '/planning/architecture',
@@ -117,6 +123,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/admin/matches/$matchId': typeof AdminMatchesMatchIdRoute
   '/admin/planning/architecture': typeof AdminPlanningArchitectureRoute
+  '/admin/planning/database': typeof AdminPlanningDatabaseRoute
   '/admin/teams/$teamId': typeof AdminTeamsTeamIdRoute
 }
 export interface FileRoutesByTo {
@@ -133,6 +140,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/admin/matches/$matchId': typeof AdminMatchesMatchIdRoute
   '/admin/planning/architecture': typeof AdminPlanningArchitectureRoute
+  '/admin/planning/database': typeof AdminPlanningDatabaseRoute
   '/admin/teams/$teamId': typeof AdminTeamsTeamIdRoute
 }
 export interface FileRoutesById {
@@ -151,6 +159,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/admin/matches/$matchId': typeof AdminMatchesMatchIdRoute
   '/admin/planning/architecture': typeof AdminPlanningArchitectureRoute
+  '/admin/planning/database': typeof AdminPlanningDatabaseRoute
   '/admin/teams/$teamId': typeof AdminTeamsTeamIdRoute
 }
 export interface FileRouteTypes {
@@ -170,6 +179,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/admin/matches/$matchId'
     | '/admin/planning/architecture'
+    | '/admin/planning/database'
     | '/admin/teams/$teamId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -186,6 +196,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin/matches/$matchId'
     | '/admin/planning/architecture'
+    | '/admin/planning/database'
     | '/admin/teams/$teamId'
   id:
     | '__root__'
@@ -203,6 +214,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/admin/matches/$matchId'
     | '/admin/planning/architecture'
+    | '/admin/planning/database'
     | '/admin/teams/$teamId'
   fileRoutesById: FileRoutesById
 }
@@ -304,6 +316,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTeamsTeamIdRouteImport
       parentRoute: typeof AdminTeamsRoute
     }
+    '/admin/planning/database': {
+      id: '/admin/planning/database'
+      path: '/planning/database'
+      fullPath: '/admin/planning/database'
+      preLoaderRoute: typeof AdminPlanningDatabaseRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/planning/architecture': {
       id: '/admin/planning/architecture'
       path: '/planning/architecture'
@@ -357,6 +376,7 @@ interface AdminRouteChildren {
   AdminZonesRoute: typeof AdminZonesRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminPlanningArchitectureRoute: typeof AdminPlanningArchitectureRoute
+  AdminPlanningDatabaseRoute: typeof AdminPlanningDatabaseRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
@@ -371,6 +391,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminZonesRoute: AdminZonesRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminPlanningArchitectureRoute: AdminPlanningArchitectureRoute,
+  AdminPlanningDatabaseRoute: AdminPlanningDatabaseRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
@@ -382,3 +403,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
