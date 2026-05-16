@@ -22,6 +22,9 @@ import { Route as AdminMapsRouteImport } from './routes/admin.maps'
 import { Route as AdminHsvRouteImport } from './routes/admin.hsv'
 import { Route as AdminCameraRouteImport } from './routes/admin.camera'
 import { Route as AdminTeamsTeamIdRouteImport } from './routes/admin.teams.$teamId'
+import { Route as AdminPlanningSlidesRouteImport } from './routes/admin.planning.slides'
+import { Route as AdminPlanningDatabaseRouteImport } from './routes/admin.planning.database'
+import { Route as AdminPlanningArchitectureRouteImport } from './routes/admin.planning.architecture'
 import { Route as AdminMatchesMatchIdRouteImport } from './routes/admin.matches.$matchId'
 
 const AdminRoute = AdminRouteImport.update({
@@ -89,6 +92,22 @@ const AdminTeamsTeamIdRoute = AdminTeamsTeamIdRouteImport.update({
   path: '/$teamId',
   getParentRoute: () => AdminTeamsRoute,
 } as any)
+const AdminPlanningSlidesRoute = AdminPlanningSlidesRouteImport.update({
+  id: '/planning/slides',
+  path: '/planning/slides',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPlanningDatabaseRoute = AdminPlanningDatabaseRouteImport.update({
+  id: '/planning/database',
+  path: '/planning/database',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPlanningArchitectureRoute =
+  AdminPlanningArchitectureRouteImport.update({
+    id: '/planning/architecture',
+    path: '/planning/architecture',
+    getParentRoute: () => AdminRoute,
+  } as any)
 const AdminMatchesMatchIdRoute = AdminMatchesMatchIdRouteImport.update({
   id: '/$matchId',
   path: '/$matchId',
@@ -109,6 +128,9 @@ export interface FileRoutesByFullPath {
   '/admin/zones': typeof AdminZonesRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/matches/$matchId': typeof AdminMatchesMatchIdRoute
+  '/admin/planning/architecture': typeof AdminPlanningArchitectureRoute
+  '/admin/planning/database': typeof AdminPlanningDatabaseRoute
+  '/admin/planning/slides': typeof AdminPlanningSlidesRoute
   '/admin/teams/$teamId': typeof AdminTeamsTeamIdRoute
 }
 export interface FileRoutesByTo {
@@ -124,6 +146,9 @@ export interface FileRoutesByTo {
   '/admin/zones': typeof AdminZonesRoute
   '/admin': typeof AdminIndexRoute
   '/admin/matches/$matchId': typeof AdminMatchesMatchIdRoute
+  '/admin/planning/architecture': typeof AdminPlanningArchitectureRoute
+  '/admin/planning/database': typeof AdminPlanningDatabaseRoute
+  '/admin/planning/slides': typeof AdminPlanningSlidesRoute
   '/admin/teams/$teamId': typeof AdminTeamsTeamIdRoute
 }
 export interface FileRoutesById {
@@ -141,6 +166,9 @@ export interface FileRoutesById {
   '/admin/zones': typeof AdminZonesRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/matches/$matchId': typeof AdminMatchesMatchIdRoute
+  '/admin/planning/architecture': typeof AdminPlanningArchitectureRoute
+  '/admin/planning/database': typeof AdminPlanningDatabaseRoute
+  '/admin/planning/slides': typeof AdminPlanningSlidesRoute
   '/admin/teams/$teamId': typeof AdminTeamsTeamIdRoute
 }
 export interface FileRouteTypes {
@@ -159,6 +187,9 @@ export interface FileRouteTypes {
     | '/admin/zones'
     | '/admin/'
     | '/admin/matches/$matchId'
+    | '/admin/planning/architecture'
+    | '/admin/planning/database'
+    | '/admin/planning/slides'
     | '/admin/teams/$teamId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -174,6 +205,9 @@ export interface FileRouteTypes {
     | '/admin/zones'
     | '/admin'
     | '/admin/matches/$matchId'
+    | '/admin/planning/architecture'
+    | '/admin/planning/database'
+    | '/admin/planning/slides'
     | '/admin/teams/$teamId'
   id:
     | '__root__'
@@ -190,6 +224,9 @@ export interface FileRouteTypes {
     | '/admin/zones'
     | '/admin/'
     | '/admin/matches/$matchId'
+    | '/admin/planning/architecture'
+    | '/admin/planning/database'
+    | '/admin/planning/slides'
     | '/admin/teams/$teamId'
   fileRoutesById: FileRoutesById
 }
@@ -291,6 +328,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTeamsTeamIdRouteImport
       parentRoute: typeof AdminTeamsRoute
     }
+    '/admin/planning/slides': {
+      id: '/admin/planning/slides'
+      path: '/planning/slides'
+      fullPath: '/admin/planning/slides'
+      preLoaderRoute: typeof AdminPlanningSlidesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/planning/database': {
+      id: '/admin/planning/database'
+      path: '/planning/database'
+      fullPath: '/admin/planning/database'
+      preLoaderRoute: typeof AdminPlanningDatabaseRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/planning/architecture': {
+      id: '/admin/planning/architecture'
+      path: '/planning/architecture'
+      fullPath: '/admin/planning/architecture'
+      preLoaderRoute: typeof AdminPlanningArchitectureRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/matches/$matchId': {
       id: '/admin/matches/$matchId'
       path: '/$matchId'
@@ -336,6 +394,9 @@ interface AdminRouteChildren {
   AdminTournamentsRoute: typeof AdminTournamentsRoute
   AdminZonesRoute: typeof AdminZonesRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminPlanningArchitectureRoute: typeof AdminPlanningArchitectureRoute
+  AdminPlanningDatabaseRoute: typeof AdminPlanningDatabaseRoute
+  AdminPlanningSlidesRoute: typeof AdminPlanningSlidesRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
@@ -349,6 +410,9 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminTournamentsRoute: AdminTournamentsRoute,
   AdminZonesRoute: AdminZonesRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminPlanningArchitectureRoute: AdminPlanningArchitectureRoute,
+  AdminPlanningDatabaseRoute: AdminPlanningDatabaseRoute,
+  AdminPlanningSlidesRoute: AdminPlanningSlidesRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
