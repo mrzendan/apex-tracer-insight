@@ -22,6 +22,25 @@ export type ZoneTag = "team" | "camera" | "minimap" | "timer" | "map_name";
 export type Zone = { id: string; name: string; tag: ZoneTag; x: number; y: number; w: number; h: number };
 export type ZoneMode = "vod" | "camera";
 
+export type ProcessPov = "map" | "team";
+export type ProcessStatus = "draft" | "queued" | "running" | "done" | "failed";
+export type MapTiming = { mapId: string; startSec: number; endSec: number };
+export type AnalysisProcess = {
+  id: string;
+  pov: ProcessPov;
+  live: boolean;
+  streamUrl: string;
+  videoTitle?: string;
+  videoChannel?: string;
+  videoDurationSec?: number;
+  tournamentId: string;
+  matchId: string;
+  teamId?: string;
+  maps: MapTiming[];
+  status: ProcessStatus;
+  createdAt: number;
+};
+
 const initialVod: Zone[] = [
   { id: "v-minimap",  name: "Minimap",    tag: "minimap",  x: 20,   y: 30,   w: 320, h: 320 },
   { id: "v-map-name", name: "Map name",   tag: "map_name", x: 360,  y: 170,  w: 380, h: 80  },
@@ -41,6 +60,7 @@ type State = {
   tournaments: Tournament[];
   polygons: Polygon[];
   zones: { vod: Zone[]; camera: Zone[] };
+  processes: AnalysisProcess[];
 };
 
 // Seed: assign default teamIds to each match (rotate 20 teams as participants).
@@ -58,6 +78,7 @@ let state: State = {
   tournaments: seedTournaments,
   polygons: [],
   zones: { vod: initialVod, camera: initialCamera },
+  processes: [],
 };
 
 const listeners = new Set<() => void>();
@@ -127,4 +148,20 @@ export function setZones(mode: ZoneMode, zones: Zone[]) {
 }
 export function getMinimapZone(mode: ZoneMode = "vod"): Zone | undefined {
   return state.zones[mode].find((z) => z.tag === "minimap");
+}
+
+export function addProcess(p: AnalysisProcess) {
+  state = { ...state, processes: [p, ...state.processes] };
+  emit();
+}
+export function updateProcess(id: string, patch: Partial<AnalysisProcess>) {
+  state = {
+    ...state,
+    processes: state.processes.map((p) => (p.id === id ? { ...p, ...patch } : p)),
+  };
+  emit();
+}
+export function removeProcess(id: string) {
+  state = { ...state, processes: state.processes.filter((p) => p.id !== id) };
+  emit();
 }
