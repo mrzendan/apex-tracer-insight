@@ -13,9 +13,12 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminZonesRouteImport } from './routes/admin.zones'
+import { Route as AdminTournamentsRouteImport } from './routes/admin.tournaments'
+import { Route as AdminTeamsRouteImport } from './routes/admin.teams'
 import { Route as AdminPolygonsRouteImport } from './routes/admin.polygons'
 import { Route as AdminMinimapRouteImport } from './routes/admin.minimap'
 import { Route as AdminMatchesRouteImport } from './routes/admin.matches'
+import { Route as AdminMapsRouteImport } from './routes/admin.maps'
 import { Route as AdminHsvRouteImport } from './routes/admin.hsv'
 import { Route as AdminCameraRouteImport } from './routes/admin.camera'
 
@@ -39,6 +42,16 @@ const AdminZonesRoute = AdminZonesRouteImport.update({
   path: '/zones',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminTournamentsRoute = AdminTournamentsRouteImport.update({
+  id: '/tournaments',
+  path: '/tournaments',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminTeamsRoute = AdminTeamsRouteImport.update({
+  id: '/teams',
+  path: '/teams',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminPolygonsRoute = AdminPolygonsRouteImport.update({
   id: '/polygons',
   path: '/polygons',
@@ -52,6 +65,11 @@ const AdminMinimapRoute = AdminMinimapRouteImport.update({
 const AdminMatchesRoute = AdminMatchesRouteImport.update({
   id: '/matches',
   path: '/matches',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMapsRoute = AdminMapsRouteImport.update({
+  id: '/maps',
+  path: '/maps',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminHsvRoute = AdminHsvRouteImport.update({
@@ -70,9 +88,12 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/admin/camera': typeof AdminCameraRoute
   '/admin/hsv': typeof AdminHsvRoute
+  '/admin/maps': typeof AdminMapsRoute
   '/admin/matches': typeof AdminMatchesRoute
   '/admin/minimap': typeof AdminMinimapRoute
   '/admin/polygons': typeof AdminPolygonsRoute
+  '/admin/teams': typeof AdminTeamsRoute
+  '/admin/tournaments': typeof AdminTournamentsRoute
   '/admin/zones': typeof AdminZonesRoute
   '/admin/': typeof AdminIndexRoute
 }
@@ -80,9 +101,12 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin/camera': typeof AdminCameraRoute
   '/admin/hsv': typeof AdminHsvRoute
+  '/admin/maps': typeof AdminMapsRoute
   '/admin/matches': typeof AdminMatchesRoute
   '/admin/minimap': typeof AdminMinimapRoute
   '/admin/polygons': typeof AdminPolygonsRoute
+  '/admin/teams': typeof AdminTeamsRoute
+  '/admin/tournaments': typeof AdminTournamentsRoute
   '/admin/zones': typeof AdminZonesRoute
   '/admin': typeof AdminIndexRoute
 }
@@ -92,9 +116,12 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/admin/camera': typeof AdminCameraRoute
   '/admin/hsv': typeof AdminHsvRoute
+  '/admin/maps': typeof AdminMapsRoute
   '/admin/matches': typeof AdminMatchesRoute
   '/admin/minimap': typeof AdminMinimapRoute
   '/admin/polygons': typeof AdminPolygonsRoute
+  '/admin/teams': typeof AdminTeamsRoute
+  '/admin/tournaments': typeof AdminTournamentsRoute
   '/admin/zones': typeof AdminZonesRoute
   '/admin/': typeof AdminIndexRoute
 }
@@ -105,9 +132,12 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin/camera'
     | '/admin/hsv'
+    | '/admin/maps'
     | '/admin/matches'
     | '/admin/minimap'
     | '/admin/polygons'
+    | '/admin/teams'
+    | '/admin/tournaments'
     | '/admin/zones'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
@@ -115,9 +145,12 @@ export interface FileRouteTypes {
     | '/'
     | '/admin/camera'
     | '/admin/hsv'
+    | '/admin/maps'
     | '/admin/matches'
     | '/admin/minimap'
     | '/admin/polygons'
+    | '/admin/teams'
+    | '/admin/tournaments'
     | '/admin/zones'
     | '/admin'
   id:
@@ -126,9 +159,12 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin/camera'
     | '/admin/hsv'
+    | '/admin/maps'
     | '/admin/matches'
     | '/admin/minimap'
     | '/admin/polygons'
+    | '/admin/teams'
+    | '/admin/tournaments'
     | '/admin/zones'
     | '/admin/'
   fileRoutesById: FileRoutesById
@@ -168,6 +204,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminZonesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/tournaments': {
+      id: '/admin/tournaments'
+      path: '/tournaments'
+      fullPath: '/admin/tournaments'
+      preLoaderRoute: typeof AdminTournamentsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/teams': {
+      id: '/admin/teams'
+      path: '/teams'
+      fullPath: '/admin/teams'
+      preLoaderRoute: typeof AdminTeamsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/polygons': {
       id: '/admin/polygons'
       path: '/polygons'
@@ -187,6 +237,13 @@ declare module '@tanstack/react-router' {
       path: '/matches'
       fullPath: '/admin/matches'
       preLoaderRoute: typeof AdminMatchesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/maps': {
+      id: '/admin/maps'
+      path: '/maps'
+      fullPath: '/admin/maps'
+      preLoaderRoute: typeof AdminMapsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/hsv': {
@@ -209,9 +266,12 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminCameraRoute: typeof AdminCameraRoute
   AdminHsvRoute: typeof AdminHsvRoute
+  AdminMapsRoute: typeof AdminMapsRoute
   AdminMatchesRoute: typeof AdminMatchesRoute
   AdminMinimapRoute: typeof AdminMinimapRoute
   AdminPolygonsRoute: typeof AdminPolygonsRoute
+  AdminTeamsRoute: typeof AdminTeamsRoute
+  AdminTournamentsRoute: typeof AdminTournamentsRoute
   AdminZonesRoute: typeof AdminZonesRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
@@ -219,9 +279,12 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminCameraRoute: AdminCameraRoute,
   AdminHsvRoute: AdminHsvRoute,
+  AdminMapsRoute: AdminMapsRoute,
   AdminMatchesRoute: AdminMatchesRoute,
   AdminMinimapRoute: AdminMinimapRoute,
   AdminPolygonsRoute: AdminPolygonsRoute,
+  AdminTeamsRoute: AdminTeamsRoute,
+  AdminTournamentsRoute: AdminTournamentsRoute,
   AdminZonesRoute: AdminZonesRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
