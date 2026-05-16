@@ -37,11 +37,61 @@ function MatchViewer() {
   const [showTrails, setShowTrails] = useState(true);
   const [showRing, setShowRing] = useState(true);
   const [showLabels, setShowLabels] = useState(true);
+  const [showConfig, setShowConfig] = useState(false);
+  const [cfg, setCfg] = useState({
+    trailWidth: 2,
+    labelSize: 22,
+    labelBg: 0.78,
+    dwellWindow: 40,    // seconds
+    dwellRadius: 0.04,  // normalized
+  });
 
   const trajectories = useMemo(
     () => Object.fromEntries(teams.map((t, i) => [t.id, generateTrajectory(i + 7, match.durationSec)])),
     [match.durationSec],
   );
+
+  /** Detect dwell clusters per team: contiguous windows of >= dwellWindow seconds
+   *  where all points stay within dwellRadius of the window's mean position. */
+  const dwellsByTeam = useMemo(() => {
+    const out: Record<string, { x: number; y: number; tStart: number; tEnd: number }[]> = {};
+    for (const team of teams) {
+      const pts = trajectories[team.id];
+      if (!pts) { out[team.id] = []; continue; }
+      const dwells: { x: number; y: number; tStart: number; tEnd: number }[] = [];
+      let i = 0;
+      while (i < pts.length) {
+        let sumX = pts[i].x, sumY = pts[i].y;
+        let j = i + 1;
+        while (j < pts.length) {
+          const n = j - i + 1;
+          const mx = (sumX + pts[j].x) / n;
+          const my = (sumY + pts[j].y) / n;
+          let ok = true;
+          for (let k = i; k <= j; k++) {
+            const dx = pts[k].x - mx, dy = pts[k].y - my;
+            if (dx * dx + dy * dy > cfg.dwellRadius * cfg.dwellRadius) { ok = false; break; }
+          }
+          if (!ok) break;
+          sumX += pts[j].x; sumY += pts[j].y;
+          j++;
+        }
+        const last = j - 1;
+        const dur = pts[last].t - pts[i].t;
+        if (dur >= cfg.dwellWindow) {
+          const n = last - i + 1;
+          let ax = 0, ay = 0;
+          for (let k = i; k <= last; k++) { ax += pts[k].x; ay += pts[k].y; }
+          dwells.push({ x: ax / n, y: ay / n, tStart: pts[i].t, tEnd: pts[last].t });
+          i = last + 1;
+        } else {
+          i++;
+        }
+      }
+      out[team.id] = dwells;
+    }
+    return out;
+  }, [trajectories, cfg.dwellWindow, cfg.dwellRadius]);
 
   useEffect(() => {
     if (!playing) return;
