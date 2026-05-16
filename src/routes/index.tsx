@@ -308,7 +308,6 @@ function TeamRow({ team, active, hovered, onToggle, onHover }: {
       <TeamLogo team={team} size={20} />
       <span className="text-mono w-6 text-[10px] tabular-nums text-muted-foreground">#{team.placement}</span>
       <span className="min-w-0 flex-1 truncate text-xs font-semibold">{team.name}</span>
-      <span className="text-mono text-[10px] text-muted-foreground">{team.kills}K</span>
       <span className={`h-1.5 w-1.5 rounded-full ${team.alive ? "bg-success" : "bg-destructive/70"}`} />
     </div>
   );
