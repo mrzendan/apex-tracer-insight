@@ -139,6 +139,7 @@ Timestamps:
 function ProcessesAdmin() {
   const { processes, matches, tournaments, teams } = useAdminStore();
   const [editing, setEditing] = useState<AnalysisProcess | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   // Suggestions: matches whose tournament endDate is in the past and no process exists.
   const suggestions = useMemo(() => {
@@ -162,6 +163,7 @@ function ProcessesAdmin() {
       tournamentId: tId,
       matchId: mId,
       teamId: undefined,
+      mapCount: 0,
       maps: [],
       status: "draft",
       createdAt: Date.now(),
@@ -176,13 +178,26 @@ function ProcessesAdmin() {
   const save = (run: boolean) => {
     if (!editing) return;
     const exists = processes.some((p) => p.id === editing.id);
-    const next: AnalysisProcess = { ...editing, status: run ? "queued" : editing.status };
+    const teamProgress = run
+      ? (matches.find((m) => m.id === editing.matchId)?.teamIds ?? []).slice(0, 20).map((tid) => ({
+          teamId: tid, ring: 0, start: 0, camera: 0,
+        }))
+      : editing.teamProgress;
+    const next: AnalysisProcess = { ...editing, status: run ? "queued" : editing.status, teamProgress };
     if (exists) updateProcess(editing.id, next);
     else addProcess(next);
     if (run) {
-      // Simulate processing lifecycle
       setTimeout(() => updateProcess(next.id, { status: "running" }), 600);
-      setTimeout(() => updateProcess(next.id, { status: "done" }), 3000);
+      const tick = (pct: number) => updateProcess(next.id, {
+        teamProgress: (teamProgress ?? []).map((tp, i) => ({
+          ...tp,
+          ring: Math.min(100, Math.round(pct * (0.7 + (i % 5) * 0.06))),
+          start: Math.min(100, Math.round(pct * (0.9 + (i % 3) * 0.04))),
+          camera: Math.min(100, Math.round(pct * (0.5 + (i % 7) * 0.07))),
+        })),
+      });
+      [10, 25, 40, 60, 80, 100].forEach((p, i) => setTimeout(() => tick(p), 800 + i * 500));
+      setTimeout(() => updateProcess(next.id, { status: "done" }), 4200);
     }
     setEditing(null);
   };
