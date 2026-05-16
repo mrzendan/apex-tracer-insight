@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import {
   useAdminStore,
   addProcess,
@@ -9,7 +9,9 @@ import {
   type ProcessPov,
   type MapTiming,
 } from "@/lib/admin-store";
-import { maps as allMaps } from "@/lib/mock-match";
+import { maps as allMaps, type Team } from "@/lib/mock-match";
+import { Progress } from "@/components/ui/progress";
+import { TeamLogo } from "@/components/admin/TeamLogo";
 
 export const Route = createFileRoute("/admin/processes")({ component: ProcessesAdmin });
 
@@ -344,14 +346,19 @@ function ProcessEditor({
     const matchByHint = meta.matchHint
       ? matches.find((m) => m.tournamentId === tournamentId && m.name.toLowerCase().includes(meta.matchHint!.toLowerCase()))
       : undefined;
+    const maps = meta.maps ?? value.maps;
     onChange({
       ...value,
       videoTitle: meta.title,
       videoChannel: meta.channel,
       videoDurationSec: meta.durationSec,
+      region: meta.region ?? value.region,
+      day: meta.day ?? value.day,
+      matchup: meta.matchup ?? value.matchup,
       tournamentId,
       matchId: matchByHint?.id ?? value.matchId,
-      maps: meta.maps ?? value.maps,
+      maps,
+      mapCount: maps.length || value.mapCount,
     });
   };
 
@@ -405,6 +412,13 @@ function ProcessEditor({
               <div className="mt-1.5 rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-[10px] text-muted-foreground">
                 <div className="text-foreground">{value.videoTitle}</div>
                 <div>{value.videoChannel} · {value.videoDurationSec ? mmss(value.videoDurationSec) : "—"}</div>
+                {(value.region || value.day || value.matchup) && (
+                  <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
+                    {value.region && <span><span className="text-foreground/60">Region:</span> {value.region}</span>}
+                    {value.day && <span><span className="text-foreground/60">Day:</span> {value.day}</span>}
+                    {value.matchup && <span><span className="text-foreground/60">Matchup:</span> {value.matchup}</span>}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -438,15 +452,35 @@ function ProcessEditor({
           <div>
             <div className="mb-1.5 flex items-center justify-between">
               <div className="label-eyebrow text-[10px]">Map timings</div>
-              <button
-                onClick={() => onChange({ ...value, maps: [...value.maps, { mapId: allMaps[0].id, startSec: 0, endSec: 1200 }] })}
-                className="text-xs text-primary hover:underline"
-              >+ Add map</button>
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                  Maps count
+                  <input
+                    type="number"
+                    min={0}
+                    max={20}
+                    value={value.mapCount ?? value.maps.length}
+                    onChange={(e) => {
+                      const n = Math.max(0, Math.min(20, +e.target.value || 0));
+                      const next: MapTiming[] = Array.from({ length: n }, (_, i) =>
+                        value.maps[i] ?? { mapId: allMaps[i % allMaps.length].id, startSec: 0, endSec: 1200 },
+                      );
+                      onChange({ ...value, mapCount: n, maps: next });
+                    }}
+                    className="w-14 rounded-sm border border-border bg-background px-1.5 py-0.5 text-xs text-mono"
+                  />
+                </label>
+                <button
+                  onClick={() => onChange({ ...value, maps: [...value.maps, { mapId: allMaps[value.maps.length % allMaps.length].id, startSec: 0, endSec: 1200 }], mapCount: (value.mapCount ?? value.maps.length) + 1 })}
+                  className="text-xs text-primary hover:underline"
+                >+ Add</button>
+              </div>
             </div>
             <div className="space-y-1.5">
-              {value.maps.length === 0 && <div className="text-[10px] text-muted-foreground">No maps configured. Fetch metadata or add manually.</div>}
+              {value.maps.length === 0 && <div className="text-[10px] text-muted-foreground">No maps configured. Set maps count, fetch metadata, or add manually.</div>}
               {value.maps.map((mp, i) => (
                 <div key={i} className="flex items-center gap-1.5">
+                  <span className="w-6 text-[10px] text-muted-foreground text-mono">#{i + 1}</span>
                   <select
                     value={mp.mapId}
                     onChange={(e) => onChange({ ...value, maps: value.maps.map((x, j) => j === i ? { ...x, mapId: e.target.value } : x) })}
@@ -455,20 +489,27 @@ function ProcessEditor({
                     {allMaps.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
                   </select>
                   <input
-                    type="number"
-                    value={mp.startSec}
-                    onChange={(e) => onChange({ ...value, maps: value.maps.map((x, j) => j === i ? { ...x, startSec: +e.target.value } : x) })}
-                    className="w-20 rounded-sm border border-border bg-background px-2 py-1 text-xs text-mono"
-                    placeholder="start s"
+                    type="text"
+                    value={hhmmss(mp.startSec)}
+                    onChange={(e) => {
+                      const s = parseHMS(e.target.value);
+                      if (s != null) onChange({ ...value, maps: value.maps.map((x, j) => j === i ? { ...x, startSec: s } : x) });
+                    }}
+                    className="w-24 rounded-sm border border-border bg-background px-2 py-1 text-xs text-mono"
+                    placeholder="hh:mm:ss"
                   />
+                  <span className="text-[10px] text-muted-foreground">→</span>
                   <input
-                    type="number"
-                    value={mp.endSec}
-                    onChange={(e) => onChange({ ...value, maps: value.maps.map((x, j) => j === i ? { ...x, endSec: +e.target.value } : x) })}
-                    className="w-20 rounded-sm border border-border bg-background px-2 py-1 text-xs text-mono"
-                    placeholder="end s"
+                    type="text"
+                    value={hhmmss(mp.endSec)}
+                    onChange={(e) => {
+                      const s = parseHMS(e.target.value);
+                      if (s != null) onChange({ ...value, maps: value.maps.map((x, j) => j === i ? { ...x, endSec: s } : x) });
+                    }}
+                    className="w-24 rounded-sm border border-border bg-background px-2 py-1 text-xs text-mono"
+                    placeholder="hh:mm:ss"
                   />
-                  <button onClick={() => onChange({ ...value, maps: value.maps.filter((_, j) => j !== i) })} className="text-xs text-destructive">✕</button>
+                  <button onClick={() => onChange({ ...value, maps: value.maps.filter((_, j) => j !== i), mapCount: Math.max(0, (value.mapCount ?? value.maps.length) - 1) })} className="text-xs text-destructive">✕</button>
                 </div>
               ))}
             </div>
