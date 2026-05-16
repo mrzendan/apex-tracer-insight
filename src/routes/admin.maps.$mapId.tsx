@@ -1,15 +1,19 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { maps as allMaps, generateTrajectory } from "@/lib/mock-match";
 import { useAdminStore } from "@/lib/admin-store";
 import { TeamLogo } from "@/components/admin/TeamLogo";
 
-export const Route = createFileRoute("/admin/maps/$mapId")({ component: MapDetail });
+export const Route = createFileRoute("/admin/maps/$mapId")({
+  component: MapDetail,
+  validateSearch: (s: Record<string, unknown>) => ({ team: typeof s.team === "string" ? s.team : undefined }),
+});
 
 type Mode = "all" | "year" | "tournaments";
 
 function MapDetail() {
   const { mapId } = Route.useParams();
+  const search = Route.useSearch();
   const { matches, tournaments, teams } = useAdminStore();
   const navigate = useNavigate();
   const map = allMaps.find((m) => m.id === mapId);
@@ -24,7 +28,10 @@ function MapDetail() {
   }, [mapMatches, tournaments]);
 
   const allYears = Array.from(new Set(tournaments.map((t) => t.year))).sort((a, b) => b - a);
-  const [teamId, setTeamId] = useState<string>(teams[0]?.id ?? "");
+  const [teamId, setTeamId] = useState<string>(search.team ?? teams[0]?.id ?? "");
+  useEffect(() => {
+    if (search.team && search.team !== teamId) setTeamId(search.team);
+  }, [search.team]);
   const [mode, setMode] = useState<Mode>("all");
   const [year, setYear] = useState<number>(allYears[0] ?? 6);
   const [selectedTours, setSelectedTours] = useState<string[]>([]);
@@ -61,6 +68,20 @@ function MapDetail() {
   }, [filteredMatches, teamId]);
 
   const maxHeat = Math.max(1, ...heat);
+  const heatColor = (t: number) => {
+    if (t < 0.5) {
+      const k = t / 0.5;
+      const r = 255;
+      const g = Math.round(220 - k * 90);
+      const b = Math.round(60 - k * 60);
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+    const k = (t - 0.5) / 0.5;
+    const r = Math.round(255 - k * 40);
+    const g = Math.round(130 - k * 110);
+    const b = Math.round(0 + k * 10);
+    return `rgb(${r}, ${g}, ${b})`;
+  };
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
@@ -71,13 +92,37 @@ function MapDetail() {
       </header>
 
       <div className="flex-1 overflow-auto p-6">
-        <div className="grid gap-4 lg:grid-cols-[360px_1fr]">
-          <div className="space-y-4">
-            <div className="hud-panel overflow-hidden">
-              <img src={map.image} alt={map.name} className="aspect-video w-full object-cover" />
-              <div className="border-t border-border px-3 py-2 text-xs font-semibold">{map.name}</div>
+        <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
+          <div className="hud-panel p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <div className="label-eyebrow text-[10px]">Heat-map · {teams.find((t) => t.id === teamId)?.tag ?? "—"}</div>
+              <TeamLogo team={teams.find((t) => t.id === teamId) ?? teams[0]} size={20} />
             </div>
+            <div className="relative w-full overflow-hidden rounded-sm border border-border bg-surface-2">
+              <img src={map.image} alt={map.name} className="block w-full opacity-60" />
+              <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 h-full w-full">
+                {heat.map((v, i) => {
+                  if (v === 0) return null;
+                  const gx = i % GRID, gy = Math.floor(i / GRID);
+                  const t = v / maxHeat;
+                  const alpha = Math.min(0.85, t * 0.9 + 0.1);
+                  return (
+                    <rect
+                      key={i}
+                      x={(gx * 100) / GRID}
+                      y={(gy * 100) / GRID}
+                      width={100 / GRID}
+                      height={100 / GRID}
+                      fill={heatColor(t)}
+                      opacity={alpha}
+                    />
+                  );
+                })}
+              </svg>
+            </div>
+          </div>
 
+          <div className="space-y-4">
             <div className="hud-panel p-3">
               <div className="label-eyebrow mb-2 text-[10px]">Tournaments used ({mapTournaments.length})</div>
               {mapTournaments.length === 0 ? (
@@ -148,35 +193,6 @@ function MapDetail() {
                   Sampling {filteredMatches.length} matches
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div className="hud-panel p-3">
-            <div className="mb-2 flex items-center justify-between">
-              <div className="label-eyebrow text-[10px]">Heat-map · {teams.find((t) => t.id === teamId)?.tag ?? "—"}</div>
-              <TeamLogo team={teams.find((t) => t.id === teamId) ?? teams[0]} size={20} />
-            </div>
-            <div className="relative w-full overflow-hidden rounded-sm border border-border bg-surface-2">
-              <img src={map.image} alt={map.name} className="block w-full opacity-60" />
-              <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 h-full w-full">
-                {heat.map((v, i) => {
-                  if (v === 0) return null;
-                  const gx = i % GRID, gy = Math.floor(i / GRID);
-                  const alpha = Math.min(0.85, (v / maxHeat) * 0.9 + 0.05);
-                  const color = teams.find((t) => t.id === teamId)?.color ?? "#ff5b12";
-                  return (
-                    <rect
-                      key={i}
-                      x={(gx * 100) / GRID}
-                      y={(gy * 100) / GRID}
-                      width={100 / GRID}
-                      height={100 / GRID}
-                      fill={color}
-                      opacity={alpha}
-                    />
-                  );
-                })}
-              </svg>
             </div>
           </div>
         </div>
