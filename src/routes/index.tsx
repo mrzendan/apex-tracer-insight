@@ -11,6 +11,7 @@ import {
   type Team,
   type RingPhase,
 } from "../lib/mock-match";
+import { TeamLogo } from "@/components/admin/TeamLogo";
 
 export const Route = createFileRoute("/")({ component: MatchViewer });
 
@@ -378,12 +379,12 @@ function MapCanvas({
                 {/* Static preview of all 6 ring phases */}
                 {ringPhases.map((p, i) => (
                   <circle key={`prev-${i}`} cx={p.cx * 1000} cy={p.cy * 1000} r={p.r * 1000}
-                    fill="none" stroke="rgba(255,255,255,0.28)"
-                    strokeWidth={1 / view.scale}
-                    strokeDasharray={`${3 / view.scale} ${4 / view.scale}`} />
+                    fill="none" stroke="rgba(255,255,255,0.85)"
+                    strokeWidth={1.6 / view.scale}
+                    strokeDasharray={`${4 / view.scale} ${4 / view.scale}`} />
                 ))}
                 <circle cx={ring.cx * 1000} cy={ring.cy * 1000} r={ring.r * 1000}
-                  fill="rgba(255,91,18,0.05)" stroke="rgba(255,91,18,0.85)" strokeWidth={2 / view.scale} strokeDasharray={`${8 / view.scale} ${5 / view.scale}`} />
+                  fill="rgba(255,91,18,0.1)" stroke="rgba(255,91,18,1)" strokeWidth={3.5 / view.scale} strokeDasharray={`${10 / view.scale} ${5 / view.scale}`} />
                 <circle cx={ring.cx * 1000} cy={ring.cy * 1000} r={3 / view.scale} fill="#ff5b12" />
               </>
             )}
