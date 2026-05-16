@@ -101,7 +101,7 @@ function fetchVideoMeta(url: string): {
     : lower.includes("esl")
       ? "esl-pro-league-12"
       : "scrims-eu-week-4";
-  const guessMatch = (lower.match(/game[-_ ]?(\d+)/)?.[1] ?? "1");
+  // (matches are days, not games — matchHint below uses Day)
   const mockDescription = `ALGS Map POV - Americas - Split 1 - Americas Day 6 (Group B vs C) - May 3, 2026
 
 Region: Americas
@@ -118,18 +118,20 @@ Timestamps:
 02:13:04 - Game 5
 02:41:27 - Game 6`;
   const parsed = parseAlgsTitle(mockDescription);
-  const games = (parsed.timings ?? []).filter((t) => /game/i.test(t.label));
+  // Only Game 1..n become map timings — exclude Pregame, breaks, intros.
+  const games = (parsed.timings ?? []).filter((t) => /^\s*game\s*\d+/i.test(t.label));
   const mapsParsed: MapTiming[] = games.map((g, i) => {
     const next = games[i + 1];
     const end = next ? next.sec : g.sec + 1500;
-    return { mapId: allMaps[i % allMaps.length].id, startSec: g.sec, endSec: end };
+    // mapId left empty — operator chooses which map this game was on.
+    return { mapId: "", startSec: g.sec, endSec: end };
   });
   return {
     title: mockDescription.split("\n")[0],
     channel: lower.includes("twitch") ? "Twitch · Official" : "YouTube · Caster",
     durationSec: 10800,
     tournamentHint,
-    matchHint: `Game ${guessMatch}`,
+    matchHint: parsed.day ? `Day ${parsed.day}` : undefined,
     maps: mapsParsed.length ? mapsParsed : undefined,
     rawDescription: mockDescription,
     region: parsed.region,
