@@ -37,11 +37,61 @@ function MatchViewer() {
   const [showTrails, setShowTrails] = useState(true);
   const [showRing, setShowRing] = useState(true);
   const [showLabels, setShowLabels] = useState(true);
+  const [showConfig, setShowConfig] = useState(false);
+  const [cfg, setCfg] = useState({
+    trailWidth: 2,
+    labelSize: 22,
+    labelBg: 0.78,
+    dwellWindow: 40,    // seconds
+    dwellRadius: 0.04,  // normalized
+  });
 
   const trajectories = useMemo(
     () => Object.fromEntries(teams.map((t, i) => [t.id, generateTrajectory(i + 7, match.durationSec)])),
     [match.durationSec],
   );
+
+  /** Detect dwell clusters per team: contiguous windows of >= dwellWindow seconds
+   *  where all points stay within dwellRadius of the window's mean position. */
+  const dwellsByTeam = useMemo(() => {
+    const out: Record<string, { x: number; y: number; tStart: number; tEnd: number }[]> = {};
+    for (const team of teams) {
+      const pts = trajectories[team.id];
+      if (!pts) { out[team.id] = []; continue; }
+      const dwells: { x: number; y: number; tStart: number; tEnd: number }[] = [];
+      let i = 0;
+      while (i < pts.length) {
+        let sumX = pts[i].x, sumY = pts[i].y;
+        let j = i + 1;
+        while (j < pts.length) {
+          const n = j - i + 1;
+          const mx = (sumX + pts[j].x) / n;
+          const my = (sumY + pts[j].y) / n;
+          let ok = true;
+          for (let k = i; k <= j; k++) {
+            const dx = pts[k].x - mx, dy = pts[k].y - my;
+            if (dx * dx + dy * dy > cfg.dwellRadius * cfg.dwellRadius) { ok = false; break; }
+          }
+          if (!ok) break;
+          sumX += pts[j].x; sumY += pts[j].y;
+          j++;
+        }
+        const last = j - 1;
+        const dur = pts[last].t - pts[i].t;
+        if (dur >= cfg.dwellWindow) {
+          const n = last - i + 1;
+          let ax = 0, ay = 0;
+          for (let k = i; k <= last; k++) { ax += pts[k].x; ay += pts[k].y; }
+          dwells.push({ x: ax / n, y: ay / n, tStart: pts[i].t, tEnd: pts[last].t });
+          i = last + 1;
+        } else {
+          i++;
+        }
+      }
+      out[team.id] = dwells;
+    }
+    return out;
+  }, [trajectories, cfg.dwellWindow, cfg.dwellRadius]);
 
   useEffect(() => {
     if (!playing) return;
@@ -112,6 +162,11 @@ function MatchViewer() {
             time={time}
             ring={showRing ? ring : null}
             trajectories={trajectories}
+            dwellsByTeam={dwellsByTeam}
+            cfg={cfg}
+            onCfg={setCfg}
+            showConfig={showConfig}
+            setShowConfig={setShowConfig}
             selectedTeams={selectedTeams}
             hoverTeam={hoverTeam}
             showTrails={showTrails}
@@ -253,7 +308,6 @@ function TeamRow({ team, active, hovered, onToggle, onHover }: {
       <TeamLogo team={team} size={20} />
       <span className="text-mono w-6 text-[10px] tabular-nums text-muted-foreground">#{team.placement}</span>
       <span className="min-w-0 flex-1 truncate text-xs font-semibold">{team.name}</span>
-      <span className="text-mono text-[10px] text-muted-foreground">{team.kills}K</span>
       <span className={`h-1.5 w-1.5 rounded-full ${team.alive ? "bg-success" : "bg-destructive/70"}`} />
     </div>
   );
@@ -270,6 +324,25 @@ function LayerToggle({ label, active, onChange }: { label: string; active: boole
   );
 }
 
+function CfgSlider({ label, value, min, max, step, onChange }: {
+  label: string; value: number; min: number; max: number; step: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <label className="block">
+      <div className="flex items-center justify-between mb-0.5">
+        <span className="label-eyebrow text-[10px]">{label}</span>
+        <span className="text-mono text-[10px] text-muted-foreground tabular-nums">
+          {Number.isInteger(step) ? value : value.toFixed(2)}
+        </span>
+      </div>
+      <input type="range" min={min} max={max} step={step} value={value}
+        onChange={(e) => onChange(parseFloat(e.target.value))}
+        className="w-full accent-primary" />
+    </label>
+  );
+}
+
 function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
     <div className="hud-panel-strong px-3 py-1.5">
@@ -279,13 +352,22 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
   );
 }
 
+type Cfg = { trailWidth: number; labelSize: number; labelBg: number; dwellWindow: number; dwellRadius: number };
+type Dwell = { x: number; y: number; tStart: number; tEnd: number };
+
 /* ---------- MAP with pan/zoom ---------- */
 function MapCanvas({
-  time, ring, trajectories, selectedTeams, hoverTeam, showTrails, showLabels,
+  time, ring, trajectories, dwellsByTeam, cfg, onCfg, showConfig, setShowConfig,
+  selectedTeams, hoverTeam, showTrails, showLabels,
   mapImage, mapName, aliveTeams, totalKills, ringIndex, ringCount, controls,
 }: {
   time: number; ring: RingPhase | null;
   trajectories: Record<string, { t: number; x: number; y: number }[]>;
+  dwellsByTeam: Record<string, Dwell[]>;
+  cfg: Cfg;
+  onCfg: (next: Cfg) => void;
+  showConfig: boolean;
+  setShowConfig: (v: boolean) => void;
   selectedTeams: Set<string>; hoverTeam: string | null;
   showTrails: boolean; showLabels: boolean;
   mapImage: string; mapName: string;
@@ -400,12 +482,42 @@ function MapCanvas({
               const opacity = dimOthers ? 0.15 : 1;
               const trail = upTo.slice(-60);
               const d = trail.map((p, i) => `${i === 0 ? "M" : "L"}${p.x * 1000} ${p.y * 1000}`).join(" ");
+              const dwells = (dwellsByTeam[t.id] ?? []).filter((dw) => dw.tStart <= time);
+              const labelW = t.tag.length * (cfg.labelSize * 0.64) + cfg.labelSize * 0.55;
+              const labelH = cfg.labelSize * 1.28;
 
               return (
                 <g key={t.id} opacity={opacity}>
+                  {/* Dwell clusters */}
+                  {dwells.map((dw, di) => {
+                    const dur = Math.round(dw.tEnd - dw.tStart);
+                    return (
+                      <g key={`dw-${di}`} transform={`translate(${dw.x * 1000} ${dw.y * 1000})`}>
+                        <circle r={cfg.dwellRadius * 1000} fill={t.color} fillOpacity={0.1}
+                          stroke={t.color} strokeOpacity={0.6}
+                          strokeWidth={1.2 / view.scale}
+                          strokeDasharray={`${3 / view.scale} ${3 / view.scale}`} />
+                        <circle r={5 / view.scale} fill={t.color} stroke="#000" strokeWidth={0.8 / view.scale} />
+                        <g transform={`translate(0 ${cfg.dwellRadius * 1000 + 14 / view.scale})`}>
+                          <rect
+                            x={-32 / view.scale} y={-9 / view.scale}
+                            width={64 / view.scale} height={18 / view.scale}
+                            rx={2 / view.scale} ry={2 / view.scale}
+                            fill={`rgba(0,0,0,${cfg.labelBg})`}
+                            stroke={t.color} strokeWidth={1 / view.scale}
+                          />
+                          <text x={0} y={4 / view.scale} textAnchor="middle"
+                            fontSize={11 / view.scale} fontWeight={700} fill="#fff"
+                            fontFamily="Manrope, sans-serif">
+                            {formatTime(dw.tStart)} · {dur}s
+                          </text>
+                        </g>
+                      </g>
+                    );
+                  })}
                   {showTrails && (
                     <path d={d} fill="none" stroke={t.color}
-                      strokeWidth={2 / view.scale} strokeOpacity={0.7}
+                      strokeWidth={cfg.trailWidth / view.scale} strokeOpacity={0.75}
                       strokeLinecap="round" strokeLinejoin="round" />
                   )}
                   <g transform={`translate(${head.x * 1000} ${head.y * 1000})`}>
@@ -414,23 +526,23 @@ function MapCanvas({
                       <circle r={6 / view.scale} fill={t.color} stroke="rgba(0,0,0,0.8)" strokeWidth={1 / view.scale} />
                     </g>
                     {showLabels && (
-                      <g transform={`translate(${14 / view.scale} ${-14 / view.scale})`}>
+                      <g transform={`translate(${14 / view.scale} ${-(labelH / 2) / view.scale})`}>
                         <rect
                           x={0}
                           y={0}
                           rx={3 / view.scale}
                           ry={3 / view.scale}
-                          width={(t.tag.length * 14 + 12) / view.scale}
-                          height={28 / view.scale}
-                          fill="rgba(0,0,0,0.78)"
+                          width={labelW / view.scale}
+                          height={labelH / view.scale}
+                          fill={`rgba(0,0,0,${cfg.labelBg})`}
                           stroke={t.color}
                           strokeWidth={2 / view.scale}
                         />
                         <text
-                          x={(t.tag.length * 14 + 12) / (2 * view.scale)}
-                          y={20 / view.scale}
+                          x={(labelW / 2) / view.scale}
+                          y={(labelH * 0.72) / view.scale}
                           textAnchor="middle"
-                          fontSize={22 / view.scale}
+                          fontSize={cfg.labelSize / view.scale}
                           fontWeight={800}
                           fill="#fff"
                           fontFamily="Manrope, sans-serif"
@@ -460,7 +572,37 @@ function MapCanvas({
         <LayerToggle label="Trails" active={controls.showTrails} onChange={controls.setShowTrails} />
         <LayerToggle label="Ring" active={controls.showRing} onChange={controls.setShowRing} />
         <LayerToggle label="Labels" active={controls.showLabels} onChange={controls.setShowLabels} />
+        <button onClick={() => setShowConfig(!showConfig)}
+          className={`mt-1 flex items-center justify-between gap-3 rounded-sm px-2 py-1 text-[11px] transition-colors ${
+            showConfig ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted"}`}>
+          <span className="label-eyebrow text-[10px]">Config</span>
+          <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={2}>
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5h0a1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
+          </svg>
+        </button>
       </div>
+
+      {showConfig && (
+        <div className="pointer-events-auto absolute right-4 top-40 hud-panel-strong w-60 p-3 text-xs space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="label-eyebrow">Map config</span>
+            <button onClick={() => setShowConfig(false)} className="text-muted-foreground hover:text-foreground">×</button>
+          </div>
+          <CfgSlider label="Trail width" value={cfg.trailWidth} min={0.5} max={6} step={0.5}
+            onChange={(v) => onCfg({ ...cfg, trailWidth: v })} />
+          <CfgSlider label="Label size" value={cfg.labelSize} min={8} max={40} step={1}
+            onChange={(v) => onCfg({ ...cfg, labelSize: v })} />
+          <CfgSlider label="Label bg" value={cfg.labelBg} min={0} max={1} step={0.05}
+            onChange={(v) => onCfg({ ...cfg, labelBg: v })} />
+          <div className="border-t border-border pt-2 space-y-3">
+            <CfgSlider label="Dwell window (s)" value={cfg.dwellWindow} min={10} max={120} step={5}
+              onChange={(v) => onCfg({ ...cfg, dwellWindow: v })} />
+            <CfgSlider label="Dwell radius" value={cfg.dwellRadius} min={0.01} max={0.12} step={0.005}
+              onChange={(v) => onCfg({ ...cfg, dwellRadius: v })} />
+          </div>
+        </div>
+      )}
 
       {/* Zoom controls */}
       <div className="pointer-events-auto absolute right-4 bottom-4 hud-panel-strong flex flex-col overflow-hidden text-xs">
