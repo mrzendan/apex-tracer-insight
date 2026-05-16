@@ -559,43 +559,66 @@ function ProcessEditor({
   );
 }
 
-function TeamProgressList({
+function ProcessAnalysisDetail({
   process, teams, matchTeamIds,
 }: {
   process: AnalysisProcess;
   teams: Team[];
   matchTeamIds: string[];
 }) {
-  const rows = (process.teamProgress && process.teamProgress.length > 0)
-    ? process.teamProgress
-    : matchTeamIds.map((tid) => ({ teamId: tid, ring: 0, start: 0, camera: 0 }));
-
-  if (rows.length === 0) {
-    return <div className="text-[10px] text-muted-foreground">No teams associated with this match.</div>;
+  if (process.maps.length === 0) {
+    return <div className="text-[10px] text-muted-foreground">No maps configured for this process.</div>;
   }
-
   return (
-    <div className="space-y-1.5">
-      <div className="grid grid-cols-[1fr_repeat(3,minmax(120px,1fr))] gap-3 px-2 label-eyebrow text-[9px]">
-        <div>Team</div>
-        <div>Ring tracking</div>
-        <div>Start detection</div>
-        <div>Camera tracking</div>
-      </div>
-      {rows.map((tp) => {
-        const team = teams.find((t) => t.id === tp.teamId);
+    <div className="space-y-3">
+      {process.maps.map((mp, mi) => {
+        const map = allMaps.find((x) => x.id === mp.mapId);
+        const analysis: MapAnalysis = process.mapAnalyses?.find((a) => a.mapIndex === mi)
+          ?? { mapIndex: mi, ring: 0, start: 0, camera: 0, teams: matchTeamIds.map((tid) => ({ teamId: tid, progress: 0 })) };
         return (
-          <div key={tp.teamId} className="grid grid-cols-[1fr_repeat(3,minmax(120px,1fr))] items-center gap-3 rounded-sm border border-border bg-background px-2 py-1.5">
-            <div className="flex items-center gap-2 text-xs font-semibold">
-              {team && <TeamLogo team={team} size={18} />}
-              <span className="truncate">{team?.name ?? tp.teamId}</span>
+          <div key={mi} className="rounded-sm border border-border bg-background p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <div className="text-xs font-bold uppercase tracking-wider">
+                Game {mi + 1} · {map?.name ?? <span className="text-muted-foreground">Unknown map</span>}
+              </div>
+              <div className="text-mono text-[10px] text-muted-foreground">
+                {hhmmss(mp.startSec)} → {hhmmss(mp.endSec)}
+              </div>
             </div>
-            <ProgressCell value={tp.ring} />
-            <ProgressCell value={tp.start} />
-            <ProgressCell value={tp.camera} />
+            <div className="grid grid-cols-3 gap-3">
+              <TaskBar label="Ring tracking" value={analysis.ring} />
+              <TaskBar label="Start detection" value={analysis.start} />
+              <TaskBar label="Camera tracking" value={analysis.camera} />
+            </div>
+            {analysis.teams.length > 0 && (
+              <div className="mt-3 border-t border-border pt-2">
+                <div className="label-eyebrow mb-1.5 text-[9px]">Per-team detection</div>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1 md:grid-cols-3 xl:grid-cols-4">
+                  {analysis.teams.map((tp) => {
+                    const team = teams.find((t) => t.id === tp.teamId);
+                    return (
+                      <div key={tp.teamId} className="flex items-center gap-2">
+                        {team && <TeamLogo team={team} size={16} />}
+                        <span className="w-24 truncate text-xs">{team?.name ?? tp.teamId}</span>
+                        <ProgressCell value={tp.progress} />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function TaskBar({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-sm border border-border bg-surface-2 px-2 py-1.5">
+      <div className="label-eyebrow mb-1 text-[9px]">{label}</div>
+      <ProgressCell value={value} />
     </div>
   );
 }
