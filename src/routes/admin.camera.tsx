@@ -193,6 +193,22 @@ function CameraAdmin() {
     });
   }, [time]);
 
+  // Shrinking ring areas — concentric rings that close in over the match duration.
+  const rings = useMemo(() => {
+    const t = duration > 0 ? Math.max(0, Math.min(1, time / duration)) : 0;
+    // (start radius, end radius, color, label) — drift centers slightly with time.
+    const drift = (k: number) => ({
+      cx: 0.5 + Math.sin(t * 1.6 + k) * 0.08 * (1 - t),
+      cy: 0.5 + Math.cos(t * 1.3 + k) * 0.08 * (1 - t),
+    });
+    return [
+      { ...drift(0.3), r: 0.48 - 0.10 * t, color: "#22d3ee", label: "Ring 1" },
+      { ...drift(1.7), r: 0.34 - 0.18 * t, color: "#f59e0b", label: "Ring 2" },
+      { ...drift(2.9), r: 0.22 - 0.18 * t, color: "#ef4444", label: "Ring 3" },
+      { ...drift(4.1), r: 0.12 - 0.10 * t, color: "#a855f7", label: "Ring 4" },
+    ].filter((r) => r.r > 0.015);
+  }, [time, duration]);
+
   // Viewport drag/resize on map
   const mapRef = useRef<HTMLDivElement | null>(null);
   const [vpDrag, setVpDrag] = useState<null | { kind: "move" | "resize"; startX: number; startY: number; v: Viewport }>(null);
@@ -304,6 +320,38 @@ function CameraAdmin() {
                 <div ref={mapRef} className="relative" style={{ aspectRatio: "1 / 1", height: "100%", maxWidth: "100%" }}>
                   <img src={map.image} alt={map.name} className="absolute inset-0 h-full w-full object-contain" draggable={false} />
                   <svg viewBox="0 0 1000 1000" preserveAspectRatio="none" className="pointer-events-none absolute inset-0 h-full w-full">
+                    {rings.map((r, i) => (
+                      <g key={`ring-${i}`}>
+                        <circle
+                          cx={r.cx * 1000}
+                          cy={r.cy * 1000}
+                          r={r.r * 1000}
+                          fill="none"
+                          stroke={r.color}
+                          strokeWidth={2}
+                          strokeDasharray="6 4"
+                          opacity={0.85}
+                        />
+                        <circle
+                          cx={r.cx * 1000}
+                          cy={r.cy * 1000}
+                          r={r.r * 1000}
+                          fill={r.color}
+                          opacity={0.06}
+                        />
+                        <text
+                          x={r.cx * 1000}
+                          y={(r.cy - r.r) * 1000 - 6}
+                          textAnchor="middle"
+                          fontSize={11}
+                          fill={r.color}
+                          stroke="#000"
+                          strokeWidth={2}
+                          paintOrder="stroke"
+                          className="font-mono"
+                        >{r.label}</text>
+                      </g>
+                    ))}
                     {teamPositions.map((t) => (
                       <g key={t.id}>
                         <circle cx={t.x * 1000} cy={t.y * 1000} r={10} fill={t.color} stroke="#000" strokeWidth={2} />

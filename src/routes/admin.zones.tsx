@@ -2,12 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import vodBg from "@/assets/hsv-samples/worlds-edge.png";
 import cameraBg from "@/assets/zones-samples/camera.png";
+import { useAdminStore, setZones as setZonesStore, type Zone, type ZoneTag, type ZoneMode } from "@/lib/admin-store";
 
 export const Route = createFileRoute("/admin/zones")({ component: ZonesAdmin });
 
-type ZoneTag = "team" | "camera" | "minimap" | "timer" | "map_name";
-type Zone = { id: string; name: string; tag: ZoneTag; x: number; y: number; w: number; h: number };
-type Mode = "vod" | "camera";
+type Mode = ZoneMode;
 
 const TAGS: ZoneTag[] = ["team", "camera", "minimap", "timer", "map_name"];
 
@@ -19,31 +18,13 @@ const TAG_COLOR: Record<ZoneTag, string> = {
   map_name: "#34d399",
 };
 
-const initialVod: Zone[] = [
-  { id: "v-minimap",  name: "Minimap",    tag: "minimap",  x: 20,   y: 30,   w: 320, h: 320 },
-  { id: "v-map-name", name: "Map name",   tag: "map_name", x: 360,  y: 170,  w: 380, h: 80  },
-  { id: "v-timer",    name: "Round timer",tag: "timer",    x: 20,   y: 380,  w: 320, h: 90  },
-  { id: "v-team-l",   name: "Team panel", tag: "team",     x: 20,   y: 720,  w: 540, h: 280 },
-  { id: "v-team-h1",  name: "Team header",tag: "team",     x: 0,    y: 0,    w: 480, h: 36  },
-  { id: "v-team-h2",  name: "Team header",tag: "team",     x: 510,  y: 0,    w: 480, h: 36  },
-  { id: "v-team-h3",  name: "Team header",tag: "team",     x: 1010, y: 0,    w: 480, h: 36  },
-];
-
-const initialCamera: Zone[] = [
-  { id: "c-name",  name: "Player name",  tag: "camera",  x: 60,   y: 730, w: 480, h: 90 },
-  { id: "c-squad", name: "Squad badge",  tag: "team",    x: 60,   y: 830, w: 480, h: 120 },
-  { id: "c-time",  name: "Round timer",  tag: "timer",   x: 60,   y: 280, w: 320, h: 80  },
-  { id: "c-mini",  name: "Minimap",      tag: "minimap", x: 20,   y: 20,  w: 360, h: 260 },
-];
-
 let _idc = 0;
 const newId = () => `z-${Date.now().toString(36)}-${_idc++}`;
 
 function ZonesAdmin() {
+  const store = useAdminStore();
   const [mode, setMode] = useState<Mode>("vod");
-  const [vodZones, setVodZones] = useState<Zone[]>(initialVod);
-  const [camZones, setCamZones] = useState<Zone[]>(initialCamera);
-  const [sel, setSel] = useState<string | null>(initialVod[0]?.id ?? null);
+  const [sel, setSel] = useState<string | null>(store.zones.vod[0]?.id ?? null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const dragRef = useRef<
     | null
@@ -57,14 +38,17 @@ function ZonesAdmin() {
   >(null);
 
   const W = 1920, H = 1080;
-  const zones = mode === "vod" ? vodZones : camZones;
-  const setZones = mode === "vod" ? setVodZones : setCamZones;
+  const zones = store.zones[mode];
+  const setZones = (next: Zone[] | ((zs: Zone[]) => Zone[])) => {
+    const computed = typeof next === "function" ? (next as (zs: Zone[]) => Zone[])(zones) : next;
+    setZonesStore(mode, computed);
+  };
   const bg = mode === "vod" ? vodBg : cameraBg;
   const selZone = zones.find((z) => z.id === sel);
 
   const switchMode = (m: Mode) => {
     setMode(m);
-    const list = m === "vod" ? vodZones : camZones;
+    const list = store.zones[m];
     setSel(list[0]?.id ?? null);
   };
 
