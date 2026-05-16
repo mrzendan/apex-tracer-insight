@@ -17,6 +17,7 @@ import { Route as AdminTournamentsRouteImport } from './routes/admin.tournaments
 import { Route as AdminPolygonsRouteImport } from './routes/admin.polygons'
 import { Route as AdminMinimapRouteImport } from './routes/admin.minimap'
 import { Route as AdminMatchesRouteImport } from './routes/admin.matches'
+import { Route as AdminMapsRouteImport } from './routes/admin.maps'
 import { Route as AdminHsvRouteImport } from './routes/admin.hsv'
 import { Route as AdminCameraRouteImport } from './routes/admin.camera'
 
@@ -60,6 +61,11 @@ const AdminMatchesRoute = AdminMatchesRouteImport.update({
   path: '/matches',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminMapsRoute = AdminMapsRouteImport.update({
+  id: '/maps',
+  path: '/maps',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminHsvRoute = AdminHsvRouteImport.update({
   id: '/hsv',
   path: '/hsv',
@@ -76,6 +82,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/admin/camera': typeof AdminCameraRoute
   '/admin/hsv': typeof AdminHsvRoute
+  '/admin/maps': typeof AdminMapsRoute
   '/admin/matches': typeof AdminMatchesRoute
   '/admin/minimap': typeof AdminMinimapRoute
   '/admin/polygons': typeof AdminPolygonsRoute
@@ -87,6 +94,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin/camera': typeof AdminCameraRoute
   '/admin/hsv': typeof AdminHsvRoute
+  '/admin/maps': typeof AdminMapsRoute
   '/admin/matches': typeof AdminMatchesRoute
   '/admin/minimap': typeof AdminMinimapRoute
   '/admin/polygons': typeof AdminPolygonsRoute
@@ -100,6 +108,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/admin/camera': typeof AdminCameraRoute
   '/admin/hsv': typeof AdminHsvRoute
+  '/admin/maps': typeof AdminMapsRoute
   '/admin/matches': typeof AdminMatchesRoute
   '/admin/minimap': typeof AdminMinimapRoute
   '/admin/polygons': typeof AdminPolygonsRoute
@@ -114,6 +123,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin/camera'
     | '/admin/hsv'
+    | '/admin/maps'
     | '/admin/matches'
     | '/admin/minimap'
     | '/admin/polygons'
@@ -125,6 +135,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin/camera'
     | '/admin/hsv'
+    | '/admin/maps'
     | '/admin/matches'
     | '/admin/minimap'
     | '/admin/polygons'
@@ -137,6 +148,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin/camera'
     | '/admin/hsv'
+    | '/admin/maps'
     | '/admin/matches'
     | '/admin/minimap'
     | '/admin/polygons'
@@ -208,6 +220,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMatchesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/maps': {
+      id: '/admin/maps'
+      path: '/maps'
+      fullPath: '/admin/maps'
+      preLoaderRoute: typeof AdminMapsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/hsv': {
       id: '/admin/hsv'
       path: '/hsv'
@@ -228,6 +247,7 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminCameraRoute: typeof AdminCameraRoute
   AdminHsvRoute: typeof AdminHsvRoute
+  AdminMapsRoute: typeof AdminMapsRoute
   AdminMatchesRoute: typeof AdminMatchesRoute
   AdminMinimapRoute: typeof AdminMinimapRoute
   AdminPolygonsRoute: typeof AdminPolygonsRoute
@@ -239,6 +259,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminCameraRoute: AdminCameraRoute,
   AdminHsvRoute: AdminHsvRoute,
+  AdminMapsRoute: AdminMapsRoute,
   AdminMatchesRoute: AdminMatchesRoute,
   AdminMinimapRoute: AdminMinimapRoute,
   AdminPolygonsRoute: AdminPolygonsRoute,
