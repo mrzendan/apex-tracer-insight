@@ -313,7 +313,7 @@ function ProcessesAdmin() {
                   {isOpen && (
                     <tr className="border-b border-border bg-surface-2/40">
                       <td colSpan={7} className="px-4 py-3">
-                        <TeamProgressList process={p} teams={teams} matchTeamIds={m?.teamIds ?? []} />
+                        <ProcessAnalysisDetail process={p} teams={teams} matchTeamIds={m?.teamIds ?? []} />
                       </td>
                     </tr>
                   )}
