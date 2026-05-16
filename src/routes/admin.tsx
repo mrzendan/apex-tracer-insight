@@ -31,7 +31,7 @@ function AdminLayout() {
           {navItems.map((item) => (
             <Link
               key={item.to}
-              to={item.to}
+              to={item.to as "/admin"}
               activeOptions={{ exact: item.exact ?? false }}
               activeProps={{ className: "bg-primary/15 text-primary border-primary/30" }}
               inactiveProps={{ className: "text-foreground/80 hover:bg-muted border-transparent" }}
