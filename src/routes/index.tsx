@@ -406,9 +406,11 @@ function MapCanvas({
                       strokeWidth={2 / view.scale} strokeOpacity={0.7}
                       strokeLinecap="round" strokeLinejoin="round" />
                   )}
-                  <g transform={`translate(${head.x * 1000} ${head.y * 1000})`} filter="url(#glow)">
-                    <circle r={11 / view.scale} fill="none" stroke={t.color} strokeWidth={1 / view.scale} opacity={0.5} />
-                    <circle r={6 / view.scale} fill={t.color} stroke="rgba(0,0,0,0.8)" strokeWidth={1 / view.scale} />
+                  <g transform={`translate(${head.x * 1000} ${head.y * 1000})`}>
+                    <g filter="url(#glow)">
+                      <circle r={11 / view.scale} fill="none" stroke={t.color} strokeWidth={1 / view.scale} opacity={0.5} />
+                      <circle r={6 / view.scale} fill={t.color} stroke="rgba(0,0,0,0.8)" strokeWidth={1 / view.scale} />
+                    </g>
                     {showLabels && (
                       <g transform={`translate(${10 / view.scale} ${-7 / view.scale})`}>
                         <rect
