@@ -5,11 +5,13 @@ import {
   addProcess,
   updateProcess,
   removeProcess,
+  addMatch,
   type AnalysisProcess,
   type ProcessPov,
   type MapTiming,
+  type MapAnalysis,
 } from "@/lib/admin-store";
-import { maps as allMaps, type Team } from "@/lib/mock-match";
+import { maps as allMaps, type Team, type MatchFull } from "@/lib/mock-match";
 import { Progress } from "@/components/ui/progress";
 import { TeamLogo } from "@/components/admin/TeamLogo";
 
@@ -182,26 +184,46 @@ function ProcessesAdmin() {
   const save = (run: boolean) => {
     if (!editing) return;
     const exists = processes.some((p) => p.id === editing.id);
-    const teamProgress = run
-      ? (matches.find((m) => m.id === editing.matchId)?.teamIds ?? []).slice(0, 20).map((tid) => ({
-          teamId: tid, ring: 0, start: 0, camera: 0,
+    const teamIds = matches.find((m) => m.id === editing.matchId)?.teamIds ?? [];
+    const mapAnalyses: MapAnalysis[] | undefined = run
+      ? editing.maps.map((_, mi) => ({
+          mapIndex: mi,
+          ring: 0,
+          start: 0,
+          camera: 0,
+          teams: teamIds.slice(0, 20).map((tid) => ({ teamId: tid, progress: 0 })),
         }))
-      : editing.teamProgress;
-    const next: AnalysisProcess = { ...editing, status: run ? "queued" : editing.status, teamProgress };
+      : editing.mapAnalyses;
+    const next: AnalysisProcess = { ...editing, status: run ? "queued" : editing.status, mapAnalyses };
     if (exists) updateProcess(editing.id, next);
     else addProcess(next);
     if (run) {
       setTimeout(() => updateProcess(next.id, { status: "running" }), 600);
+      // Each task is independent: separate random multipliers per map per task.
+      const rng = (seed: number) => {
+        let s = seed >>> 0;
+        return () => {
+          s = (s * 1664525 + 1013904223) >>> 0;
+          return s / 0xffffffff;
+        };
+      };
       const tick = (pct: number) => updateProcess(next.id, {
-        teamProgress: (teamProgress ?? []).map((tp, i) => ({
-          ...tp,
-          ring: Math.min(100, Math.round(pct * (0.7 + (i % 5) * 0.06))),
-          start: Math.min(100, Math.round(pct * (0.9 + (i % 3) * 0.04))),
-          camera: Math.min(100, Math.round(pct * (0.5 + (i % 7) * 0.07))),
-        })),
+        mapAnalyses: (mapAnalyses ?? []).map((ma) => {
+          const r = rng(ma.mapIndex * 7 + 1);
+          return {
+            ...ma,
+            ring: Math.min(100, Math.round(pct * (0.5 + r() * 0.7))),
+            start: Math.min(100, Math.round(pct * (0.5 + r() * 0.7))),
+            camera: Math.min(100, Math.round(pct * (0.5 + r() * 0.7))),
+            teams: ma.teams.map((tp, ti) => {
+              const rt = rng(ma.mapIndex * 31 + ti * 13 + 5);
+              return { ...tp, progress: Math.min(100, Math.round(pct * (0.4 + rt() * 0.9))) };
+            }),
+          };
+        }),
       });
-      [10, 25, 40, 60, 80, 100].forEach((p, i) => setTimeout(() => tick(p), 800 + i * 500));
-      setTimeout(() => updateProcess(next.id, { status: "done" }), 4200);
+      [15, 30, 50, 70, 90, 100].forEach((p, i) => setTimeout(() => tick(p), 800 + i * 600));
+      setTimeout(() => updateProcess(next.id, { status: "done" }), 5000);
     }
     setEditing(null);
   };
@@ -291,7 +313,7 @@ function ProcessesAdmin() {
                   {isOpen && (
                     <tr className="border-b border-border bg-surface-2/40">
                       <td colSpan={7} className="px-4 py-3">
-                        <TeamProgressList process={p} teams={teams} matchTeamIds={m?.teamIds ?? []} />
+                        <ProcessAnalysisDetail process={p} teams={teams} matchTeamIds={m?.teamIds ?? []} />
                       </td>
                     </tr>
                   )}
@@ -365,6 +387,24 @@ function ProcessEditor({
   };
 
   const matchOptions = matches.filter((m) => m.tournamentId === value.tournamentId);
+  const createNewMatch = () => {
+    const name = prompt("New Match (Day) name", value.day ? `Day ${value.day}${value.matchup ? ` — ${value.matchup}` : ""}` : "New Day");
+    if (!name) return;
+    const id = `m-${Date.now()}`;
+    const newMatch: MatchFull = {
+      id,
+      name,
+      tournamentId: value.tournamentId,
+      mapId: "",
+      durationSec: value.videoDurationSec ?? 0,
+      mapIds: value.maps.map((mp) => mp.mapId).filter(Boolean),
+      vodLink: value.streamUrl,
+      teamIds: teams.map((t) => t.id),
+      teamVods: {},
+    };
+    addMatch(newMatch);
+    onChange({ ...value, matchId: id });
+  };
   const povBtn = (pov: ProcessPov, label: string) => (
     <button
       onClick={() => set("pov", pov)}
@@ -434,10 +474,26 @@ function ProcessEditor({
             </div>
             <div>
               <div className="label-eyebrow mb-1.5 text-[10px]">Match (Day)</div>
-              <select value={value.matchId} onChange={(e) => set("matchId", e.target.value)} className="w-full rounded-sm border border-border bg-background px-2 py-1.5 text-xs">
-                {matchOptions.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-                {matchOptions.length === 0 && <option value="">No matches in tournament</option>}
-              </select>
+              <div className="flex gap-1.5">
+                <select
+                  value={value.matchId}
+                  onChange={(e) => {
+                    if (e.target.value === "__new__") { createNewMatch(); return; }
+                    set("matchId", e.target.value);
+                  }}
+                  className="flex-1 rounded-sm border border-border bg-background px-2 py-1.5 text-xs"
+                >
+                  {matchOptions.length === 0 && <option value="">— No matches —</option>}
+                  {matchOptions.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                  <option value="__new__">+ New Match (Day)…</option>
+                </select>
+                <button
+                  type="button"
+                  onClick={createNewMatch}
+                  className="rounded-sm border border-border bg-surface-2 px-2 text-xs hover:bg-muted"
+                  title="Create a new Match (Day) in this tournament"
+                >+ New</button>
+              </div>
             </div>
           </div>
 
@@ -537,43 +593,66 @@ function ProcessEditor({
   );
 }
 
-function TeamProgressList({
+function ProcessAnalysisDetail({
   process, teams, matchTeamIds,
 }: {
   process: AnalysisProcess;
   teams: Team[];
   matchTeamIds: string[];
 }) {
-  const rows = (process.teamProgress && process.teamProgress.length > 0)
-    ? process.teamProgress
-    : matchTeamIds.map((tid) => ({ teamId: tid, ring: 0, start: 0, camera: 0 }));
-
-  if (rows.length === 0) {
-    return <div className="text-[10px] text-muted-foreground">No teams associated with this match.</div>;
+  if (process.maps.length === 0) {
+    return <div className="text-[10px] text-muted-foreground">No maps configured for this process.</div>;
   }
-
   return (
-    <div className="space-y-1.5">
-      <div className="grid grid-cols-[1fr_repeat(3,minmax(120px,1fr))] gap-3 px-2 label-eyebrow text-[9px]">
-        <div>Team</div>
-        <div>Ring tracking</div>
-        <div>Start detection</div>
-        <div>Camera tracking</div>
-      </div>
-      {rows.map((tp) => {
-        const team = teams.find((t) => t.id === tp.teamId);
+    <div className="space-y-3">
+      {process.maps.map((mp, mi) => {
+        const map = allMaps.find((x) => x.id === mp.mapId);
+        const analysis: MapAnalysis = process.mapAnalyses?.find((a) => a.mapIndex === mi)
+          ?? { mapIndex: mi, ring: 0, start: 0, camera: 0, teams: matchTeamIds.map((tid) => ({ teamId: tid, progress: 0 })) };
         return (
-          <div key={tp.teamId} className="grid grid-cols-[1fr_repeat(3,minmax(120px,1fr))] items-center gap-3 rounded-sm border border-border bg-background px-2 py-1.5">
-            <div className="flex items-center gap-2 text-xs font-semibold">
-              {team && <TeamLogo team={team} size={18} />}
-              <span className="truncate">{team?.name ?? tp.teamId}</span>
+          <div key={mi} className="rounded-sm border border-border bg-background p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <div className="text-xs font-bold uppercase tracking-wider">
+                Game {mi + 1} · {map?.name ?? <span className="text-muted-foreground">Unknown map</span>}
+              </div>
+              <div className="text-mono text-[10px] text-muted-foreground">
+                {hhmmss(mp.startSec)} → {hhmmss(mp.endSec)}
+              </div>
             </div>
-            <ProgressCell value={tp.ring} />
-            <ProgressCell value={tp.start} />
-            <ProgressCell value={tp.camera} />
+            <div className="grid grid-cols-3 gap-3">
+              <TaskBar label="Ring tracking" value={analysis.ring} />
+              <TaskBar label="Start detection" value={analysis.start} />
+              <TaskBar label="Camera tracking" value={analysis.camera} />
+            </div>
+            {analysis.teams.length > 0 && (
+              <div className="mt-3 border-t border-border pt-2">
+                <div className="label-eyebrow mb-1.5 text-[9px]">Per-team detection</div>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1 md:grid-cols-3 xl:grid-cols-4">
+                  {analysis.teams.map((tp) => {
+                    const team = teams.find((t) => t.id === tp.teamId);
+                    return (
+                      <div key={tp.teamId} className="flex items-center gap-2">
+                        {team && <TeamLogo team={team} size={16} />}
+                        <span className="w-24 truncate text-xs">{team?.name ?? tp.teamId}</span>
+                        <ProgressCell value={tp.progress} />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function TaskBar({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-sm border border-border bg-surface-2 px-2 py-1.5">
+      <div className="label-eyebrow mb-1 text-[9px]">{label}</div>
+      <ProgressCell value={value} />
     </div>
   );
 }

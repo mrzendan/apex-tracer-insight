@@ -25,11 +25,12 @@ export type ZoneMode = "vod" | "camera";
 export type ProcessPov = "map" | "team";
 export type ProcessStatus = "draft" | "queued" | "running" | "done" | "failed";
 export type MapTiming = { mapId: string; startSec: number; endSec: number };
-export type TeamProgress = {
-  teamId: string;
-  ring: number;   // 0..100
-  start: number;  // 0..100
-  camera: number; // 0..100
+export type MapAnalysis = {
+  mapIndex: number;
+  ring: number;    // 0..100, independent
+  start: number;   // 0..100, independent
+  camera: number;  // 0..100, independent
+  teams: { teamId: string; progress: number }[]; // independent per-team detection
 };
 export type AnalysisProcess = {
   id: string;
@@ -47,7 +48,7 @@ export type AnalysisProcess = {
   teamId?: string;
   mapCount?: number;
   maps: MapTiming[];
-  teamProgress?: TeamProgress[];
+  mapAnalyses?: MapAnalysis[];
   status: ProcessStatus;
   createdAt: number;
 };
@@ -112,6 +113,10 @@ export function setTeams(teams: Team[]) {
 }
 export function setMatches(matches: MatchFull[]) {
   state = { ...state, matches };
+  emit();
+}
+export function addMatch(m: MatchFull) {
+  state = { ...state, matches: [...state.matches, m] };
   emit();
 }
 export function updateMatch(id: string, patch: Partial<MatchFull>) {
