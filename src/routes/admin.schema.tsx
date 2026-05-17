@@ -358,6 +358,28 @@ function SchemaEditor() {
       <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-surface px-4">
         <h1 className="text-sm font-bold uppercase tracking-wider">Schema editor</h1>
         <span className="text-mono text-[10px] text-muted-foreground">{doc.blocks.length} tables · {doc.relations.length} relations</span>
+        <div className="ml-2 flex items-center gap-1 rounded-sm border border-border bg-surface-2 p-0.5">
+          {MODULE_PRESETS.map((p) => {
+            const eq = p.mods.length === prefs.modules.length && p.mods.every((m) => activeModules.has(m));
+            return (
+              <button key={p.id} onClick={() => setPrefs((pp) => ({ ...pp, modules: [...p.mods] }))}
+                className={`px-2 py-0.5 text-[10px] uppercase tracking-wider rounded-sm ${eq ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"}`}>
+                {p.label}
+              </button>
+            );
+          })}
+        </div>
+        <div className="flex items-center gap-1">
+          {ALL_MODULES.map((k) => {
+            const on = activeModules.has(k);
+            return (
+              <button key={k} onClick={() => toggleModule(k)}
+                className={`rounded-sm border px-1.5 py-0.5 text-[10px] uppercase tracking-wider ${on ? "border-primary/40 bg-primary/15 text-primary" : "border-border bg-surface-2 text-muted-foreground hover:text-foreground"}`}>
+                {MODULE_LABELS[k]}
+              </button>
+            );
+          })}
+        </div>
         <div className="ml-auto flex items-center gap-2">
           <div className="flex items-center gap-1 rounded-sm border border-border bg-surface-2 p-0.5">
             {(["color", "mono"] as Theme[]).map((t) => (
@@ -416,6 +438,7 @@ function SchemaEditor() {
               {doc.relations.map((r) => {
                 const fb = blocksById[r.fromBlock]; const tb = blocksById[r.toBlock];
                 if (!fb || !tb) return null;
+                if (!isBlockVisible(fb) || !isBlockVisible(tb)) return null;
                 const fromRight = (fb.x + BLOCK_W / 2) < (tb.x + BLOCK_W / 2);
                 const a = fieldAnchor(fb, r.fromField, fromRight ? "right" : "left");
                 const b2 = fieldAnchor(tb, r.toField, fromRight ? "left" : "right");
@@ -447,6 +470,7 @@ function SchemaEditor() {
 
               {/* Blocks */}
               {doc.blocks.map((b) => {
+                if (!isBlockVisible(b)) return null;
                 const isSel = selected?.blockId === b.id;
                 return (
                   <g key={b.id} data-block transform={`translate(${b.x} ${b.y})`} onMouseDown={(e) => onBlockMouseDown(e, b)}>
