@@ -35,7 +35,7 @@ function Block({
 
 function IconBubble({
   Icon, color = "cyan",
-}: { iconName: string; color?: "cyan" | "primary" | "success" | "destructive" | "warning" }) {
+}: { Icon: ComponentType<{ className?: string; strokeWidth?: number }>; color?: "cyan" | "primary" | "success" | "destructive" | "warning" }) {
   const map: Record<string, string> = {
     cyan: "text-cyan",
     primary: "text-primary",
@@ -117,7 +117,7 @@ export function Slide1({ editing }: SlideProps) {
 function NodeCard({
   id, Icon, title, desc, editing, compact = false, color = "cyan",
 }: {
-  id: string; iconName: string;
+  id: string; Icon: ComponentType<{ className?: string; strokeWidth?: number }>;
   title: string; desc: string; editing: boolean; compact?: boolean;
   color?: "cyan" | "primary";
 }) {
@@ -444,7 +444,7 @@ export function Slide9({ editing }: SlideProps) {
 function EntityCard({
   id, Icon, title, fields, editing, color = "primary",
 }: {
-  id: string; iconName: string;
+  id: string; Icon: ComponentType<{ className?: string; strokeWidth?: number }>;
   title: string; fields: string[]; editing: boolean;
   color?: "primary" | "cyan" | "success" | "warning" | "destructive";
 }) {
