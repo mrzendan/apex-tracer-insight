@@ -41,7 +41,9 @@ export function useText(id: string, fallback: string): string {
 
 export type BoxLayout = { x: number; y: number; w: number; h: number };
 export type Pt = { x: number; y: number };
-export type ArrowLayout = { pts: Pt[] };
+/** Optional binding: arrow vertex is anchored to a box at relative (ax,ay) in [0..1]. */
+export type Binding = { boxId: string; ax: number; ay: number };
+export type ArrowLayout = { pts: Pt[]; bindings?: (Binding | null)[] };
 export type AnyLayout = BoxLayout | ArrowLayout;
 
 type LayoutStore = Record<string, AnyLayout>;
@@ -64,6 +66,26 @@ export function resetLayout(id?: string) {
   if (!id) { layout = {}; }
   else { const { [id]: _, ...rest } = layout; layout = rest; }
   persistLayout(); emit();
+}
+
+// ────── Box registry — defaults registered by every Movable so arrows can bind ──────
+const boxDefaults: Record<string, BoxLayout> = {};
+export function registerBoxDefault(id: string, box: BoxLayout) {
+  if (!boxDefaults[id]) boxDefaults[id] = box;
+}
+export function getBox(id: string): BoxLayout | undefined {
+  const v = layout[id] as BoxLayout | undefined;
+  if (v && typeof (v as any).w === "number") return v;
+  return boxDefaults[id];
+}
+export function listBoxes(): Array<{ id: string; box: BoxLayout }> {
+  const ids = new Set<string>([...Object.keys(boxDefaults), ...Object.keys(layout)]);
+  const out: Array<{ id: string; box: BoxLayout }> = [];
+  ids.forEach((id) => {
+    const b = getBox(id);
+    if (b && typeof (b as any).w === "number") out.push({ id, box: b });
+  });
+  return out;
 }
 
 export function useBox(id: string, fallback: BoxLayout): BoxLayout {
