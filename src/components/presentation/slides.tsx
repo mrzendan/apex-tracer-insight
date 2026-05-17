@@ -347,10 +347,11 @@ export function Slide4({ editing }: SlideProps) {
               ))}
             </Block>
             <Block className="relative p-0 overflow-hidden h-[440px]">
-              <div className="absolute inset-0 hud-grid-bg opacity-40" />
+              <img src={mapImage} alt="Карта Storm Point" className="absolute inset-0 h-full w-full object-cover opacity-80" />
+              <div className="absolute inset-0 hud-grid-bg opacity-20" />
               <div className="absolute left-3 top-3 rounded-md bg-surface/80 px-3 py-1 text-[14px] font-mono">08:37 · Раунд 1</div>
               <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-                <div className="h-72 w-72 rounded-full border-2 border-dashed border-cyan/60" />
+                <div className="h-72 w-72 rounded-full border-2 border-dashed border-cyan/80 shadow-[0_0_40px_rgba(34,211,238,0.25)]" />
               </div>
               <div className="absolute bottom-3 left-3 right-3 flex items-center gap-3 text-[14px]">
                 <Play className="h-5 w-5 text-primary" />
@@ -401,9 +402,11 @@ export function Slide9({ editing }: SlideProps) {
       <div className="mt-10 grid grid-cols-[2.4fr_1fr] gap-5 px-16">
         <Block className="p-5 h-[520px]">
           <div className="mb-4 text-[14px] font-bold uppercase tracking-wider text-muted-foreground">Игровая карта</div>
-          <div className="relative h-[440px] rounded-md border border-border bg-surface-2/40 hud-grid-bg">
+          <div className="relative h-[440px] overflow-hidden rounded-md border border-border bg-surface-2/40">
+            <img src={mapImage} alt="Карта Storm Point" className="absolute inset-0 h-full w-full object-cover opacity-80" />
+            <div className="absolute inset-0 hud-grid-bg opacity-20" />
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="h-80 w-80 rounded-full border-2 border-dashed border-cyan/60" />
+              <div className="h-80 w-80 rounded-full border-2 border-dashed border-cyan/80 shadow-[0_0_50px_rgba(34,211,238,0.25)]" />
             </div>
           </div>
         </Block>
@@ -728,7 +731,10 @@ export function Slide7({ editing }: SlideProps) {
               className="text-[26px] font-bold text-destructive" />
           </div>
           <div className="grid grid-cols-[1fr_1.1fr] gap-5">
-            <div className="h-64 rounded-lg border border-border bg-surface-2/40 hud-grid-bg" />
+            <div className="relative h-64 overflow-hidden rounded-lg border border-border bg-surface-2/40">
+              <img src={mapImage} alt="VOD кадр" className="absolute inset-0 h-full w-full object-cover opacity-50 grayscale" />
+              <div className="absolute inset-0 flex items-center justify-center text-[14px] text-muted-foreground">VOD · ручной просмотр</div>
+            </div>
             <ul className="space-y-3">
               {manual.map((m, i) => (
                 <li key={i} className="flex items-center gap-2 text-[18px]">
@@ -751,7 +757,13 @@ export function Slide7({ editing }: SlideProps) {
               className="text-[26px] font-bold text-success" />
           </div>
           <div className="grid grid-cols-[1.1fr_1fr] gap-5">
-            <div className="h-64 rounded-lg border border-border bg-surface-2/40 hud-grid-bg" />
+            <div className="relative h-64 overflow-hidden rounded-lg border border-border bg-surface-2/40">
+              <img src={mapImage} alt="Дашборд" className="absolute inset-0 h-full w-full object-cover opacity-80" />
+              <div className="absolute inset-0 hud-grid-bg opacity-15" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="h-40 w-40 rounded-full border-2 border-dashed border-success/80" />
+              </div>
+            </div>
             <ul className="space-y-3">
               {auto.map((a, i) => (
                 <li key={i} className="flex items-center gap-2 text-[18px]">
