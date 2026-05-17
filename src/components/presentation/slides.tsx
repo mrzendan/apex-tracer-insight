@@ -619,52 +619,61 @@ export function Slide6({ editing }: SlideProps) {
       <div className="relative mt-10 px-12">
         <svg className="pointer-events-none absolute inset-x-12 top-0 z-10 h-[800px] w-[calc(100%-96px)]" viewBox="0 0 1728 800" preserveAspectRatio="none">
           <defs>
-            <marker id="s6arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+            <marker id="s6arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
               <path d="M0,0 L10,5 L0,10 z" fill="var(--cyan)" />
             </marker>
           </defs>
-          {/* Row1 horizontal connectors (between 5 tables, mid-y ≈ 170): tournaments→matches→maps→teams→players  */}
-          {[0,1,2,3].map((i) => {
-            const colW = 1728 / 5; // ≈ 345.6
-            const x1 = colW * (i + 1) - 16;
-            const x2 = colW * (i + 1) + 16;
-            return (
-              <g key={i}>
-                <line x1={x1} y1={170} x2={x2} y2={170} stroke="var(--cyan)" strokeWidth="2" markerEnd="url(#s6arr)" />
-                <RelLabel x={(x1+x2)/2} y={155} t="1" />
-                <RelLabel x={(x1+x2)/2} y={195} t="N" />
-              </g>
-            );
-          })}
-          {/* Vertical connectors row1→row2: tournaments→rings(dashed), matches→team_positions, maps→timeline_events, teams→analysis_jobs, players→analysis_outputs(dashed) */}
-          {[
-            { col: 0, dashed: true },
-            { col: 1, dashed: false },
-            { col: 2, dashed: false },
-            { col: 3, dashed: false },
-            { col: 4, dashed: true },
-          ].map(({ col, dashed }) => {
-            const colW = 1728 / 5;
-            const x = colW * col + colW / 2;
-            return (
-              <g key={col}>
-                <line x1={x} y1={340} x2={x} y2={460} stroke="var(--cyan)" strokeWidth="2" strokeDasharray={dashed ? "6 4" : undefined} markerEnd="url(#s6arr)" />
-                <RelLabel x={x - 20} y={370} t="1" />
-                <RelLabel x={x + 20} y={440} t="N" />
-              </g>
-            );
-          })}
-          {/* analysis_jobs → analysis_outputs (row2 col4 → col5 horizontal) */}
           {(() => {
             const colW = 1728 / 5;
-            const x1 = colW * 4 - 16;
-            const x2 = colW * 4 + 16;
+            const cx = (c: number) => colW * c + colW / 2;
+            const ROW1_Y = 170;
+            const ROW2_TOP = 410;     // top edge of row 2 cards (approx)
+            const ROW1_BOTTOM = 320;  // bottom edge of row 1 cards (approx)
+            const TRUNK_Y = 370;      // horizontal trunk between rows
             return (
-              <g>
-                <line x1={x1} y1={620} x2={x2} y2={620} stroke="var(--cyan)" strokeWidth="2" markerEnd="url(#s6arr)" />
-                <RelLabel x={(x1+x2)/2} y={605} t="1" />
-                <RelLabel x={(x1+x2)/2} y={645} t="N" />
-              </g>
+              <>
+                {/* Row 1 horizontal FK arrows: each child → parent on the LEFT (matches→tournaments, maps→matches, teams→maps, players→teams) */}
+                {[0,1,2,3].map((i) => {
+                  const xRight = colW * (i + 1) - 8;  // start at right card's left edge
+                  const xLeft  = colW * (i + 1) + 8;  // tip near left card's right edge
+                  return (
+                    <g key={`r1-${i}`}>
+                      <line x1={xRight} y1={ROW1_Y} x2={xLeft} y2={ROW1_Y} stroke="var(--cyan)" strokeWidth="2" markerEnd="url(#s6arr)" />
+                      <RelLabel x={xLeft + 18}  y={ROW1_Y - 14} t="1" />
+                      <RelLabel x={xRight - 18} y={ROW1_Y + 14} t="N" />
+                    </g>
+                  );
+                })}
+                {/* Vertical lines from row-2 tables UP to a trunk, then branches up to maps (col 2) and teams (col 3) */}
+                {/* trunk segment between leftmost row2 (col 0) and rightmost child trunk (col 3) */}
+                <line x1={cx(0)} y1={TRUNK_Y} x2={cx(3)} y2={TRUNK_Y} stroke="var(--cyan)" strokeWidth="2" />
+                {/* vertical drops from trunk down to each row2 card */}
+                {[0,1,2,3].map((c) => (
+                  <g key={`v-${c}`}>
+                    <line x1={cx(c)} y1={TRUNK_Y} x2={cx(c)} y2={ROW2_TOP} stroke="var(--cyan)" strokeWidth="2" />
+                    <RelLabel x={cx(c) + 18} y={ROW2_TOP - 20} t="N" />
+                  </g>
+                ))}
+                {/* dashed soft link: rings ↔ tournaments column hint (optional, keep minimal) */}
+                {/* branches up from trunk to maps (col 2) and teams (col 3) parent cards */}
+                <line x1={cx(2)} y1={TRUNK_Y} x2={cx(2)} y2={ROW1_BOTTOM} stroke="var(--cyan)" strokeWidth="2" markerEnd="url(#s6arr)" />
+                <RelLabel x={cx(2) + 18} y={ROW1_BOTTOM + 6} t="1" />
+                <line x1={cx(3)} y1={TRUNK_Y} x2={cx(3)} y2={ROW1_BOTTOM} stroke="var(--cyan)" strokeWidth="2" markerEnd="url(#s6arr)" />
+                <RelLabel x={cx(3) + 18} y={ROW1_BOTTOM + 6} t="1" />
+                {/* analysis_jobs (col 3) → analysis_outputs (col 4) horizontal in row 2 */}
+                {(() => {
+                  const y = 620;
+                  const x1 = colW * 4 - 8;
+                  const x2 = colW * 4 + 8;
+                  return (
+                    <g>
+                      <line x1={x1} y1={y} x2={x2} y2={y} stroke="var(--cyan)" strokeWidth="2" markerEnd="url(#s6arr)" />
+                      <RelLabel x={(x1+x2)/2} y={y - 14} t="1" />
+                      <RelLabel x={(x1+x2)/2} y={y + 14} t="N" />
+                    </g>
+                  );
+                })()}
+              </>
             );
           })()}
         </svg>
