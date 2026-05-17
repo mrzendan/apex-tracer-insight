@@ -544,6 +544,17 @@ function SchemaEditor() {
                   <input value={selBlock.name} onChange={(e) => renameBlock(selBlock.id, e.target.value)} className="w-full rounded-sm border border-border bg-background px-2 py-1 font-mono text-xs" />
                 </div>
                 <div>
+                  <div className="label-eyebrow mb-1 text-[10px]">Module</div>
+                  <div className="flex flex-wrap gap-1">
+                    {ALL_MODULES.map((k) => (
+                      <button key={k} onClick={() => setBlockModule(selBlock.id, k)}
+                        className={`rounded-sm border px-1.5 py-0.5 text-[10px] uppercase tracking-wider ${selBlock.module === k ? "border-primary/40 bg-primary/15 text-primary" : "border-border bg-background hover:bg-muted"}`}>
+                        {MODULE_LABELS[k]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
                   <div className="label-eyebrow mb-1 flex items-center justify-between text-[10px]">
                     <span>Fields ({selBlock.fields.length})</span>
                     <button onClick={() => addField(selBlock.id)} className="rounded-sm border border-border bg-background px-1.5 py-0.5 text-[10px] hover:bg-muted">+ field</button>
