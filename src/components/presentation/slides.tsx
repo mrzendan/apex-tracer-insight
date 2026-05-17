@@ -660,7 +660,7 @@ export function Slide6({ editing }: SlideProps) {
             <MovableArrow
               key={a.id}
               id={a.id}
-              defaultArrow={{ x1: a.x1, y1: a.y1, x2: a.x2, y2: a.y2 }}
+              defaultArrow={{ pts: [{ x: a.x1, y: a.y1 }, { x: a.x2, y: a.y2 }] }}
               editing={editing}
               viewW={1920} viewH={1080} pixelW={1920} pixelH={1080}
               label1={a.label1} labelN={a.labelN} dashed={a.dashed}
