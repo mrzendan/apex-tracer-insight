@@ -35,7 +35,7 @@ function Block({
 
 function IconBubble({
   Icon, color = "cyan",
-}: { Icon: ComponentType<{ className?: string; strokeWidth?: number }>; color?: "cyan" | "primary" | "success" | "destructive" | "warning" }) {
+}: { iconName: string; color?: "cyan" | "primary" | "success" | "destructive" | "warning" }) {
   const map: Record<string, string> = {
     cyan: "text-cyan",
     primary: "text-primary",
@@ -117,7 +117,7 @@ export function Slide1({ editing }: SlideProps) {
 function NodeCard({
   id, Icon, title, desc, editing, compact = false, color = "cyan",
 }: {
-  id: string; Icon: ComponentType<{ className?: string; strokeWidth?: number }>;
+  id: string; iconName: string;
   title: string; desc: string; editing: boolean; compact?: boolean;
   color?: "cyan" | "primary";
 }) {
@@ -155,7 +155,7 @@ export function Slide2({ editing }: SlideProps) {
             {[
               { id: "s2.vod", Icon: FolderOpen, label: "VOD / запись матча" },
               { id: "s2.meta", Icon: FileText, label: "Метаданные матча" },
-              { id: "s2.map", Icon: MapIcon, label: "Карта / ассеты" },
+              { id: "s2.map", iconName: "Map", label: "Карта / ассеты" },
             ].map((it) => (
               <Block key={it.id} className="p-4">
                 <div className="flex flex-col items-center gap-2">
@@ -178,10 +178,10 @@ export function Slide2({ editing }: SlideProps) {
           <div className="mx-auto h-0.5 w-10 bg-primary" />
           <div className="mt-4 space-y-3">
             {[
-              { id: "s2.start", Icon: Flag, label: "Старт карты" },
-              { id: "s2.ring", Icon: Target, label: "Кольца" },
+              { id: "s2.start", iconName: "Flag", label: "Старт карты" },
+              { id: "s2.ring", iconName: "Target", label: "Кольца" },
               { id: "s2.gaze", Icon: Eye, label: "Трекинг обзора" },
-              { id: "s2.team", Icon: Users, label: "Трекинг команд" },
+              { id: "s2.team", iconName: "Users", label: "Трекинг команд" },
             ].map((it) => (
               <div key={it.id} className="flex items-center gap-3 rounded-lg border border-border bg-surface-2/60 px-3 py-2">
                 <it.Icon className="h-5 w-5 text-cyan" strokeWidth={1.8} />
@@ -212,15 +212,15 @@ export function Slide3({ editing }: SlideProps) {
   const steps = [
     { n: 1, Icon: Play, title: "Видеокадр", caption: "Исходный кадр трансляции" },
     { n: 2, Icon: Crosshair, title: "Миникарта / HUD", caption: "Выделение нужной области" },
-    { n: 3, Icon: MapIcon, title: "Регистрация карты", caption: "Привязка к игровой карте" },
-    { n: 4, Icon: Target, title: "Детекция кольца", caption: "Поиск текущей зоны" },
-    { n: 5, Icon: Users, title: "Детекция маркеров команд", caption: "Поиск игроков и сквадов" },
+    { n: 3, iconName: "Map", title: "Регистрация карты", caption: "Привязка к игровой карте" },
+    { n: 4, iconName: "Target", title: "Детекция кольца", caption: "Поиск текущей зоны" },
+    { n: 5, iconName: "Users", title: "Детекция маркеров команд", caption: "Поиск игроков и сквадов" },
     { n: 6, Icon: BarChart3, title: "Нормализация координат", caption: "Перевод в единое пространство" },
     { n: 7, Icon: TrendingUp, title: "Трекинг и результат", caption: "Траектории, события и вывод" },
   ];
   const tech = [
     { Icon: Eye, label: "OpenCV" },
-    { Icon: Target, label: "Сегментация цвета" },
+    { iconName: "Target", label: "Сегментация цвета" },
     { Icon: Crosshair, label: "Шаблонное сопоставление" },
     { Icon: Eye, label: "Детекция объектов" },
     { Icon: TrendingUp, label: "Калман-фильтр" },
@@ -276,9 +276,9 @@ export function Slide3({ editing }: SlideProps) {
 
 const FLOW_STEPS = [
   { Icon: BarChart3, label: "Открыть дашборд" },
-  { Icon: Trophy, label: "Выбрать турнир" },
+  { iconName: "Trophy", label: "Выбрать турнир" },
   { Icon: Swords, label: "Выбрать матч" },
-  { Icon: MapIcon, label: "Выбрать карту" },
+  { iconName: "Map", label: "Выбрать карту" },
   { Icon: Filter, label: "Применить фильтры" },
   { Icon: Play, label: "Изучить таймлайн и карту" },
   { Icon: TrendingUp, label: "Получить инсайты" },
@@ -415,11 +415,11 @@ export function Slide9({ editing }: SlideProps) {
         </Block>
         <div className="space-y-4">
           {[
-            { Icon: Users, t: "Панель команд", d: "Списки команд слева и справа. Цветовая привязка к маршрутам и текущему состоянию." },
+            { iconName: "Users", t: "Панель команд", d: "Списки команд слева и справа. Цветовая привязка к маршрутам и текущему состоянию." },
             { Icon: Filter, t: "Фильтры матча", d: "Выбор турнира, матча и карты в боковой панели. Фильтры по командам и фазам." },
-            { Icon: MapIcon, t: "Игровая карта", d: "Центральная зона карты с маршрутами команд, кольцом, таймингами и подписями." },
+            { iconName: "Map", t: "Игровая карта", d: "Центральная зона карты с маршрутами команд, кольцом, таймингами и подписями." },
             { Icon: Play, t: "Воспроизведение", d: "Нижняя шкала времени для навигации по раундам и ключевым событиям." },
-            { Icon: Clock, t: "Таймер раунда", d: "Верхний индикатор показывает текущую фазу и оставшееся время." },
+            { iconName: "Clock", t: "Таймер раунда", d: "Верхний индикатор показывает текущую фазу и оставшееся время." },
           ].map((b, i) => (
             <Block key={i} className="p-4">
               <div className="flex gap-3">
@@ -444,7 +444,7 @@ export function Slide9({ editing }: SlideProps) {
 function EntityCard({
   id, Icon, title, fields, editing, color = "primary",
 }: {
-  id: string; Icon: ComponentType<{ className?: string; strokeWidth?: number }>;
+  id: string; iconName: string;
   title: string; fields: string[]; editing: boolean;
   color?: "primary" | "cyan" | "success" | "warning" | "destructive";
 }) {
@@ -610,17 +610,17 @@ export function Slide6({ editing }: SlideProps) {
   const W = 336, H1 = 270, H2 = 290;
   const COLS = [80, 436, 792, 1148, 1504];
   const Y1 = 220, Y2 = 560;
-  const tables: Array<{ id: string; title: string; Icon: ComponentType<{ className?: string; strokeWidth?: number }>; rows: [string,string,string][]; x: number; y: number; w: number; h: number }> = [
-    { id: "s6.tour",   title: "tournaments",      Icon: Trophy,   x: COLS[0], y: Y1, w: W, h: H1, rows: [["PK","id","integer"],["","name","text"],["","game","text"],["","start_date","timestamp"],["","end_date","timestamp"]] },
-    { id: "s6.match",  title: "matches",          Icon: Gamepad2, x: COLS[1], y: Y1, w: W, h: H1, rows: [["PK","id","integer"],["FK","tournament_id","integer"],["","name","text"],["","start_time","timestamp"],["","status","text"]] },
-    { id: "s6.maps",   title: "maps",             Icon: MapIcon,  x: COLS[2], y: Y1, w: W, h: H1, rows: [["PK","id","integer"],["FK","match_id","integer"],["","name","text"],["","order_index","integer"],["","map_type","text"]] },
-    { id: "s6.teams",  title: "teams",            Icon: Users,    x: COLS[3], y: Y1, w: W, h: H1, rows: [["PK","id","integer"],["FK","tournament_id","integer"],["","name","text"],["","tag","text"],["","region","text"]] },
-    { id: "s6.players",title: "players",          Icon: User,     x: COLS[4], y: Y1, w: W, h: H1, rows: [["PK","id","integer"],["FK","team_id","integer"],["","nick","text"],["","role","text"],["","nationality","text"]] },
-    { id: "s6.rings",  title: "rings",            Icon: Target,   x: COLS[0], y: Y2, w: W, h: H2, rows: [["PK","id","integer"],["FK","map_id","integer"],["","ring_number","integer"],["","start_time","timestamp"],["","end_time","timestamp"]] },
-    { id: "s6.pos",    title: "team_positions",   Icon: Flag,     x: COLS[1], y: Y2, w: W, h: H2, rows: [["PK","id","integer"],["FK","map_id","integer"],["FK","team_id","integer"],["FK","ring_id","integer"],["","position","text"]] },
-    { id: "s6.evt",    title: "timeline_events",  Icon: Clock,    x: COLS[2], y: Y2, w: W, h: H2, rows: [["PK","id","integer"],["FK","map_id","integer"],["FK","team_id","integer"],["","event_type","text"],["","event_time","timestamp"]] },
-    { id: "s6.jobs",   title: "analysis_jobs",    Icon: Settings, x: COLS[3], y: Y2, w: W, h: H2, rows: [["PK","id","integer"],["FK","map_id","integer"],["","job_type","text"],["","status","text"],["","created_at","timestamp"]] },
-    { id: "s6.out",    title: "analysis_outputs", Icon: Database, x: COLS[4], y: Y2, w: W, h: H2, rows: [["PK","id","integer"],["FK","job_id","integer"],["","output_type","text"],["","file_url","text"],["","created_at","timestamp"]] },
+  const tables: Array<{ id: string; title: string; iconName: string; rows: [string,string,string][]; x: number; y: number; w: number; h: number }> = [
+    { id: "s6.tour",   title: "tournaments",      iconName: "Trophy",   x: COLS[0], y: Y1, w: W, h: H1, rows: [["PK","id","integer"],["","name","text"],["","game","text"],["","start_date","timestamp"],["","end_date","timestamp"]] },
+    { id: "s6.match",  title: "matches",          iconName: "Gamepad2", x: COLS[1], y: Y1, w: W, h: H1, rows: [["PK","id","integer"],["FK","tournament_id","integer"],["","name","text"],["","start_time","timestamp"],["","status","text"]] },
+    { id: "s6.maps",   title: "maps",             iconName: "Map",  x: COLS[2], y: Y1, w: W, h: H1, rows: [["PK","id","integer"],["FK","match_id","integer"],["","name","text"],["","order_index","integer"],["","map_type","text"]] },
+    { id: "s6.teams",  title: "teams",            iconName: "Users",    x: COLS[3], y: Y1, w: W, h: H1, rows: [["PK","id","integer"],["FK","tournament_id","integer"],["","name","text"],["","tag","text"],["","region","text"]] },
+    { id: "s6.players",title: "players",          iconName: "User",     x: COLS[4], y: Y1, w: W, h: H1, rows: [["PK","id","integer"],["FK","team_id","integer"],["","nick","text"],["","role","text"],["","nationality","text"]] },
+    { id: "s6.rings",  title: "rings",            iconName: "Target",   x: COLS[0], y: Y2, w: W, h: H2, rows: [["PK","id","integer"],["FK","map_id","integer"],["","ring_number","integer"],["","start_time","timestamp"],["","end_time","timestamp"]] },
+    { id: "s6.pos",    title: "team_positions",   iconName: "Flag",     x: COLS[1], y: Y2, w: W, h: H2, rows: [["PK","id","integer"],["FK","map_id","integer"],["FK","team_id","integer"],["FK","ring_id","integer"],["","position","text"]] },
+    { id: "s6.evt",    title: "timeline_events",  iconName: "Clock",    x: COLS[2], y: Y2, w: W, h: H2, rows: [["PK","id","integer"],["FK","map_id","integer"],["FK","team_id","integer"],["","event_type","text"],["","event_time","timestamp"]] },
+    { id: "s6.jobs",   title: "analysis_jobs",    iconName: "Settings", x: COLS[3], y: Y2, w: W, h: H2, rows: [["PK","id","integer"],["FK","map_id","integer"],["","job_type","text"],["","status","text"],["","created_at","timestamp"]] },
+    { id: "s6.out",    title: "analysis_outputs", iconName: "Database", x: COLS[4], y: Y2, w: W, h: H2, rows: [["PK","id","integer"],["FK","job_id","integer"],["","output_type","text"],["","file_url","text"],["","created_at","timestamp"]] },
   ];
 
   // Default arrow endpoints in slide design space (1920×1080).
@@ -670,7 +670,7 @@ export function Slide6({ editing }: SlideProps) {
         </svg>
         {tables.map((t) => (
           <Movable key={t.id} id={`${t.id}.box`} defaultBox={{ x: t.x, y: t.y, w: t.w, h: t.h }} editing={editing}>
-            <ErTable id={t.id} title={t.title} Icon={t.Icon} editing={editing} rows={t.rows} />
+            <ErTable id={t.id} title={t.title} iconName={t.iconName} editing={editing} rows={t.rows} />
           </Movable>
         ))}
       </div>
@@ -773,7 +773,7 @@ export function Slide8({ editing }: SlideProps) {
     { title: "Backend API", Icon: Server, items: ["NestJS","TypeScript","REST API","WebSocket"] },
     { title: "Сбор данных", Icon: CloudUpload, items: ["Node.js","TypeScript","Scheduler","BullMQ"] },
     { title: "Анализ (CV)", Icon: Eye, items: ["Python","OpenCV","NumPy","YOLO"] },
-    { title: "База данных", Icon: Database, items: ["PostgreSQL","PostGIS","Prisma ORM"] },
+    { title: "База данных", iconName: "Database", items: ["PostgreSQL","PostGIS","Prisma ORM"] },
     { title: "Инфраструктура", Icon: Server, items: ["Docker","Nginx","PM2","Ubuntu"] },
   ];
   const common = [
