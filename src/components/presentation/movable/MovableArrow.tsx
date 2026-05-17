@@ -112,17 +112,18 @@ export function MovableArrow({
   const insertCorner = (segIdx: number) => (e: React.MouseEvent) => {
     if (!editing) return;
     e.preventDefault(); e.stopPropagation();
-    const p1 = pts[segIdx], p2 = pts[segIdx + 1];
+    const p1 = displayPts[segIdx], p2 = displayPts[segIdx + 1];
     const mid = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
     const next = [...pts.slice(0, segIdx + 1), mid, ...pts.slice(segIdx + 1)];
-    commit(next);
+    const nb = [...bindings.slice(0, segIdx + 1), null, ...bindings.slice(segIdx + 1)];
+    commit(next, nb);
   };
   // Remove a corner (only intermediate ones).
   const removeCorner = (i: number) => (e: React.MouseEvent) => {
     if (!editing) return;
     if (i === 0 || i === pts.length - 1) return;
     e.preventDefault(); e.stopPropagation();
-    commit(pts.filter((_, idx) => idx !== i));
+    commit(pts.filter((_, idx) => idx !== i), bindings.filter((_, idx) => idx !== i));
   };
 
   const markerId = `mv-arr-${id.replace(/[^a-z0-9]/gi, "_")}`;
