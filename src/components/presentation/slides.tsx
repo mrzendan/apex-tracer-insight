@@ -605,7 +605,6 @@ function ErTable({
 }
 
 export function Slide6({ editing }: SlideProps) {
-export function Slide6({ editing }: SlideProps) {
   // Defaults in 1920×1080 design space. Each card is movable+resizable, each arrow is draggable.
   const W = 336, H1 = 270, H2 = 290;
   const COLS = [80, 436, 792, 1148, 1504];
