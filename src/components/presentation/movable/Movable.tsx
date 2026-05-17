@@ -37,11 +37,14 @@ export function Movable({
     const dx = (e.clientX - s.px) / scale;
     const dy = (e.clientY - s.py) / scale;
     let { x, y, w, h } = s.box;
-    if (s.mode === "move") { x += dx; y += dy; }
-    if (s.mode.includes("e")) w = Math.max(minW, s.box.w + dx);
-    if (s.mode.includes("s")) h = Math.max(minH, s.box.h + dy);
-    if (s.mode.includes("w")) { w = Math.max(minW, s.box.w - dx); x = s.box.x + (s.box.w - w); }
-    if (s.mode.includes("n")) { h = Math.max(minH, s.box.h - dy); y = s.box.y + (s.box.h - h); }
+    if (s.mode === "move") {
+      x += dx; y += dy;
+    } else {
+      if (s.mode.includes("e")) w = Math.max(minW, s.box.w + dx);
+      if (s.mode.includes("s")) h = Math.max(minH, s.box.h + dy);
+      if (s.mode.includes("w")) { w = Math.max(minW, s.box.w - dx); x = s.box.x + (s.box.w - w); }
+      if (s.mode.includes("n")) { h = Math.max(minH, s.box.h - dy); y = s.box.y + (s.box.h - h); }
+    }
     setLayout(id, { x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h) });
   };
   const onPointerUp = (e: React.PointerEvent) => {
