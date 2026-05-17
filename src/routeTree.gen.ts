@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as TeamsTeamIdRouteImport } from './routes/teams.$teamId'
 import { Route as MatchesMatchIdRouteImport } from './routes/matches.$matchId'
 import { Route as AdminZonesRouteImport } from './routes/admin.zones'
 import { Route as AdminTournamentsRouteImport } from './routes/admin.tournaments'
@@ -41,6 +42,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
+} as any)
+const TeamsTeamIdRoute = TeamsTeamIdRouteImport.update({
+  id: '/teams/$teamId',
+  path: '/teams/$teamId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const MatchesMatchIdRoute = MatchesMatchIdRouteImport.update({
   id: '/matches/$matchId',
@@ -127,6 +133,7 @@ export interface FileRoutesByFullPath {
   '/admin/tournaments': typeof AdminTournamentsRoute
   '/admin/zones': typeof AdminZonesRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
+  '/teams/$teamId': typeof TeamsTeamIdRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/maps/$mapId': typeof AdminMapsMapIdRoute
   '/admin/matches/$matchId': typeof AdminMatchesMatchIdRoute
@@ -145,6 +152,7 @@ export interface FileRoutesByTo {
   '/admin/tournaments': typeof AdminTournamentsRoute
   '/admin/zones': typeof AdminZonesRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
+  '/teams/$teamId': typeof TeamsTeamIdRoute
   '/admin': typeof AdminIndexRoute
   '/admin/maps/$mapId': typeof AdminMapsMapIdRoute
   '/admin/matches/$matchId': typeof AdminMatchesMatchIdRoute
@@ -165,6 +173,7 @@ export interface FileRoutesById {
   '/admin/tournaments': typeof AdminTournamentsRoute
   '/admin/zones': typeof AdminZonesRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
+  '/teams/$teamId': typeof TeamsTeamIdRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/maps/$mapId': typeof AdminMapsMapIdRoute
   '/admin/matches/$matchId': typeof AdminMatchesMatchIdRoute
@@ -186,6 +195,7 @@ export interface FileRouteTypes {
     | '/admin/tournaments'
     | '/admin/zones'
     | '/matches/$matchId'
+    | '/teams/$teamId'
     | '/admin/'
     | '/admin/maps/$mapId'
     | '/admin/matches/$matchId'
@@ -204,6 +214,7 @@ export interface FileRouteTypes {
     | '/admin/tournaments'
     | '/admin/zones'
     | '/matches/$matchId'
+    | '/teams/$teamId'
     | '/admin'
     | '/admin/maps/$mapId'
     | '/admin/matches/$matchId'
@@ -223,6 +234,7 @@ export interface FileRouteTypes {
     | '/admin/tournaments'
     | '/admin/zones'
     | '/matches/$matchId'
+    | '/teams/$teamId'
     | '/admin/'
     | '/admin/maps/$mapId'
     | '/admin/matches/$matchId'
@@ -233,6 +245,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   MatchesMatchIdRoute: typeof MatchesMatchIdRoute
+  TeamsTeamIdRoute: typeof TeamsTeamIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -257,6 +270,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/teams/$teamId': {
+      id: '/teams/$teamId'
+      path: '/teams/$teamId'
+      fullPath: '/teams/$teamId'
+      preLoaderRoute: typeof TeamsTeamIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/matches/$matchId': {
       id: '/matches/$matchId'
@@ -429,17 +449,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   MatchesMatchIdRoute: MatchesMatchIdRoute,
+  TeamsTeamIdRoute: TeamsTeamIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
