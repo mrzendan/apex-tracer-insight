@@ -67,21 +67,46 @@ export function resetLayout(id?: string) {
 }
 
 export function useBox(id: string, fallback: BoxLayout): BoxLayout {
+  const cacheRef = (useBox as any)._c ||= new Map<string, { src: unknown; val: BoxLayout }>();
   return useSyncExternalStore(
     (cb) => { listeners.add(cb); return () => listeners.delete(cb); },
-    () => (layout[id] as BoxLayout) ?? fallback,
+    () => {
+      const v = layout[id] as BoxLayout | undefined;
+      if (v) {
+        const c = cacheRef.get(id);
+        if (c && c.src === v) return c.val;
+        cacheRef.set(id, { src: v, val: v });
+        return v;
+      }
+      const c = cacheRef.get(id);
+      if (c && c.src === "fallback") return c.val;
+      cacheRef.set(id, { src: "fallback", val: fallback });
+      return fallback;
+    },
     () => fallback,
   );
 }
 /** Reads an arrow layout, transparently migrating the legacy {x1,y1,x2,y2} shape. */
 export function useArrow(id: string, fallback: ArrowLayout): ArrowLayout {
+  const cacheRef = (useArrow as any)._c ||= new Map<string, { src: unknown; val: ArrowLayout }>();
   return useSyncExternalStore(
     (cb) => { listeners.add(cb); return () => listeners.delete(cb); },
     () => {
       const v = layout[id] as any;
-      if (!v) return fallback;
-      if (Array.isArray(v.pts)) return v as ArrowLayout;
-      if (typeof v.x1 === "number") return { pts: [{ x: v.x1, y: v.y1 }, { x: v.x2, y: v.y2 }] };
+      const cached = cacheRef.get(id);
+      if (v && Array.isArray(v.pts)) {
+        if (cached && cached.src === v) return cached.val;
+        cacheRef.set(id, { src: v, val: v as ArrowLayout });
+        return v as ArrowLayout;
+      }
+      if (v && typeof v.x1 === "number") {
+        if (cached && cached.src === v) return cached.val;
+        const migrated = { pts: [{ x: v.x1, y: v.y1 }, { x: v.x2, y: v.y2 }] };
+        cacheRef.set(id, { src: v, val: migrated });
+        return migrated;
+      }
+      if (cached && cached.src === "fallback") return cached.val;
+      cacheRef.set(id, { src: "fallback", val: fallback });
       return fallback;
     },
     () => fallback,
