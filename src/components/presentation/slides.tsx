@@ -634,13 +634,14 @@ export function Slide6({ editing }: SlideProps) {
               <>
                 {/* Row 1 horizontal FK arrows: each child → parent on the LEFT (matches→tournaments, maps→matches, teams→maps, players→teams) */}
                 {[0,1,2,3].map((i) => {
-                  const xRight = colW * (i + 1) - 8;  // start at right card's left edge
-                  const xLeft  = colW * (i + 1) + 8;  // tip near left card's right edge
+                  // child (right card, col i+1) → parent (left card, col i): arrow tip on the LEFT
+                  const xRight = colW * (i + 1) + 8;  // tail at right card's left edge
+                  const xLeft  = colW * (i + 1) - 8;  // tip at left card's right edge
                   return (
                     <g key={`r1-${i}`}>
                       <line x1={xRight} y1={ROW1_Y} x2={xLeft} y2={ROW1_Y} stroke="var(--cyan)" strokeWidth="2" markerEnd="url(#s6arr)" />
-                      <RelLabel x={xLeft + 18}  y={ROW1_Y - 14} t="1" />
-                      <RelLabel x={xRight - 18} y={ROW1_Y + 14} t="N" />
+                      <RelLabel x={xLeft - 14}  y={ROW1_Y - 16} t="1" />
+                      <RelLabel x={xRight + 14} y={ROW1_Y + 16} t="N" />
                     </g>
                   );
                 })}
