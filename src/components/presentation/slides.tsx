@@ -3,12 +3,11 @@ import {
   Sliders, Flag, Target, Eye, Users, Crosshair, TrendingUp, Map as MapIcon,
   Trophy, Swords, Filter, Play, BarChart3, Route as RouteIcon, Clock, Rocket,
   Bot, Check, X, Server, Globe, ShieldCheck, GitBranch,
-  Pipette, Palette, Save, LayoutGrid, Frame, Zap, Image as ImageIcon,
-  Video, Activity, SlidersHorizontal, MousePointer2,
 } from "lucide-react";
 import type { ComponentType, ReactElement, ReactNode } from "react";
 import { EditableText } from "./EditableText";
 import { SlideCanvas, SlideHeader } from "./SlideCanvas";
+import { Slide10, Slide11, Slide12 } from "./slides-extra";
 
 type SlideProps = { editing: boolean };
 
