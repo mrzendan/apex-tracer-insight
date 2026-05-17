@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { EditableText } from "./EditableText";
 
 export const SLIDE_W = 1920;
 export const SLIDE_H = 1080;
@@ -45,8 +46,6 @@ export function SlideHeader({
   titleId: string; subtitleId: string;
   titleDefault: string; subtitleDefault: string; editing: boolean;
 }) {
-  // Import here to avoid circular
-  const { EditableText } = require("./EditableText");
   return (
     <div className="px-24 pt-16">
       <div className="flex items-center justify-center gap-6">
