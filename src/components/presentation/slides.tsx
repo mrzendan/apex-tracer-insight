@@ -480,8 +480,8 @@ export function Slide5({ editing }: SlideProps) {
   // SVG viewBox sized to overlay container; we use percentages.
   const ArrowLabel = ({ x, y, text = "1:N" }: { x: number; y: number; text?: string }) => (
     <g>
-      <rect x={x - 22} y={y - 11} width="44" height="22" rx="4" fill="hsl(var(--background))" stroke="hsl(var(--border))" />
-      <text x={x} y={y + 5} fontSize="13" fontFamily="ui-monospace,monospace" fill="hsl(var(--foreground))" textAnchor="middle">{text}</text>
+      <rect x={x - 22} y={y - 11} width="44" height="22" rx="4" fill="var(--background)" stroke="var(--border)" />
+      <text x={x} y={y + 5} fontSize="13" fontFamily="ui-monospace,monospace" fill="var(--foreground)" textAnchor="middle">{text}</text>
     </g>
   );
   return (
@@ -495,10 +495,10 @@ export function Slide5({ editing }: SlideProps) {
         <svg className="pointer-events-none absolute inset-x-16 top-0 z-10 h-[760px] w-[calc(100%-128px)]" viewBox="0 0 1664 760" preserveAspectRatio="none">
           <defs>
             <marker id="s5arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
-              <path d="M0,0 L10,5 L0,10 z" fill="hsl(var(--muted-foreground))" />
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--muted-foreground)" />
             </marker>
             <marker id="s5arrSuccess" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
-              <path d="M0,0 L10,5 L0,10 z" fill="hsl(var(--success))" />
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--success)" />
             </marker>
           </defs>
           {/* Row1 horizontal arrows: Tournament→Match→Map→Event. Card edges ≈ 408px wide + 24 gap. Row1 mid-y ≈ 170 */}
@@ -508,18 +508,18 @@ export function Slide5({ editing }: SlideProps) {
             const y = 170;
             return (
               <g key={i}>
-                <line x1={x1} y1={y} x2={x2 + 0} y2={y} stroke="hsl(var(--muted-foreground))" strokeWidth="2" markerEnd="url(#s5arr)" />
+                <line x1={x1} y1={y} x2={x2 + 0} y2={y} stroke="var(--muted-foreground)" strokeWidth="2" markerEnd="url(#s5arr)" />
               </g>
             );
           })}
           {/* Row2 horizontal: Team→Player */}
-          <line x1={408} y1={590} x2={432} y2={590} stroke="hsl(var(--muted-foreground))" strokeWidth="2" markerEnd="url(#s5arr)" />
+          <line x1={408} y1={590} x2={432} y2={590} stroke="var(--muted-foreground)" strokeWidth="2" markerEnd="url(#s5arr)" />
           {/* Match → Team (vertical from Match card down to Team card) */}
-          <path d={`M ${620} ${350} L ${620} ${440} L ${204} ${440} L ${204} ${500}`} stroke="hsl(var(--muted-foreground))" strokeWidth="2" fill="none" markerEnd="url(#s5arr)" />
+          <path d={`M ${620} ${350} L ${620} ${440} L ${204} ${440} L ${204} ${500}`} stroke="var(--muted-foreground)" strokeWidth="2" fill="none" markerEnd="url(#s5arr)" />
           {/* Map → Position (vertical) */}
-          <line x1={1052} y1={350} x2={1052} y2={500} stroke="hsl(var(--muted-foreground))" strokeWidth="2" markerEnd="url(#s5arr)" />
+          <line x1={1052} y1={350} x2={1052} y2={500} stroke="var(--muted-foreground)" strokeWidth="2" markerEnd="url(#s5arr)" />
           {/* Position → Ring (horizontal dashed - analytical) */}
-          <line x1={1272} y1={590} x2={1296} y2={590} stroke="hsl(var(--success))" strokeWidth="2" strokeDasharray="6 4" markerEnd="url(#s5arrSuccess)" />
+          <line x1={1272} y1={590} x2={1296} y2={590} stroke="var(--success)" strokeWidth="2" strokeDasharray="6 4" markerEnd="url(#s5arrSuccess)" />
           {/* Labels */}
           <ArrowLabel x={420} y={155} />
           <ArrowLabel x={852} y={155} />
@@ -556,7 +556,7 @@ export function Slide5({ editing }: SlideProps) {
               {c==="arrow" ? (
                 <svg width="28" height="10"><line x1="0" y1="5" x2="22" y2="5" stroke="currentColor" strokeWidth="2"/><polyline points="20,1 26,5 20,9" fill="none" stroke="currentColor" strokeWidth="2"/></svg>
               ) : c==="dashed" ? (
-                <svg width="28" height="10"><line x1="0" y1="5" x2="22" y2="5" stroke="hsl(var(--success))" strokeWidth="2" strokeDasharray="4 3"/><polyline points="20,1 26,5 20,9" fill="none" stroke="hsl(var(--success))" strokeWidth="2"/></svg>
+                <svg width="28" height="10"><line x1="0" y1="5" x2="22" y2="5" stroke="var(--success)" strokeWidth="2" strokeDasharray="4 3"/><polyline points="20,1 26,5 20,9" fill="none" stroke="var(--success)" strokeWidth="2"/></svg>
               ) : (
                 <span className={"h-3 w-3 rounded-sm " + (c==="cyan"?"bg-cyan":c==="success"?"bg-success":c==="warning"?"bg-warning":"bg-primary")} />
               )}
@@ -605,8 +605,8 @@ function ErTable({
 export function Slide6({ editing }: SlideProps) {
   const RelLabel = ({ x, y, t }: { x: number; y: number; t: string }) => (
     <g>
-      <rect x={x - 9} y={y - 10} width="18" height="20" rx="3" fill="hsl(var(--background))" stroke="hsl(var(--cyan))" strokeOpacity="0.4" />
-      <text x={x} y={y + 5} fontSize="13" fontFamily="ui-monospace,monospace" fill="hsl(var(--cyan))" textAnchor="middle">{t}</text>
+      <rect x={x - 9} y={y - 10} width="18" height="20" rx="3" fill="var(--background)" stroke="var(--cyan)" strokeOpacity="0.4" />
+      <text x={x} y={y + 5} fontSize="13" fontFamily="ui-monospace,monospace" fill="var(--cyan)" textAnchor="middle">{t}</text>
     </g>
   );
   return (
@@ -620,7 +620,7 @@ export function Slide6({ editing }: SlideProps) {
         <svg className="pointer-events-none absolute inset-x-12 top-0 z-10 h-[800px] w-[calc(100%-96px)]" viewBox="0 0 1728 800" preserveAspectRatio="none">
           <defs>
             <marker id="s6arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
-              <path d="M0,0 L10,5 L0,10 z" fill="hsl(var(--cyan))" />
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--cyan)" />
             </marker>
           </defs>
           {/* Row1 horizontal connectors (between 5 tables, mid-y ≈ 170): tournaments→matches→maps→teams→players  */}
@@ -630,7 +630,7 @@ export function Slide6({ editing }: SlideProps) {
             const x2 = colW * (i + 1) + 16;
             return (
               <g key={i}>
-                <line x1={x1} y1={170} x2={x2} y2={170} stroke="hsl(var(--cyan))" strokeWidth="2" markerEnd="url(#s6arr)" />
+                <line x1={x1} y1={170} x2={x2} y2={170} stroke="var(--cyan)" strokeWidth="2" markerEnd="url(#s6arr)" />
                 <RelLabel x={(x1+x2)/2} y={155} t="1" />
                 <RelLabel x={(x1+x2)/2} y={195} t="N" />
               </g>
@@ -648,7 +648,7 @@ export function Slide6({ editing }: SlideProps) {
             const x = colW * col + colW / 2;
             return (
               <g key={col}>
-                <line x1={x} y1={340} x2={x} y2={460} stroke="hsl(var(--cyan))" strokeWidth="2" strokeDasharray={dashed ? "6 4" : undefined} markerEnd="url(#s6arr)" />
+                <line x1={x} y1={340} x2={x} y2={460} stroke="var(--cyan)" strokeWidth="2" strokeDasharray={dashed ? "6 4" : undefined} markerEnd="url(#s6arr)" />
                 <RelLabel x={x - 20} y={370} t="1" />
                 <RelLabel x={x + 20} y={440} t="N" />
               </g>
@@ -661,7 +661,7 @@ export function Slide6({ editing }: SlideProps) {
             const x2 = colW * 4 + 16;
             return (
               <g>
-                <line x1={x1} y1={620} x2={x2} y2={620} stroke="hsl(var(--cyan))" strokeWidth="2" markerEnd="url(#s6arr)" />
+                <line x1={x1} y1={620} x2={x2} y2={620} stroke="var(--cyan)" strokeWidth="2" markerEnd="url(#s6arr)" />
                 <RelLabel x={(x1+x2)/2} y={605} t="1" />
                 <RelLabel x={(x1+x2)/2} y={645} t="N" />
               </g>
