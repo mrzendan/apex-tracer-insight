@@ -2,7 +2,7 @@ import {
   FolderOpen, FileText, CloudUpload, BrainCircuit, Database, Code2, Monitor, User,
   Sliders, Flag, Target, Eye, Users, Crosshair, TrendingUp, Map as MapIcon,
   Trophy, Swords, Filter, Play, BarChart3, Route as RouteIcon, Clock, Rocket,
-  Bot, Check, X, Server, Globe, ShieldCheck, GitBranch,
+  Bot, Check, X, Server, Globe, ShieldCheck, GitBranch, Gamepad2, MapPin, Settings,
 } from "lucide-react";
 import type { ComponentType, ReactElement, ReactNode } from "react";
 import { EditableText } from "./EditableText";
