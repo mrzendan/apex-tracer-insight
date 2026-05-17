@@ -2,12 +2,13 @@ import {
   FolderOpen, FileText, CloudUpload, BrainCircuit, Database, Code2, Monitor, User,
   Sliders, Flag, Target, Eye, Users, Crosshair, TrendingUp, Map as MapIcon,
   Trophy, Swords, Filter, Play, BarChart3, Route as RouteIcon, Clock, Rocket,
-  Bot, Check, X, Server, Globe, ShieldCheck, GitBranch,
+  Bot, Check, X, Server, Globe, ShieldCheck, GitBranch, Gamepad2, MapPin, Settings,
 } from "lucide-react";
 import type { ComponentType, ReactElement, ReactNode } from "react";
 import { EditableText } from "./EditableText";
 import { SlideCanvas, SlideHeader } from "./SlideCanvas";
 import { Slide10, Slide11, Slide12 } from "./slides-extra";
+import mapImage from "@/assets/maps/storm-point.png";
 
 type SlideProps = { editing: boolean };
 
@@ -346,10 +347,11 @@ export function Slide4({ editing }: SlideProps) {
               ))}
             </Block>
             <Block className="relative p-0 overflow-hidden h-[440px]">
-              <div className="absolute inset-0 hud-grid-bg opacity-40" />
+              <img src={mapImage} alt="Карта Storm Point" className="absolute inset-0 h-full w-full object-cover opacity-80" />
+              <div className="absolute inset-0 hud-grid-bg opacity-20" />
               <div className="absolute left-3 top-3 rounded-md bg-surface/80 px-3 py-1 text-[14px] font-mono">08:37 · Раунд 1</div>
               <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-                <div className="h-72 w-72 rounded-full border-2 border-dashed border-cyan/60" />
+                <div className="h-72 w-72 rounded-full border-2 border-dashed border-cyan/80 shadow-[0_0_40px_rgba(34,211,238,0.25)]" />
               </div>
               <div className="absolute bottom-3 left-3 right-3 flex items-center gap-3 text-[14px]">
                 <Play className="h-5 w-5 text-primary" />
@@ -400,9 +402,11 @@ export function Slide9({ editing }: SlideProps) {
       <div className="mt-10 grid grid-cols-[2.4fr_1fr] gap-5 px-16">
         <Block className="p-5 h-[520px]">
           <div className="mb-4 text-[14px] font-bold uppercase tracking-wider text-muted-foreground">Игровая карта</div>
-          <div className="relative h-[440px] rounded-md border border-border bg-surface-2/40 hud-grid-bg">
+          <div className="relative h-[440px] overflow-hidden rounded-md border border-border bg-surface-2/40">
+            <img src={mapImage} alt="Карта Storm Point" className="absolute inset-0 h-full w-full object-cover opacity-80" />
+            <div className="absolute inset-0 hud-grid-bg opacity-20" />
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="h-80 w-80 rounded-full border-2 border-dashed border-cyan/60" />
+              <div className="h-80 w-80 rounded-full border-2 border-dashed border-cyan/80 shadow-[0_0_50px_rgba(34,211,238,0.25)]" />
             </div>
           </div>
         </Block>
@@ -439,24 +443,30 @@ function EntityCard({
 }: {
   id: string; Icon: ComponentType<{ className?: string; strokeWidth?: number }>;
   title: string; fields: string[]; editing: boolean;
-  color?: "primary" | "cyan" | "success" | "warning";
+  color?: "primary" | "cyan" | "success" | "warning" | "destructive";
 }) {
   const ring: Record<string, string> = {
     primary: "border-primary/50", cyan: "border-cyan/50",
     success: "border-success/50", warning: "border-warning/50",
+    destructive: "border-destructive/50",
+  };
+  const icon: Record<string, string> = {
+    primary: "text-primary", cyan: "text-cyan",
+    success: "text-success", warning: "text-warning",
+    destructive: "text-destructive",
   };
   return (
-    <div className={"rounded-2xl border-2 bg-surface/60 p-5 " + ring[color]}>
+    <div className={"relative rounded-2xl border-2 bg-surface/60 p-5 " + ring[color]}>
       <div className="mb-3 flex items-center gap-3">
-        <Icon className="h-8 w-8 text-cyan" strokeWidth={1.6} />
+        <Icon className={"h-9 w-9 " + icon[color]} strokeWidth={1.6} />
         <EditableText id={id + ".t"} defaultValue={title} editing={editing}
-          className="text-[22px] font-bold" />
+          className="text-[24px] font-bold" />
       </div>
-      <div className="h-0.5 w-12 bg-primary" />
-      <ul className="mt-3 space-y-1.5 text-[16px]">
+      <div className={"h-0.5 w-16 " + (color === "destructive" ? "bg-destructive" : color === "cyan" ? "bg-cyan" : color === "success" ? "bg-success" : color === "warning" ? "bg-warning" : "bg-primary") + " opacity-60"} />
+      <ul className="mt-3 space-y-2 text-[18px]">
         {fields.map((f, i) => (
           <li key={i} className="flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
+            <span className="h-2 w-2 rounded-full bg-muted-foreground" />
             <EditableText id={`${id}.f.${i}`} defaultValue={f} editing={editing} className="font-mono" />
           </li>
         ))}
@@ -466,6 +476,14 @@ function EntityCard({
 }
 
 export function Slide5({ editing }: SlideProps) {
+  // 4-column grid with absolute SVG arrows. Coordinates assume px-16, gap-6, two rows of 4.
+  // SVG viewBox sized to overlay container; we use percentages.
+  const ArrowLabel = ({ x, y, text = "1:N" }: { x: number; y: number; text?: string }) => (
+    <g>
+      <rect x={x - 22} y={y - 11} width="44" height="22" rx="4" fill="hsl(var(--background))" stroke="hsl(var(--border))" />
+      <text x={x} y={y + 5} fontSize="13" fontFamily="ui-monospace,monospace" fill="hsl(var(--foreground))" textAnchor="middle">{text}</text>
+    </g>
+  );
   return (
     <SlideCanvas>
       <SlideHeader
@@ -473,28 +491,75 @@ export function Slide5({ editing }: SlideProps) {
         subtitleId="s5.sub" subtitleDefault="Ключевые сущности и связи внутри системы аналитики матчей Apex Legends."
         editing={editing}
       />
-      <div className="mt-10 grid grid-cols-4 gap-6 px-16">
-        <EntityCard id="s5.tour" Icon={Trophy} title="Турнир" fields={["id","название","сезон","год"]} editing={editing} color="primary" />
-        <EntityCard id="s5.match" Icon={Swords} title="Матч" fields={["id","время_старта","тип","best_of"]} editing={editing} color="primary" />
-        <EntityCard id="s5.map" Icon={MapIcon} title="Карта" fields={["id","название","порядок","длительность"]} editing={editing} color="cyan" />
-        <EntityCard id="s5.evt" Icon={Play} title="Событие таймлайна" fields={["id","тип","метка_времени","данные"]} editing={editing} color="primary" />
-
-        <EntityCard id="s5.team" Icon={Users} title="Команда" fields={["id","название","тег","регион"]} editing={editing} color="primary" />
-        <EntityCard id="s5.player" Icon={User} title="Игрок" fields={["id","имя","роль","team_id"]} editing={editing} color="primary" />
-        <EntityCard id="s5.pos" Icon={MapIcon} title="Позиция команды" fields={["id","map_id","team_id","метка_времени","позиция"]} editing={editing} color="success" />
-        <EntityCard id="s5.ring" Icon={Target} title="Кольцо" fields={["id","map_id","номер_кольца","полигон","timestamp"]} editing={editing} color="primary" />
+      <div className="relative mt-10 px-16">
+        <svg className="pointer-events-none absolute inset-x-16 top-0 z-10 h-[760px] w-[calc(100%-128px)]" viewBox="0 0 1664 760" preserveAspectRatio="none">
+          <defs>
+            <marker id="s5arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0,0 L10,5 L0,10 z" fill="hsl(var(--muted-foreground))" />
+            </marker>
+            <marker id="s5arrSuccess" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0,0 L10,5 L0,10 z" fill="hsl(var(--success))" />
+            </marker>
+          </defs>
+          {/* Row1 horizontal arrows: Tournament→Match→Map→Event. Card edges ≈ 408px wide + 24 gap. Row1 mid-y ≈ 170 */}
+          {[0,1,2].map((i) => {
+            const x1 = 408 + i * 432;
+            const x2 = 432 + i * 432;
+            const y = 170;
+            return (
+              <g key={i}>
+                <line x1={x1} y1={y} x2={x2 + 0} y2={y} stroke="hsl(var(--muted-foreground))" strokeWidth="2" markerEnd="url(#s5arr)" />
+              </g>
+            );
+          })}
+          {/* Row2 horizontal: Team→Player */}
+          <line x1={408} y1={590} x2={432} y2={590} stroke="hsl(var(--muted-foreground))" strokeWidth="2" markerEnd="url(#s5arr)" />
+          {/* Match → Team (vertical from Match card down to Team card) */}
+          <path d={`M ${620} ${350} L ${620} ${440} L ${204} ${440} L ${204} ${500}`} stroke="hsl(var(--muted-foreground))" strokeWidth="2" fill="none" markerEnd="url(#s5arr)" />
+          {/* Map → Position (vertical) */}
+          <line x1={1052} y1={350} x2={1052} y2={500} stroke="hsl(var(--muted-foreground))" strokeWidth="2" markerEnd="url(#s5arr)" />
+          {/* Position → Ring (horizontal dashed - analytical) */}
+          <line x1={1272} y1={590} x2={1296} y2={590} stroke="hsl(var(--success))" strokeWidth="2" strokeDasharray="6 4" markerEnd="url(#s5arrSuccess)" />
+          {/* Labels */}
+          <ArrowLabel x={420} y={155} />
+          <ArrowLabel x={852} y={155} />
+          <ArrowLabel x={1284} y={155} />
+          <ArrowLabel x={420} y={575} />
+          <ArrowLabel x={640} y={420} />
+          <ArrowLabel x={1072} y={420} />
+          <ArrowLabel x={1284} y={575} />
+        </svg>
+        <div className="grid grid-cols-4 gap-6">
+          <EntityCard id="s5.tour"   Icon={Trophy} title="Турнир" fields={["id","название","сезон","год"]} editing={editing} color="primary" />
+          <EntityCard id="s5.match"  Icon={Swords} title="Матч" fields={["id","время_старта","тип","best_of"]} editing={editing} color="primary" />
+          <EntityCard id="s5.map"    Icon={MapIcon} title="Карта" fields={["id","название","порядок","длительность"]} editing={editing} color="cyan" />
+          <EntityCard id="s5.evt"    Icon={Play} title="Событие таймлайна" fields={["id","тип","метка_времени","данные"]} editing={editing} color="warning" />
+        </div>
+        <div className="mt-12 grid grid-cols-4 gap-6">
+          <EntityCard id="s5.team"   Icon={Users} title="Команда" fields={["id","название","тег","регион"]} editing={editing} color="primary" />
+          <EntityCard id="s5.player" Icon={User} title="Игрок" fields={["id","имя","роль","team_id"]} editing={editing} color="primary" />
+          <EntityCard id="s5.pos"    Icon={MapPin} title="Позиция команды" fields={["id","map_id","team_id","метка_времени","позиция"]} editing={editing} color="success" />
+          <EntityCard id="s5.ring"   Icon={Target} title="Кольцо" fields={["id","map_id","номер_кольца","полигон","timestamp"]} editing={editing} color="warning" />
+        </div>
       </div>
-      <div className="mt-10 mx-16 rounded-xl border border-border bg-surface/40 p-4">
-        <div className="grid grid-cols-5 gap-4 text-[14px] text-muted-foreground">
+      <div className="mt-8 mx-16 rounded-xl border border-border bg-surface/40 px-5 py-3">
+        <div className="grid grid-cols-6 gap-3 text-[14px] text-muted-foreground">
           {[
             ["primary","Основные сущности (соревновательный контекст)"],
             ["cyan","Игровой контент (карта)"],
             ["success","Аналитические сущности (позиции)"],
-            ["primary","Аналитические сущности (события)"],
-            ["","Связь 1:N — стрелка"],
+            ["warning","Аналитические сущности (события)"],
+            ["arrow","Связь 1:N"],
+            ["dashed","Аналитическая связь 1:N"],
           ].map(([c,l],i)=>(
             <div key={i} className="flex items-center gap-2">
-              {c && <span className={"h-3 w-3 rounded-sm " + (c==="cyan"?"bg-cyan":c==="success"?"bg-success":"bg-primary")} />}
+              {c==="arrow" ? (
+                <svg width="28" height="10"><line x1="0" y1="5" x2="22" y2="5" stroke="currentColor" strokeWidth="2"/><polyline points="20,1 26,5 20,9" fill="none" stroke="currentColor" strokeWidth="2"/></svg>
+              ) : c==="dashed" ? (
+                <svg width="28" height="10"><line x1="0" y1="5" x2="22" y2="5" stroke="hsl(var(--success))" strokeWidth="2" strokeDasharray="4 3"/><polyline points="20,1 26,5 20,9" fill="none" stroke="hsl(var(--success))" strokeWidth="2"/></svg>
+              ) : (
+                <span className={"h-3 w-3 rounded-sm " + (c==="cyan"?"bg-cyan":c==="success"?"bg-success":c==="warning"?"bg-warning":"bg-primary")} />
+              )}
               <span>{l}</span>
             </div>
           ))}
@@ -507,12 +572,12 @@ export function Slide5({ editing }: SlideProps) {
 /* ────────────────────────── 6. ER diagram ────────────────────────── */
 
 function ErTable({
-  id, title, rows, editing,
-}: { id: string; title: string; rows: [string,string,string][]; editing: boolean }) {
+  id, title, rows, editing, Icon = Database,
+}: { id: string; title: string; rows: [string,string,string][]; editing: boolean; Icon?: ComponentType<{ className?: string; strokeWidth?: number }> }) {
   return (
-    <div className="rounded-xl border border-cyan/40 bg-surface/60 p-4">
+    <div className="relative rounded-xl border border-cyan/40 bg-surface/60 p-4">
       <div className="mb-2 flex items-center gap-2">
-        <Database className="h-5 w-5 text-cyan" strokeWidth={1.8} />
+        <Icon className="h-6 w-6 text-cyan" strokeWidth={1.8} />
         <EditableText id={id + ".t"} defaultValue={title} editing={editing} className="text-[20px] font-bold" />
       </div>
       <div className="h-px w-full bg-border" />
@@ -538,6 +603,12 @@ function ErTable({
 }
 
 export function Slide6({ editing }: SlideProps) {
+  const RelLabel = ({ x, y, t }: { x: number; y: number; t: string }) => (
+    <g>
+      <rect x={x - 9} y={y - 10} width="18" height="20" rx="3" fill="hsl(var(--background))" stroke="hsl(var(--cyan))" strokeOpacity="0.4" />
+      <text x={x} y={y + 5} fontSize="13" fontFamily="ui-monospace,monospace" fill="hsl(var(--cyan))" textAnchor="middle">{t}</text>
+    </g>
+  );
   return (
     <SlideCanvas>
       <SlideHeader
@@ -545,39 +616,92 @@ export function Slide6({ editing }: SlideProps) {
         subtitleId="s6.sub" subtitleDefault="Упрощённая структура таблиц и связей для хранения аналитики матчей."
         editing={editing}
       />
-      <div className="mt-10 grid grid-cols-5 gap-4 px-12">
-        <ErTable id="s6.tour" title="tournaments" editing={editing} rows={[
+      <div className="relative mt-10 px-12">
+        <svg className="pointer-events-none absolute inset-x-12 top-0 z-10 h-[800px] w-[calc(100%-96px)]" viewBox="0 0 1728 800" preserveAspectRatio="none">
+          <defs>
+            <marker id="s6arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0,0 L10,5 L0,10 z" fill="hsl(var(--cyan))" />
+            </marker>
+          </defs>
+          {/* Row1 horizontal connectors (between 5 tables, mid-y ≈ 170): tournaments→matches→maps→teams→players  */}
+          {[0,1,2,3].map((i) => {
+            const colW = 1728 / 5; // ≈ 345.6
+            const x1 = colW * (i + 1) - 16;
+            const x2 = colW * (i + 1) + 16;
+            return (
+              <g key={i}>
+                <line x1={x1} y1={170} x2={x2} y2={170} stroke="hsl(var(--cyan))" strokeWidth="2" markerEnd="url(#s6arr)" />
+                <RelLabel x={(x1+x2)/2} y={155} t="1" />
+                <RelLabel x={(x1+x2)/2} y={195} t="N" />
+              </g>
+            );
+          })}
+          {/* Vertical connectors row1→row2: tournaments→rings(dashed), matches→team_positions, maps→timeline_events, teams→analysis_jobs, players→analysis_outputs(dashed) */}
+          {[
+            { col: 0, dashed: true },
+            { col: 1, dashed: false },
+            { col: 2, dashed: false },
+            { col: 3, dashed: false },
+            { col: 4, dashed: true },
+          ].map(({ col, dashed }) => {
+            const colW = 1728 / 5;
+            const x = colW * col + colW / 2;
+            return (
+              <g key={col}>
+                <line x1={x} y1={340} x2={x} y2={460} stroke="hsl(var(--cyan))" strokeWidth="2" strokeDasharray={dashed ? "6 4" : undefined} markerEnd="url(#s6arr)" />
+                <RelLabel x={x - 20} y={370} t="1" />
+                <RelLabel x={x + 20} y={440} t="N" />
+              </g>
+            );
+          })}
+          {/* analysis_jobs → analysis_outputs (row2 col4 → col5 horizontal) */}
+          {(() => {
+            const colW = 1728 / 5;
+            const x1 = colW * 4 - 16;
+            const x2 = colW * 4 + 16;
+            return (
+              <g>
+                <line x1={x1} y1={620} x2={x2} y2={620} stroke="hsl(var(--cyan))" strokeWidth="2" markerEnd="url(#s6arr)" />
+                <RelLabel x={(x1+x2)/2} y={605} t="1" />
+                <RelLabel x={(x1+x2)/2} y={645} t="N" />
+              </g>
+            );
+          })()}
+        </svg>
+        <div className="grid grid-cols-5 gap-4">
+        <ErTable id="s6.tour" title="tournaments" Icon={Trophy} editing={editing} rows={[
           ["PK","id","integer"],["","name","text"],["","game","text"],["","start_date","timestamp"],["","end_date","timestamp"],
         ]} />
-        <ErTable id="s6.match" title="matches" editing={editing} rows={[
+        <ErTable id="s6.match" title="matches" Icon={Gamepad2} editing={editing} rows={[
           ["PK","id","integer"],["FK","tournament_id","integer"],["","name","text"],["","start_time","timestamp"],["","status","text"],
         ]} />
-        <ErTable id="s6.maps" title="maps" editing={editing} rows={[
+        <ErTable id="s6.maps" title="maps" Icon={MapIcon} editing={editing} rows={[
           ["PK","id","integer"],["FK","match_id","integer"],["","name","text"],["","order_index","integer"],["","map_type","text"],
         ]} />
-        <ErTable id="s6.teams" title="teams" editing={editing} rows={[
+        <ErTable id="s6.teams" title="teams" Icon={Users} editing={editing} rows={[
           ["PK","id","integer"],["FK","tournament_id","integer"],["","name","text"],["","tag","text"],["","region","text"],
         ]} />
-        <ErTable id="s6.players" title="players" editing={editing} rows={[
+        <ErTable id="s6.players" title="players" Icon={User} editing={editing} rows={[
           ["PK","id","integer"],["FK","team_id","integer"],["","nick","text"],["","role","text"],["","nationality","text"],
         ]} />
-      </div>
-      <div className="mt-6 grid grid-cols-5 gap-4 px-12">
-        <ErTable id="s6.rings" title="rings" editing={editing} rows={[
+        </div>
+        <div className="mt-6 grid grid-cols-5 gap-4">
+        <ErTable id="s6.rings" title="rings" Icon={Target} editing={editing} rows={[
           ["PK","id","integer"],["FK","map_id","integer"],["","ring_number","integer"],["","start_time","timestamp"],["","end_time","timestamp"],
         ]} />
-        <ErTable id="s6.pos" title="team_positions" editing={editing} rows={[
+        <ErTable id="s6.pos" title="team_positions" Icon={Flag} editing={editing} rows={[
           ["PK","id","integer"],["FK","map_id","integer"],["FK","team_id","integer"],["FK","ring_id","integer"],["","position","text"],
         ]} />
-        <ErTable id="s6.evt" title="timeline_events" editing={editing} rows={[
+        <ErTable id="s6.evt" title="timeline_events" Icon={Clock} editing={editing} rows={[
           ["PK","id","integer"],["FK","map_id","integer"],["FK","team_id","integer"],["","event_type","text"],["","event_time","timestamp"],
         ]} />
-        <ErTable id="s6.jobs" title="analysis_jobs" editing={editing} rows={[
+        <ErTable id="s6.jobs" title="analysis_jobs" Icon={Settings} editing={editing} rows={[
           ["PK","id","integer"],["FK","map_id","integer"],["","job_type","text"],["","status","text"],["","created_at","timestamp"],
         ]} />
-        <ErTable id="s6.out" title="analysis_outputs" editing={editing} rows={[
+        <ErTable id="s6.out" title="analysis_outputs" Icon={Database} editing={editing} rows={[
           ["PK","id","integer"],["FK","job_id","integer"],["","output_type","text"],["","file_url","text"],["","created_at","timestamp"],
         ]} />
+        </div>
       </div>
       <div className="mt-8 flex items-center justify-center gap-6 text-[16px] text-muted-foreground">
         <div className="flex items-center gap-2"><span className="rounded bg-cyan/20 px-2 py-0.5 text-[12px] font-bold text-cyan">PK</span> Primary Key</div>
@@ -607,7 +731,10 @@ export function Slide7({ editing }: SlideProps) {
               className="text-[26px] font-bold text-destructive" />
           </div>
           <div className="grid grid-cols-[1fr_1.1fr] gap-5">
-            <div className="h-64 rounded-lg border border-border bg-surface-2/40 hud-grid-bg" />
+            <div className="relative h-64 overflow-hidden rounded-lg border border-border bg-surface-2/40">
+              <img src={mapImage} alt="VOD кадр" className="absolute inset-0 h-full w-full object-cover opacity-50 grayscale" />
+              <div className="absolute inset-0 flex items-center justify-center text-[14px] text-muted-foreground">VOD · ручной просмотр</div>
+            </div>
             <ul className="space-y-3">
               {manual.map((m, i) => (
                 <li key={i} className="flex items-center gap-2 text-[18px]">
@@ -630,7 +757,13 @@ export function Slide7({ editing }: SlideProps) {
               className="text-[26px] font-bold text-success" />
           </div>
           <div className="grid grid-cols-[1.1fr_1fr] gap-5">
-            <div className="h-64 rounded-lg border border-border bg-surface-2/40 hud-grid-bg" />
+            <div className="relative h-64 overflow-hidden rounded-lg border border-border bg-surface-2/40">
+              <img src={mapImage} alt="Дашборд" className="absolute inset-0 h-full w-full object-cover opacity-80" />
+              <div className="absolute inset-0 hud-grid-bg opacity-15" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="h-40 w-40 rounded-full border-2 border-dashed border-success/80" />
+              </div>
+            </div>
             <ul className="space-y-3">
               {auto.map((a, i) => (
                 <li key={i} className="flex items-center gap-2 text-[18px]">
