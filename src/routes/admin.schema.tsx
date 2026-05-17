@@ -151,13 +151,24 @@ function SchemaEditor() {
   useEffect(() => { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); }, [prefs]);
 
   const mono = prefs.theme === "mono";
-  const strokeColor = mono ? "var(--foreground)" : "var(--primary)";
-  const strokeColorSoft = mono
-    ? "color-mix(in oklab, var(--foreground) 55%, transparent)"
-    : "color-mix(in oklab, var(--primary) 55%, transparent)";
-  const headFill = mono ? "var(--surface-2)" : "color-mix(in oklab, var(--primary) 15%, transparent)";
-  const rowSelFill = mono ? "color-mix(in oklab, var(--foreground) 10%, transparent)" : "color-mix(in oklab, var(--primary) 10%, transparent)";
-  const accentSoft = mono ? "var(--foreground)" : "var(--accent)";
+  // Report-friendly monochrome palette (paper-white canvas, black ink).
+  const m = {
+    canvasBg: mono ? "#ffffff" : "var(--background)",
+    gridColor: mono ? "rgba(0,0,0,0.08)" : "color-mix(in oklab, var(--border) 60%, transparent)",
+    ink: mono ? "#000000" : "var(--foreground)",
+    inkSoft: mono ? "rgba(0,0,0,0.55)" : "var(--muted-foreground)",
+    border: mono ? "#000000" : "var(--border)",
+    borderSoft: mono ? "rgba(0,0,0,0.35)" : "var(--border)",
+    blockFill: mono ? "#ffffff" : "var(--surface)",
+    headFill: mono ? "#f0f0f0" : "var(--surface-2)",
+    headFillSel: mono ? "#d9d9d9" : "color-mix(in oklab, var(--primary) 15%, transparent)",
+    rowSelFill: mono ? "rgba(0,0,0,0.08)" : "color-mix(in oklab, var(--primary) 10%, transparent)",
+    portIdle: mono ? "#000000" : "var(--border)",
+    portActive: mono ? "#000000" : "var(--accent)",
+    portStroke: mono ? "#ffffff" : "var(--surface)",
+  };
+  const strokeColor = m.ink;
+  const strokeColorSoft = mono ? "rgba(0,0,0,0.6)" : "color-mix(in oklab, var(--primary) 55%, transparent)";
 
   const mutate = (fn: (d: SchemaDoc) => SchemaDoc) => setDoc((d) => fn(structuredClone(d)));
 
@@ -292,11 +303,11 @@ function SchemaEditor() {
 
       <div className="flex min-h-0 flex-1">
         {/* Canvas */}
-        <div className="relative min-w-0 flex-1 overflow-hidden bg-background" onWheel={onWheel}>
+        <div className="relative min-w-0 flex-1 overflow-hidden" style={{ background: m.canvasBg }} onWheel={onWheel}>
           <svg
             ref={svgRef}
             className="block h-full w-full"
-            style={{ background: "repeating-linear-gradient(0deg, transparent 0 23px, color-mix(in oklab, var(--border) 60%, transparent) 23px 24px), repeating-linear-gradient(90deg, transparent 0 23px, color-mix(in oklab, var(--border) 60%, transparent) 23px 24px)" }}
+            style={{ background: `repeating-linear-gradient(0deg, transparent 0 23px, ${m.gridColor} 23px 24px), repeating-linear-gradient(90deg, transparent 0 23px, ${m.gridColor} 23px 24px)` }}
             onMouseDown={onCanvasMouseDown}
             onMouseMove={onMove}
             onMouseUp={onUp}
@@ -339,7 +350,7 @@ function SchemaEditor() {
                       markerEnd={endId}
                       markerStart={startId}
                     />
-                    <text x={(a.x + b2.x) / 2} y={(a.y + b2.y) / 2 - 4} textAnchor="middle" className="text-mono" fontSize={10} fill="var(--muted-foreground)">{r.kind}</text>
+                    <text x={(a.x + b2.x) / 2} y={(a.y + b2.y) / 2 - 4} textAnchor="middle" className="text-mono" fontSize={10} fill={m.inkSoft}>{r.kind}</text>
                   </g>
                 );
               })}
@@ -356,30 +367,30 @@ function SchemaEditor() {
                 const isSel = selected?.blockId === b.id;
                 return (
                   <g key={b.id} data-block transform={`translate(${b.x} ${b.y})`} onMouseDown={(e) => onBlockMouseDown(e, b)}>
-                    <rect width={BLOCK_W} height={blockHeight(b)} rx={6} className="fill-surface" stroke={isSel ? strokeColor : "var(--border)"} strokeWidth={isSel ? 1.5 : 1} />
-                    <rect width={BLOCK_W} height={HEAD_H} rx={6} fill={isSel ? headFill : "var(--surface-2)"} />
-                    <text x={10} y={20} className="font-mono" fontSize={12} fontWeight={700} fill="var(--foreground)">{b.name}</text>
-                    <text x={BLOCK_W - 10} y={20} textAnchor="end" fontSize={9} fill="var(--muted-foreground)">{b.fields.length}</text>
+                    <rect width={BLOCK_W} height={blockHeight(b)} rx={6} fill={m.blockFill} stroke={isSel ? strokeColor : m.borderSoft} strokeWidth={isSel ? 1.5 : 1} />
+                    <rect width={BLOCK_W} height={HEAD_H} rx={6} fill={isSel ? m.headFillSel : m.headFill} />
+                    <text x={10} y={20} className="font-mono" fontSize={12} fontWeight={700} fill={m.ink}>{b.name}</text>
+                    <text x={BLOCK_W - 10} y={20} textAnchor="end" fontSize={9} fill={m.inkSoft}>{b.fields.length}</text>
                     {b.fields.map((f, i) => {
                       const y = HEAD_H + i * ROW_H;
                       const fSel = isSel && selected?.fieldId === f.id;
                       return (
                         <g key={f.id} onClick={(e) => { e.stopPropagation(); setSelected({ blockId: b.id, fieldId: f.id }); setSelectedRel(null); }}>
-                          <rect x={1} y={y} width={BLOCK_W - 2} height={ROW_H} fill={fSel ? rowSelFill : "transparent"} />
-                          <circle cx={0} cy={y + ROW_H / 2} r={4} fill={connect ? accentSoft : "var(--border)"} stroke="var(--surface)" strokeWidth={1}
+                          <rect x={1} y={y} width={BLOCK_W - 2} height={ROW_H} fill={fSel ? m.rowSelFill : "transparent"} />
+                          <circle cx={0} cy={y + ROW_H / 2} r={4} fill={connect ? m.portActive : m.portIdle} stroke={m.portStroke} strokeWidth={1}
                             data-no-drag
                             style={{ cursor: "crosshair" }}
                             onMouseDown={(e) => { e.stopPropagation(); if (connect) { completeConnect(b.id, f.id); } else { startConnect(b.id, f.id); } }}
                           />
-                          <circle cx={BLOCK_W} cy={y + ROW_H / 2} r={4} fill={connect ? accentSoft : "var(--border)"} stroke="var(--surface)" strokeWidth={1}
+                          <circle cx={BLOCK_W} cy={y + ROW_H / 2} r={4} fill={connect ? m.portActive : m.portIdle} stroke={m.portStroke} strokeWidth={1}
                             data-no-drag
                             style={{ cursor: "crosshair" }}
                             onMouseDown={(e) => { e.stopPropagation(); if (connect) { completeConnect(b.id, f.id); } else { startConnect(b.id, f.id); } }}
                           />
-                          <text x={10} y={y + 15} fontSize={11} className="font-mono" fill="var(--foreground)">
+                          <text x={10} y={y + 15} fontSize={11} className="font-mono" fill={m.ink}>
                             {f.pk ? "★ " : ""}{f.name}
                           </text>
-                          <text x={BLOCK_W - 10} y={y + 15} textAnchor="end" fontSize={10} className="font-mono" fill="var(--muted-foreground)">{f.type}</text>
+                          <text x={BLOCK_W - 10} y={y + 15} textAnchor="end" fontSize={10} className="font-mono" fill={m.inkSoft}>{f.type}</text>
                         </g>
                       );
                     })}
