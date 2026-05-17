@@ -745,4 +745,7 @@ export const SLIDES: SlideDef[] = [
   { id: "07", title: "Ручной vs автоматизированный анализ", subtitle: "Сравнение разбора матча.", Component: Slide7 },
   { id: "08", title: "Технологический стек", subtitle: "Ключевые технологии платформы.", Component: Slide8 },
   { id: "09", title: "Пользовательский сценарий — детали", subtitle: "Подробный разбор дашборда аналитика.", Component: Slide9 },
+  { id: "10", title: "HSV — калибровка цвета команд", subtitle: "Пипетка и бинарная HSV-маска.", Component: Slide10 },
+  { id: "11", title: "ZONES — зоны HUD", subtitle: "Быстрая разметка зон интерфейса трансляции.", Component: Slide11 },
+  { id: "12", title: "CAMERA — калибровка камеры", subtitle: "Сравнение сайта, видеопотока и графиков скачков.", Component: Slide12 },
 ];
