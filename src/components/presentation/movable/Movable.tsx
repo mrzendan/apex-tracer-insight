@@ -68,12 +68,15 @@ export function Movable({
       )}
       {editing && !dragAnywhere && (
         <div
-          className="absolute left-0 right-0 top-0 z-20 h-7 cursor-move rounded-t-xl bg-primary/15 ring-1 ring-primary/30"
+          className="absolute left-0 right-0 z-20 flex h-6 cursor-move items-center justify-center rounded-t bg-primary/80 text-[10px] font-bold tracking-wider text-primary-foreground shadow"
+          style={{ top: -24 }}
           onPointerDown={onPointerDown("move")}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           title="Перетащить"
-        />
+        >
+          ⋮⋮  DRAG
+        </div>
       )}
       <div className="absolute inset-0">{children}</div>
       {/* Resize handles */}
