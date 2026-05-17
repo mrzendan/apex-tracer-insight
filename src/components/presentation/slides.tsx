@@ -155,7 +155,7 @@ export function Slide2({ editing }: SlideProps) {
             {[
               { id: "s2.vod", Icon: FolderOpen, label: "VOD / запись матча" },
               { id: "s2.meta", Icon: FileText, label: "Метаданные матча" },
-              { id: "s2.map", iconName: "Map", label: "Карта / ассеты" },
+              { id: "s2.map", Icon: MapIcon, label: "Карта / ассеты" },
             ].map((it) => (
               <Block key={it.id} className="p-4">
                 <div className="flex flex-col items-center gap-2">
@@ -178,10 +178,10 @@ export function Slide2({ editing }: SlideProps) {
           <div className="mx-auto h-0.5 w-10 bg-primary" />
           <div className="mt-4 space-y-3">
             {[
-              { id: "s2.start", iconName: "Flag", label: "Старт карты" },
-              { id: "s2.ring", iconName: "Target", label: "Кольца" },
+              { id: "s2.start", Icon: Flag, label: "Старт карты" },
+              { id: "s2.ring", Icon: Target, label: "Кольца" },
               { id: "s2.gaze", Icon: Eye, label: "Трекинг обзора" },
-              { id: "s2.team", iconName: "Users", label: "Трекинг команд" },
+              { id: "s2.team", Icon: Users, label: "Трекинг команд" },
             ].map((it) => (
               <div key={it.id} className="flex items-center gap-3 rounded-lg border border-border bg-surface-2/60 px-3 py-2">
                 <it.Icon className="h-5 w-5 text-cyan" strokeWidth={1.8} />
@@ -212,15 +212,15 @@ export function Slide3({ editing }: SlideProps) {
   const steps = [
     { n: 1, Icon: Play, title: "Видеокадр", caption: "Исходный кадр трансляции" },
     { n: 2, Icon: Crosshair, title: "Миникарта / HUD", caption: "Выделение нужной области" },
-    { n: 3, iconName: "Map", title: "Регистрация карты", caption: "Привязка к игровой карте" },
-    { n: 4, iconName: "Target", title: "Детекция кольца", caption: "Поиск текущей зоны" },
-    { n: 5, iconName: "Users", title: "Детекция маркеров команд", caption: "Поиск игроков и сквадов" },
+    { n: 3, Icon: MapIcon, title: "Регистрация карты", caption: "Привязка к игровой карте" },
+    { n: 4, Icon: Target, title: "Детекция кольца", caption: "Поиск текущей зоны" },
+    { n: 5, Icon: Users, title: "Детекция маркеров команд", caption: "Поиск игроков и сквадов" },
     { n: 6, Icon: BarChart3, title: "Нормализация координат", caption: "Перевод в единое пространство" },
     { n: 7, Icon: TrendingUp, title: "Трекинг и результат", caption: "Траектории, события и вывод" },
   ];
   const tech = [
     { Icon: Eye, label: "OpenCV" },
-    { iconName: "Target", label: "Сегментация цвета" },
+    { Icon: Target, label: "Сегментация цвета" },
     { Icon: Crosshair, label: "Шаблонное сопоставление" },
     { Icon: Eye, label: "Детекция объектов" },
     { Icon: TrendingUp, label: "Калман-фильтр" },
@@ -276,9 +276,9 @@ export function Slide3({ editing }: SlideProps) {
 
 const FLOW_STEPS = [
   { Icon: BarChart3, label: "Открыть дашборд" },
-  { iconName: "Trophy", label: "Выбрать турнир" },
+  { Icon: Trophy, label: "Выбрать турнир" },
   { Icon: Swords, label: "Выбрать матч" },
-  { iconName: "Map", label: "Выбрать карту" },
+  { Icon: MapIcon, label: "Выбрать карту" },
   { Icon: Filter, label: "Применить фильтры" },
   { Icon: Play, label: "Изучить таймлайн и карту" },
   { Icon: TrendingUp, label: "Получить инсайты" },
@@ -415,11 +415,11 @@ export function Slide9({ editing }: SlideProps) {
         </Block>
         <div className="space-y-4">
           {[
-            { iconName: "Users", t: "Панель команд", d: "Списки команд слева и справа. Цветовая привязка к маршрутам и текущему состоянию." },
+            { Icon: Users, t: "Панель команд", d: "Списки команд слева и справа. Цветовая привязка к маршрутам и текущему состоянию." },
             { Icon: Filter, t: "Фильтры матча", d: "Выбор турнира, матча и карты в боковой панели. Фильтры по командам и фазам." },
-            { iconName: "Map", t: "Игровая карта", d: "Центральная зона карты с маршрутами команд, кольцом, таймингами и подписями." },
+            { Icon: MapIcon, t: "Игровая карта", d: "Центральная зона карты с маршрутами команд, кольцом, таймингами и подписями." },
             { Icon: Play, t: "Воспроизведение", d: "Нижняя шкала времени для навигации по раундам и ключевым событиям." },
-            { iconName: "Clock", t: "Таймер раунда", d: "Верхний индикатор показывает текущую фазу и оставшееся время." },
+            { Icon: Clock, t: "Таймер раунда", d: "Верхний индикатор показывает текущую фазу и оставшееся время." },
           ].map((b, i) => (
             <Block key={i} className="p-4">
               <div className="flex gap-3">
@@ -773,7 +773,7 @@ export function Slide8({ editing }: SlideProps) {
     { title: "Backend API", Icon: Server, items: ["NestJS","TypeScript","REST API","WebSocket"] },
     { title: "Сбор данных", Icon: CloudUpload, items: ["Node.js","TypeScript","Scheduler","BullMQ"] },
     { title: "Анализ (CV)", Icon: Eye, items: ["Python","OpenCV","NumPy","YOLO"] },
-    { title: "База данных", iconName: "Database", items: ["PostgreSQL","PostGIS","Prisma ORM"] },
+    { title: "База данных", Icon: Database, items: ["PostgreSQL","PostGIS","Prisma ORM"] },
     { title: "Инфраструктура", Icon: Server, items: ["Docker","Nginx","PM2","Ubuntu"] },
   ];
   const common = [
