@@ -290,7 +290,7 @@ function SchemaEditor() {
                 return (
                   <g key={r.id} className="cursor-pointer" onClick={(e) => { e.stopPropagation(); setSelectedRel(r.id); setSelected(null); }}>
                     <path d={d} fill="none" stroke="transparent" strokeWidth={14} />
-                    <path d={d} fill="none" stroke={isSel ? "var(--primary)" : "hsl(var(--primary) / 0.55)"} strokeWidth={isSel ? 2 : 1.5}
+                    <path d={d} fill="none" stroke={isSel ? "var(--primary)" : "color-mix(in oklab, var(--primary) 55%, transparent)"} strokeWidth={isSel ? 2 : 1.5}
                       markerEnd={r.kind === "1-1" ? "url(#arrow)" : "url(#arrow-many)"}
                       markerStart={r.kind === "N-M" ? "url(#arrow-many)" : undefined}
                     />
