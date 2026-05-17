@@ -8,6 +8,7 @@ import type { ComponentType, ReactElement, ReactNode } from "react";
 import { EditableText } from "./EditableText";
 import { SlideCanvas, SlideHeader } from "./SlideCanvas";
 import { Slide10, Slide11, Slide12 } from "./slides-extra";
+import mapImage from "@/assets/maps/storm-point.png";
 
 type SlideProps = { editing: boolean };
 
