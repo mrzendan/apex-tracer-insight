@@ -439,24 +439,30 @@ function EntityCard({
 }: {
   id: string; Icon: ComponentType<{ className?: string; strokeWidth?: number }>;
   title: string; fields: string[]; editing: boolean;
-  color?: "primary" | "cyan" | "success" | "warning";
+  color?: "primary" | "cyan" | "success" | "warning" | "destructive";
 }) {
   const ring: Record<string, string> = {
     primary: "border-primary/50", cyan: "border-cyan/50",
     success: "border-success/50", warning: "border-warning/50",
+    destructive: "border-destructive/50",
+  };
+  const icon: Record<string, string> = {
+    primary: "text-primary", cyan: "text-cyan",
+    success: "text-success", warning: "text-warning",
+    destructive: "text-destructive",
   };
   return (
-    <div className={"rounded-2xl border-2 bg-surface/60 p-5 " + ring[color]}>
+    <div className={"relative rounded-2xl border-2 bg-surface/60 p-5 " + ring[color]}>
       <div className="mb-3 flex items-center gap-3">
-        <Icon className="h-8 w-8 text-cyan" strokeWidth={1.6} />
+        <Icon className={"h-9 w-9 " + icon[color]} strokeWidth={1.6} />
         <EditableText id={id + ".t"} defaultValue={title} editing={editing}
-          className="text-[22px] font-bold" />
+          className="text-[24px] font-bold" />
       </div>
-      <div className="h-0.5 w-12 bg-primary" />
-      <ul className="mt-3 space-y-1.5 text-[16px]">
+      <div className={"h-0.5 w-16 " + (color === "destructive" ? "bg-destructive" : color === "cyan" ? "bg-cyan" : color === "success" ? "bg-success" : color === "warning" ? "bg-warning" : "bg-primary") + " opacity-60"} />
+      <ul className="mt-3 space-y-2 text-[18px]">
         {fields.map((f, i) => (
           <li key={i} className="flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
+            <span className="h-2 w-2 rounded-full bg-muted-foreground" />
             <EditableText id={`${id}.f.${i}`} defaultValue={f} editing={editing} className="font-mono" />
           </li>
         ))}
@@ -466,6 +472,14 @@ function EntityCard({
 }
 
 export function Slide5({ editing }: SlideProps) {
+  // 4-column grid with absolute SVG arrows. Coordinates assume px-16, gap-6, two rows of 4.
+  // SVG viewBox sized to overlay container; we use percentages.
+  const ArrowLabel = ({ x, y, text = "1:N" }: { x: number; y: number; text?: string }) => (
+    <g>
+      <rect x={x - 22} y={y - 11} width="44" height="22" rx="4" fill="hsl(var(--background))" stroke="hsl(var(--border))" />
+      <text x={x} y={y + 5} fontSize="13" fontFamily="ui-monospace,monospace" fill="hsl(var(--foreground))" textAnchor="middle">{text}</text>
+    </g>
+  );
   return (
     <SlideCanvas>
       <SlideHeader
@@ -473,28 +487,75 @@ export function Slide5({ editing }: SlideProps) {
         subtitleId="s5.sub" subtitleDefault="Ключевые сущности и связи внутри системы аналитики матчей Apex Legends."
         editing={editing}
       />
-      <div className="mt-10 grid grid-cols-4 gap-6 px-16">
-        <EntityCard id="s5.tour" Icon={Trophy} title="Турнир" fields={["id","название","сезон","год"]} editing={editing} color="primary" />
-        <EntityCard id="s5.match" Icon={Swords} title="Матч" fields={["id","время_старта","тип","best_of"]} editing={editing} color="primary" />
-        <EntityCard id="s5.map" Icon={MapIcon} title="Карта" fields={["id","название","порядок","длительность"]} editing={editing} color="cyan" />
-        <EntityCard id="s5.evt" Icon={Play} title="Событие таймлайна" fields={["id","тип","метка_времени","данные"]} editing={editing} color="primary" />
-
-        <EntityCard id="s5.team" Icon={Users} title="Команда" fields={["id","название","тег","регион"]} editing={editing} color="primary" />
-        <EntityCard id="s5.player" Icon={User} title="Игрок" fields={["id","имя","роль","team_id"]} editing={editing} color="primary" />
-        <EntityCard id="s5.pos" Icon={MapIcon} title="Позиция команды" fields={["id","map_id","team_id","метка_времени","позиция"]} editing={editing} color="success" />
-        <EntityCard id="s5.ring" Icon={Target} title="Кольцо" fields={["id","map_id","номер_кольца","полигон","timestamp"]} editing={editing} color="primary" />
+      <div className="relative mt-10 px-16">
+        <svg className="pointer-events-none absolute inset-x-16 top-0 z-10 h-[760px] w-[calc(100%-128px)]" viewBox="0 0 1664 760" preserveAspectRatio="none">
+          <defs>
+            <marker id="s5arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0,0 L10,5 L0,10 z" fill="hsl(var(--muted-foreground))" />
+            </marker>
+            <marker id="s5arrSuccess" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0,0 L10,5 L0,10 z" fill="hsl(var(--success))" />
+            </marker>
+          </defs>
+          {/* Row1 horizontal arrows: Tournament→Match→Map→Event. Card edges ≈ 408px wide + 24 gap. Row1 mid-y ≈ 170 */}
+          {[0,1,2].map((i) => {
+            const x1 = 408 + i * 432;
+            const x2 = 432 + i * 432;
+            const y = 170;
+            return (
+              <g key={i}>
+                <line x1={x1} y1={y} x2={x2 + 0} y2={y} stroke="hsl(var(--muted-foreground))" strokeWidth="2" markerEnd="url(#s5arr)" />
+              </g>
+            );
+          })}
+          {/* Row2 horizontal: Team→Player */}
+          <line x1={408} y1={590} x2={432} y2={590} stroke="hsl(var(--muted-foreground))" strokeWidth="2" markerEnd="url(#s5arr)" />
+          {/* Match → Team (vertical from Match card down to Team card) */}
+          <path d={`M ${620} ${350} L ${620} ${440} L ${204} ${440} L ${204} ${500}`} stroke="hsl(var(--muted-foreground))" strokeWidth="2" fill="none" markerEnd="url(#s5arr)" />
+          {/* Map → Position (vertical) */}
+          <line x1={1052} y1={350} x2={1052} y2={500} stroke="hsl(var(--muted-foreground))" strokeWidth="2" markerEnd="url(#s5arr)" />
+          {/* Position → Ring (horizontal dashed - analytical) */}
+          <line x1={1272} y1={590} x2={1296} y2={590} stroke="hsl(var(--success))" strokeWidth="2" strokeDasharray="6 4" markerEnd="url(#s5arrSuccess)" />
+          {/* Labels */}
+          <ArrowLabel x={420} y={155} />
+          <ArrowLabel x={852} y={155} />
+          <ArrowLabel x={1284} y={155} />
+          <ArrowLabel x={420} y={575} />
+          <ArrowLabel x={640} y={420} />
+          <ArrowLabel x={1072} y={420} />
+          <ArrowLabel x={1284} y={575} />
+        </svg>
+        <div className="grid grid-cols-4 gap-6">
+          <EntityCard id="s5.tour"   Icon={Trophy} title="Турнир" fields={["id","название","сезон","год"]} editing={editing} color="primary" />
+          <EntityCard id="s5.match"  Icon={Swords} title="Матч" fields={["id","время_старта","тип","best_of"]} editing={editing} color="primary" />
+          <EntityCard id="s5.map"    Icon={MapIcon} title="Карта" fields={["id","название","порядок","длительность"]} editing={editing} color="cyan" />
+          <EntityCard id="s5.evt"    Icon={Play} title="Событие таймлайна" fields={["id","тип","метка_времени","данные"]} editing={editing} color="warning" />
+        </div>
+        <div className="mt-12 grid grid-cols-4 gap-6">
+          <EntityCard id="s5.team"   Icon={Users} title="Команда" fields={["id","название","тег","регион"]} editing={editing} color="primary" />
+          <EntityCard id="s5.player" Icon={User} title="Игрок" fields={["id","имя","роль","team_id"]} editing={editing} color="primary" />
+          <EntityCard id="s5.pos"    Icon={MapPin} title="Позиция команды" fields={["id","map_id","team_id","метка_времени","позиция"]} editing={editing} color="success" />
+          <EntityCard id="s5.ring"   Icon={Target} title="Кольцо" fields={["id","map_id","номер_кольца","полигон","timestamp"]} editing={editing} color="warning" />
+        </div>
       </div>
-      <div className="mt-10 mx-16 rounded-xl border border-border bg-surface/40 p-4">
-        <div className="grid grid-cols-5 gap-4 text-[14px] text-muted-foreground">
+      <div className="mt-8 mx-16 rounded-xl border border-border bg-surface/40 px-5 py-3">
+        <div className="grid grid-cols-6 gap-3 text-[14px] text-muted-foreground">
           {[
             ["primary","Основные сущности (соревновательный контекст)"],
             ["cyan","Игровой контент (карта)"],
             ["success","Аналитические сущности (позиции)"],
-            ["primary","Аналитические сущности (события)"],
-            ["","Связь 1:N — стрелка"],
+            ["warning","Аналитические сущности (события)"],
+            ["arrow","Связь 1:N"],
+            ["dashed","Аналитическая связь 1:N"],
           ].map(([c,l],i)=>(
             <div key={i} className="flex items-center gap-2">
-              {c && <span className={"h-3 w-3 rounded-sm " + (c==="cyan"?"bg-cyan":c==="success"?"bg-success":"bg-primary")} />}
+              {c==="arrow" ? (
+                <svg width="28" height="10"><line x1="0" y1="5" x2="22" y2="5" stroke="currentColor" strokeWidth="2" markerEnd="url(#legendArr)"/><polyline points="20,1 26,5 20,9" fill="none" stroke="currentColor" strokeWidth="2"/></svg>
+              ) : c==="dashed" ? (
+                <svg width="28" height="10"><line x1="0" y1="5" x2="22" y2="5" stroke="hsl(var(--success))" strokeWidth="2" strokeDasharray="4 3"/><polyline points="20,1 26,5 20,9" fill="none" stroke="hsl(var(--success))" strokeWidth="2"/></svg>
+              ) : (
+                <span className={"h-3 w-3 rounded-sm " + (c==="cyan"?"bg-cyan":c==="success"?"bg-success":c==="warning"?"bg-warning":"bg-primary")} />
+              )}
               <span>{l}</span>
             </div>
           ))}
