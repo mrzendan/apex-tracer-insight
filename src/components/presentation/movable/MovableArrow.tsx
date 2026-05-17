@@ -1,6 +1,9 @@
 import { useRef } from "react";
 import { setLayout, useArrow, type ArrowLayout, type Pt } from "../store";
 import { useSlideScale } from "../SlideCanvas";
+import { useColor, PALETTE } from "../ColorButton";
+import { setText } from "../store";
+import { useState } from "react";
 
 type Props = {
   id: string;
@@ -23,6 +26,8 @@ export function MovableArrow({
   color = "var(--cyan)", dashed, label1, labelN,
 }: Props) {
   const a = useArrow(id, defaultArrow);
+  const stroke = useColor(id, color);
+  const [palOpen, setPalOpen] = useState(false);
   const pts = a.pts;
   const scale = useSlideScale();
   const startRef = useRef<{ pts: Pt[]; px: number; py: number; mode: "all" | number } | null>(null);
@@ -85,7 +90,7 @@ export function MovableArrow({
     <g>
       <defs>
         <marker id={markerId} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
-          <path d="M0,0 L10,5 L0,10 z" fill={color} />
+          <path d="M0,0 L10,5 L0,10 z" fill={stroke} />
         </marker>
       </defs>
       {/* Wide invisible hit path for moving whole arrow */}
@@ -100,7 +105,7 @@ export function MovableArrow({
       <path
         d={pathD}
         fill="none"
-        stroke={color}
+        stroke={stroke}
         strokeWidth={2}
         strokeDasharray={dashed ? "6 4" : undefined}
         markerEnd={`url(#${markerId})`}
@@ -109,14 +114,14 @@ export function MovableArrow({
       {/* Labels on tail (N) and head (1) midpoints */}
       {label1 && (
         <g style={{ pointerEvents: "none" }}>
-          <rect x={headMid.x - 22} y={headMid.y - 26} width="18" height="20" rx="3" fill="var(--background)" stroke={color} strokeOpacity="0.4" />
-          <text x={headMid.x - 13} y={headMid.y - 11} fontSize="13" fontFamily="ui-monospace,monospace" fill={color} textAnchor="middle">{label1}</text>
+          <rect x={headMid.x - 22} y={headMid.y - 26} width="18" height="20" rx="3" fill="var(--background)" stroke={stroke} strokeOpacity="0.4" />
+          <text x={headMid.x - 13} y={headMid.y - 11} fontSize="13" fontFamily="ui-monospace,monospace" fill={stroke} textAnchor="middle">{label1}</text>
         </g>
       )}
       {labelN && (
         <g style={{ pointerEvents: "none" }}>
-          <rect x={tailMid.x + 4} y={tailMid.y + 6} width="18" height="20" rx="3" fill="var(--background)" stroke={color} strokeOpacity="0.4" />
-          <text x={tailMid.x + 13} y={tailMid.y + 21} fontSize="13" fontFamily="ui-monospace,monospace" fill={color} textAnchor="middle">{labelN}</text>
+          <rect x={tailMid.x + 4} y={tailMid.y + 6} width="18" height="20" rx="3" fill="var(--background)" stroke={stroke} strokeOpacity="0.4" />
+          <text x={tailMid.x + 13} y={tailMid.y + 21} fontSize="13" fontFamily="ui-monospace,monospace" fill={stroke} textAnchor="middle">{labelN}</text>
         </g>
       )}
       {editing && (
@@ -144,13 +149,40 @@ export function MovableArrow({
             const m = { x: (p.x + q.x) / 2, y: (p.y + q.y) / 2 };
             return (
               <g key={`seg-${i}`} style={{ cursor: "copy", pointerEvents: "all" }} onClick={insertCorner(i)}>
-                <circle cx={m.x} cy={m.y} r={8} fill="var(--background)" stroke={color} strokeOpacity="0.7" />
-                <line x1={m.x - 4} y1={m.y} x2={m.x + 4} y2={m.y} stroke={color} strokeWidth="2" />
-                <line x1={m.x} y1={m.y - 4} x2={m.x} y2={m.y + 4} stroke={color} strokeWidth="2" />
+                <circle cx={m.x} cy={m.y} r={8} fill="var(--background)" stroke={stroke} strokeOpacity="0.7" />
+                <line x1={m.x - 4} y1={m.y} x2={m.x + 4} y2={m.y} stroke={stroke} strokeWidth="2" />
+                <line x1={m.x} y1={m.y - 4} x2={m.x} y2={m.y + 4} stroke={stroke} strokeWidth="2" />
                 <title>Добавить угол</title>
               </g>
             );
           })}
+          {/* Color swatch button — opens palette inline */}
+          <g
+            style={{ cursor: "pointer", pointerEvents: "all" }}
+            transform={`translate(${pts[0].x - 26}, ${pts[0].y - 26})`}
+            onClick={(e) => { e.stopPropagation(); setPalOpen((o) => !o); }}
+          >
+            <circle cx={0} cy={0} r={9} fill={stroke} stroke="var(--background)" strokeWidth="2" />
+            <title>Сменить цвет</title>
+          </g>
+          {palOpen && (
+            <g transform={`translate(${pts[0].x - 26}, ${pts[0].y - 8})`} style={{ pointerEvents: "all" }}>
+              <rect x={-6} y={0} width={PALETTE.length * 22 + 12} height={28} rx={6} fill="var(--surface)" stroke="var(--border)" />
+              {PALETTE.map((c, i) => (
+                <circle
+                  key={c.value}
+                  cx={6 + i * 22 + 8} cy={14} r={9}
+                  fill={c.value}
+                  stroke={c.value === stroke ? "var(--foreground)" : "var(--border)"}
+                  strokeWidth={c.value === stroke ? 2 : 1}
+                  style={{ cursor: "pointer" }}
+                  onClick={(e) => { e.stopPropagation(); setText(`${id}.color`, c.value); setPalOpen(false); }}
+                >
+                  <title>{c.name}</title>
+                </circle>
+              ))}
+            </g>
+          )}
         </>
       )}
     </g>
