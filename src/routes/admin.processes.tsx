@@ -28,6 +28,31 @@ const STATUS_COLORS: Record<AnalysisProcess["status"], string> = {
 const mmss = (s: number) =>
   `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
 
+function FilterChip({
+  label, count, active, onClick, tone,
+}: {
+  label: string; count: number; active: boolean; onClick: () => void;
+  tone: "muted" | "primary" | "warning" | "success" | "destructive";
+}) {
+  const toneCls =
+    tone === "primary" ? "border-primary/40 text-primary"
+    : tone === "warning" ? "border-warning/40 text-warning"
+    : tone === "success" ? "border-success/40 text-success"
+    : tone === "destructive" ? "border-destructive/40 text-destructive"
+    : "border-border text-foreground/80";
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-1.5 rounded-sm border px-2 py-1 text-[10px] font-semibold uppercase tracking-wider transition-colors ${toneCls} ${
+        active ? "bg-surface-2 brightness-125" : "bg-surface hover:bg-surface-2"
+      }`}
+    >
+      <span>{label}</span>
+      <span className="text-mono tabular-nums opacity-70">{count}</span>
+    </button>
+  );
+}
+
 const hhmmss = (s: number) => {
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
