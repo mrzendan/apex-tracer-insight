@@ -10,6 +10,7 @@ import { SlideCanvas, SlideHeader } from "./SlideCanvas";
 import { Slide10, Slide11, Slide12 } from "./slides-extra";
 import { Movable } from "./movable/Movable";
 import { MovableArrow } from "./movable/MovableArrow";
+import { IconSlot } from "./IconSlot";
 import mapImage from "@/assets/maps/storm-point.png";
 
 type SlideProps = { editing: boolean };
@@ -574,12 +575,12 @@ export function Slide5({ editing }: SlideProps) {
 /* ────────────────────────── 6. ER diagram ────────────────────────── */
 
 function ErTable({
-  id, title, rows, editing, Icon = Database,
-}: { id: string; title: string; rows: [string,string,string][]; editing: boolean; Icon?: ComponentType<{ className?: string; strokeWidth?: number }> }) {
+  id, title, rows, editing, iconName = "Database",
+}: { id: string; title: string; rows: [string,string,string][]; editing: boolean; iconName?: string }) {
   return (
     <div className="relative h-full w-full overflow-hidden rounded-xl border border-cyan/40 bg-surface/60 p-4">
       <div className="mb-2 flex items-center gap-2">
-        <Icon className="h-6 w-6 text-cyan" strokeWidth={1.8} />
+        <IconSlot id={`${id}.icon`} defaultName={iconName} editing={editing} className="h-6 w-6 text-cyan" />
         <EditableText id={id + ".t"} defaultValue={title} editing={editing} className="text-[20px] font-bold" />
       </div>
       <div className="h-px w-full bg-border" />
