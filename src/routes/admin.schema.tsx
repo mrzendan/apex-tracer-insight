@@ -6,17 +6,26 @@ export const Route = createFileRoute("/admin/schema")({ component: SchemaEditor 
 // ------------------------------ Types ------------------------------
 type FieldType = "uuid" | "text" | "int" | "float" | "bool" | "timestamp" | "enum" | "jsonb";
 type Field = { id: string; name: string; type: FieldType; pk?: boolean; nullable?: boolean };
-type Block = { id: string; name: string; x: number; y: number; fields: Field[] };
+type ModuleKey = "core" | "analysis" | "media" | "map" | "auth";
+type Block = { id: string; name: string; x: number; y: number; module: ModuleKey; fields: Field[] };
 type RelKind = "1-1" | "1-N" | "N-M";
 type Relation = { id: string; fromBlock: string; fromField: string; toBlock: string; toField: string; kind: RelKind };
 type SchemaDoc = { blocks: Block[]; relations: Relation[] };
 
-const STORAGE_KEY = "apex-stats:schema-v1";
+const STORAGE_KEY = "apex-stats:schema-v3";
 const PREFS_KEY = "apex-stats:schema-prefs-v1";
 type ArrowStyle = "triangle" | "crowfoot" | "circle" | "diamond" | "none";
 type Theme = "color" | "mono";
-type Prefs = { theme: Theme; arrow: ArrowStyle };
-const defaultPrefs: Prefs = { theme: "color", arrow: "crowfoot" };
+type Prefs = { theme: Theme; arrow: ArrowStyle; modules: ModuleKey[] };
+const ALL_MODULES: ModuleKey[] = ["core", "analysis", "media", "map", "auth"];
+const MODULE_LABELS: Record<ModuleKey, string> = {
+  core: "Core",
+  analysis: "Analysis",
+  media: "Media",
+  map: "Map",
+  auth: "Auth",
+};
+const defaultPrefs: Prefs = { theme: "color", arrow: "crowfoot", modules: [...ALL_MODULES] };
 function loadPrefs(): Prefs {
   if (typeof window === "undefined") return defaultPrefs;
   try { const r = localStorage.getItem(PREFS_KEY); return r ? { ...defaultPrefs, ...JSON.parse(r) } : defaultPrefs; }
@@ -26,99 +35,101 @@ const uid = (p = "id") => `${p}_${Math.random().toString(36).slice(2, 9)}`;
 
 // ------------------------------ Seed (proposed schema) ------------------------------
 function seed(): SchemaDoc {
-  const b = (name: string, x: number, y: number, fields: [string, FieldType, boolean?][]): Block => ({
+  const b = (name: string, x: number, y: number, module: ModuleKey, fields: [string, FieldType, boolean?][]): Block => ({
     id: uid("b"),
     name,
     x,
     y,
+    module,
     fields: fields.map(([n, t, pk]) => ({ id: uid("f"), name: n, type: t, pk })),
   });
-  const tournaments = b("tournaments", 40, 40, [
+  // Layout mirrors the curated arrangement (see /admin/schema screenshot).
+  const tournaments = b("tournaments", 40, 320, "core", [
     ["id", "uuid", true], ["name", "text"], ["start_date", "timestamp"], ["end_date", "timestamp"],
     ["year", "int"], ["type", "enum"], ["region", "enum"],
   ]);
-  const matches = b("matches", 360, 40, [
+  const matches = b("matches", 280, 360, "core", [
     ["id", "uuid", true], ["tournament_id", "uuid"], ["name", "text"],
     ["day", "int"], ["matchup", "text"], ["video_title", "text"], ["vod_link", "text"],
   ]);
-  const match_maps = b("match_maps", 700, 40, [
+  const match_maps = b("match_maps", 720, 260, "core", [
     ["id", "uuid", true], ["match_id", "uuid"], ["map_id", "uuid"],
     ["ordinal", "int"], ["start_offset_sec", "int"], ["duration_sec", "int"],
   ]);
-  const maps = b("maps", 1040, 40, [
+  const maps = b("maps", 1180, 280, "core", [
     ["id", "uuid", true], ["name", "text"], ["image_url", "text"],
   ]);
-  const teams = b("teams", 40, 320, [
+  const teams = b("teams", 720, 540, "core", [
     ["id", "uuid", true], ["tag", "text"], ["name", "text"], ["color", "text"], ["logo_url", "text"],
   ]);
-  const players = b("players", 40, 580, [
+  const players = b("players", 40, 600, "core", [
     ["id", "uuid", true], ["team_id", "uuid"], ["handle", "text"],
   ]);
-  const match_teams = b("match_teams", 360, 320, [
+  const match_teams = b("match_teams", 1180, 540, "core", [
     ["match_id", "uuid", true], ["team_id", "uuid", true], ["group_label", "text"],
   ]);
-  const team_vods = b("team_vods", 360, 540, [
+  const team_vods = b("team_vods", 40, 460, "media", [
     ["match_id", "uuid", true], ["team_id", "uuid", true], ["url", "text"],
   ]);
-  const map_results = b("map_results", 700, 320, [
+  const map_results = b("map_results", 500, 220, "core", [
     ["id", "uuid", true], ["match_map_id", "uuid"], ["team_id", "uuid"],
     ["placement", "int"], ["kills", "int"],
   ]);
-  const processes = b("processes", 1040, 320, [
+  const processes = b("processes", 940, 160, "analysis", [
     ["id", "uuid", true], ["match_map_id", "uuid"], ["kind", "enum"],
     ["status", "enum"], ["progress", "int"], ["params", "jsonb"], ["result", "jsonb"],
   ]);
-  const ring_events = b("ring_events", 700, 580, [
+  const ring_events = b("ring_events", 940, 0, "analysis", [
     ["id", "uuid", true], ["match_map_id", "uuid"], ["phase", "int"],
     ["start_sec", "int"], ["end_sec", "int"], ["center_x", "float"], ["center_y", "float"], ["radius", "float"],
   ]);
-  const camera_events = b("camera_events", 1040, 580, [
+  const camera_events = b("camera_events", 1180, 360, "analysis", [
     ["id", "uuid", true], ["match_map_id", "uuid"], ["t_sec", "int"],
     ["target_team_id", "uuid"], ["target_player", "text"],
   ]);
-  const users = b("users", 1380, 40, [
+  const users = b("users", 1660, 520, "auth", [
     ["id", "uuid", true], ["email", "text"], ["created_at", "timestamp"],
   ]);
-  const user_roles = b("user_roles", 1380, 240, [
+  const user_roles = b("user_roles", 1420, 460, "auth", [
     ["id", "uuid", true], ["user_id", "uuid"], ["role", "enum"],
   ]);
-  const sessions = b("auth_sessions", 1380, 420, [
+  const sessions = b("auth_sessions", 1420, 540, "auth", [
     ["id", "uuid", true], ["user_id", "uuid"], ["created_at", "timestamp"],
     ["expires_at", "timestamp"], ["ip", "text"], ["user_agent", "text"],
   ]);
-  const audit_log = b("audit_log", 1380, 640, [
+  const audit_log = b("audit_log", 1420, 660, "auth", [
     ["id", "uuid", true], ["user_id", "uuid"], ["entity", "text"],
     ["entity_id", "uuid"], ["action", "enum"], ["diff", "jsonb"], ["created_at", "timestamp"],
   ]);
-  const map_zones = b("map_zones", 1380, 880, [
+  const map_zones = b("map_zones", 1420, 280, "map", [
     ["id", "uuid", true], ["map_id", "uuid"], ["name", "text"],
     ["color", "text"], ["kind", "enum"],
   ]);
-  const map_polygons = b("map_polygons", 1040, 880, [
+  const map_polygons = b("map_polygons", 1660, 280, "map", [
     ["id", "uuid", true], ["zone_id", "uuid"], ["points", "jsonb"], ["ordinal", "int"],
   ]);
-  const hsv_presets = b("hsv_presets", 700, 880, [
+  const hsv_presets = b("hsv_presets", 1180, 620, "analysis", [
     ["id", "uuid", true], ["name", "text"], ["team_id", "uuid"],
     ["h_min", "int"], ["h_max", "int"], ["s_min", "int"], ["s_max", "int"],
     ["v_min", "int"], ["v_max", "int"],
   ]);
-  const minimap_calibrations = b("minimap_calibrations", 360, 880, [
+  const minimap_calibrations = b("minimap_calibrations", 500, 80, "analysis", [
     ["id", "uuid", true], ["match_map_id", "uuid"], ["homography", "jsonb"],
     ["offset_x", "float"], ["offset_y", "float"], ["scale", "float"], ["rotation", "float"],
   ]);
-  const camera_targets = b("camera_targets", 40, 880, [
+  const camera_targets = b("camera_targets", 280, 480, "analysis", [
     ["id", "uuid", true], ["match_map_id", "uuid"], ["team_id", "uuid"],
     ["player_handle", "text"], ["label", "text"],
   ]);
-  const vods = b("vods", 40, 1120, [
+  const vods = b("vods", 40, 200, "media", [
     ["id", "uuid", true], ["match_id", "uuid"], ["source", "enum"],
     ["url", "text"], ["offset_sec", "int"], ["language", "text"],
   ]);
-  const process_logs = b("process_logs", 360, 1120, [
+  const process_logs = b("process_logs", 940, 380, "analysis", [
     ["id", "uuid", true], ["process_id", "uuid"], ["t", "timestamp"],
     ["level", "enum"], ["message", "text"],
   ]);
-  const player_team_history = b("player_team_history", 700, 1120, [
+  const player_team_history = b("player_team_history", 280, 660, "core", [
     ["id", "uuid", true], ["player_id", "uuid"], ["team_id", "uuid"],
     ["from_date", "timestamp"], ["to_date", "timestamp"], ["role", "enum"],
   ]);
@@ -170,7 +181,10 @@ function load(): SchemaDoc {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return seed();
-    return JSON.parse(raw) as SchemaDoc;
+    const parsed = JSON.parse(raw) as SchemaDoc;
+    // Back-compat: ensure module is set on every block.
+    parsed.blocks = parsed.blocks.map((b) => ({ ...b, module: (b.module ?? "core") as ModuleKey }));
+    return parsed;
   } catch {
     return seed();
   }
@@ -229,7 +243,7 @@ function SchemaEditor() {
   const addBlock = () => {
     const id = uid("b");
     mutate((d) => {
-      d.blocks.push({ id, name: "new_table", x: -pan.x / zoom + 60, y: -pan.y / zoom + 60, fields: [{ id: uid("f"), name: "id", type: "uuid", pk: true }] });
+      d.blocks.push({ id, name: "new_table", module: "core", x: -pan.x / zoom + 60, y: -pan.y / zoom + 60, fields: [{ id: uid("f"), name: "id", type: "uuid", pk: true }] });
       return d;
     });
     setSelected({ blockId: id });
@@ -265,6 +279,21 @@ function SchemaEditor() {
   });
   const setRelKind = (relId: string, kind: RelKind) => mutate((d) => { const r = d.relations.find((x) => x.id === relId); if (r) r.kind = kind; return d; });
   const deleteRel = (relId: string) => mutate((d) => { d.relations = d.relations.filter((r) => r.id !== relId); return d; });
+  const setBlockModule = (id: string, module: ModuleKey) => mutate((d) => { const b = d.blocks.find((x) => x.id === id); if (b) b.module = module; return d; });
+  const toggleModule = (k: ModuleKey) => setPrefs((p) => {
+    const has = p.modules.includes(k);
+    const next = has ? p.modules.filter((m) => m !== k) : [...p.modules, k];
+    return { ...p, modules: next.length ? next : [k] };
+  });
+  const activeModules = new Set(prefs.modules);
+  const isBlockVisible = (b: Block) => activeModules.has(b.module);
+  const MODULE_PRESETS: { id: string; label: string; mods: ModuleKey[] }[] = [
+    { id: "all", label: "All", mods: [...ALL_MODULES] },
+    { id: "core", label: "Core flow", mods: ["core", "media"] },
+    { id: "analysis", label: "Analysis", mods: ["core", "analysis"] },
+    { id: "map", label: "Map data", mods: ["core", "map"] },
+    { id: "auth", label: "Auth & audit", mods: ["auth"] },
+  ];
 
   // Drag a block
   const onBlockMouseDown = (e: React.MouseEvent, b: Block) => {
@@ -329,6 +358,28 @@ function SchemaEditor() {
       <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-surface px-4">
         <h1 className="text-sm font-bold uppercase tracking-wider">Schema editor</h1>
         <span className="text-mono text-[10px] text-muted-foreground">{doc.blocks.length} tables · {doc.relations.length} relations</span>
+        <div className="ml-2 flex items-center gap-1 rounded-sm border border-border bg-surface-2 p-0.5">
+          {MODULE_PRESETS.map((p) => {
+            const eq = p.mods.length === prefs.modules.length && p.mods.every((m) => activeModules.has(m));
+            return (
+              <button key={p.id} onClick={() => setPrefs((pp) => ({ ...pp, modules: [...p.mods] }))}
+                className={`px-2 py-0.5 text-[10px] uppercase tracking-wider rounded-sm ${eq ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"}`}>
+                {p.label}
+              </button>
+            );
+          })}
+        </div>
+        <div className="flex items-center gap-1">
+          {ALL_MODULES.map((k) => {
+            const on = activeModules.has(k);
+            return (
+              <button key={k} onClick={() => toggleModule(k)}
+                className={`rounded-sm border px-1.5 py-0.5 text-[10px] uppercase tracking-wider ${on ? "border-primary/40 bg-primary/15 text-primary" : "border-border bg-surface-2 text-muted-foreground hover:text-foreground"}`}>
+                {MODULE_LABELS[k]}
+              </button>
+            );
+          })}
+        </div>
         <div className="ml-auto flex items-center gap-2">
           <div className="flex items-center gap-1 rounded-sm border border-border bg-surface-2 p-0.5">
             {(["color", "mono"] as Theme[]).map((t) => (
@@ -387,6 +438,7 @@ function SchemaEditor() {
               {doc.relations.map((r) => {
                 const fb = blocksById[r.fromBlock]; const tb = blocksById[r.toBlock];
                 if (!fb || !tb) return null;
+                if (!isBlockVisible(fb) || !isBlockVisible(tb)) return null;
                 const fromRight = (fb.x + BLOCK_W / 2) < (tb.x + BLOCK_W / 2);
                 const a = fieldAnchor(fb, r.fromField, fromRight ? "right" : "left");
                 const b2 = fieldAnchor(tb, r.toField, fromRight ? "left" : "right");
@@ -418,6 +470,7 @@ function SchemaEditor() {
 
               {/* Blocks */}
               {doc.blocks.map((b) => {
+                if (!isBlockVisible(b)) return null;
                 const isSel = selected?.blockId === b.id;
                 return (
                   <g key={b.id} data-block transform={`translate(${b.x} ${b.y})`} onMouseDown={(e) => onBlockMouseDown(e, b)}>
@@ -489,6 +542,17 @@ function SchemaEditor() {
                 <div>
                   <div className="label-eyebrow mb-1 text-[10px]">Table</div>
                   <input value={selBlock.name} onChange={(e) => renameBlock(selBlock.id, e.target.value)} className="w-full rounded-sm border border-border bg-background px-2 py-1 font-mono text-xs" />
+                </div>
+                <div>
+                  <div className="label-eyebrow mb-1 text-[10px]">Module</div>
+                  <div className="flex flex-wrap gap-1">
+                    {ALL_MODULES.map((k) => (
+                      <button key={k} onClick={() => setBlockModule(selBlock.id, k)}
+                        className={`rounded-sm border px-1.5 py-0.5 text-[10px] uppercase tracking-wider ${selBlock.module === k ? "border-primary/40 bg-primary/15 text-primary" : "border-border bg-background hover:bg-muted"}`}>
+                        {MODULE_LABELS[k]}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <div>
                   <div className="label-eyebrow mb-1 flex items-center justify-between text-[10px]">

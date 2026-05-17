@@ -20,6 +20,7 @@ const toolItems: NavItem[] = [
   { to: "/admin/camera",   label: "Camera",   hint: "Camera tracking" },
   { to: "/admin/minimap",  label: "Minimap",  hint: "Minimap detection" },
   { to: "/admin/schema",   label: "Schema",   hint: "DB schema editor" },
+  { to: "/admin/diagrams", label: "Diagrams", hint: "Flowcharts for reports" },
 ];
 
 function AdminLayout() {

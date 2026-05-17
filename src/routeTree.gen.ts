@@ -24,6 +24,7 @@ import { Route as AdminMinimapRouteImport } from './routes/admin.minimap'
 import { Route as AdminMatchesRouteImport } from './routes/admin.matches'
 import { Route as AdminMapsRouteImport } from './routes/admin.maps'
 import { Route as AdminHsvRouteImport } from './routes/admin.hsv'
+import { Route as AdminDiagramsRouteImport } from './routes/admin.diagrams'
 import { Route as AdminCameraRouteImport } from './routes/admin.camera'
 import { Route as AdminTeamsTeamIdRouteImport } from './routes/admin.teams.$teamId'
 import { Route as AdminMatchesMatchIdRouteImport } from './routes/admin.matches.$matchId'
@@ -104,6 +105,11 @@ const AdminHsvRoute = AdminHsvRouteImport.update({
   path: '/hsv',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminDiagramsRoute = AdminDiagramsRouteImport.update({
+  id: '/diagrams',
+  path: '/diagrams',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminCameraRoute = AdminCameraRouteImport.update({
   id: '/camera',
   path: '/camera',
@@ -129,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/admin/camera': typeof AdminCameraRoute
+  '/admin/diagrams': typeof AdminDiagramsRoute
   '/admin/hsv': typeof AdminHsvRoute
   '/admin/maps': typeof AdminMapsRouteWithChildren
   '/admin/matches': typeof AdminMatchesRouteWithChildren
@@ -149,6 +156,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin/camera': typeof AdminCameraRoute
+  '/admin/diagrams': typeof AdminDiagramsRoute
   '/admin/hsv': typeof AdminHsvRoute
   '/admin/maps': typeof AdminMapsRouteWithChildren
   '/admin/matches': typeof AdminMatchesRouteWithChildren
@@ -171,6 +179,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/admin/camera': typeof AdminCameraRoute
+  '/admin/diagrams': typeof AdminDiagramsRoute
   '/admin/hsv': typeof AdminHsvRoute
   '/admin/maps': typeof AdminMapsRouteWithChildren
   '/admin/matches': typeof AdminMatchesRouteWithChildren
@@ -194,6 +203,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/admin/camera'
+    | '/admin/diagrams'
     | '/admin/hsv'
     | '/admin/maps'
     | '/admin/matches'
@@ -214,6 +224,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin/camera'
+    | '/admin/diagrams'
     | '/admin/hsv'
     | '/admin/maps'
     | '/admin/matches'
@@ -235,6 +246,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/admin/camera'
+    | '/admin/diagrams'
     | '/admin/hsv'
     | '/admin/maps'
     | '/admin/matches'
@@ -367,6 +379,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminHsvRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/diagrams': {
+      id: '/admin/diagrams'
+      path: '/diagrams'
+      fullPath: '/admin/diagrams'
+      preLoaderRoute: typeof AdminDiagramsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/camera': {
       id: '/admin/camera'
       path: '/camera'
@@ -436,6 +455,7 @@ const AdminTeamsRouteWithChildren = AdminTeamsRoute._addFileChildren(
 
 interface AdminRouteChildren {
   AdminCameraRoute: typeof AdminCameraRoute
+  AdminDiagramsRoute: typeof AdminDiagramsRoute
   AdminHsvRoute: typeof AdminHsvRoute
   AdminMapsRoute: typeof AdminMapsRouteWithChildren
   AdminMatchesRoute: typeof AdminMatchesRouteWithChildren
@@ -451,6 +471,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminCameraRoute: AdminCameraRoute,
+  AdminDiagramsRoute: AdminDiagramsRoute,
   AdminHsvRoute: AdminHsvRoute,
   AdminMapsRoute: AdminMapsRouteWithChildren,
   AdminMatchesRoute: AdminMatchesRouteWithChildren,
