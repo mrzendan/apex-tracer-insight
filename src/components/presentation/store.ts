@@ -40,7 +40,8 @@ export function useText(id: string, fallback: string): string {
 // ───────────────────── Layout (boxes / arrow endpoints) ─────────────────────
 
 export type BoxLayout = { x: number; y: number; w: number; h: number };
-export type ArrowLayout = { x1: number; y1: number; x2: number; y2: number };
+export type Pt = { x: number; y: number };
+export type ArrowLayout = { pts: Pt[] };
 export type AnyLayout = BoxLayout | ArrowLayout;
 
 type LayoutStore = Record<string, AnyLayout>;
@@ -72,10 +73,17 @@ export function useBox(id: string, fallback: BoxLayout): BoxLayout {
     () => fallback,
   );
 }
+/** Reads an arrow layout, transparently migrating the legacy {x1,y1,x2,y2} shape. */
 export function useArrow(id: string, fallback: ArrowLayout): ArrowLayout {
   return useSyncExternalStore(
     (cb) => { listeners.add(cb); return () => listeners.delete(cb); },
-    () => (layout[id] as ArrowLayout) ?? fallback,
+    () => {
+      const v = layout[id] as any;
+      if (!v) return fallback;
+      if (Array.isArray(v.pts)) return v as ArrowLayout;
+      if (typeof v.x1 === "number") return { pts: [{ x: v.x1, y: v.y1 }, { x: v.x2, y: v.y2 }] };
+      return fallback;
+    },
     () => fallback,
   );
 }

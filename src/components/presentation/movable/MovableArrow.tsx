@@ -1,15 +1,14 @@
 import { useRef } from "react";
-import { setLayout, useArrow, type ArrowLayout } from "../store";
+import { setLayout, useArrow, type ArrowLayout, type Pt } from "../store";
 import { useSlideScale } from "../SlideCanvas";
 
 type Props = {
   id: string;
+  /** Default points. At least 2. */
   defaultArrow: ArrowLayout;
   editing: boolean;
-  /** SVG canvas size used for endpoint coordinates (must match the svg viewBox you draw arrows in). */
   viewW: number;
   viewH: number;
-  /** Pixel size of the slide-design area covered by the SVG (left/right/top/bottom in 1920×1080 space). */
   pixelW: number;
   pixelH: number;
   color?: string;
@@ -18,42 +17,69 @@ type Props = {
   labelN?: string;
 };
 
-/** Draggable SVG arrow with two endpoints. Coordinates live in the svg viewBox space. */
+/** Polyline arrow with draggable endpoints, intermediate corners and tail/head labels. */
 export function MovableArrow({
   id, defaultArrow, editing, viewW, viewH, pixelW, pixelH,
   color = "var(--cyan)", dashed, label1, labelN,
 }: Props) {
   const a = useArrow(id, defaultArrow);
+  const pts = a.pts;
   const scale = useSlideScale();
-  const startRef = useRef<{ a: ArrowLayout; px: number; py: number; mode: "p1" | "p2" | "move" } | null>(null);
+  const startRef = useRef<{ pts: Pt[]; px: number; py: number; mode: "all" | number } | null>(null);
 
-  // px → viewBox conversion factor (also account for slide scale)
   const kx = viewW / pixelW / scale;
   const ky = viewH / pixelH / scale;
 
-  const onDown = (mode: "p1" | "p2" | "move") => (e: React.PointerEvent) => {
+  const commit = (next: Pt[]) => setLayout(id, { pts: next });
+
+  const onDown = (mode: "all" | number) => (e: React.PointerEvent) => {
     if (!editing) return;
     e.preventDefault(); e.stopPropagation();
     (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
-    startRef.current = { a, px: e.clientX, py: e.clientY, mode };
+    startRef.current = { pts, px: e.clientX, py: e.clientY, mode };
   };
   const onMove = (e: React.PointerEvent) => {
     const s = startRef.current; if (!s) return;
     const dx = (e.clientX - s.px) * kx;
     const dy = (e.clientY - s.py) * ky;
-    let { x1, y1, x2, y2 } = s.a;
-    if (s.mode === "p1" || s.mode === "move") { x1 = s.a.x1 + dx; y1 = s.a.y1 + dy; }
-    if (s.mode === "p2" || s.mode === "move") { x2 = s.a.x2 + dx; y2 = s.a.y2 + dy; }
-    setLayout(id, { x1, y1, x2, y2 });
+    if (s.mode === "all") {
+      commit(s.pts.map((p) => ({ x: p.x + dx, y: p.y + dy })));
+    } else {
+      const i = s.mode;
+      commit(s.pts.map((p, idx) => idx === i ? { x: p.x + dx, y: p.y + dy } : p));
+    }
   };
   const onUp = (e: React.PointerEvent) => {
     startRef.current = null;
     try { (e.currentTarget as Element).releasePointerCapture?.(e.pointerId); } catch {}
   };
 
+  // Insert a corner at midpoint of a segment.
+  const insertCorner = (segIdx: number) => (e: React.MouseEvent) => {
+    if (!editing) return;
+    e.preventDefault(); e.stopPropagation();
+    const p1 = pts[segIdx], p2 = pts[segIdx + 1];
+    const mid = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+    const next = [...pts.slice(0, segIdx + 1), mid, ...pts.slice(segIdx + 1)];
+    commit(next);
+  };
+  // Remove a corner (only intermediate ones).
+  const removeCorner = (i: number) => (e: React.MouseEvent) => {
+    if (!editing) return;
+    if (i === 0 || i === pts.length - 1) return;
+    e.preventDefault(); e.stopPropagation();
+    commit(pts.filter((_, idx) => idx !== i));
+  };
+
   const markerId = `mv-arr-${id.replace(/[^a-z0-9]/gi, "_")}`;
-  const midx = (a.x1 + a.x2) / 2;
-  const midy = (a.y1 + a.y2) / 2;
+  const last = pts[pts.length - 1];
+  const prev = pts[pts.length - 2] ?? last;
+  // Tail = midpoint of first segment, head = midpoint of last segment for label placement
+  const segMid = (a: Pt, b: Pt) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+  const headMid = segMid(prev, last);
+  const tailMid = segMid(pts[0], pts[1] ?? pts[0]);
+
+  const pathD = pts.map((p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`)).join(" ");
 
   return (
     <g>
@@ -62,45 +88,69 @@ export function MovableArrow({
           <path d="M0,0 L10,5 L0,10 z" fill={color} />
         </marker>
       </defs>
-      {/* Wide invisible hit line for "move" */}
-      <line
-        x1={a.x1} y1={a.y1} x2={a.x2} y2={a.y2}
-        stroke="transparent" strokeWidth={editing ? 24 : 0}
+      {/* Wide invisible hit path for moving whole arrow */}
+      <path
+        d={pathD}
+        fill="none"
+        stroke="transparent"
+        strokeWidth={editing ? 22 : 0}
         style={{ cursor: editing ? "move" : undefined, pointerEvents: editing ? "stroke" : "none" }}
-        onPointerDown={onDown("move")} onPointerMove={onMove} onPointerUp={onUp}
+        onPointerDown={onDown("all")} onPointerMove={onMove} onPointerUp={onUp}
       />
-      <line
-        x1={a.x1} y1={a.y1} x2={a.x2} y2={a.y2}
-        stroke={color} strokeWidth={2} strokeDasharray={dashed ? "6 4" : undefined}
+      <path
+        d={pathD}
+        fill="none"
+        stroke={color}
+        strokeWidth={2}
+        strokeDasharray={dashed ? "6 4" : undefined}
         markerEnd={`url(#${markerId})`}
         style={{ pointerEvents: "none" }}
       />
+      {/* Labels on tail (N) and head (1) midpoints */}
       {label1 && (
         <g style={{ pointerEvents: "none" }}>
-          <rect x={midx - 22} y={midy - 26} width="18" height="20" rx="3" fill="var(--background)" stroke={color} strokeOpacity="0.4" />
-          <text x={midx - 13} y={midy - 11} fontSize="13" fontFamily="ui-monospace,monospace" fill={color} textAnchor="middle">{label1}</text>
+          <rect x={headMid.x - 22} y={headMid.y - 26} width="18" height="20" rx="3" fill="var(--background)" stroke={color} strokeOpacity="0.4" />
+          <text x={headMid.x - 13} y={headMid.y - 11} fontSize="13" fontFamily="ui-monospace,monospace" fill={color} textAnchor="middle">{label1}</text>
         </g>
       )}
       {labelN && (
         <g style={{ pointerEvents: "none" }}>
-          <rect x={midx + 4} y={midy + 6} width="18" height="20" rx="3" fill="var(--background)" stroke={color} strokeOpacity="0.4" />
-          <text x={midx + 13} y={midy + 21} fontSize="13" fontFamily="ui-monospace,monospace" fill={color} textAnchor="middle">{labelN}</text>
+          <rect x={tailMid.x + 4} y={tailMid.y + 6} width="18" height="20" rx="3" fill="var(--background)" stroke={color} strokeOpacity="0.4" />
+          <text x={tailMid.x + 13} y={tailMid.y + 21} fontSize="13" fontFamily="ui-monospace,monospace" fill={color} textAnchor="middle">{labelN}</text>
         </g>
       )}
       {editing && (
         <>
-          <circle
-            cx={a.x1} cy={a.y1} r={9}
-            fill="var(--primary)" stroke="var(--background)" strokeWidth="2"
-            style={{ cursor: "grab", pointerEvents: "all" }}
-            onPointerDown={onDown("p1")} onPointerMove={onMove} onPointerUp={onUp}
-          />
-          <circle
-            cx={a.x2} cy={a.y2} r={9}
-            fill="var(--primary)" stroke="var(--background)" strokeWidth="2"
-            style={{ cursor: "grab", pointerEvents: "all" }}
-            onPointerDown={onDown("p2")} onPointerMove={onMove} onPointerUp={onUp}
-          />
+          {/* Vertex handles */}
+          {pts.map((p, i) => {
+            const isMid = i !== 0 && i !== pts.length - 1;
+            return (
+              <circle
+                key={`v-${i}`}
+                cx={p.x} cy={p.y} r={isMid ? 7 : 9}
+                fill={isMid ? "var(--warning)" : "var(--primary)"}
+                stroke="var(--background)" strokeWidth="2"
+                style={{ cursor: "grab", pointerEvents: "all" }}
+                onPointerDown={onDown(i)} onPointerMove={onMove} onPointerUp={onUp}
+                onContextMenu={removeCorner(i)}
+              >
+                <title>{isMid ? "Перетащить · ПКМ — удалить" : "Перетащить"}</title>
+              </circle>
+            );
+          })}
+          {/* Segment "+" buttons for inserting a corner */}
+          {pts.slice(0, -1).map((p, i) => {
+            const q = pts[i + 1];
+            const m = { x: (p.x + q.x) / 2, y: (p.y + q.y) / 2 };
+            return (
+              <g key={`seg-${i}`} style={{ cursor: "copy", pointerEvents: "all" }} onClick={insertCorner(i)}>
+                <circle cx={m.x} cy={m.y} r={8} fill="var(--background)" stroke={color} strokeOpacity="0.7" />
+                <line x1={m.x - 4} y1={m.y} x2={m.x + 4} y2={m.y} stroke={color} strokeWidth="2" />
+                <line x1={m.x} y1={m.y - 4} x2={m.x} y2={m.y + 4} stroke={color} strokeWidth="2" />
+                <title>Добавить угол</title>
+              </g>
+            );
+          })}
         </>
       )}
     </g>
