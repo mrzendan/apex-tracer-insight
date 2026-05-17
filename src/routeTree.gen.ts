@@ -17,6 +17,7 @@ import { Route as MatchesMatchIdRouteImport } from './routes/matches.$matchId'
 import { Route as AdminZonesRouteImport } from './routes/admin.zones'
 import { Route as AdminTournamentsRouteImport } from './routes/admin.tournaments'
 import { Route as AdminTeamsRouteImport } from './routes/admin.teams'
+import { Route as AdminSchemaRouteImport } from './routes/admin.schema'
 import { Route as AdminProcessesRouteImport } from './routes/admin.processes'
 import { Route as AdminPolygonsRouteImport } from './routes/admin.polygons'
 import { Route as AdminMinimapRouteImport } from './routes/admin.minimap'
@@ -66,6 +67,11 @@ const AdminTournamentsRoute = AdminTournamentsRouteImport.update({
 const AdminTeamsRoute = AdminTeamsRouteImport.update({
   id: '/teams',
   path: '/teams',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSchemaRoute = AdminSchemaRouteImport.update({
+  id: '/schema',
+  path: '/schema',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminProcessesRoute = AdminProcessesRouteImport.update({
@@ -129,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/admin/minimap': typeof AdminMinimapRoute
   '/admin/polygons': typeof AdminPolygonsRoute
   '/admin/processes': typeof AdminProcessesRoute
+  '/admin/schema': typeof AdminSchemaRoute
   '/admin/teams': typeof AdminTeamsRouteWithChildren
   '/admin/tournaments': typeof AdminTournamentsRoute
   '/admin/zones': typeof AdminZonesRoute
@@ -148,6 +155,7 @@ export interface FileRoutesByTo {
   '/admin/minimap': typeof AdminMinimapRoute
   '/admin/polygons': typeof AdminPolygonsRoute
   '/admin/processes': typeof AdminProcessesRoute
+  '/admin/schema': typeof AdminSchemaRoute
   '/admin/teams': typeof AdminTeamsRouteWithChildren
   '/admin/tournaments': typeof AdminTournamentsRoute
   '/admin/zones': typeof AdminZonesRoute
@@ -169,6 +177,7 @@ export interface FileRoutesById {
   '/admin/minimap': typeof AdminMinimapRoute
   '/admin/polygons': typeof AdminPolygonsRoute
   '/admin/processes': typeof AdminProcessesRoute
+  '/admin/schema': typeof AdminSchemaRoute
   '/admin/teams': typeof AdminTeamsRouteWithChildren
   '/admin/tournaments': typeof AdminTournamentsRoute
   '/admin/zones': typeof AdminZonesRoute
@@ -191,6 +200,7 @@ export interface FileRouteTypes {
     | '/admin/minimap'
     | '/admin/polygons'
     | '/admin/processes'
+    | '/admin/schema'
     | '/admin/teams'
     | '/admin/tournaments'
     | '/admin/zones'
@@ -210,6 +220,7 @@ export interface FileRouteTypes {
     | '/admin/minimap'
     | '/admin/polygons'
     | '/admin/processes'
+    | '/admin/schema'
     | '/admin/teams'
     | '/admin/tournaments'
     | '/admin/zones'
@@ -230,6 +241,7 @@ export interface FileRouteTypes {
     | '/admin/minimap'
     | '/admin/polygons'
     | '/admin/processes'
+    | '/admin/schema'
     | '/admin/teams'
     | '/admin/tournaments'
     | '/admin/zones'
@@ -304,6 +316,13 @@ declare module '@tanstack/react-router' {
       path: '/teams'
       fullPath: '/admin/teams'
       preLoaderRoute: typeof AdminTeamsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/schema': {
+      id: '/admin/schema'
+      path: '/schema'
+      fullPath: '/admin/schema'
+      preLoaderRoute: typeof AdminSchemaRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/processes': {
@@ -423,6 +442,7 @@ interface AdminRouteChildren {
   AdminMinimapRoute: typeof AdminMinimapRoute
   AdminPolygonsRoute: typeof AdminPolygonsRoute
   AdminProcessesRoute: typeof AdminProcessesRoute
+  AdminSchemaRoute: typeof AdminSchemaRoute
   AdminTeamsRoute: typeof AdminTeamsRouteWithChildren
   AdminTournamentsRoute: typeof AdminTournamentsRoute
   AdminZonesRoute: typeof AdminZonesRoute
@@ -437,6 +457,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminMinimapRoute: AdminMinimapRoute,
   AdminPolygonsRoute: AdminPolygonsRoute,
   AdminProcessesRoute: AdminProcessesRoute,
+  AdminSchemaRoute: AdminSchemaRoute,
   AdminTeamsRoute: AdminTeamsRouteWithChildren,
   AdminTournamentsRoute: AdminTournamentsRoute,
   AdminZonesRoute: AdminZonesRoute,
@@ -454,3 +475,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
