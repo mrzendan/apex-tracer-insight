@@ -1,10 +1,10 @@
 import {
-  FolderPlay, FileText, CloudUpload, BrainCircuit, Database, Code2, Monitor, User,
+  FolderOpen, FileText, CloudUpload, BrainCircuit, Database, Code2, Monitor, User,
   Sliders, Flag, Target, Eye, Users, Crosshair, TrendingUp, Map as MapIcon,
   Trophy, Swords, Filter, Play, BarChart3, Route as RouteIcon, Clock, Rocket,
   Bot, Check, X, Server, Globe, ShieldCheck, GitBranch,
 } from "lucide-react";
-import type { ComponentType, ReactNode } from "react";
+import type { ComponentType, ReactElement, ReactNode } from "react";
 import { EditableText } from "./EditableText";
 import { SlideCanvas, SlideHeader } from "./SlideCanvas";
 
@@ -71,7 +71,7 @@ export function Slide1({ editing }: SlideProps) {
           <div className="mt-6 space-y-5">
             <Block className="p-5">
               <div className="flex flex-col items-center gap-3">
-                <IconBubble Icon={FolderPlay} color="primary" />
+                <IconBubble Icon={FolderOpen} color="primary" />
                 <EditableText id="s1.vod" defaultValue="VOD / записи матчей" editing={editing}
                   className="text-center text-[22px] font-semibold" multiline />
               </div>
@@ -148,7 +148,7 @@ export function Slide2({ editing }: SlideProps) {
           <div className="mx-auto h-0.5 w-12 bg-primary" />
           <div className="mt-5 space-y-4">
             {[
-              { id: "s2.vod", Icon: FolderPlay, label: "VOD / запись матча" },
+              { id: "s2.vod", Icon: FolderOpen, label: "VOD / запись матча" },
               { id: "s2.meta", Icon: FileText, label: "Метаданные матча" },
               { id: "s2.map", Icon: MapIcon, label: "Карта / ассеты" },
             ].map((it) => (
@@ -731,7 +731,7 @@ export function Slide8({ editing }: SlideProps) {
 
 /* ────────────────────────── Slide registry ────────────────────────── */
 
-export type SlideDef = { id: string; title: string; subtitle: string; Component: (p: SlideProps) => JSX.Element };
+export type SlideDef = { id: string; title: string; subtitle: string; Component: (p: SlideProps) => ReactElement };
 
 export const SLIDES: SlideDef[] = [
   { id: "01", title: "Архитектура верхнего уровня", subtitle: "Как данные из матчей превращаются в аналитику.", Component: Slide1 },
