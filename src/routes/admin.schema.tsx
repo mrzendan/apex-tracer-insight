@@ -82,10 +82,52 @@ function seed(): SchemaDoc {
   const user_roles = b("user_roles", 1380, 240, [
     ["id", "uuid", true], ["user_id", "uuid"], ["role", "enum"],
   ]);
+  const sessions = b("auth_sessions", 1380, 420, [
+    ["id", "uuid", true], ["user_id", "uuid"], ["created_at", "timestamp"],
+    ["expires_at", "timestamp"], ["ip", "text"], ["user_agent", "text"],
+  ]);
+  const audit_log = b("audit_log", 1380, 640, [
+    ["id", "uuid", true], ["user_id", "uuid"], ["entity", "text"],
+    ["entity_id", "uuid"], ["action", "enum"], ["diff", "jsonb"], ["created_at", "timestamp"],
+  ]);
+  const map_zones = b("map_zones", 1380, 880, [
+    ["id", "uuid", true], ["map_id", "uuid"], ["name", "text"],
+    ["color", "text"], ["kind", "enum"],
+  ]);
+  const map_polygons = b("map_polygons", 1040, 880, [
+    ["id", "uuid", true], ["zone_id", "uuid"], ["points", "jsonb"], ["ordinal", "int"],
+  ]);
+  const hsv_presets = b("hsv_presets", 700, 880, [
+    ["id", "uuid", true], ["name", "text"], ["team_id", "uuid"],
+    ["h_min", "int"], ["h_max", "int"], ["s_min", "int"], ["s_max", "int"],
+    ["v_min", "int"], ["v_max", "int"],
+  ]);
+  const minimap_calibrations = b("minimap_calibrations", 360, 880, [
+    ["id", "uuid", true], ["match_map_id", "uuid"], ["homography", "jsonb"],
+    ["offset_x", "float"], ["offset_y", "float"], ["scale", "float"], ["rotation", "float"],
+  ]);
+  const camera_targets = b("camera_targets", 40, 880, [
+    ["id", "uuid", true], ["match_map_id", "uuid"], ["team_id", "uuid"],
+    ["player_handle", "text"], ["label", "text"],
+  ]);
+  const vods = b("vods", 40, 1120, [
+    ["id", "uuid", true], ["match_id", "uuid"], ["source", "enum"],
+    ["url", "text"], ["offset_sec", "int"], ["language", "text"],
+  ]);
+  const process_logs = b("process_logs", 360, 1120, [
+    ["id", "uuid", true], ["process_id", "uuid"], ["t", "timestamp"],
+    ["level", "enum"], ["message", "text"],
+  ]);
+  const player_team_history = b("player_team_history", 700, 1120, [
+    ["id", "uuid", true], ["player_id", "uuid"], ["team_id", "uuid"],
+    ["from_date", "timestamp"], ["to_date", "timestamp"], ["role", "enum"],
+  ]);
 
   const blocks = [
     tournaments, matches, match_maps, maps, teams, players, match_teams,
     team_vods, map_results, processes, ring_events, camera_events, users, user_roles,
+    sessions, audit_log, map_zones, map_polygons, hsv_presets,
+    minimap_calibrations, camera_targets, vods, process_logs, player_team_history,
   ];
   const F = (b: Block, n: string) => b.fields.find((f) => f.name === n)!.id;
   const rel = (from: Block, ff: string, to: Block, tf: string, kind: RelKind): Relation => ({
@@ -107,6 +149,18 @@ function seed(): SchemaDoc {
     rel(camera_events, "match_map_id", match_maps, "id", "1-N"),
     rel(camera_events, "target_team_id", teams, "id", "1-N"),
     rel(user_roles, "user_id", users, "id", "1-N"),
+    rel(sessions, "user_id", users, "id", "1-N"),
+    rel(audit_log, "user_id", users, "id", "1-N"),
+    rel(map_zones, "map_id", maps, "id", "1-N"),
+    rel(map_polygons, "zone_id", map_zones, "id", "1-N"),
+    rel(hsv_presets, "team_id", teams, "id", "1-N"),
+    rel(minimap_calibrations, "match_map_id", match_maps, "id", "1-1"),
+    rel(camera_targets, "match_map_id", match_maps, "id", "1-N"),
+    rel(camera_targets, "team_id", teams, "id", "1-N"),
+    rel(vods, "match_id", matches, "id", "1-N"),
+    rel(process_logs, "process_id", processes, "id", "1-N"),
+    rel(player_team_history, "player_id", players, "id", "1-N"),
+    rel(player_team_history, "team_id", teams, "id", "1-N"),
   ];
   return { blocks, relations };
 }
