@@ -19,6 +19,7 @@ const toolItems: NavItem[] = [
   { to: "/admin/polygons", label: "Polygons", hint: "Map areas" },
   { to: "/admin/camera",   label: "Camera",   hint: "Camera tracking" },
   { to: "/admin/minimap",  label: "Minimap",  hint: "Minimap detection" },
+  { to: "/admin/schema",   label: "Schema",   hint: "DB schema editor" },
 ];
 
 function AdminLayout() {
