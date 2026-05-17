@@ -1,6 +1,11 @@
 import { useRef } from "react";
 import { setLayout, useArrow, type ArrowLayout, type Pt } from "../store";
 import { useSlideScale } from "../SlideCanvas";
+import { useColor } from "../ColorButton";
+import { setText, PALETTE_STATE_KEY } from "../store-compat";
+import { PALETTE } from "../ColorButton";
+import { setText as setTextStore } from "../store";
+import { useState } from "react";
 
 type Props = {
   id: string;
@@ -23,6 +28,8 @@ export function MovableArrow({
   color = "var(--cyan)", dashed, label1, labelN,
 }: Props) {
   const a = useArrow(id, defaultArrow);
+  const customColor = useColor(id, color);
+  const stroke = customColor;
   const pts = a.pts;
   const scale = useSlideScale();
   const startRef = useRef<{ pts: Pt[]; px: number; py: number; mode: "all" | number } | null>(null);
