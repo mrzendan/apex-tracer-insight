@@ -231,8 +231,8 @@ function Empty() {
 function TypeBadge({ type }: { type: TournamentType }) {
   const color =
     type === "LAN" ? "bg-primary/15 text-primary border-primary/30"
-    : type === "Online" ? "bg-accent/15 text-accent border-accent/30"
-    : "bg-muted text-foreground/80 border-border";
+    : type === "Online" ? "bg-success/20 text-success border-success/40"
+    : "bg-cyan/15 text-cyan border-cyan/40";
   return <span className={`rounded-sm border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${color}`}>{type}</span>;
 }
 
