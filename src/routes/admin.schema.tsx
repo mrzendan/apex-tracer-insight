@@ -267,10 +267,10 @@ function SchemaEditor() {
           >
             <defs>
               <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                <path d="M0,0 L10,5 L0,10 z" fill="hsl(var(--primary))" />
+                <path d="M0,0 L10,5 L0,10 z" fill="var(--primary)" />
               </marker>
               <marker id="arrow-many" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-                <path d="M0,1 L11,6 L0,11 M6,1 L11,6 L6,11" fill="none" stroke="hsl(var(--primary))" strokeWidth="1.5" />
+                <path d="M0,1 L11,6 L0,11 M6,1 L11,6 L6,11" fill="none" stroke="var(--primary)" strokeWidth="1.5" />
               </marker>
             </defs>
 
@@ -290,11 +290,11 @@ function SchemaEditor() {
                 return (
                   <g key={r.id} className="cursor-pointer" onClick={(e) => { e.stopPropagation(); setSelectedRel(r.id); setSelected(null); }}>
                     <path d={d} fill="none" stroke="transparent" strokeWidth={14} />
-                    <path d={d} fill="none" stroke={isSel ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.55)"} strokeWidth={isSel ? 2 : 1.5}
+                    <path d={d} fill="none" stroke={isSel ? "var(--primary)" : "hsl(var(--primary) / 0.55)"} strokeWidth={isSel ? 2 : 1.5}
                       markerEnd={r.kind === "1-1" ? "url(#arrow)" : "url(#arrow-many)"}
                       markerStart={r.kind === "N-M" ? "url(#arrow-many)" : undefined}
                     />
-                    <text x={(a.x + b2.x) / 2} y={(a.y + b2.y) / 2 - 4} textAnchor="middle" className="text-mono" fontSize={10} fill="hsl(var(--muted-foreground))">{r.kind}</text>
+                    <text x={(a.x + b2.x) / 2} y={(a.y + b2.y) / 2 - 4} textAnchor="middle" className="text-mono" fontSize={10} fill="var(--muted-foreground)">{r.kind}</text>
                   </g>
                 );
               })}
@@ -303,7 +303,7 @@ function SchemaEditor() {
               {connect && (() => {
                 const fb = blocksById[connect.blockId]; if (!fb) return null;
                 const a = fieldAnchor(fb, connect.fieldId, "right");
-                return <circle cx={a.x} cy={a.y} r={6} fill="hsl(var(--primary))" />;
+                return <circle cx={a.x} cy={a.y} r={6} fill="var(--primary)" />;
               })()}
 
               {/* Blocks */}
@@ -311,30 +311,30 @@ function SchemaEditor() {
                 const isSel = selected?.blockId === b.id;
                 return (
                   <g key={b.id} data-block transform={`translate(${b.x} ${b.y})`} onMouseDown={(e) => onBlockMouseDown(e, b)}>
-                    <rect width={BLOCK_W} height={blockHeight(b)} rx={6} className="fill-surface" stroke={isSel ? "hsl(var(--primary))" : "hsl(var(--border))"} strokeWidth={isSel ? 1.5 : 1} />
+                    <rect width={BLOCK_W} height={blockHeight(b)} rx={6} className="fill-surface" stroke={isSel ? "var(--primary)" : "var(--border)"} strokeWidth={isSel ? 1.5 : 1} />
                     <rect width={BLOCK_W} height={HEAD_H} rx={6} className={isSel ? "fill-primary/15" : "fill-surface-2"} />
-                    <text x={10} y={20} className="font-mono" fontSize={12} fontWeight={700} fill="hsl(var(--foreground))">{b.name}</text>
-                    <text x={BLOCK_W - 10} y={20} textAnchor="end" fontSize={9} fill="hsl(var(--muted-foreground))">{b.fields.length}</text>
+                    <text x={10} y={20} className="font-mono" fontSize={12} fontWeight={700} fill="var(--foreground)">{b.name}</text>
+                    <text x={BLOCK_W - 10} y={20} textAnchor="end" fontSize={9} fill="var(--muted-foreground)">{b.fields.length}</text>
                     {b.fields.map((f, i) => {
                       const y = HEAD_H + i * ROW_H;
                       const fSel = isSel && selected?.fieldId === f.id;
                       return (
                         <g key={f.id} onClick={(e) => { e.stopPropagation(); setSelected({ blockId: b.id, fieldId: f.id }); setSelectedRel(null); }}>
                           <rect x={1} y={y} width={BLOCK_W - 2} height={ROW_H} className={fSel ? "fill-primary/10" : "fill-transparent"} />
-                          <circle cx={0} cy={y + ROW_H / 2} r={4} fill={connect ? "hsl(var(--accent))" : "hsl(var(--border))"} stroke="hsl(var(--surface))" strokeWidth={1}
+                          <circle cx={0} cy={y + ROW_H / 2} r={4} fill={connect ? "var(--accent)" : "var(--border)"} stroke="var(--surface)" strokeWidth={1}
                             data-no-drag
                             style={{ cursor: "crosshair" }}
                             onMouseDown={(e) => { e.stopPropagation(); if (connect) { completeConnect(b.id, f.id); } else { startConnect(b.id, f.id); } }}
                           />
-                          <circle cx={BLOCK_W} cy={y + ROW_H / 2} r={4} fill={connect ? "hsl(var(--accent))" : "hsl(var(--border))"} stroke="hsl(var(--surface))" strokeWidth={1}
+                          <circle cx={BLOCK_W} cy={y + ROW_H / 2} r={4} fill={connect ? "var(--accent)" : "var(--border)"} stroke="var(--surface)" strokeWidth={1}
                             data-no-drag
                             style={{ cursor: "crosshair" }}
                             onMouseDown={(e) => { e.stopPropagation(); if (connect) { completeConnect(b.id, f.id); } else { startConnect(b.id, f.id); } }}
                           />
-                          <text x={10} y={y + 15} fontSize={11} className="font-mono" fill="hsl(var(--foreground))">
+                          <text x={10} y={y + 15} fontSize={11} className="font-mono" fill="var(--foreground)">
                             {f.pk ? "★ " : ""}{f.name}
                           </text>
-                          <text x={BLOCK_W - 10} y={y + 15} textAnchor="end" fontSize={10} className="font-mono" fill="hsl(var(--muted-foreground))">{f.type}</text>
+                          <text x={BLOCK_W - 10} y={y + 15} textAnchor="end" fontSize={10} className="font-mono" fill="var(--muted-foreground)">{f.type}</text>
                         </g>
                       );
                     })}
