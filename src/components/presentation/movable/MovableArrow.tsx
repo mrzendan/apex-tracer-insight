@@ -90,7 +90,7 @@ export function MovableArrow({
     <g>
       <defs>
         <marker id={markerId} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
-          <path d="M0,0 L10,5 L0,10 z" fill={color} />
+          <path d="M0,0 L10,5 L0,10 z" fill={stroke} />
         </marker>
       </defs>
       {/* Wide invisible hit path for moving whole arrow */}
@@ -105,7 +105,7 @@ export function MovableArrow({
       <path
         d={pathD}
         fill="none"
-        stroke={color}
+        stroke={stroke}
         strokeWidth={2}
         strokeDasharray={dashed ? "6 4" : undefined}
         markerEnd={`url(#${markerId})`}
@@ -114,14 +114,14 @@ export function MovableArrow({
       {/* Labels on tail (N) and head (1) midpoints */}
       {label1 && (
         <g style={{ pointerEvents: "none" }}>
-          <rect x={headMid.x - 22} y={headMid.y - 26} width="18" height="20" rx="3" fill="var(--background)" stroke={color} strokeOpacity="0.4" />
-          <text x={headMid.x - 13} y={headMid.y - 11} fontSize="13" fontFamily="ui-monospace,monospace" fill={color} textAnchor="middle">{label1}</text>
+          <rect x={headMid.x - 22} y={headMid.y - 26} width="18" height="20" rx="3" fill="var(--background)" stroke={stroke} strokeOpacity="0.4" />
+          <text x={headMid.x - 13} y={headMid.y - 11} fontSize="13" fontFamily="ui-monospace,monospace" fill={stroke} textAnchor="middle">{label1}</text>
         </g>
       )}
       {labelN && (
         <g style={{ pointerEvents: "none" }}>
-          <rect x={tailMid.x + 4} y={tailMid.y + 6} width="18" height="20" rx="3" fill="var(--background)" stroke={color} strokeOpacity="0.4" />
-          <text x={tailMid.x + 13} y={tailMid.y + 21} fontSize="13" fontFamily="ui-monospace,monospace" fill={color} textAnchor="middle">{labelN}</text>
+          <rect x={tailMid.x + 4} y={tailMid.y + 6} width="18" height="20" rx="3" fill="var(--background)" stroke={stroke} strokeOpacity="0.4" />
+          <text x={tailMid.x + 13} y={tailMid.y + 21} fontSize="13" fontFamily="ui-monospace,monospace" fill={stroke} textAnchor="middle">{labelN}</text>
         </g>
       )}
       {editing && (
@@ -149,9 +149,9 @@ export function MovableArrow({
             const m = { x: (p.x + q.x) / 2, y: (p.y + q.y) / 2 };
             return (
               <g key={`seg-${i}`} style={{ cursor: "copy", pointerEvents: "all" }} onClick={insertCorner(i)}>
-                <circle cx={m.x} cy={m.y} r={8} fill="var(--background)" stroke={color} strokeOpacity="0.7" />
-                <line x1={m.x - 4} y1={m.y} x2={m.x + 4} y2={m.y} stroke={color} strokeWidth="2" />
-                <line x1={m.x} y1={m.y - 4} x2={m.x} y2={m.y + 4} stroke={color} strokeWidth="2" />
+                <circle cx={m.x} cy={m.y} r={8} fill="var(--background)" stroke={stroke} strokeOpacity="0.7" />
+                <line x1={m.x - 4} y1={m.y} x2={m.x + 4} y2={m.y} stroke={stroke} strokeWidth="2" />
+                <line x1={m.x} y1={m.y - 4} x2={m.x} y2={m.y + 4} stroke={stroke} strokeWidth="2" />
                 <title>Добавить угол</title>
               </g>
             );
