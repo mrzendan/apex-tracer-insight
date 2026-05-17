@@ -627,9 +627,9 @@ export function Slide6({ editing }: SlideProps) {
             const colW = 1728 / 5;
             const cx = (c: number) => colW * c + colW / 2;
             const ROW1_Y = 170;
-            const ROW2_TOP = 410;     // top edge of row 2 cards (approx)
-            const ROW1_BOTTOM = 320;  // bottom edge of row 1 cards (approx)
-            const TRUNK_Y = 370;      // horizontal trunk between rows
+            const ROW2_TOP = 406;
+            const ROW1_BOTTOM = 310;
+            const TRUNK_Y = 358;
             return (
               <>
                 {/* Row 1 horizontal FK arrows: each child → parent on the LEFT (matches→tournaments, maps→matches, teams→maps, players→teams) */}
@@ -662,7 +662,7 @@ export function Slide6({ editing }: SlideProps) {
                 <RelLabel x={cx(3) + 18} y={ROW1_BOTTOM + 6} t="1" />
                 {/* analysis_jobs (col 3) → analysis_outputs (col 4) horizontal in row 2 */}
                 {(() => {
-                  const y = 620;
+                  const y = 580;
                   const x1 = colW * 4 - 8;
                   const x2 = colW * 4 + 8;
                   return (
