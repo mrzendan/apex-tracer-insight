@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
   tournaments,
@@ -10,10 +10,8 @@ import {
   events,
   type Team,
   type RingPhase,
-} from "../lib/mock-match";
+} from "@/lib/mock-match";
 import { TeamLogo } from "@/components/admin/TeamLogo";
-
-export const Route = createFileRoute("/")({ component: MatchViewer });
 
 function formatTime(sec: number) {
   const m = Math.floor(sec / 60).toString().padStart(2, "0");
@@ -21,10 +19,12 @@ function formatTime(sec: number) {
   return `${m}:${s}`;
 }
 
-function MatchViewer() {
-  const [tournamentId, setTournamentId] = useState(tournaments[0].id);
-  const [matchId, setMatchId] = useState(matches[0].id);
-  const match = matches.find((m) => m.id === matchId)!;
+export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
+  const firstId = initialMatchId ?? matches[0].id;
+  const initialMatch = matches.find((m) => m.id === firstId) ?? matches[0];
+  const [tournamentId, setTournamentId] = useState(initialMatch.tournamentId);
+  const [matchId, setMatchId] = useState(initialMatch.id);
+  const match = matches.find((m) => m.id === matchId) ?? matches[0];
   const apexMap = maps.find((m) => m.id === match.mapId)!;
 
   const [time, setTime] = useState(0);
