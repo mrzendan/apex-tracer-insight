@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as Presentation2RouteImport } from './routes/presentation-2'
 import { Route as PresentationRouteImport } from './routes/presentation'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
@@ -31,6 +32,11 @@ import { Route as AdminTeamsTeamIdRouteImport } from './routes/admin.teams.$team
 import { Route as AdminMatchesMatchIdRouteImport } from './routes/admin.matches.$matchId'
 import { Route as AdminMapsMapIdRouteImport } from './routes/admin.maps.$mapId'
 
+const Presentation2Route = Presentation2RouteImport.update({
+  id: '/presentation-2',
+  path: '/presentation-2',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PresentationRoute = PresentationRouteImport.update({
   id: '/presentation',
   path: '/presentation',
@@ -141,6 +147,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/presentation': typeof PresentationRoute
+  '/presentation-2': typeof Presentation2Route
   '/admin/camera': typeof AdminCameraRoute
   '/admin/diagrams': typeof AdminDiagramsRoute
   '/admin/hsv': typeof AdminHsvRoute
@@ -163,6 +170,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/presentation': typeof PresentationRoute
+  '/presentation-2': typeof Presentation2Route
   '/admin/camera': typeof AdminCameraRoute
   '/admin/diagrams': typeof AdminDiagramsRoute
   '/admin/hsv': typeof AdminHsvRoute
@@ -187,6 +195,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/presentation': typeof PresentationRoute
+  '/presentation-2': typeof Presentation2Route
   '/admin/camera': typeof AdminCameraRoute
   '/admin/diagrams': typeof AdminDiagramsRoute
   '/admin/hsv': typeof AdminHsvRoute
@@ -212,6 +221,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/presentation'
+    | '/presentation-2'
     | '/admin/camera'
     | '/admin/diagrams'
     | '/admin/hsv'
@@ -234,6 +244,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/presentation'
+    | '/presentation-2'
     | '/admin/camera'
     | '/admin/diagrams'
     | '/admin/hsv'
@@ -257,6 +268,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/presentation'
+    | '/presentation-2'
     | '/admin/camera'
     | '/admin/diagrams'
     | '/admin/hsv'
@@ -281,12 +293,20 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   PresentationRoute: typeof PresentationRoute
+  Presentation2Route: typeof Presentation2Route
   MatchesMatchIdRoute: typeof MatchesMatchIdRoute
   TeamsTeamIdRoute: typeof TeamsTeamIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/presentation-2': {
+      id: '/presentation-2'
+      path: '/presentation-2'
+      fullPath: '/presentation-2'
+      preLoaderRoute: typeof Presentation2RouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/presentation': {
       id: '/presentation'
       path: '/presentation'
@@ -511,6 +531,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   PresentationRoute: PresentationRoute,
+  Presentation2Route: Presentation2Route,
   MatchesMatchIdRoute: MatchesMatchIdRoute,
   TeamsTeamIdRoute: TeamsTeamIdRoute,
 }
