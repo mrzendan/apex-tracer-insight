@@ -397,7 +397,7 @@ function V2Slide5({ editing }: P) {
             <E id={`v2.s5.e${i}.t`} defaultValue={t} editing={editing} className="mt-3 text-[22px] font-semibold" />
             <div className="mt-2 h-px w-10" style={{ background: ACCENT }} />
             <E id={`v2.s5.e${i}.f`} defaultValue={fields} editing={editing}
-              className="mt-3 font-mono text-[13px]" style={{ color: MUTED } as any} multiline />
+              className="mt-3 font-mono text-[13px] text-[#6b5d4a]" multiline />
           </Card>
         ))}
       </div>
