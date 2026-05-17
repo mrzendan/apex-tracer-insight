@@ -127,7 +127,7 @@ function TeamDetail() {
   const tourStatus = (t: { startDate: string; endDate: string }) => {
     const s = new Date(t.startDate + "T00:00:00Z").getTime();
     const e = new Date(t.endDate + "T23:59:59Z").getTime();
-    if (today < s) return { label: "FUTURE", cls: "bg-accent/15 text-accent border-accent/30" };
+    if (today < s) return { label: "FUTURE", cls: "bg-success/20 text-success border-success/40" };
     if (today > e) return { label: "PAST", cls: "bg-surface-2 text-muted-foreground border-border" };
     return { label: "LIVE", cls: "bg-destructive/20 text-destructive border-destructive/40 animate-pulse" };
   };
