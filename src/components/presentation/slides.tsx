@@ -8,6 +8,8 @@ import type { ComponentType, ReactElement, ReactNode } from "react";
 import { EditableText } from "./EditableText";
 import { SlideCanvas, SlideHeader } from "./SlideCanvas";
 import { Slide10, Slide11, Slide12 } from "./slides-extra";
+import { Movable } from "./movable/Movable";
+import { MovableArrow } from "./movable/MovableArrow";
 import mapImage from "@/assets/maps/storm-point.png";
 
 type SlideProps = { editing: boolean };
@@ -575,7 +577,7 @@ function ErTable({
   id, title, rows, editing, Icon = Database,
 }: { id: string; title: string; rows: [string,string,string][]; editing: boolean; Icon?: ComponentType<{ className?: string; strokeWidth?: number }> }) {
   return (
-    <div className="relative rounded-xl border border-cyan/40 bg-surface/60 p-4">
+    <div className="relative h-full w-full overflow-hidden rounded-xl border border-cyan/40 bg-surface/60 p-4">
       <div className="mb-2 flex items-center gap-2">
         <Icon className="h-6 w-6 text-cyan" strokeWidth={1.8} />
         <EditableText id={id + ".t"} defaultValue={title} editing={editing} className="text-[20px] font-bold" />
@@ -603,12 +605,40 @@ function ErTable({
 }
 
 export function Slide6({ editing }: SlideProps) {
-  const RelLabel = ({ x, y, t }: { x: number; y: number; t: string }) => (
-    <g>
-      <rect x={x - 9} y={y - 10} width="18" height="20" rx="3" fill="var(--background)" stroke="var(--cyan)" strokeOpacity="0.4" />
-      <text x={x} y={y + 5} fontSize="13" fontFamily="ui-monospace,monospace" fill="var(--cyan)" textAnchor="middle">{t}</text>
-    </g>
-  );
+  // Defaults in 1920×1080 design space. Each card is movable+resizable, each arrow is draggable.
+  const W = 336, H1 = 270, H2 = 290;
+  const COLS = [80, 436, 792, 1148, 1504];
+  const Y1 = 220, Y2 = 560;
+  const tables: Array<{ id: string; title: string; Icon: ComponentType<{ className?: string; strokeWidth?: number }>; rows: [string,string,string][]; x: number; y: number; w: number; h: number }> = [
+    { id: "s6.tour",   title: "tournaments",      Icon: Trophy,   x: COLS[0], y: Y1, w: W, h: H1, rows: [["PK","id","integer"],["","name","text"],["","game","text"],["","start_date","timestamp"],["","end_date","timestamp"]] },
+    { id: "s6.match",  title: "matches",          Icon: Gamepad2, x: COLS[1], y: Y1, w: W, h: H1, rows: [["PK","id","integer"],["FK","tournament_id","integer"],["","name","text"],["","start_time","timestamp"],["","status","text"]] },
+    { id: "s6.maps",   title: "maps",             Icon: MapIcon,  x: COLS[2], y: Y1, w: W, h: H1, rows: [["PK","id","integer"],["FK","match_id","integer"],["","name","text"],["","order_index","integer"],["","map_type","text"]] },
+    { id: "s6.teams",  title: "teams",            Icon: Users,    x: COLS[3], y: Y1, w: W, h: H1, rows: [["PK","id","integer"],["FK","tournament_id","integer"],["","name","text"],["","tag","text"],["","region","text"]] },
+    { id: "s6.players",title: "players",          Icon: User,     x: COLS[4], y: Y1, w: W, h: H1, rows: [["PK","id","integer"],["FK","team_id","integer"],["","nick","text"],["","role","text"],["","nationality","text"]] },
+    { id: "s6.rings",  title: "rings",            Icon: Target,   x: COLS[0], y: Y2, w: W, h: H2, rows: [["PK","id","integer"],["FK","map_id","integer"],["","ring_number","integer"],["","start_time","timestamp"],["","end_time","timestamp"]] },
+    { id: "s6.pos",    title: "team_positions",   Icon: Flag,     x: COLS[1], y: Y2, w: W, h: H2, rows: [["PK","id","integer"],["FK","map_id","integer"],["FK","team_id","integer"],["FK","ring_id","integer"],["","position","text"]] },
+    { id: "s6.evt",    title: "timeline_events",  Icon: Clock,    x: COLS[2], y: Y2, w: W, h: H2, rows: [["PK","id","integer"],["FK","map_id","integer"],["FK","team_id","integer"],["","event_type","text"],["","event_time","timestamp"]] },
+    { id: "s6.jobs",   title: "analysis_jobs",    Icon: Settings, x: COLS[3], y: Y2, w: W, h: H2, rows: [["PK","id","integer"],["FK","map_id","integer"],["","job_type","text"],["","status","text"],["","created_at","timestamp"]] },
+    { id: "s6.out",    title: "analysis_outputs", Icon: Database, x: COLS[4], y: Y2, w: W, h: H2, rows: [["PK","id","integer"],["FK","job_id","integer"],["","output_type","text"],["","file_url","text"],["","created_at","timestamp"]] },
+  ];
+
+  // Default arrow endpoints in slide design space (1920×1080).
+  const arrows: Array<{ id: string; x1: number; y1: number; x2: number; y2: number; label1?: string; labelN?: string; dashed?: boolean }> = [
+    // row 1: child → parent (left)
+    { id: "s6.a.match_tour",    x1: COLS[1],         y1: Y1 + H1/2, x2: COLS[0] + W, y2: Y1 + H1/2, label1: "1", labelN: "N" },
+    { id: "s6.a.maps_match",    x1: COLS[2],         y1: Y1 + H1/2, x2: COLS[1] + W, y2: Y1 + H1/2, label1: "1", labelN: "N" },
+    { id: "s6.a.teams_tour",    x1: COLS[3],         y1: Y1 + H1/2, x2: COLS[0] + W/2, y2: Y1, label1: "1", labelN: "N", dashed: true },
+    { id: "s6.a.players_teams", x1: COLS[4],         y1: Y1 + H1/2, x2: COLS[3] + W, y2: Y1 + H1/2, label1: "1", labelN: "N" },
+    // row 2 → row 1
+    { id: "s6.a.rings_maps",  x1: COLS[0] + W/2, y1: Y2,        x2: COLS[2] + W/2, y2: Y1 + H1, label1: "1", labelN: "N" },
+    { id: "s6.a.pos_maps",    x1: COLS[1] + W/3, y1: Y2,        x2: COLS[2] + W/3, y2: Y1 + H1, label1: "1", labelN: "N" },
+    { id: "s6.a.pos_teams",   x1: COLS[1] + 2*W/3, y1: Y2,      x2: COLS[3] + W/3, y2: Y1 + H1, label1: "1", labelN: "N" },
+    { id: "s6.a.evt_maps",    x1: COLS[2] + W/3, y1: Y2,        x2: COLS[2] + 2*W/3, y2: Y1 + H1, label1: "1", labelN: "N" },
+    { id: "s6.a.evt_teams",   x1: COLS[2] + 2*W/3, y1: Y2,      x2: COLS[3] + 2*W/3, y2: Y1 + H1, label1: "1", labelN: "N" },
+    { id: "s6.a.jobs_maps",   x1: COLS[3] + W/2, y1: Y2,        x2: COLS[2] + W, y2: Y1 + H1, label1: "1", labelN: "N" },
+    { id: "s6.a.out_jobs",    x1: COLS[4],       y1: Y2 + H2/2, x2: COLS[3] + W, y2: Y2 + H2/2, label1: "1", labelN: "N" },
+  ];
+
   return (
     <SlideCanvas>
       <SlideHeader
@@ -616,104 +646,34 @@ export function Slide6({ editing }: SlideProps) {
         subtitleId="s6.sub" subtitleDefault="Упрощённая структура таблиц и связей для хранения аналитики матчей."
         editing={editing}
       />
-      <div className="relative mt-10 px-12">
-        <svg className="pointer-events-none absolute inset-x-12 top-0 z-10 h-[800px] w-[calc(100%-96px)]" viewBox="0 0 1728 800" preserveAspectRatio="none">
-          <defs>
-            <marker id="s6arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
-              <path d="M0,0 L10,5 L0,10 z" fill="var(--cyan)" />
-            </marker>
-          </defs>
-          {(() => {
-            const colW = 1728 / 5;
-            const cx = (c: number) => colW * c + colW / 2;
-            const ROW1_Y = 170;
-            const ROW2_TOP = 406;
-            const ROW1_BOTTOM = 310;
-            const TRUNK_Y = 358;
-            return (
-              <>
-                {/* Row 1 horizontal FK arrows: each child → parent on the LEFT (matches→tournaments, maps→matches, teams→maps, players→teams) */}
-                {[0,1,2,3].map((i) => {
-                  // child (right card, col i+1) → parent (left card, col i): arrow tip on the LEFT
-                  const xRight = colW * (i + 1) + 8;  // tail at right card's left edge
-                  const xLeft  = colW * (i + 1) - 8;  // tip at left card's right edge
-                  return (
-                    <g key={`r1-${i}`}>
-                      <line x1={xRight} y1={ROW1_Y} x2={xLeft} y2={ROW1_Y} stroke="var(--cyan)" strokeWidth="2" markerEnd="url(#s6arr)" />
-                      <RelLabel x={xLeft - 14}  y={ROW1_Y - 16} t="1" />
-                      <RelLabel x={xRight + 14} y={ROW1_Y + 16} t="N" />
-                    </g>
-                  );
-                })}
-                {/* Vertical lines from row-2 tables UP to a trunk, then branches up to maps (col 2) and teams (col 3) */}
-                {/* trunk segment between leftmost row2 (col 0) and rightmost child trunk (col 3) */}
-                <line x1={cx(0)} y1={TRUNK_Y} x2={cx(3)} y2={TRUNK_Y} stroke="var(--cyan)" strokeWidth="2" />
-                {/* vertical drops from trunk down to each row2 card */}
-                {[0,1,2,3].map((c) => (
-                  <g key={`v-${c}`}>
-                    <line x1={cx(c)} y1={TRUNK_Y} x2={cx(c)} y2={ROW2_TOP} stroke="var(--cyan)" strokeWidth="2" />
-                    <RelLabel x={cx(c) + 18} y={ROW2_TOP - 20} t="N" />
-                  </g>
-                ))}
-                {/* dashed soft link: rings ↔ tournaments column hint (optional, keep minimal) */}
-                {/* branches up from trunk to maps (col 2) and teams (col 3) parent cards */}
-                <line x1={cx(2)} y1={TRUNK_Y} x2={cx(2)} y2={ROW1_BOTTOM} stroke="var(--cyan)" strokeWidth="2" markerEnd="url(#s6arr)" />
-                <RelLabel x={cx(2) + 18} y={ROW1_BOTTOM + 6} t="1" />
-                <line x1={cx(3)} y1={TRUNK_Y} x2={cx(3)} y2={ROW1_BOTTOM} stroke="var(--cyan)" strokeWidth="2" markerEnd="url(#s6arr)" />
-                <RelLabel x={cx(3) + 18} y={ROW1_BOTTOM + 6} t="1" />
-                {/* analysis_jobs (col 3) → analysis_outputs (col 4) horizontal in row 2 */}
-                {(() => {
-                  const y = 580;
-                  const x1 = colW * 4 - 8;
-                  const x2 = colW * 4 + 8;
-                  return (
-                    <g>
-                      <line x1={x1} y1={y} x2={x2} y2={y} stroke="var(--cyan)" strokeWidth="2" markerEnd="url(#s6arr)" />
-                      <RelLabel x={(x1+x2)/2} y={y - 14} t="1" />
-                      <RelLabel x={(x1+x2)/2} y={y + 14} t="N" />
-                    </g>
-                  );
-                })()}
-              </>
-            );
-          })()}
+      {/* Diagram area uses absolute positioning over the full slide */}
+      <div className="absolute inset-0">
+        {/* Arrow overlay covers the full slide. Pointer events only when editing. */}
+        <svg
+          className="absolute inset-0 z-10"
+          width="100%" height="100%"
+          viewBox="0 0 1920 1080"
+          preserveAspectRatio="none"
+          style={{ pointerEvents: editing ? "auto" : "none" }}
+        >
+          {arrows.map((a) => (
+            <MovableArrow
+              key={a.id}
+              id={a.id}
+              defaultArrow={{ x1: a.x1, y1: a.y1, x2: a.x2, y2: a.y2 }}
+              editing={editing}
+              viewW={1920} viewH={1080} pixelW={1920} pixelH={1080}
+              label1={a.label1} labelN={a.labelN} dashed={a.dashed}
+            />
+          ))}
         </svg>
-        <div className="grid grid-cols-5 gap-4">
-        <ErTable id="s6.tour" title="tournaments" Icon={Trophy} editing={editing} rows={[
-          ["PK","id","integer"],["","name","text"],["","game","text"],["","start_date","timestamp"],["","end_date","timestamp"],
-        ]} />
-        <ErTable id="s6.match" title="matches" Icon={Gamepad2} editing={editing} rows={[
-          ["PK","id","integer"],["FK","tournament_id","integer"],["","name","text"],["","start_time","timestamp"],["","status","text"],
-        ]} />
-        <ErTable id="s6.maps" title="maps" Icon={MapIcon} editing={editing} rows={[
-          ["PK","id","integer"],["FK","match_id","integer"],["","name","text"],["","order_index","integer"],["","map_type","text"],
-        ]} />
-        <ErTable id="s6.teams" title="teams" Icon={Users} editing={editing} rows={[
-          ["PK","id","integer"],["FK","tournament_id","integer"],["","name","text"],["","tag","text"],["","region","text"],
-        ]} />
-        <ErTable id="s6.players" title="players" Icon={User} editing={editing} rows={[
-          ["PK","id","integer"],["FK","team_id","integer"],["","nick","text"],["","role","text"],["","nationality","text"],
-        ]} />
-        </div>
-        <div className="mt-24 grid grid-cols-5 gap-4">
-        <ErTable id="s6.rings" title="rings" Icon={Target} editing={editing} rows={[
-          ["PK","id","integer"],["FK","map_id","integer"],["","ring_number","integer"],["","start_time","timestamp"],["","end_time","timestamp"],
-        ]} />
-        <ErTable id="s6.pos" title="team_positions" Icon={Flag} editing={editing} rows={[
-          ["PK","id","integer"],["FK","map_id","integer"],["FK","team_id","integer"],["FK","ring_id","integer"],["","position","text"],
-        ]} />
-        <ErTable id="s6.evt" title="timeline_events" Icon={Clock} editing={editing} rows={[
-          ["PK","id","integer"],["FK","map_id","integer"],["FK","team_id","integer"],["","event_type","text"],["","event_time","timestamp"],
-        ]} />
-        <ErTable id="s6.jobs" title="analysis_jobs" Icon={Settings} editing={editing} rows={[
-          ["PK","id","integer"],["FK","map_id","integer"],["","job_type","text"],["","status","text"],["","created_at","timestamp"],
-        ]} />
-        <ErTable id="s6.out" title="analysis_outputs" Icon={Database} editing={editing} rows={[
-          ["PK","id","integer"],["FK","job_id","integer"],["","output_type","text"],["","file_url","text"],["","created_at","timestamp"],
-        ]} />
-        </div>
+        {tables.map((t) => (
+          <Movable key={t.id} id={`${t.id}.box`} defaultBox={{ x: t.x, y: t.y, w: t.w, h: t.h }} editing={editing}>
+            <ErTable id={t.id} title={t.title} Icon={t.Icon} editing={editing} rows={t.rows} />
+          </Movable>
+        ))}
       </div>
-      <div className="mt-8 flex items-center justify-center gap-6 text-[16px] text-muted-foreground">
+      <div className="absolute bottom-6 left-0 right-0 flex items-center justify-center gap-6 text-[16px] text-muted-foreground">
         <div className="flex items-center gap-2"><span className="rounded bg-cyan/20 px-2 py-0.5 text-[12px] font-bold text-cyan">PK</span> Primary Key</div>
         <div className="flex items-center gap-2"><span className="rounded bg-muted px-2 py-0.5 text-[12px] font-bold text-muted-foreground">FK</span> Foreign Key</div>
       </div>

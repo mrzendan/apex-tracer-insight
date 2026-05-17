@@ -1,8 +1,11 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { EditableText } from "./EditableText";
 
 export const SLIDE_W = 1920;
 export const SLIDE_H = 1080;
+
+const ScaleContext = createContext(1);
+export const useSlideScale = () => useContext(ScaleContext);
 
 export function SlideCanvas({ children, className }: { children: ReactNode; className?: string }) {
   const wrapRef = useRef<HTMLDivElement | null>(null);
@@ -34,7 +37,7 @@ export function SlideCanvas({ children, className }: { children: ReactNode; clas
           transformOrigin: "center center",
         }}
       >
-        {children}
+        <ScaleContext.Provider value={scale}>{children}</ScaleContext.Provider>
       </div>
     </div>
   );
