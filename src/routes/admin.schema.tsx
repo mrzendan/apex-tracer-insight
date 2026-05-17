@@ -243,7 +243,7 @@ function SchemaEditor() {
   const addBlock = () => {
     const id = uid("b");
     mutate((d) => {
-      d.blocks.push({ id, name: "new_table", x: -pan.x / zoom + 60, y: -pan.y / zoom + 60, fields: [{ id: uid("f"), name: "id", type: "uuid", pk: true }] });
+      d.blocks.push({ id, name: "new_table", module: "core", x: -pan.x / zoom + 60, y: -pan.y / zoom + 60, fields: [{ id: uid("f"), name: "id", type: "uuid", pk: true }] });
       return d;
     });
     setSelected({ blockId: id });
@@ -279,6 +279,21 @@ function SchemaEditor() {
   });
   const setRelKind = (relId: string, kind: RelKind) => mutate((d) => { const r = d.relations.find((x) => x.id === relId); if (r) r.kind = kind; return d; });
   const deleteRel = (relId: string) => mutate((d) => { d.relations = d.relations.filter((r) => r.id !== relId); return d; });
+  const setBlockModule = (id: string, module: ModuleKey) => mutate((d) => { const b = d.blocks.find((x) => x.id === id); if (b) b.module = module; return d; });
+  const toggleModule = (k: ModuleKey) => setPrefs((p) => {
+    const has = p.modules.includes(k);
+    const next = has ? p.modules.filter((m) => m !== k) : [...p.modules, k];
+    return { ...p, modules: next.length ? next : [k] };
+  });
+  const activeModules = new Set(prefs.modules);
+  const isBlockVisible = (b: Block) => activeModules.has(b.module);
+  const MODULE_PRESETS: { id: string; label: string; mods: ModuleKey[] }[] = [
+    { id: "all", label: "All", mods: [...ALL_MODULES] },
+    { id: "core", label: "Core flow", mods: ["core", "media"] },
+    { id: "analysis", label: "Analysis", mods: ["core", "analysis"] },
+    { id: "map", label: "Map data", mods: ["core", "map"] },
+    { id: "auth", label: "Auth & audit", mods: ["auth"] },
+  ];
 
   // Drag a block
   const onBlockMouseDown = (e: React.MouseEvent, b: Block) => {
