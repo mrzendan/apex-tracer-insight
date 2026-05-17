@@ -134,7 +134,7 @@ function UsersPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="input"
+                className="h-9 w-full rounded-sm border border-border bg-surface-2 px-2 text-xs outline-none focus:border-primary"
               />
             </Field>
             <Field label="Password">
@@ -144,7 +144,7 @@ function UsersPage() {
                 minLength={8}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="input"
+                className="h-9 w-full rounded-sm border border-border bg-surface-2 px-2 text-xs outline-none focus:border-primary"
               />
             </Field>
             <Field label="Display name">
@@ -152,14 +152,14 @@ function UsersPage() {
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                className="input"
+                className="h-9 w-full rounded-sm border border-border bg-surface-2 px-2 text-xs outline-none focus:border-primary"
               />
             </Field>
             <Field label="Role">
               <select
                 value={role}
                 onChange={(e) => setRoleVal(e.target.value as AppRole)}
-                className="input"
+                className="h-9 w-full rounded-sm border border-border bg-surface-2 px-2 text-xs outline-none focus:border-primary"
               >
                 <option value="user">User</option>
                 <option value="operator">Operator</option>
@@ -210,7 +210,7 @@ function UsersPage() {
                       <select
                         value={r.role ?? "user"}
                         onChange={(e) => onChangeRole(r.id, e.target.value as AppRole)}
-                        className="input h-7 py-0 text-[11px]"
+                        className="h-7 w-full rounded-sm border border-border bg-surface-2 px-2 text-[11px] outline-none focus:border-primary"
                       >
                         <option value="user">User</option>
                         <option value="operator">Operator</option>
