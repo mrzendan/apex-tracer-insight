@@ -1,9 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { tournaments, matches, maps, teams } from "@/lib/mock-match";
 import { TeamLogo } from "@/components/admin/TeamLogo";
+import { RouteGuard } from "@/components/auth/RouteGuard";
+import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/")({
-  component: Hub,
+  component: () => (
+    <RouteGuard min="user">
+      <Hub />
+    </RouteGuard>
+  ),
   head: () => ({
     meta: [
       { title: "APEX STATS — VOD Analytics Hub" },
@@ -13,6 +19,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Hub() {
+  const { role, user, signOut } = useAuth();
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="flex h-14 items-center gap-4 border-b border-border bg-surface px-4">
@@ -28,9 +35,20 @@ function Hub() {
           </div>
         </Link>
         <div className="ml-auto flex items-center gap-2">
-          <Link to="/admin" className="rounded-sm border border-border-strong bg-surface-2 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider hover:bg-muted">
-            Admin
-          </Link>
+          <span className="text-mono hidden sm:inline text-[10px] text-muted-foreground">
+            {user?.email} · {role}
+          </span>
+          {(role === "operator" || role === "administrator") && (
+            <Link to="/admin" className="rounded-sm border border-border-strong bg-surface-2 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider hover:bg-muted">
+              Admin
+            </Link>
+          )}
+          <button
+            onClick={() => signOut()}
+            className="rounded-sm border border-border-strong bg-surface-2 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider hover:bg-muted"
+          >
+            Sign out
+          </button>
         </div>
       </header>
 

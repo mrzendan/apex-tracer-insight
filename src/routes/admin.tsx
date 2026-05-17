@@ -1,7 +1,15 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
+import { RouteGuard } from "@/components/auth/RouteGuard";
+import { useAuth } from "@/lib/auth";
 
-export const Route = createFileRoute("/admin")({ component: AdminLayout });
+export const Route = createFileRoute("/admin")({
+  component: () => (
+    <RouteGuard min="operator">
+      <AdminLayout />
+    </RouteGuard>
+  ),
+});
 
 type NavItem = { to: string; label: string; hint: string; exact?: boolean };
 
@@ -24,6 +32,7 @@ const toolItems: NavItem[] = [
 ];
 
 function AdminLayout() {
+  const { role, user, signOut } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const dataActive = dataItems.some((i) => pathname.startsWith(i.to));
   const toolsActive = toolItems.some((i) => pathname.startsWith(i.to));
@@ -57,6 +66,19 @@ function AdminLayout() {
             <div className="mt-0.5 text-[10px] font-normal normal-case tracking-normal text-muted-foreground">Overview</div>
           </Link>
 
+          {role === "administrator" && (
+            <Link
+              to="/admin/users"
+              activeOptions={{ exact: true }}
+              activeProps={{ className: "bg-primary/15 text-primary border-primary/30" }}
+              inactiveProps={{ className: "text-foreground/80 hover:bg-muted border-transparent" }}
+              className="mb-0.5 mt-0.5 block rounded-sm border px-3 py-2 text-xs font-semibold uppercase tracking-wider transition-colors"
+            >
+              <div>Users</div>
+              <div className="mt-0.5 text-[10px] font-normal normal-case tracking-normal text-muted-foreground">Accounts & roles</div>
+            </Link>
+          )}
+
           <NavGroup
             label="Data"
             count={dataItems.length}
@@ -74,7 +96,16 @@ function AdminLayout() {
           />
         </nav>
 
-        <div className="border-t border-border p-3">
+        <div className="space-y-2 border-t border-border p-3">
+          <div className="text-mono truncate text-[10px] text-muted-foreground" title={user?.email ?? ""}>
+            {user?.email} · {role}
+          </div>
+          <button
+            onClick={() => signOut()}
+            className="text-mono block w-full rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-center text-[10px] uppercase tracking-wider hover:bg-muted"
+          >
+            Sign out
+          </button>
           <Link to="/" className="text-mono block rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-center text-[10px] uppercase tracking-wider hover:bg-muted">
             ← Match Viewer
           </Link>

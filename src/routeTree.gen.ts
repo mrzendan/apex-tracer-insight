@@ -11,12 +11,14 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as Presentation2RouteImport } from './routes/presentation-2'
 import { Route as PresentationRouteImport } from './routes/presentation'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as TeamsTeamIdRouteImport } from './routes/teams.$teamId'
 import { Route as MatchesMatchIdRouteImport } from './routes/matches.$matchId'
 import { Route as AdminZonesRouteImport } from './routes/admin.zones'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminTournamentsRouteImport } from './routes/admin.tournaments'
 import { Route as AdminTeamsRouteImport } from './routes/admin.teams'
 import { Route as AdminSchemaRouteImport } from './routes/admin.schema'
@@ -40,6 +42,11 @@ const Presentation2Route = Presentation2RouteImport.update({
 const PresentationRoute = PresentationRouteImport.update({
   id: '/presentation',
   path: '/presentation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -70,6 +77,11 @@ const MatchesMatchIdRoute = MatchesMatchIdRouteImport.update({
 const AdminZonesRoute = AdminZonesRouteImport.update({
   id: '/zones',
   path: '/zones',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminTournamentsRoute = AdminTournamentsRouteImport.update({
@@ -146,6 +158,7 @@ const AdminMapsMapIdRoute = AdminMapsMapIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/login': typeof LoginRoute
   '/presentation': typeof PresentationRoute
   '/presentation-2': typeof Presentation2Route
   '/admin/camera': typeof AdminCameraRoute
@@ -159,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/admin/schema': typeof AdminSchemaRoute
   '/admin/teams': typeof AdminTeamsRouteWithChildren
   '/admin/tournaments': typeof AdminTournamentsRoute
+  '/admin/users': typeof AdminUsersRoute
   '/admin/zones': typeof AdminZonesRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
   '/teams/$teamId': typeof TeamsTeamIdRoute
@@ -169,6 +183,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
   '/presentation': typeof PresentationRoute
   '/presentation-2': typeof Presentation2Route
   '/admin/camera': typeof AdminCameraRoute
@@ -182,6 +197,7 @@ export interface FileRoutesByTo {
   '/admin/schema': typeof AdminSchemaRoute
   '/admin/teams': typeof AdminTeamsRouteWithChildren
   '/admin/tournaments': typeof AdminTournamentsRoute
+  '/admin/users': typeof AdminUsersRoute
   '/admin/zones': typeof AdminZonesRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
   '/teams/$teamId': typeof TeamsTeamIdRoute
@@ -194,6 +210,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/login': typeof LoginRoute
   '/presentation': typeof PresentationRoute
   '/presentation-2': typeof Presentation2Route
   '/admin/camera': typeof AdminCameraRoute
@@ -207,6 +224,7 @@ export interface FileRoutesById {
   '/admin/schema': typeof AdminSchemaRoute
   '/admin/teams': typeof AdminTeamsRouteWithChildren
   '/admin/tournaments': typeof AdminTournamentsRoute
+  '/admin/users': typeof AdminUsersRoute
   '/admin/zones': typeof AdminZonesRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
   '/teams/$teamId': typeof TeamsTeamIdRoute
@@ -220,6 +238,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/login'
     | '/presentation'
     | '/presentation-2'
     | '/admin/camera'
@@ -233,6 +252,7 @@ export interface FileRouteTypes {
     | '/admin/schema'
     | '/admin/teams'
     | '/admin/tournaments'
+    | '/admin/users'
     | '/admin/zones'
     | '/matches/$matchId'
     | '/teams/$teamId'
@@ -243,6 +263,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/login'
     | '/presentation'
     | '/presentation-2'
     | '/admin/camera'
@@ -256,6 +277,7 @@ export interface FileRouteTypes {
     | '/admin/schema'
     | '/admin/teams'
     | '/admin/tournaments'
+    | '/admin/users'
     | '/admin/zones'
     | '/matches/$matchId'
     | '/teams/$teamId'
@@ -267,6 +289,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/login'
     | '/presentation'
     | '/presentation-2'
     | '/admin/camera'
@@ -280,6 +303,7 @@ export interface FileRouteTypes {
     | '/admin/schema'
     | '/admin/teams'
     | '/admin/tournaments'
+    | '/admin/users'
     | '/admin/zones'
     | '/matches/$matchId'
     | '/teams/$teamId'
@@ -292,6 +316,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
+  LoginRoute: typeof LoginRoute
   PresentationRoute: typeof PresentationRoute
   Presentation2Route: typeof Presentation2Route
   MatchesMatchIdRoute: typeof MatchesMatchIdRoute
@@ -312,6 +337,13 @@ declare module '@tanstack/react-router' {
       path: '/presentation'
       fullPath: '/presentation'
       preLoaderRoute: typeof PresentationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -354,6 +386,13 @@ declare module '@tanstack/react-router' {
       path: '/zones'
       fullPath: '/admin/zones'
       preLoaderRoute: typeof AdminZonesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/tournaments': {
@@ -505,6 +544,7 @@ interface AdminRouteChildren {
   AdminSchemaRoute: typeof AdminSchemaRoute
   AdminTeamsRoute: typeof AdminTeamsRouteWithChildren
   AdminTournamentsRoute: typeof AdminTournamentsRoute
+  AdminUsersRoute: typeof AdminUsersRoute
   AdminZonesRoute: typeof AdminZonesRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
@@ -521,6 +561,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSchemaRoute: AdminSchemaRoute,
   AdminTeamsRoute: AdminTeamsRouteWithChildren,
   AdminTournamentsRoute: AdminTournamentsRoute,
+  AdminUsersRoute: AdminUsersRoute,
   AdminZonesRoute: AdminZonesRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
@@ -530,6 +571,7 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
+  LoginRoute: LoginRoute,
   PresentationRoute: PresentationRoute,
   Presentation2Route: Presentation2Route,
   MatchesMatchIdRoute: MatchesMatchIdRoute,
