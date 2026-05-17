@@ -694,7 +694,7 @@ export function Slide6({ editing }: SlideProps) {
           ["PK","id","integer"],["FK","team_id","integer"],["","nick","text"],["","role","text"],["","nationality","text"],
         ]} />
         </div>
-        <div className="mt-6 grid grid-cols-5 gap-4">
+        <div className="mt-24 grid grid-cols-5 gap-4">
         <ErTable id="s6.rings" title="rings" Icon={Target} editing={editing} rows={[
           ["PK","id","integer"],["FK","map_id","integer"],["","ring_number","integer"],["","start_time","timestamp"],["","end_time","timestamp"],
         ]} />
