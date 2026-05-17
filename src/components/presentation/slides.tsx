@@ -554,7 +554,7 @@ export function Slide5({ editing }: SlideProps) {
           ].map(([c,l],i)=>(
             <div key={i} className="flex items-center gap-2">
               {c==="arrow" ? (
-                <svg width="28" height="10"><line x1="0" y1="5" x2="22" y2="5" stroke="currentColor" strokeWidth="2" markerEnd="url(#legendArr)"/><polyline points="20,1 26,5 20,9" fill="none" stroke="currentColor" strokeWidth="2"/></svg>
+                <svg width="28" height="10"><line x1="0" y1="5" x2="22" y2="5" stroke="currentColor" strokeWidth="2"/><polyline points="20,1 26,5 20,9" fill="none" stroke="currentColor" strokeWidth="2"/></svg>
               ) : c==="dashed" ? (
                 <svg width="28" height="10"><line x1="0" y1="5" x2="22" y2="5" stroke="hsl(var(--success))" strokeWidth="2" strokeDasharray="4 3"/><polyline points="20,1 26,5 20,9" fill="none" stroke="hsl(var(--success))" strokeWidth="2"/></svg>
               ) : (
