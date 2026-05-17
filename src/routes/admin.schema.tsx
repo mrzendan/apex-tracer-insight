@@ -12,6 +12,16 @@ type Relation = { id: string; fromBlock: string; fromField: string; toBlock: str
 type SchemaDoc = { blocks: Block[]; relations: Relation[] };
 
 const STORAGE_KEY = "apex-stats:schema-v1";
+const PREFS_KEY = "apex-stats:schema-prefs-v1";
+type ArrowStyle = "triangle" | "crowfoot" | "circle" | "diamond" | "none";
+type Theme = "color" | "mono";
+type Prefs = { theme: Theme; arrow: ArrowStyle };
+const defaultPrefs: Prefs = { theme: "color", arrow: "crowfoot" };
+function loadPrefs(): Prefs {
+  if (typeof window === "undefined") return defaultPrefs;
+  try { const r = localStorage.getItem(PREFS_KEY); return r ? { ...defaultPrefs, ...JSON.parse(r) } : defaultPrefs; }
+  catch { return defaultPrefs; }
+}
 const uid = (p = "id") => `${p}_${Math.random().toString(36).slice(2, 9)}`;
 
 // ------------------------------ Seed (proposed schema) ------------------------------
@@ -127,6 +137,7 @@ function fieldAnchor(b: Block, fieldId: string, side: "left" | "right") {
 // ------------------------------ Component ------------------------------
 function SchemaEditor() {
   const [doc, setDoc] = useState<SchemaDoc>(load);
+  const [prefs, setPrefs] = useState<Prefs>(loadPrefs);
   const [selected, setSelected] = useState<{ blockId: string; fieldId?: string } | null>(null);
   const [selectedRel, setSelectedRel] = useState<string | null>(null);
   const [connect, setConnect] = useState<{ blockId: string; fieldId: string } | null>(null);
@@ -137,6 +148,16 @@ function SchemaEditor() {
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   useEffect(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(doc)); }, [doc]);
+  useEffect(() => { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); }, [prefs]);
+
+  const mono = prefs.theme === "mono";
+  const strokeColor = mono ? "var(--foreground)" : "var(--primary)";
+  const strokeColorSoft = mono
+    ? "color-mix(in oklab, var(--foreground) 55%, transparent)"
+    : "color-mix(in oklab, var(--primary) 55%, transparent)";
+  const headFill = mono ? "var(--surface-2)" : "color-mix(in oklab, var(--primary) 15%, transparent)";
+  const rowSelFill = mono ? "color-mix(in oklab, var(--foreground) 10%, transparent)" : "color-mix(in oklab, var(--primary) 10%, transparent)";
+  const accentSoft = mono ? "var(--foreground)" : "var(--accent)";
 
   const mutate = (fn: (d: SchemaDoc) => SchemaDoc) => setDoc((d) => fn(structuredClone(d)));
 
@@ -244,6 +265,22 @@ function SchemaEditor() {
         <h1 className="text-sm font-bold uppercase tracking-wider">Schema editor</h1>
         <span className="text-mono text-[10px] text-muted-foreground">{doc.blocks.length} tables · {doc.relations.length} relations</span>
         <div className="ml-auto flex items-center gap-2">
+          <div className="flex items-center gap-1 rounded-sm border border-border bg-surface-2 p-0.5">
+            {(["color", "mono"] as Theme[]).map((t) => (
+              <button key={t} onClick={() => setPrefs((p) => ({ ...p, theme: t }))}
+                className={`px-2 py-0.5 text-[10px] uppercase tracking-wider rounded-sm ${prefs.theme === t ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"}`}>
+                {t === "color" ? "Color" : "B/W"}
+              </button>
+            ))}
+          </div>
+          <select value={prefs.arrow} onChange={(e) => setPrefs((p) => ({ ...p, arrow: e.target.value as ArrowStyle }))}
+            className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-[10px] uppercase tracking-wider">
+            <option value="triangle">▶ Triangle</option>
+            <option value="crowfoot">⋈ Crow's foot</option>
+            <option value="circle">● Circle</option>
+            <option value="diamond">◆ Diamond</option>
+            <option value="none">— None</option>
+          </select>
           <button onClick={addBlock} className="rounded-sm border border-primary/40 bg-primary/15 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-primary hover:bg-primary/25">+ Table</button>
           <button onClick={() => { setDoc(seed()); setSelected(null); setSelectedRel(null); }} className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-[10px] uppercase tracking-wider hover:bg-muted">Reset to proposed</button>
           <div className="text-mono ml-2 text-[10px] text-muted-foreground">zoom {(zoom * 100).toFixed(0)}%</div>
@@ -266,11 +303,17 @@ function SchemaEditor() {
             onMouseLeave={onUp}
           >
             <defs>
-              <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                <path d="M0,0 L10,5 L0,10 z" fill="var(--primary)" />
+              <marker id="ep-triangle" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill={strokeColor} />
               </marker>
-              <marker id="arrow-many" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-                <path d="M0,1 L11,6 L0,11 M6,1 L11,6 L6,11" fill="none" stroke="var(--primary)" strokeWidth="1.5" />
+              <marker id="ep-crowfoot" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+                <path d="M0,1 L11,6 L0,11 M6,1 L11,6 L6,11" fill="none" stroke={strokeColor} strokeWidth="1.5" />
+              </marker>
+              <marker id="ep-circle" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <circle cx="5" cy="5" r="4" fill="none" stroke={strokeColor} strokeWidth="1.5" />
+              </marker>
+              <marker id="ep-diamond" viewBox="0 0 12 10" refX="11" refY="5" markerWidth="8" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0,5 L6,0 L12,5 L6,10 z" fill="none" stroke={strokeColor} strokeWidth="1.5" />
               </marker>
             </defs>
 
@@ -287,12 +330,14 @@ function SchemaEditor() {
                 const c2x = b2.x + (fromRight ? -dx : dx);
                 const d = `M${a.x},${a.y} C${c1x},${a.y} ${c2x},${b2.y} ${b2.x},${b2.y}`;
                 const isSel = selectedRel === r.id;
+                const endId = prefs.arrow === "none" ? undefined : `url(#ep-${prefs.arrow})`;
+                const startId = r.kind === "N-M" && prefs.arrow !== "none" ? `url(#ep-${prefs.arrow})` : undefined;
                 return (
                   <g key={r.id} className="cursor-pointer" onClick={(e) => { e.stopPropagation(); setSelectedRel(r.id); setSelected(null); }}>
                     <path d={d} fill="none" stroke="transparent" strokeWidth={14} />
-                    <path d={d} fill="none" stroke={isSel ? "var(--primary)" : "color-mix(in oklab, var(--primary) 55%, transparent)"} strokeWidth={isSel ? 2 : 1.5}
-                      markerEnd={r.kind === "1-1" ? "url(#arrow)" : "url(#arrow-many)"}
-                      markerStart={r.kind === "N-M" ? "url(#arrow-many)" : undefined}
+                    <path d={d} fill="none" stroke={isSel ? strokeColor : strokeColorSoft} strokeWidth={isSel ? 2 : 1.5}
+                      markerEnd={endId}
+                      markerStart={startId}
                     />
                     <text x={(a.x + b2.x) / 2} y={(a.y + b2.y) / 2 - 4} textAnchor="middle" className="text-mono" fontSize={10} fill="var(--muted-foreground)">{r.kind}</text>
                   </g>
@@ -303,7 +348,7 @@ function SchemaEditor() {
               {connect && (() => {
                 const fb = blocksById[connect.blockId]; if (!fb) return null;
                 const a = fieldAnchor(fb, connect.fieldId, "right");
-                return <circle cx={a.x} cy={a.y} r={6} fill="var(--primary)" />;
+                return <circle cx={a.x} cy={a.y} r={6} fill={strokeColor} />;
               })()}
 
               {/* Blocks */}
@@ -311,8 +356,8 @@ function SchemaEditor() {
                 const isSel = selected?.blockId === b.id;
                 return (
                   <g key={b.id} data-block transform={`translate(${b.x} ${b.y})`} onMouseDown={(e) => onBlockMouseDown(e, b)}>
-                    <rect width={BLOCK_W} height={blockHeight(b)} rx={6} className="fill-surface" stroke={isSel ? "var(--primary)" : "var(--border)"} strokeWidth={isSel ? 1.5 : 1} />
-                    <rect width={BLOCK_W} height={HEAD_H} rx={6} className={isSel ? "fill-primary/15" : "fill-surface-2"} />
+                    <rect width={BLOCK_W} height={blockHeight(b)} rx={6} className="fill-surface" stroke={isSel ? strokeColor : "var(--border)"} strokeWidth={isSel ? 1.5 : 1} />
+                    <rect width={BLOCK_W} height={HEAD_H} rx={6} fill={isSel ? headFill : "var(--surface-2)"} />
                     <text x={10} y={20} className="font-mono" fontSize={12} fontWeight={700} fill="var(--foreground)">{b.name}</text>
                     <text x={BLOCK_W - 10} y={20} textAnchor="end" fontSize={9} fill="var(--muted-foreground)">{b.fields.length}</text>
                     {b.fields.map((f, i) => {
@@ -320,13 +365,13 @@ function SchemaEditor() {
                       const fSel = isSel && selected?.fieldId === f.id;
                       return (
                         <g key={f.id} onClick={(e) => { e.stopPropagation(); setSelected({ blockId: b.id, fieldId: f.id }); setSelectedRel(null); }}>
-                          <rect x={1} y={y} width={BLOCK_W - 2} height={ROW_H} className={fSel ? "fill-primary/10" : "fill-transparent"} />
-                          <circle cx={0} cy={y + ROW_H / 2} r={4} fill={connect ? "var(--accent)" : "var(--border)"} stroke="var(--surface)" strokeWidth={1}
+                          <rect x={1} y={y} width={BLOCK_W - 2} height={ROW_H} fill={fSel ? rowSelFill : "transparent"} />
+                          <circle cx={0} cy={y + ROW_H / 2} r={4} fill={connect ? accentSoft : "var(--border)"} stroke="var(--surface)" strokeWidth={1}
                             data-no-drag
                             style={{ cursor: "crosshair" }}
                             onMouseDown={(e) => { e.stopPropagation(); if (connect) { completeConnect(b.id, f.id); } else { startConnect(b.id, f.id); } }}
                           />
-                          <circle cx={BLOCK_W} cy={y + ROW_H / 2} r={4} fill={connect ? "var(--accent)" : "var(--border)"} stroke="var(--surface)" strokeWidth={1}
+                          <circle cx={BLOCK_W} cy={y + ROW_H / 2} r={4} fill={connect ? accentSoft : "var(--border)"} stroke="var(--surface)" strokeWidth={1}
                             data-no-drag
                             style={{ cursor: "crosshair" }}
                             onMouseDown={(e) => { e.stopPropagation(); if (connect) { completeConnect(b.id, f.id); } else { startConnect(b.id, f.id); } }}
