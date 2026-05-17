@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { setLayout, useArrow, type ArrowLayout, type Pt } from "../store";
+import { setLayout, useArrow, listBoxes, getBox, type ArrowLayout, type Pt, type Binding } from "../store";
 import { useSlideScale } from "../SlideCanvas";
 import { useColor, PALETTE } from "../ColorButton";
 import { setText } from "../store";
@@ -29,62 +29,113 @@ export function MovableArrow({
   const stroke = useColor(id, color);
   const [palOpen, setPalOpen] = useState(false);
   const pts = a.pts;
+  const bindings: (Binding | null)[] = (a.bindings ?? new Array(pts.length).fill(null)).slice(0, pts.length);
+  while (bindings.length < pts.length) bindings.push(null);
+  // Resolve display points from bindings (so arrows follow moved/resized boxes).
+  const displayPts: Pt[] = pts.map((p, i) => {
+    const b = bindings[i];
+    if (!b) return p;
+    const box = getBox(b.boxId);
+    if (!box) return p;
+    return { x: box.x + box.w * b.ax, y: box.y + box.h * b.ay };
+  });
   const scale = useSlideScale();
   const startRef = useRef<{ pts: Pt[]; px: number; py: number; mode: "all" | number } | null>(null);
 
   const kx = viewW / pixelW / scale;
   const ky = viewH / pixelH / scale;
 
-  const commit = (next: Pt[]) => setLayout(id, { pts: next });
+  const commit = (next: Pt[], nextBindings: (Binding | null)[] = bindings) =>
+    setLayout(id, { pts: next, bindings: nextBindings });
+
+  /** Find the topmost registered box containing point p (in design coords). */
+  const hitBox = (p: Pt): { id: string; box: { x: number; y: number; w: number; h: number } } | null => {
+    const all = listBoxes();
+    for (let i = all.length - 1; i >= 0; i--) {
+      const { box } = all[i];
+      if (p.x >= box.x && p.x <= box.x + box.w && p.y >= box.y && p.y <= box.y + box.h) return all[i];
+    }
+    return null;
+  };
 
   const onDown = (mode: "all" | number) => (e: React.PointerEvent) => {
     if (!editing) return;
     e.preventDefault(); e.stopPropagation();
     (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
-    startRef.current = { pts, px: e.clientX, py: e.clientY, mode };
+    // Drag from the currently displayed positions (resolved bindings),
+    // so a bound endpoint detaches cleanly under the cursor.
+    startRef.current = { pts: displayPts.slice(), px: e.clientX, py: e.clientY, mode };
   };
   const onMove = (e: React.PointerEvent) => {
     const s = startRef.current; if (!s) return;
     const dx = (e.clientX - s.px) * kx;
     const dy = (e.clientY - s.py) * ky;
     if (s.mode === "all") {
-      commit(s.pts.map((p) => ({ x: p.x + dx, y: p.y + dy })));
+      // Moving whole arrow: detach all bindings while dragging.
+      commit(s.pts.map((p) => ({ x: p.x + dx, y: p.y + dy })), s.pts.map(() => null));
     } else {
       const i = s.mode;
-      commit(s.pts.map((p, idx) => idx === i ? { x: p.x + dx, y: p.y + dy } : p));
+      const nextPts = s.pts.map((p, idx) => idx === i ? { x: p.x + dx, y: p.y + dy } : p);
+      const nextBindings = bindings.slice();
+      nextBindings[i] = null; // detach while dragging
+      commit(nextPts, nextBindings);
     }
   };
   const onUp = (e: React.PointerEvent) => {
+    const s = startRef.current;
     startRef.current = null;
     try { (e.currentTarget as Element).releasePointerCapture?.(e.pointerId); } catch {}
+    if (!s) return;
+    // Snap dragged vertex/vertices to box anchors if they were dropped over a box.
+    const dx = (e.clientX - s.px) * kx;
+    const dy = (e.clientY - s.py) * ky;
+    const indices = s.mode === "all" ? s.pts.map((_, i) => i) : [s.mode];
+    const nextPts = s.mode === "all"
+      ? s.pts.map((p) => ({ x: p.x + dx, y: p.y + dy }))
+      : s.pts.map((p, idx) => idx === s.mode ? { x: p.x + dx, y: p.y + dy } : p);
+    const nextBindings = bindings.slice();
+    for (const i of indices) {
+      const p = nextPts[i];
+      const hit = hitBox(p);
+      if (hit) {
+        const ax = Math.max(0, Math.min(1, (p.x - hit.box.x) / hit.box.w));
+        const ay = Math.max(0, Math.min(1, (p.y - hit.box.y) / hit.box.h));
+        nextBindings[i] = { boxId: hit.id, ax, ay };
+      } else {
+        nextBindings[i] = null;
+      }
+    }
+    commit(nextPts, nextBindings);
   };
 
   // Insert a corner at midpoint of a segment.
   const insertCorner = (segIdx: number) => (e: React.MouseEvent) => {
     if (!editing) return;
     e.preventDefault(); e.stopPropagation();
-    const p1 = pts[segIdx], p2 = pts[segIdx + 1];
+    const p1 = displayPts[segIdx], p2 = displayPts[segIdx + 1];
     const mid = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
     const next = [...pts.slice(0, segIdx + 1), mid, ...pts.slice(segIdx + 1)];
-    commit(next);
+    const nb = [...bindings.slice(0, segIdx + 1), null, ...bindings.slice(segIdx + 1)];
+    commit(next, nb);
   };
   // Remove a corner (only intermediate ones).
   const removeCorner = (i: number) => (e: React.MouseEvent) => {
     if (!editing) return;
     if (i === 0 || i === pts.length - 1) return;
     e.preventDefault(); e.stopPropagation();
-    commit(pts.filter((_, idx) => idx !== i));
+    commit(pts.filter((_, idx) => idx !== i), bindings.filter((_, idx) => idx !== i));
   };
 
   const markerId = `mv-arr-${id.replace(/[^a-z0-9]/gi, "_")}`;
-  const last = pts[pts.length - 1];
-  const prev = pts[pts.length - 2] ?? last;
+  const rPts = displayPts;
+  const last = rPts[rPts.length - 1];
+  const prev = rPts[rPts.length - 2] ?? last;
   // Tail = midpoint of first segment, head = midpoint of last segment for label placement
   const segMid = (a: Pt, b: Pt) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
   const headMid = segMid(prev, last);
-  const tailMid = segMid(pts[0], pts[1] ?? pts[0]);
+  const tailMid = segMid(rPts[0], rPts[1] ?? rPts[0]);
 
-  const pathD = pts.map((p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`)).join(" ");
+  const pathD = rPts.map((p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`)).join(" ");
 
   return (
     <g>
@@ -127,25 +178,26 @@ export function MovableArrow({
       {editing && (
         <>
           {/* Vertex handles */}
-          {pts.map((p, i) => {
-            const isMid = i !== 0 && i !== pts.length - 1;
+          {rPts.map((p, i) => {
+            const isMid = i !== 0 && i !== rPts.length - 1;
+            const bound = !!bindings[i];
             return (
               <circle
                 key={`v-${i}`}
                 cx={p.x} cy={p.y} r={isMid ? 7 : 9}
-                fill={isMid ? "var(--warning)" : "var(--primary)"}
+                fill={bound ? "var(--success)" : (isMid ? "var(--warning)" : "var(--primary)")}
                 stroke="var(--background)" strokeWidth="2"
                 style={{ cursor: "grab", pointerEvents: "all" }}
                 onPointerDown={onDown(i)} onPointerMove={onMove} onPointerUp={onUp}
                 onContextMenu={removeCorner(i)}
               >
-                <title>{isMid ? "Перетащить · ПКМ — удалить" : "Перетащить"}</title>
+                <title>{(bound ? "Привязано к блоку · " : "") + (isMid ? "Перетащить · ПКМ — удалить" : "Перетащить · бросьте на блок чтобы привязать")}</title>
               </circle>
             );
           })}
           {/* Segment "+" buttons for inserting a corner */}
-          {pts.slice(0, -1).map((p, i) => {
-            const q = pts[i + 1];
+          {rPts.slice(0, -1).map((p, i) => {
+            const q = rPts[i + 1];
             const m = { x: (p.x + q.x) / 2, y: (p.y + q.y) / 2 };
             return (
               <g key={`seg-${i}`} style={{ cursor: "copy", pointerEvents: "all" }} onClick={insertCorner(i)}>
@@ -159,14 +211,14 @@ export function MovableArrow({
           {/* Color swatch button — opens palette inline */}
           <g
             style={{ cursor: "pointer", pointerEvents: "all" }}
-            transform={`translate(${pts[0].x - 26}, ${pts[0].y - 26})`}
+            transform={`translate(${rPts[0].x - 26}, ${rPts[0].y - 26})`}
             onClick={(e) => { e.stopPropagation(); setPalOpen((o) => !o); }}
           >
             <circle cx={0} cy={0} r={9} fill={stroke} stroke="var(--background)" strokeWidth="2" />
             <title>Сменить цвет</title>
           </g>
           {palOpen && (
-            <g transform={`translate(${pts[0].x - 26}, ${pts[0].y - 8})`} style={{ pointerEvents: "all" }}>
+            <g transform={`translate(${rPts[0].x - 26}, ${rPts[0].y - 8})`} style={{ pointerEvents: "all" }}>
               <rect x={-6} y={0} width={PALETTE.length * 22 + 12} height={28} rx={6} fill="var(--surface)" stroke="var(--border)" />
               {PALETTE.map((c, i) => (
                 <circle

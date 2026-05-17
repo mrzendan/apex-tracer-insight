@@ -1,5 +1,5 @@
-import { useRef, type ReactNode } from "react";
-import { setLayout, useBox, type BoxLayout } from "../store";
+import { useEffect, useRef, type ReactNode } from "react";
+import { setLayout, useBox, registerBoxDefault, type BoxLayout } from "../store";
 import { useSlideScale } from "../SlideCanvas";
 import { ColorButton, useColor } from "../ColorButton";
 
@@ -23,6 +23,7 @@ export function Movable({
 }: Props) {
   const box = useBox(id, defaultBox);
   const color = useColor(id, "var(--primary)");
+  useEffect(() => { registerBoxDefault(id, defaultBox); }, [id]);
   const scale = useSlideScale();
   const startRef = useRef<{ box: BoxLayout; px: number; py: number; mode: string } | null>(null);
 
