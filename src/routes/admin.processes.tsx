@@ -146,6 +146,20 @@ function ProcessesAdmin() {
   const { processes, matches, tournaments, teams } = useAdminStore();
   const [editing, setEditing] = useState<AnalysisProcess | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<AnalysisProcess["status"] | "all">("all");
+
+  const statusCounts = useMemo(() => {
+    const c: Record<AnalysisProcess["status"], number> = {
+      draft: 0, queued: 0, running: 0, done: 0, failed: 0,
+    };
+    for (const p of processes) c[p.status]++;
+    return c;
+  }, [processes]);
+
+  const visibleProcesses = useMemo(
+    () => (statusFilter === "all" ? processes : processes.filter((p) => p.status === statusFilter)),
+    [processes, statusFilter],
+  );
 
   // Suggestions: matches whose tournament endDate is in the past and no process exists.
   const suggestions = useMemo(() => {
@@ -241,6 +255,15 @@ function ProcessesAdmin() {
       </header>
 
       <div className="flex-1 overflow-auto p-6 space-y-6">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <FilterChip label="All" count={processes.length} active={statusFilter === "all"} onClick={() => setStatusFilter("all")} tone="muted" />
+          <FilterChip label="Draft"   count={statusCounts.draft}   active={statusFilter === "draft"}   onClick={() => setStatusFilter("draft")}   tone="muted" />
+          <FilterChip label="Queued"  count={statusCounts.queued}  active={statusFilter === "queued"}  onClick={() => setStatusFilter("queued")}  tone="primary" />
+          <FilterChip label="Running" count={statusCounts.running} active={statusFilter === "running"} onClick={() => setStatusFilter("running")} tone="warning" />
+          <FilterChip label="Done"    count={statusCounts.done}    active={statusFilter === "done"}    onClick={() => setStatusFilter("done")}    tone="success" />
+          <FilterChip label="Failed"  count={statusCounts.failed}  active={statusFilter === "failed"}  onClick={() => setStatusFilter("failed")}  tone="destructive" />
+        </div>
+
         {suggestions.length > 0 && (
           <section className="hud-panel p-4">
             <div className="mb-2 flex items-center justify-between">
@@ -282,10 +305,12 @@ function ProcessesAdmin() {
               </tr>
             </thead>
             <tbody>
-              {processes.length === 0 && (
-                <tr><td colSpan={7} className="px-3 py-6 text-center text-xs text-muted-foreground">No processes yet.</td></tr>
+              {visibleProcesses.length === 0 && (
+                <tr><td colSpan={7} className="px-3 py-6 text-center text-xs text-muted-foreground">
+                  {processes.length === 0 ? "No processes yet." : `No processes with status "${statusFilter}".`}
+                </td></tr>
               )}
-              {processes.map((p) => {
+              {visibleProcesses.map((p) => {
                 const m = matches.find((x) => x.id === p.matchId);
                 const t = tournaments.find((x) => x.id === p.tournamentId);
                 const isOpen = expanded === p.id;
