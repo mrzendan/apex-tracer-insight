@@ -156,6 +156,33 @@ export function MovableArrow({
               </g>
             );
           })}
+          {/* Color swatch button — opens palette inline */}
+          <g
+            style={{ cursor: "pointer", pointerEvents: "all" }}
+            transform={`translate(${pts[0].x - 26}, ${pts[0].y - 26})`}
+            onClick={(e) => { e.stopPropagation(); setPalOpen((o) => !o); }}
+          >
+            <circle cx={0} cy={0} r={9} fill={stroke} stroke="var(--background)" strokeWidth="2" />
+            <title>Сменить цвет</title>
+          </g>
+          {palOpen && (
+            <g transform={`translate(${pts[0].x - 26}, ${pts[0].y - 8})`} style={{ pointerEvents: "all" }}>
+              <rect x={-6} y={0} width={PALETTE.length * 22 + 12} height={28} rx={6} fill="var(--surface)" stroke="var(--border)" />
+              {PALETTE.map((c, i) => (
+                <circle
+                  key={c.value}
+                  cx={6 + i * 22 + 8} cy={14} r={9}
+                  fill={c.value}
+                  stroke={c.value === stroke ? "var(--foreground)" : "var(--border)"}
+                  strokeWidth={c.value === stroke ? 2 : 1}
+                  style={{ cursor: "pointer" }}
+                  onClick={(e) => { e.stopPropagation(); setText(`${id}.color`, c.value); setPalOpen(false); }}
+                >
+                  <title>{c.name}</title>
+                </circle>
+              ))}
+            </g>
+          )}
         </>
       )}
     </g>
