@@ -253,8 +253,9 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
   };
   // Scale team-row logo size with panel width.
   const teamCompact = leftWidth < 210;
+  // In compact mode the row is 48px tall with ~28px reserved for slot color + alive dot on the sides.
   const teamLogoSize = teamCompact
-    ? Math.max(24, leftWidth - 36)
+    ? Math.max(24, Math.min(44, leftWidth - 40))
     : Math.round(Math.max(18, Math.min(44, leftWidth / 11)));
 
   return (
