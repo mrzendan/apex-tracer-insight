@@ -989,14 +989,27 @@ function Timeline({
               </div>
             );
           })}
+          {/* progress fill — subtle tint of elapsed time */}
+          <div className="pointer-events-none absolute inset-y-0 left-0 bg-primary/10"
+            style={{ width: `${(time / duration) * 100}%` }} />
           {events.map((e, i) => (
             <div key={i} className="absolute top-0 h-full w-px"
               style={{ left: `${(e.t / duration) * 100}%`, backgroundColor: eventColor(e.type), opacity: 0.7 }}
               title={`${formatTime(e.t)} — ${e.label}`} />
           ))}
-          <div className="pointer-events-none absolute top-0 h-full w-0.5 bg-primary shadow-[0_0_8px_rgba(255,91,18,0.8)]"
+          {/* playhead */}
+          <div className="pointer-events-none absolute top-0 h-full w-0.5 bg-primary shadow-[0_0_10px_rgba(255,91,18,0.7)]"
             style={{ left: `${(time / duration) * 100}%` }}>
-            <div className="absolute -left-1.5 -top-1 h-2.5 w-2.5 rotate-45 bg-primary" />
+            {/* top handle */}
+            <div className="absolute -left-2 -top-1.5 flex h-3 w-3 items-center justify-center rounded-sm bg-primary ring-2 ring-background">
+              <span className="h-1 w-1 rounded-full bg-primary-foreground/90" />
+            </div>
+            {/* bottom triangle */}
+            <div className="absolute -left-[5px] -bottom-1 h-0 w-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-primary" />
+            {/* current time label */}
+            <div className="text-mono absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-sm bg-primary px-1.5 py-0.5 text-[9px] font-bold tabular-nums text-primary-foreground shadow-md">
+              {formatTime(time)}
+            </div>
           </div>
         </div>
       </div>
