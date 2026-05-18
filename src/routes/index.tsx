@@ -5,6 +5,7 @@ import { TeamLogo } from "@/components/admin/TeamLogo";
 import { RouteGuard } from "@/components/auth/RouteGuard";
 import { useAuth } from "@/lib/auth";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { DensityToggle } from "@/components/DensityToggle";
 import { HubClassic } from "@/components/hub/HubClassic";
 import { Trophy, Swords, MapIcon as MapMarker, Users, ArrowRight, Activity } from "lucide-react";
 
@@ -68,6 +69,7 @@ function Hub() {
         </Link>
         <div className="ml-auto flex items-center gap-2">
           <ThemeToggle compact />
+          <DensityToggle compact />
           <span className="text-mono hidden text-[10px] text-muted-foreground sm:inline">
             {user?.email} · {role}
           </span>
