@@ -998,7 +998,7 @@ function Timeline({
               title={`${formatTime(e.t)} — ${e.label}`} />
           ))}
           {/* playhead */}
-          <div className="pointer-events-none absolute top-0 h-full w-0.5 bg-primary shadow-[0_0_10px_2px_hsl(var(--primary)/0.55)]"
+          <div className="pointer-events-none absolute top-0 h-full w-0.5 bg-primary shadow-[0_0_10px_rgba(255,91,18,0.7)]"
             style={{ left: `${(time / duration) * 100}%` }}>
             {/* top handle */}
             <div className="absolute -left-2 -top-1.5 flex h-3 w-3 items-center justify-center rounded-sm bg-primary ring-2 ring-background">
