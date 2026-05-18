@@ -538,12 +538,15 @@ function PanelHeader({ title, subtitle }: { title: string; subtitle?: React.Reac
   );
 }
 
-function TeamRow({ team, active, hovered, onToggle, onHover, logoSize = 20, compact = false }: {
+function TeamRow({ team, active, hovered, onToggle, onHover, logoSize = 20, compact = false, alive }: {
   team: Team; active: boolean; hovered: boolean; onToggle: () => void; onHover: (v: boolean) => void;
   logoSize?: number; compact?: boolean;
+  /** Live alive override; falls back to the static `team.alive` flag. */
+  alive?: boolean;
 }) {
   const slotColor = getSlotColor(teams.indexOf(team));
   const nameSize = Math.max(12, Math.min(18, Math.round(logoSize * 0.6)));
+  const isAlive = alive ?? team.alive;
   if (compact) {
     return (
       <div onMouseEnter={() => onHover(true)} onMouseLeave={() => onHover(false)}
@@ -556,7 +559,7 @@ function TeamRow({ team, active, hovered, onToggle, onHover, logoSize = 20, comp
         </div>
         <span className="absolute left-1.5 top-1.5 h-2.5 w-2.5 rounded-sm"
           style={{ backgroundColor: slotColor }} />
-        <span className={`absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full ${team.alive ? "bg-success" : "bg-destructive/70"}`} />
+        <span className={`absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full ${isAlive ? "bg-success" : "bg-destructive/70"}`} />
       </div>
     );
   }
@@ -570,7 +573,7 @@ function TeamRow({ team, active, hovered, onToggle, onHover, logoSize = 20, comp
       <TeamLogo team={team} size={logoSize} />
       <span className="text-mono w-6 text-[10px] tabular-nums text-muted-foreground">#{team.placement}</span>
       <span className="min-w-0 flex-1 truncate font-semibold" style={{ fontSize: nameSize }}>{team.name}</span>
-      <span className={`h-1.5 w-1.5 rounded-full ${team.alive ? "bg-success" : "bg-destructive/70"}`} />
+      <span className={`h-1.5 w-1.5 rounded-full ${isAlive ? "bg-success" : "bg-destructive/70"}`} />
     </div>
   );
 }
