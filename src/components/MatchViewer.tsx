@@ -216,6 +216,7 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
 
   // Resizable side panels (Teams left, Match feed right)
   const [leftWidth, setLeftWidth] = useState(260);
+  const [leftCollapsed, setLeftCollapsed] = useState(false);
   const [rightWidth, setRightWidth] = useState(300);
   const startResize = (side: "left" | "right") => (e: React.PointerEvent) => {
     e.preventDefault();
@@ -225,8 +226,16 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
     const onMove = (ev: PointerEvent) => {
       const dx = ev.clientX - startX;
       const next = side === "left" ? startW + dx : startW - dx;
-      const clamped = Math.max(200, Math.min(560, next));
-      if (side === "left") setLeftWidth(clamped); else setRightWidth(clamped);
+      if (side === "left") {
+        if (next < 150) {
+          setLeftCollapsed(true);
+        } else {
+          setLeftCollapsed(false);
+          setLeftWidth(Math.max(160, Math.min(560, next)));
+        }
+      } else {
+        setRightWidth(Math.max(200, Math.min(560, next)));
+      }
     };
     const onUp = () => {
       window.removeEventListener("pointermove", onMove);
@@ -236,7 +245,8 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
     window.addEventListener("pointerup", onUp);
   };
   // Scale team-row logo size with panel width.
-  const teamLogoSize = Math.round(Math.max(18, Math.min(40, leftWidth / 13)));
+  const teamLogoSize = Math.round(Math.max(18, Math.min(44, leftWidth / 11)));
+  const teamCompact = leftWidth < 210;
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-background text-foreground">
@@ -251,6 +261,20 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
       />
 
       <div className="flex min-h-0 flex-1">
+        {leftCollapsed ? (
+          <div className="hidden shrink-0 flex-col items-center border-r border-border bg-surface p-2 lg:flex">
+            <button
+              onClick={() => setLeftCollapsed(false)}
+              title="Show teams"
+              className="flex h-10 w-10 items-center justify-center rounded-sm border border-border-strong bg-surface-2 text-foreground hover:bg-muted"
+            >
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2}>
+                <path d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <div className="label-eyebrow mt-2 text-[9px]">Teams</div>
+          </div>
+        ) : (
         <aside
           className="relative hidden shrink-0 flex-col border-r border-border bg-surface lg:flex"
           style={{ width: leftWidth }}
@@ -261,7 +285,7 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
               <TeamRow key={t.id} team={t} active={selectedTeams.has(t.id)} hovered={hoverTeam === t.id}
                 onToggle={() => toggleTeam(t.id)}
                 onHover={(v) => setHoverTeam(v ? t.id : null)}
-                logoSize={teamLogoSize} />
+                logoSize={teamLogoSize} compact={teamCompact} />
             ))}
           </div>
           <div className="border-t border-border p-3">
@@ -278,6 +302,7 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
             title="Drag to resize"
           />
         </aside>
+        )}
 
         <main className="flex min-w-0 flex-1 flex-col">
           <MapCanvas
@@ -451,9 +476,9 @@ function PanelHeader({ title, subtitle }: { title: string; subtitle?: string }) 
   );
 }
 
-function TeamRow({ team, active, hovered, onToggle, onHover, logoSize = 20 }: {
+function TeamRow({ team, active, hovered, onToggle, onHover, logoSize = 20, compact = false }: {
   team: Team; active: boolean; hovered: boolean; onToggle: () => void; onHover: (v: boolean) => void;
-  logoSize?: number;
+  logoSize?: number; compact?: boolean;
 }) {
   const slotColor = getSlotColor(teams.indexOf(team));
   const nameSize = Math.max(12, Math.min(18, Math.round(logoSize * 0.6)));
@@ -465,8 +490,13 @@ function TeamRow({ team, active, hovered, onToggle, onHover, logoSize = 20 }: {
       <span className="h-2.5 w-2.5 shrink-0 rounded-sm"
         style={{ backgroundColor: slotColor }} />
       <TeamLogo team={team} size={logoSize} />
-      <span className="text-mono w-6 text-[10px] tabular-nums text-muted-foreground">#{team.placement}</span>
-      <span className="min-w-0 flex-1 truncate font-semibold" style={{ fontSize: nameSize }}>{team.name}</span>
+      {!compact && (
+        <>
+          <span className="text-mono w-6 text-[10px] tabular-nums text-muted-foreground">#{team.placement}</span>
+          <span className="min-w-0 flex-1 truncate font-semibold" style={{ fontSize: nameSize }}>{team.name}</span>
+        </>
+      )}
+      {compact && <span className="flex-1" />}
       <span className={`h-1.5 w-1.5 rounded-full ${team.alive ? "bg-success" : "bg-destructive/70"}`} />
     </div>
   );
