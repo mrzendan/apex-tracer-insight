@@ -183,10 +183,46 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
     setSelectedTeams((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   };
 
-  const aliveTeams = teams.filter((t) => t.alive).length;
   const totalKills = teams.reduce((acc, t) => acc + t.kills, 0);
 
   const teamByTag = useMemo(() => new Map(teams.map(t => [t.tag, t])), []);
+
+  /** When each team becomes "out". Sourced from `wipe` events (victim parsed from label),
+   *  and synthesized from `placement` for teams that are flagged dead but lack an event. */
+  const deathTimes = useMemo<Record<string, number>>(() => {
+    const out: Record<string, number> = {};
+    for (const e of events) {
+      if (e.type !== "wipe") continue;
+      // Label shape: "<KILLER> wipes <VICTIM> [— note]"
+      const m = /wipes\s+([A-Za-z0-9]+)/i.exec(e.label);
+      const victimTag = m?.[1];
+      if (!victimTag) continue;
+      const victim = teamByTag.get(victimTag);
+      if (!victim) continue;
+      if (out[victim.id] === undefined || e.t < out[victim.id]) out[victim.id] = e.t;
+    }
+    // Fallback: teams marked dead in static data but with no wipe event get a
+    // synthetic death time derived from placement (lower placement → later death).
+    for (const t of teams) {
+      if (t.alive) continue;
+      if (out[t.id] !== undefined) continue;
+      const k = (teams.length - t.placement + 1) / (teams.length + 1);
+      out[t.id] = Math.round(match.durationSec * k);
+    }
+    return out;
+  }, [teamByTag, match.durationSec]);
+
+  /** Per-team alive state at the current `time`. */
+  const liveAlive = useMemo<Record<string, boolean>>(() => {
+    const map: Record<string, boolean> = {};
+    for (const t of teams) {
+      const d = deathTimes[t.id];
+      map[t.id] = d === undefined ? true : time < d;
+    }
+    return map;
+  }, [deathTimes, time]);
+
+  const aliveTeams = useMemo(() => teams.filter((t) => liveAlive[t.id]).length, [liveAlive]);
 
   /** Resolve an event's spatial position so we can plot it / focus the map. */
   const eventPoint = useCallback((e: GameEvent): { x: number; y: number } | null => {
