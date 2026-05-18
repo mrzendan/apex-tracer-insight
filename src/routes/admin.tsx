@@ -2,7 +2,6 @@ import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-r
 import { useState } from "react";
 import { RouteGuard } from "@/components/auth/RouteGuard";
 import { useAuth } from "@/lib/auth";
-import { UserBar } from "@/components/UserBar";
 
 export const Route = createFileRoute("/admin")({
   component: () => (
@@ -123,13 +122,9 @@ function AdminLayout() {
           />
         </nav>
 
-        <div className="shrink-0 border-t border-border p-2">
-          <UserBar variant="inline" />
-        </div>
-
       </aside>
 
-      <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
+      <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden [&>div>header]:pr-[380px]">
         <Outlet />
       </main>
     </div>
