@@ -242,6 +242,7 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
             mapName={apexMap.name}
             aliveTeams={aliveTeams}
             totalKills={totalKills}
+            duration={match.durationSec}
             ringIndex={ringPhases.findIndex((p) => time >= p.startSec && time <= p.endSec)}
             ringCount={ringPhases.length}
             controls={{ showTrails, setShowTrails, showRing, setShowRing, showLabels, setShowLabels }}
@@ -450,7 +451,7 @@ type Dwell = { x: number; y: number; tStart: number; tEnd: number };
 function MapCanvas({
   time, ring, trajectories, dwellsByTeam, cfg, onCfg, showConfig, setShowConfig,
   selectedTeams, hoverTeam, showTrails, showLabels,
-  mapImage, mapName, aliveTeams, totalKills, ringIndex, ringCount, controls,
+  mapImage, mapName, aliveTeams, totalKills, duration, ringIndex, ringCount, controls,
   focusRequest, onEventClick,
 }: {
   time: number; ring: RingPhase | null;
@@ -463,7 +464,7 @@ function MapCanvas({
   selectedTeams: Set<string>; hoverTeam: string | null;
   showTrails: boolean; showLabels: boolean;
   mapImage: string; mapName: string;
-  aliveTeams: number; totalKills: number;
+  aliveTeams: number; totalKills: number; duration: number;
   ringIndex: number; ringCount: number;
   controls: {
     showTrails: boolean; setShowTrails: (v: boolean) => void;
