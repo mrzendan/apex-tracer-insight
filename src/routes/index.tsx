@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { tournaments, matches, maps, teams, type Match } from "@/lib/mock-match";
+import { tournaments, matches, maps, teams, matchSeedExtras, getGames, type Match } from "@/lib/mock-match";
 import { TeamLogo } from "@/components/admin/TeamLogo";
 import { RouteGuard } from "@/components/auth/RouteGuard";
 import { useAuth } from "@/lib/auth";
@@ -144,7 +144,11 @@ function Hub() {
       const tMatches = matches.filter((m) => m.tournamentId === t.id);
       const procs = tMatches.map((m) => processingFor(m));
       const ready = procs.filter((p) => p.overall === "ready").length;
-      const mapIds = new Set(tMatches.map((m) => m.mapId));
+      const mapIds = new Set<string>();
+      tMatches.forEach((m) => {
+        const extras = matchSeedExtras[m.id];
+        getGames({ ...m, mapIds: extras?.mapIds, gameDurations: extras?.gameDurations }).forEach((g) => mapIds.add(g.mapId));
+      });
       const lastReady = tMatches.find((m, i) => procs[i].overall === "ready");
       return {
         tournament: t,
@@ -160,7 +164,8 @@ function Hub() {
   }, []);
 
   const featuredProc = featured ? processingFor(featured) : null;
-  const featuredMap = featured ? maps.find((x) => x.id === featured.mapId) : null;
+  const featuredGames = featured ? getGames({ ...featured, ...matchSeedExtras[featured.id] }) : [];
+  const featuredMap = featuredGames[0] ? maps.find((x) => x.id === featuredGames[0].mapId) : null;
   const featuredTournament = featured ? tournaments.find((t) => t.id === featured.tournamentId) : null;
 
   return (
@@ -248,7 +253,7 @@ function Hub() {
                   </div>
                   <h3 className="mt-1.5 text-2xl font-bold leading-tight">{featured.name}</h3>
                   <div className="text-mono mt-1 text-[11px] text-muted-foreground">
-                    {featuredMap?.name} · {Math.round(featured.durationSec / 60)} мин · анализ: {featuredProc.analyzedHint}
+                    {featuredGames.length} {featuredGames.length === 1 ? "игра" : "игр"} · анализ: {featuredProc.analyzedHint}
                   </div>
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     <StatusChip state={featuredProc.trajectory} label="траектории" />
@@ -262,7 +267,7 @@ function Hub() {
                   </span>
                   <span className="inline-flex items-center gap-2 rounded-sm bg-primary px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-primary-foreground transition-transform group-hover:translate-x-0.5">
                     <Play className="h-3.5 w-3.5" strokeWidth={2.5} />
-                    Открыть карту
+                    Открыть матч
                   </span>
                 </div>
               </div>
@@ -275,7 +280,8 @@ function Hub() {
           <SectionHead title="Последние матчи" subtitle="Готовы к просмотру и анализу" badge={<><Activity className="h-3 w-3" /> {matches.length}</>} />
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {recentMatches.map((m, i) => {
-              const mp = maps.find((x) => x.id === m.mapId);
+              const gs = getGames({ ...m, ...matchSeedExtras[m.id] });
+              const mp = maps.find((x) => x.id === gs[0].mapId);
               const t = tournaments.find((x) => x.id === m.tournamentId);
               const proc = processingFor(m);
               return (
@@ -288,13 +294,16 @@ function Hub() {
                       <img src={mp.image} alt={mp.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
                       <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/40 to-transparent" />
                       <div className="absolute right-2 top-2"><OverallBadge state={proc.overall} /></div>
+                      <div className="text-mono absolute left-2 top-2 rounded-sm border border-border-strong bg-surface/90 px-1.5 py-0.5 text-[10px] font-bold">
+                        {gs.length} {gs.length === 1 ? "игра" : "игр"}
+                      </div>
                     </div>
                   )}
                   <div className="p-3">
                     <div className="label-eyebrow text-[9px] text-muted-foreground truncate">{t?.name}</div>
                     <div className="mt-1 text-sm font-semibold leading-tight">{m.name}</div>
-                    <div className="text-mono mt-1 text-[10px] text-muted-foreground">
-                      {mp?.name} · {Math.round(m.durationSec / 60)} мин
+                    <div className="text-mono mt-1 text-[10px] text-muted-foreground truncate">
+                      {gs.map((g) => maps.find((x) => x.id === g.mapId)?.name).filter(Boolean).join(" · ")}
                     </div>
                     <div className="mt-2 flex flex-wrap gap-1">
                       <StatusChip state={proc.trajectory} label="трек" />
@@ -354,7 +363,8 @@ function Hub() {
                   {/* Match list */}
                   <ul className="mt-3 space-y-1.5">
                     {tMatches.slice(0, 3).map((m) => {
-                      const mp = maps.find((x) => x.id === m.mapId);
+                      const gs = getGames({ ...m, ...matchSeedExtras[m.id] });
+                      const mp = maps.find((x) => x.id === gs[0].mapId);
                       const proc = processingFor(m);
                       return (
                         <li key={m.id}>
@@ -366,6 +376,7 @@ function Hub() {
                                 <img src={mp.image} alt="" className="h-6 w-6 shrink-0 rounded-sm object-cover ring-1 ring-border" />
                               )}
                               <span className="truncate">{m.name}</span>
+                              <span className="text-mono shrink-0 text-[9px] text-muted-foreground">· {gs.length}</span>
                             </span>
                             <OverallBadge state={proc.overall} />
                           </Link>
