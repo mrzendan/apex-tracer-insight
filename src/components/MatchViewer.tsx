@@ -338,7 +338,8 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
               <TeamRow key={t.id} team={t} active={selectedTeams.has(t.id)} hovered={hoverTeam === t.id}
                 onToggle={() => toggleTeam(t.id)}
                 onHover={(v) => setHoverTeam(v ? t.id : null)}
-                logoSize={teamLogoSize} compact={teamCompact} />
+                logoSize={teamLogoSize} compact={teamCompact}
+                alive={liveAlive[t.id]} />
             ))}
           </div>
           <div className="border-t border-border p-3">
@@ -376,6 +377,7 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
             aliveTeams={aliveTeams}
             totalKills={totalKills}
             duration={match.durationSec}
+            deathTimes={deathTimes}
             ringIndex={ringPhases.findIndex((p) => time >= p.startSec && time <= p.endSec)}
             ringCount={ringPhases.length}
             controls={{ showTrails, setShowTrails, showRing, setShowRing, showLabels, setShowLabels }}
