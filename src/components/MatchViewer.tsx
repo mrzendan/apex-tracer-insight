@@ -733,11 +733,15 @@ function MapCanvas({
         {(view.scale * 100).toFixed(0)}%
       </div>
 
-      <div className="pointer-events-none absolute bottom-4 left-4 flex gap-2">
-        <Stat label="Alive" value={`${aliveTeams}/${teams.length}`} accent />
-        <Stat label="Kills" value={totalKills.toString()} />
-        <Stat label="Ring" value={`${ringIndex + 1 || ringCount}/${ringCount}`} />
-      </div>
+      <CurrentState
+        aliveTeams={aliveTeams}
+        totalTeams={teams.length}
+        totalKills={totalKills}
+        ringIndex={ringIndex}
+        ringCount={ringCount}
+        time={time}
+        duration={duration}
+      />
     </div>
   );
 }
