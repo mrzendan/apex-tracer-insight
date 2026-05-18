@@ -284,7 +284,19 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
           className="relative hidden shrink-0 flex-col border-r border-border bg-surface lg:flex"
           style={{ width: leftWidth }}
         >
-          <PanelHeader title="Teams" subtitle={`${selectedTeams.size}/${teams.length} visible`} />
+          <PanelHeader
+            title="Teams"
+            subtitle={
+              <span className="flex items-center gap-2">
+                <span className="flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-success" /> alive
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-destructive/70" /> out
+                </span>
+              </span>
+            }
+          />
           <div className="min-h-0 flex-1 overflow-y-auto p-2">
             {[...teams].sort((a, b) => a.placement - b.placement).map((t) => (
               <TeamRow key={t.id} team={t} active={selectedTeams.has(t.id)} hovered={hoverTeam === t.id}
