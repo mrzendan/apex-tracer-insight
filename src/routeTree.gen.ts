@@ -16,6 +16,7 @@ import { Route as PresentationRouteImport } from './routes/presentation'
 import { Route as MatchesRouteImport } from './routes/matches'
 import { Route as MapsRouteImport } from './routes/maps'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as GamesRouteImport } from './routes/games'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as IndexRouteImport } from './routes/index'
@@ -76,6 +77,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GamesRoute = GamesRouteImport.update({
+  id: '/games',
+  path: '/games',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -112,9 +118,9 @@ const MapsMapIdRoute = MapsMapIdRouteImport.update({
   getParentRoute: () => MapsRoute,
 } as any)
 const GamesGameIdRoute = GamesGameIdRouteImport.update({
-  id: '/games/$gameId',
-  path: '/games/$gameId',
-  getParentRoute: () => rootRouteImport,
+  id: '/$gameId',
+  path: '/$gameId',
+  getParentRoute: () => GamesRoute,
 } as any)
 const AdminZonesRoute = AdminZonesRouteImport.update({
   id: '/zones',
@@ -201,6 +207,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
   '/admin': typeof AdminRouteWithChildren
+  '/games': typeof GamesRouteWithChildren
   '/login': typeof LoginRoute
   '/maps': typeof MapsRouteWithChildren
   '/matches': typeof MatchesRouteWithChildren
@@ -233,6 +240,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
+  '/games': typeof GamesRouteWithChildren
   '/login': typeof LoginRoute
   '/maps': typeof MapsRouteWithChildren
   '/matches': typeof MatchesRouteWithChildren
@@ -267,6 +275,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
   '/admin': typeof AdminRouteWithChildren
+  '/games': typeof GamesRouteWithChildren
   '/login': typeof LoginRoute
   '/maps': typeof MapsRouteWithChildren
   '/matches': typeof MatchesRouteWithChildren
@@ -302,6 +311,7 @@ export interface FileRouteTypes {
     | '/'
     | '/accept-invite'
     | '/admin'
+    | '/games'
     | '/login'
     | '/maps'
     | '/matches'
@@ -334,6 +344,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/accept-invite'
+    | '/games'
     | '/login'
     | '/maps'
     | '/matches'
@@ -367,6 +378,7 @@ export interface FileRouteTypes {
     | '/'
     | '/accept-invite'
     | '/admin'
+    | '/games'
     | '/login'
     | '/maps'
     | '/matches'
@@ -401,6 +413,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AcceptInviteRoute: typeof AcceptInviteRoute
   AdminRoute: typeof AdminRouteWithChildren
+  GamesRoute: typeof GamesRouteWithChildren
   LoginRoute: typeof LoginRoute
   MapsRoute: typeof MapsRouteWithChildren
   MatchesRoute: typeof MatchesRouteWithChildren
@@ -408,7 +421,6 @@ export interface RootRouteChildren {
   Presentation2Route: typeof Presentation2Route
   TeamsRoute: typeof TeamsRouteWithChildren
   TournamentsRoute: typeof TournamentsRoute
-  GamesGameIdRoute: typeof GamesGameIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -462,6 +474,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/games': {
+      id: '/games'
+      path: '/games'
+      fullPath: '/games'
+      preLoaderRoute: typeof GamesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -513,10 +532,10 @@ declare module '@tanstack/react-router' {
     }
     '/games/$gameId': {
       id: '/games/$gameId'
-      path: '/games/$gameId'
+      path: '/$gameId'
       fullPath: '/games/$gameId'
       preLoaderRoute: typeof GamesGameIdRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof GamesRoute
     }
     '/admin/zones': {
       id: '/admin/zones'
@@ -705,6 +724,16 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface GamesRouteChildren {
+  GamesGameIdRoute: typeof GamesGameIdRoute
+}
+
+const GamesRouteChildren: GamesRouteChildren = {
+  GamesGameIdRoute: GamesGameIdRoute,
+}
+
+const GamesRouteWithChildren = GamesRoute._addFileChildren(GamesRouteChildren)
+
 interface MapsRouteChildren {
   MapsMapIdRoute: typeof MapsMapIdRoute
 }
@@ -740,6 +769,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AcceptInviteRoute: AcceptInviteRoute,
   AdminRoute: AdminRouteWithChildren,
+  GamesRoute: GamesRouteWithChildren,
   LoginRoute: LoginRoute,
   MapsRoute: MapsRouteWithChildren,
   MatchesRoute: MatchesRouteWithChildren,
@@ -747,8 +777,17 @@ const rootRouteChildren: RootRouteChildren = {
   Presentation2Route: Presentation2Route,
   TeamsRoute: TeamsRouteWithChildren,
   TournamentsRoute: TournamentsRoute,
-  GamesGameIdRoute: GamesGameIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

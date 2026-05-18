@@ -9,7 +9,7 @@ import { DensityToggle } from "@/components/DensityToggle";
 import { HubClassic } from "@/components/hub/HubClassic";
 import {
   Trophy, Swords, MapIcon as MapMarker, Users, ArrowRight, Activity,
-  CheckCircle2, Loader2, AlertTriangle, CircleSlash, Play, Sparkles,
+  CheckCircle2, Loader2, AlertTriangle, CircleSlash, Play, Sparkles, Gamepad2,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -109,6 +109,7 @@ function Hub() {
   const stats = useMemo(() => ({
     tournaments: tournaments.length,
     matches: matches.length,
+    games: matches.reduce((s, m) => s + getGames({ ...m, ...matchSeedExtras[m.id] }).length, 0),
     maps: maps.length,
     teams: teams.length,
   }), []);
@@ -215,9 +216,10 @@ function Hub() {
             Превращай матчи Apex Legends <span className="text-primary">в инсайты команды.</span>
           </h1>
 
-          <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+          <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
             <StatPill label="Турниры"   value={stats.tournaments} Icon={Trophy}     to="/tournaments" />
             <StatPill label="Матчи"     value={stats.matches}     Icon={Swords}     to="/matches" />
+            <StatPill label="Игры"      value={stats.games}       Icon={Gamepad2}   to="/games" />
             <StatPill label="Карты"     value={stats.maps}        Icon={MapMarker}  to="/maps" />
             <StatPill label="Команды"   value={stats.teams}       Icon={Users}      to="/teams" />
           </div>
@@ -232,16 +234,15 @@ function Hub() {
               badge={<><Sparkles className="h-3 w-3" /> featured</>}
             />
             <Link
-              to="/matches/$matchId"
-              params={{ matchId: featured.id }}
-              className="hud-panel-strong hover-lift group mt-4 grid overflow-hidden md:grid-cols-[1.2fr_1fr]"
+              to="/games/$gameId"
+              params={{ gameId: featuredGames[0]?.id ?? featured.id }}
+              className="hud-panel-strong group mt-4 grid overflow-hidden md:grid-cols-[1.2fr_1fr]"
             >
               <div className="relative h-48 overflow-hidden md:h-full md:min-h-[220px]">
                 {featuredMap?.image && (
                   <img src={featuredMap.image} alt={featuredMap.name}
                     className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-r from-surface via-surface/30 to-transparent md:bg-gradient-to-r" />
                 <div className="absolute left-3 top-3">
                   <OverallBadge state={featuredProc.overall} />
                 </div>
@@ -267,7 +268,7 @@ function Hub() {
                   </span>
                   <span className="inline-flex items-center gap-2 rounded-sm bg-primary px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-primary-foreground transition-transform group-hover:translate-x-0.5">
                     <Play className="h-3.5 w-3.5" strokeWidth={2.5} />
-                    Открыть матч
+                    Открыть игру
                   </span>
                 </div>
               </div>
@@ -452,7 +453,7 @@ function MiniStat({ label, value, mono = true }: { label: string; value: number 
   );
 }
 
-function StatPill({ label, value, Icon, to }: { label: string; value: number; Icon: typeof Trophy; to: "/tournaments" | "/matches" | "/maps" | "/teams" }) {
+function StatPill({ label, value, Icon, to }: { label: string; value: number; Icon: typeof Trophy; to: "/tournaments" | "/matches" | "/games" | "/maps" | "/teams" }) {
   return (
     <Link to={to} className="hud-panel-strong hover-lift group flex items-center gap-3 px-4 py-3 transition-colors hover:border-primary/40">
       <div className="flex h-9 w-9 items-center justify-center rounded-sm bg-primary/15 text-primary">
