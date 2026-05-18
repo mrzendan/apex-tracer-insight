@@ -176,21 +176,6 @@ function Hub() {
 
       <header className="sticky top-0 z-20 flex h-14 items-center gap-4 border-b border-border bg-surface/80 px-4 backdrop-blur">
         <BrandMark subtitle="VOD analytics" />
-        <div className="ml-auto flex items-center gap-2">
-          <ThemeToggle compact />
-          <DensityToggle compact />
-          <span className="text-mono hidden text-xs text-muted-foreground sm:inline">
-            {user?.email} · {role}
-          </span>
-          {(role === "operator" || role === "administrator") && (
-            <Link to="/admin" className="rounded-sm border border-border-strong bg-surface-2 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider transition-colors hover:bg-muted">
-              Admin
-            </Link>
-          )}
-          <button onClick={() => signOut()} className="rounded-sm border border-border-strong bg-surface-2 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider transition-colors hover:bg-muted">
-            Sign out
-          </button>
-        </div>
       </header>
 
       <div className="mx-auto max-w-7xl px-6 pb-16 pt-8">
