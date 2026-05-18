@@ -94,13 +94,22 @@ export const maps: ApexMap[] = [
 ];
 
 export const matches: Match[] = [
-  { id: "m-001", name: "Game 1 — World's Edge", tournamentId: "algs-2026-split-1", mapId: "worlds-edge", durationSec: 1320 },
-  { id: "m-002", name: "Game 2 — Storm Point",  tournamentId: "algs-2026-split-1", mapId: "storm-point", durationSec: 1480 },
-  { id: "m-003", name: "Game 3 — Broken Moon",  tournamentId: "algs-2026-split-1", mapId: "broken-moon", durationSec: 1190 },
-  { id: "m-004", name: "Game 4 — E-District",   tournamentId: "algs-2026-split-1", mapId: "e-district",  durationSec: 1260 },
-  { id: "m-005", name: "Game 5 — Olympus",      tournamentId: "esl-pro-league-12", mapId: "olympus",     durationSec: 1400 },
-  { id: "m-006", name: "Game 6 — King's Canyon",tournamentId: "esl-pro-league-12", mapId: "kings-canyon",durationSec: 1320 },
+  // Match = серия игр (карт) внутри турнира. mapId/durationSec — это первая игра (для обратной совместимости),
+  // полный список игр живёт в MatchExtras.mapIds (см. admin-store / getGames()).
+  { id: "m-001", name: "Match Day 1", tournamentId: "algs-2026-split-1", mapId: "worlds-edge", durationSec: 1320 },
+  { id: "m-002", name: "Match Day 2", tournamentId: "algs-2026-split-1", mapId: "broken-moon", durationSec: 1190 },
+  { id: "m-003", name: "Week 1",      tournamentId: "esl-pro-league-12", mapId: "olympus",     durationSec: 1400 },
 ];
+
+/**
+ * Расширенный seed: каждый Match содержит несколько games (карт).
+ * Применяется через admin-store. Длительности по каждой game — gameDurations.
+ */
+export const matchSeedExtras: Record<string, Pick<MatchExtras, "mapIds" | "gameDurations">> = {
+  "m-001": { mapIds: ["worlds-edge", "storm-point"],                 gameDurations: [1320, 1480] },
+  "m-002": { mapIds: ["broken-moon", "e-district"],                  gameDurations: [1190, 1260] },
+  "m-003": { mapIds: ["olympus", "kings-canyon"],                    gameDurations: [1400, 1320] },
+};
 
 export type Team = {
   id: string;
