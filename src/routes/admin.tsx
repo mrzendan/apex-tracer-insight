@@ -2,8 +2,6 @@ import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-r
 import { useState } from "react";
 import { RouteGuard } from "@/components/auth/RouteGuard";
 import { useAuth } from "@/lib/auth";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { DensityToggle } from "@/components/DensityToggle";
 
 export const Route = createFileRoute("/admin")({
   component: () => (
@@ -40,7 +38,7 @@ const systemItems: NavItem[] = [
 ];
 
 function AdminLayout() {
-  const { role, user, signOut } = useAuth();
+  const { role } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const dataActive = dataItems.some((i) => pathname.startsWith(i.to));
   const calibActive = calibrationItems.some((i) => pathname.startsWith(i.to));
