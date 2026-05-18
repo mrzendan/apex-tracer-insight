@@ -416,6 +416,8 @@ function TopBar({
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-success" />
           <span className="label-eyebrow text-[10px]">Live</span>
         </span>
+        <ThemeToggle compact />
+        <DensityToggle compact />
         <Link to="/admin" className="rounded-sm border border-border-strong bg-surface-2 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider hover:bg-muted">
           Admin
         </Link>
