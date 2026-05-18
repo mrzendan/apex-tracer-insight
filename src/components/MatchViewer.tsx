@@ -795,11 +795,15 @@ function MapCanvas({
               if (!selectedTeams.has(t.id)) return null;
               const slotColor = getSlotColor(slotIdx);
               const path = trajectories[t.id];
-              const upTo = path.filter((p) => p.t <= time);
+              const deathT = deathTimes[t.id];
+              const isDead = deathT !== undefined && time >= deathT;
+              // Freeze trajectory at the moment of death.
+              const effectiveTime = isDead ? deathT : time;
+              const upTo = path.filter((p) => p.t <= effectiveTime);
               if (upTo.length === 0) return null;
               const head = upTo[upTo.length - 1];
               const dimOthers = hoverTeam && hoverTeam !== t.id;
-              const opacity = dimOthers ? 0.15 : 1;
+              const opacity = dimOthers ? 0.15 : (isDead ? 0.55 : 1);
               const trail = upTo.slice(-60);
               const d = trail.map((p, i) => `${i === 0 ? "M" : "L"}${p.x * 1000} ${p.y * 1000}`).join(" ");
               const dwells = (dwellsByTeam[t.id] ?? []).filter((dw) => dw.tStart <= time);
@@ -836,15 +840,32 @@ function MapCanvas({
                     );
                   })}
                   {showTrails && (
-                    <path d={d} fill="none" stroke={slotColor}
-                      strokeWidth={cfg.trailWidth / view.scale} strokeOpacity={0.75}
+                    <path d={d} fill="none"
+                      stroke={isDead ? "#9ca3af" : slotColor}
+                      strokeWidth={cfg.trailWidth / view.scale}
+                      strokeOpacity={isDead ? 0.4 : 0.75}
+                      strokeDasharray={isDead ? `${4 / view.scale} ${3 / view.scale}` : undefined}
                       strokeLinecap="round" strokeLinejoin="round" />
                   )}
                   <g transform={`translate(${head.x * 1000} ${head.y * 1000})`}>
-                    <g filter="url(#glow)">
-                      <circle r={11 / view.scale} fill="none" stroke={slotColor} strokeWidth={1 / view.scale} opacity={0.5} />
-                      <circle r={6 / view.scale} fill={slotColor} stroke="rgba(0,0,0,0.8)" strokeWidth={1 / view.scale} />
-                    </g>
+                    {isDead ? (
+                      // Frozen "tombstone": desaturated body + bright slot-color ring,
+                      // so the team's identity is still readable but clearly out.
+                      <g>
+                        <circle r={9 / view.scale} fill="none"
+                          stroke={slotColor} strokeWidth={2 / view.scale} opacity={0.9} />
+                        <circle r={5.5 / view.scale} fill="#6b7280"
+                          stroke="rgba(0,0,0,0.85)" strokeWidth={1 / view.scale} />
+                        {/* X mark */}
+                        <path d={`M${-3 / view.scale},${-3 / view.scale} L${3 / view.scale},${3 / view.scale} M${3 / view.scale},${-3 / view.scale} L${-3 / view.scale},${3 / view.scale}`}
+                          stroke="#fff" strokeWidth={1.4 / view.scale} strokeLinecap="round" />
+                      </g>
+                    ) : (
+                      <g filter="url(#glow)">
+                        <circle r={11 / view.scale} fill="none" stroke={slotColor} strokeWidth={1 / view.scale} opacity={0.5} />
+                        <circle r={6 / view.scale} fill={slotColor} stroke="rgba(0,0,0,0.8)" strokeWidth={1 / view.scale} />
+                      </g>
+                    )}
                     {showLabels && (
                       <g transform={`translate(${14 / view.scale} ${-(labelH / 2) / view.scale})`}>
                         <rect
@@ -855,8 +876,9 @@ function MapCanvas({
                           width={labelW / view.scale}
                           height={labelH / view.scale}
                           fill={`rgba(0,0,0,${cfg.labelBg})`}
-                          stroke={slotColor}
+                          stroke={isDead ? "#9ca3af" : slotColor}
                           strokeWidth={2 / view.scale}
+                          strokeDasharray={isDead ? `${3 / view.scale} ${2 / view.scale}` : undefined}
                         />
                         <text
                           x={(labelW / 2) / view.scale}
@@ -864,7 +886,7 @@ function MapCanvas({
                           textAnchor="middle"
                           fontSize={cfg.labelSize / view.scale}
                           fontWeight={800}
-                          fill="#fff"
+                          fill={isDead ? "#d1d5db" : "#fff"}
                           fontFamily="Manrope, sans-serif"
                           style={{ letterSpacing: `${0.6 / view.scale}px` }}
                         >
