@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      invites: {
+        Row: {
+          created_at: string
+          created_by: string
+          email: string
+          expires_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          email: string
+          expires_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          token: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
