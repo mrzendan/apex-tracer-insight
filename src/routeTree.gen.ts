@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TournamentsRouteImport } from './routes/tournaments'
 import { Route as Presentation2RouteImport } from './routes/presentation-2'
 import { Route as PresentationRouteImport } from './routes/presentation'
 import { Route as MapsRouteImport } from './routes/maps'
@@ -37,6 +38,11 @@ import { Route as AdminTeamsTeamIdRouteImport } from './routes/admin.teams.$team
 import { Route as AdminMatchesMatchIdRouteImport } from './routes/admin.matches.$matchId'
 import { Route as AdminMapsMapIdRouteImport } from './routes/admin.maps.$mapId'
 
+const TournamentsRoute = TournamentsRouteImport.update({
+  id: '/tournaments',
+  path: '/tournaments',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const Presentation2Route = Presentation2RouteImport.update({
   id: '/presentation-2',
   path: '/presentation-2',
@@ -181,6 +187,7 @@ export interface FileRoutesByFullPath {
   '/maps': typeof MapsRouteWithChildren
   '/presentation': typeof PresentationRoute
   '/presentation-2': typeof Presentation2Route
+  '/tournaments': typeof TournamentsRoute
   '/admin/camera': typeof AdminCameraRoute
   '/admin/diagrams': typeof AdminDiagramsRoute
   '/admin/hsv': typeof AdminHsvRoute
@@ -209,6 +216,7 @@ export interface FileRoutesByTo {
   '/maps': typeof MapsRouteWithChildren
   '/presentation': typeof PresentationRoute
   '/presentation-2': typeof Presentation2Route
+  '/tournaments': typeof TournamentsRoute
   '/admin/camera': typeof AdminCameraRoute
   '/admin/diagrams': typeof AdminDiagramsRoute
   '/admin/hsv': typeof AdminHsvRoute
@@ -239,6 +247,7 @@ export interface FileRoutesById {
   '/maps': typeof MapsRouteWithChildren
   '/presentation': typeof PresentationRoute
   '/presentation-2': typeof Presentation2Route
+  '/tournaments': typeof TournamentsRoute
   '/admin/camera': typeof AdminCameraRoute
   '/admin/diagrams': typeof AdminDiagramsRoute
   '/admin/hsv': typeof AdminHsvRoute
@@ -270,6 +279,7 @@ export interface FileRouteTypes {
     | '/maps'
     | '/presentation'
     | '/presentation-2'
+    | '/tournaments'
     | '/admin/camera'
     | '/admin/diagrams'
     | '/admin/hsv'
@@ -298,6 +308,7 @@ export interface FileRouteTypes {
     | '/maps'
     | '/presentation'
     | '/presentation-2'
+    | '/tournaments'
     | '/admin/camera'
     | '/admin/diagrams'
     | '/admin/hsv'
@@ -327,6 +338,7 @@ export interface FileRouteTypes {
     | '/maps'
     | '/presentation'
     | '/presentation-2'
+    | '/tournaments'
     | '/admin/camera'
     | '/admin/diagrams'
     | '/admin/hsv'
@@ -357,12 +369,20 @@ export interface RootRouteChildren {
   MapsRoute: typeof MapsRouteWithChildren
   PresentationRoute: typeof PresentationRoute
   Presentation2Route: typeof Presentation2Route
+  TournamentsRoute: typeof TournamentsRoute
   MatchesMatchIdRoute: typeof MatchesMatchIdRoute
   TeamsTeamIdRoute: typeof TeamsTeamIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/tournaments': {
+      id: '/tournaments'
+      path: '/tournaments'
+      fullPath: '/tournaments'
+      preLoaderRoute: typeof TournamentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/presentation-2': {
       id: '/presentation-2'
       path: '/presentation-2'
@@ -645,9 +665,20 @@ const rootRouteChildren: RootRouteChildren = {
   MapsRoute: MapsRouteWithChildren,
   PresentationRoute: PresentationRoute,
   Presentation2Route: Presentation2Route,
+  TournamentsRoute: TournamentsRoute,
   MatchesMatchIdRoute: MatchesMatchIdRoute,
   TeamsTeamIdRoute: TeamsTeamIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
