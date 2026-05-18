@@ -232,13 +232,12 @@ function Hub() {
             ))}
           </div>
           <div className="mt-3 text-right">
-            <Link
-              to="/"
-              search={{ classic: "1" } as never}
+            <a
+              href="/?classic=1"
               className="text-mono text-[10px] uppercase tracking-wider text-muted-foreground hover:text-primary"
             >
               Classic view →
-            </Link>
+            </a>
           </div>
         </section>
       </div>
