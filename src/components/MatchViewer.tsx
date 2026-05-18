@@ -148,12 +148,25 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
     return () => cancelAnimationFrame(raf);
   }, [playing, speed, match.durationSec]);
 
+  /**
+   * The currently-visible safe area.
+   * - CD phase  : equal to ring[phaseIndex] (the zone doesn't move).
+   * - Closing   : interpolates from ring[phaseIndex] down to ring[phaseIndex+1]
+   *               over the closing window (red zone is shrinking toward next ring).
+   */
   const ring = useMemo<RingPhase>(() => {
-    const cur = ringPhases.find((p) => time >= p.startSec && time <= p.endSec) ?? ringPhases[ringPhases.length - 1];
-    const next = ringPhases[ringPhases.indexOf(cur) + 1];
-    if (!next) return cur;
-    const k = Math.max(0, Math.min(1, (time - cur.startSec) / (cur.endSec - cur.startSec)));
-    return { ...cur, cx: cur.cx + (next.cx - cur.cx) * k, cy: cur.cy + (next.cy - cur.cy) * k, r: cur.r + (next.r - cur.r) * k };
+    const seg = ringSegments.find(s => time >= s.startSec && time <= s.endSec)
+      ?? ringSegments[ringSegments.length - 1];
+    const cur  = ringPhases[seg.phaseIndex];
+    const next = ringPhases[seg.phaseIndex + 1];
+    if (seg.kind === "CD" || !next) return cur;
+    const k = Math.max(0, Math.min(1, (time - seg.startSec) / (seg.endSec - seg.startSec)));
+    return {
+      ...cur,
+      cx: cur.cx + (next.cx - cur.cx) * k,
+      cy: cur.cy + (next.cy - cur.cy) * k,
+      r:  cur.r  + (next.r  - cur.r ) * k,
+    };
   }, [time]);
 
   const toggleTeam = (id: string) => {
