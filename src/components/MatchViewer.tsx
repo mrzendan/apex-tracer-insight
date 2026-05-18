@@ -210,7 +210,7 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
           <div className="min-h-0 flex-1 overflow-y-auto p-2">
             {[...teams].sort((a, b) => a.placement - b.placement).map((t) => (
               <TeamRow key={t.id} team={t} active={selectedTeams.has(t.id)} hovered={hoverTeam === t.id}
-                onToggle={() => { toggleTeam(t.id); if (viewMode !== "selected") setViewMode("selected"); }}
+                onToggle={() => toggleTeam(t.id)}
                 onHover={(v) => setHoverTeam(v ? t.id : null)} />
             ))}
           </div>
@@ -227,17 +227,17 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
         <main className="flex min-w-0 flex-1 flex-col">
           <MapCanvas
             time={time}
-            ring={effective.ring ? ring : null}
+            ring={showRing ? ring : null}
             trajectories={trajectories}
-            dwellsByTeam={effective.dwells ? dwellsByTeam : {}}
+            dwellsByTeam={dwellsByTeam}
             cfg={cfg}
             onCfg={setCfg}
             showConfig={showConfig}
             setShowConfig={setShowConfig}
-            selectedTeams={effective.teamsVisible}
+            selectedTeams={selectedTeams}
             hoverTeam={hoverTeam}
-            showTrails={effective.trails}
-            showLabels={effective.labels}
+            showTrails={showTrails}
+            showLabels={showLabels}
             mapImage={apexMap.image}
             mapName={apexMap.name}
             aliveTeams={aliveTeams}
@@ -245,9 +245,6 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
             ringIndex={ringPhases.findIndex((p) => time >= p.startSec && time <= p.endSec)}
             ringCount={ringPhases.length}
             controls={{ showTrails, setShowTrails, showRing, setShowRing, showLabels, setShowLabels }}
-            viewMode={viewMode}
-            setViewMode={setViewMode}
-            eventMarkers={effective.showEvents ? eventMarkers : []}
             focusRequest={focusRequest}
             onEventClick={handleEventClick}
           />
