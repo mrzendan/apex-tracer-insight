@@ -4,13 +4,17 @@ import {
   tournaments,
   maps,
   matches,
+  matchSeedExtras,
   teams,
   generateTrajectory,
   ringPhases,
   events,
+  getGames,
+  parseGameId,
   type Team,
   type RingPhase,
   type GameEvent,
+  type Game,
 } from "@/lib/mock-match";
 import { TeamLogo } from "@/components/admin/TeamLogo";
 import { getSlotColor } from "@/lib/team-colors";
@@ -58,13 +62,34 @@ const ringSegments: RingSegment[] = ringPhases.flatMap((p, i) => {
   ];
 });
 
-export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
-  const firstId = initialMatchId ?? matches[0].id;
-  const initialMatch = matches.find((m) => m.id === firstId) ?? matches[0];
-  const [tournamentId, setTournamentId] = useState(initialMatch.tournamentId);
-  const [matchId, setMatchId] = useState(initialMatch.id);
+export function MatchViewer({ initialGameId }: { initialGameId?: string }) {
+  const initial = (() => {
+    if (initialGameId) {
+      const parsed = parseGameId(initialGameId);
+      if (parsed) {
+        const m = matches.find((x) => x.id === parsed.matchId);
+        if (m) {
+          const extras = matchSeedExtras[m.id];
+          const games = getGames({ ...m, mapIds: extras?.mapIds, gameDurations: extras?.gameDurations });
+          const idx = Math.max(0, Math.min(games.length - 1, parsed.index));
+          return { match: m, gameIndex: idx };
+        }
+      }
+    }
+    return { match: matches[0], gameIndex: 0 };
+  })();
+  const [tournamentId, setTournamentId] = useState(initial.match.tournamentId);
+  const [matchId, setMatchId] = useState(initial.match.id);
+  const [gameIndex, setGameIndex] = useState(initial.gameIndex);
   const match = matches.find((m) => m.id === matchId) ?? matches[0];
-  const apexMap = maps.find((m) => m.id === match.mapId)!;
+  const matchEnriched = useMemo(() => {
+    const extras = matchSeedExtras[match.id];
+    return { ...match, mapIds: extras?.mapIds, gameDurations: extras?.gameDurations };
+  }, [match]);
+  const games = useMemo(() => getGames(matchEnriched), [matchEnriched]);
+  const game = games[Math.min(gameIndex, games.length - 1)] ?? games[0];
+  const apexMap = maps.find((m) => m.id === game.mapId)!;
+  const durationSec = game.durationSec;
 
   const [time, setTime] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -88,8 +113,8 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
   });
 
   const trajectories = useMemo(
-    () => Object.fromEntries(teams.map((t, i) => [t.id, generateTrajectory(i + 7, match.durationSec)])),
-    [match.durationSec],
+    () => Object.fromEntries(teams.map((t, i) => [t.id, generateTrajectory(i + 7, durationSec)])),
+    [durationSec],
   );
 
   /** Detect dwell clusters per team: contiguous windows of >= dwellWindow seconds
@@ -143,14 +168,14 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
       last = now;
       setTime((t) => {
         const nt = t + dt * speed;
-        if (nt >= match.durationSec) { setPlaying(false); return match.durationSec; }
+        if (nt >= durationSec) { setPlaying(false); return durationSec; }
         return nt;
       });
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [playing, speed, match.durationSec]);
+  }, [playing, speed, durationSec]);
 
   /**
    * The currently-visible safe area (the cyan boundary; everything outside is red).
@@ -208,10 +233,10 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
       if (t.alive) continue;
       if (out[t.id] !== undefined) continue;
       const k = (teams.length - t.placement + 1) / (teams.length + 1);
-      out[t.id] = Math.round(match.durationSec * k);
+      out[t.id] = Math.round(durationSec * k);
     }
     return out;
-  }, [teamByTag, match.durationSec]);
+  }, [teamByTag, durationSec]);
 
   /** Per-team alive state at the current `time`. */
   const liveAlive = useMemo<Record<string, boolean>>(() => {
@@ -299,9 +324,19 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-background text-foreground">
       <TopBar
         tournamentId={tournamentId}
-        onTournamentChange={setTournamentId}
+        onTournamentChange={(id) => {
+          setTournamentId(id);
+          const firstMatch = matches.find((m) => m.tournamentId === id);
+          if (firstMatch) { setMatchId(firstMatch.id); setGameIndex(0); setTime(0); setPlaying(false); }
+        }}
         matchId={matchId}
-        onMatchChange={(id) => { setMatchId(id); setTime(0); setPlaying(false); }}
+        onMatchChange={(id) => { setMatchId(id); setGameIndex(0); setTime(0); setPlaying(false); }}
+        gameId={game.id}
+        games={games}
+        onGameChange={(gid) => {
+          const idx = games.findIndex((g) => g.id === gid);
+          if (idx >= 0) { setGameIndex(idx); setTime(0); setPlaying(false); }
+        }}
         mapName={apexMap.name}
         aliveTeams={aliveTeams}
         totalKills={totalKills}
@@ -377,7 +412,7 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
             mapName={apexMap.name}
             aliveTeams={aliveTeams}
             totalKills={totalKills}
-            duration={match.durationSec}
+            duration={durationSec}
             deathTimes={deathTimes}
             ringIndex={ringPhases.findIndex((p) => time >= p.startSec && time <= p.endSec)}
             ringCount={ringPhases.length}
@@ -386,7 +421,7 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
             onEventClick={handleEventClick}
           />
 
-          <Timeline time={time} duration={match.durationSec} playing={playing} speed={speed}
+          <Timeline time={time} duration={durationSec} playing={playing} speed={speed}
             onSeek={setTime} onTogglePlay={() => setPlaying((p) => !p)} onSpeedChange={setSpeed} />
         </main>
 
@@ -505,10 +540,11 @@ function EventIcon({ type }: { type: string }) {
 
 /* ---------- TOP BAR ---------- */
 function TopBar({
-  tournamentId, onTournamentChange, matchId, onMatchChange, mapName, aliveTeams, totalKills,
+  tournamentId, onTournamentChange, matchId, onMatchChange, gameId, games, onGameChange, mapName, aliveTeams, totalKills,
 }: {
   tournamentId: string; onTournamentChange: (id: string) => void;
   matchId: string; onMatchChange: (id: string) => void;
+  gameId: string; games: Game[]; onGameChange: (id: string) => void;
   mapName: string; aliveTeams: number; totalKills: number;
 }) {
   return (
@@ -531,6 +567,8 @@ function TopBar({
         options={tournaments.map((t) => ({ value: t.id, label: t.name }))} />
       <Select label="Match" value={matchId} onChange={onMatchChange}
         options={matches.filter((m) => m.tournamentId === tournamentId).map((m) => ({ value: m.id, label: m.name }))} />
+      <Select label="Game" value={gameId} onChange={onGameChange}
+        options={games.map((g) => ({ value: g.id, label: `G${g.index + 1} · ${maps.find((mp) => mp.id === g.mapId)?.name ?? g.mapId}` }))} />
       <div className="hud-panel hidden items-center gap-2 px-3 py-1.5 text-xs md:flex">
         <span className="label-eyebrow text-[10px]">Map</span>
         <span className="text-mono font-semibold">{mapName}</span>
