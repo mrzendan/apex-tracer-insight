@@ -16,7 +16,7 @@ import { TeamLogo } from "@/components/admin/TeamLogo";
 import { getSlotColor } from "@/lib/team-colors";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { DensityToggle } from "@/components/DensityToggle";
-import { Users, Swords, Crosshair, Skull, HeartCrack, ShieldAlert, Package, Circle } from "lucide-react";
+import { Users, Swords, Crosshair, Skull, ShieldAlert, Package, Circle } from "lucide-react";
 import damageIcon from "@/assets/icons/damage.svg";
 
 function formatTime(sec: number) {
