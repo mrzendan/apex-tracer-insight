@@ -183,10 +183,46 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
     setSelectedTeams((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   };
 
-  const aliveTeams = teams.filter((t) => t.alive).length;
   const totalKills = teams.reduce((acc, t) => acc + t.kills, 0);
 
   const teamByTag = useMemo(() => new Map(teams.map(t => [t.tag, t])), []);
+
+  /** When each team becomes "out". Sourced from `wipe` events (victim parsed from label),
+   *  and synthesized from `placement` for teams that are flagged dead but lack an event. */
+  const deathTimes = useMemo<Record<string, number>>(() => {
+    const out: Record<string, number> = {};
+    for (const e of events) {
+      if (e.type !== "wipe") continue;
+      // Label shape: "<KILLER> wipes <VICTIM> [— note]"
+      const m = /wipes\s+([A-Za-z0-9]+)/i.exec(e.label);
+      const victimTag = m?.[1];
+      if (!victimTag) continue;
+      const victim = teamByTag.get(victimTag);
+      if (!victim) continue;
+      if (out[victim.id] === undefined || e.t < out[victim.id]) out[victim.id] = e.t;
+    }
+    // Fallback: teams marked dead in static data but with no wipe event get a
+    // synthetic death time derived from placement (lower placement → later death).
+    for (const t of teams) {
+      if (t.alive) continue;
+      if (out[t.id] !== undefined) continue;
+      const k = (teams.length - t.placement + 1) / (teams.length + 1);
+      out[t.id] = Math.round(match.durationSec * k);
+    }
+    return out;
+  }, [teamByTag, match.durationSec]);
+
+  /** Per-team alive state at the current `time`. */
+  const liveAlive = useMemo<Record<string, boolean>>(() => {
+    const map: Record<string, boolean> = {};
+    for (const t of teams) {
+      const d = deathTimes[t.id];
+      map[t.id] = d === undefined ? true : time < d;
+    }
+    return map;
+  }, [deathTimes, time]);
+
+  const aliveTeams = useMemo(() => teams.filter((t) => liveAlive[t.id]).length, [liveAlive]);
 
   /** Resolve an event's spatial position so we can plot it / focus the map. */
   const eventPoint = useCallback((e: GameEvent): { x: number; y: number } | null => {
@@ -302,7 +338,8 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
               <TeamRow key={t.id} team={t} active={selectedTeams.has(t.id)} hovered={hoverTeam === t.id}
                 onToggle={() => toggleTeam(t.id)}
                 onHover={(v) => setHoverTeam(v ? t.id : null)}
-                logoSize={teamLogoSize} compact={teamCompact} />
+                logoSize={teamLogoSize} compact={teamCompact}
+                alive={liveAlive[t.id]} />
             ))}
           </div>
           <div className="border-t border-border p-3">
@@ -340,6 +377,7 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
             aliveTeams={aliveTeams}
             totalKills={totalKills}
             duration={match.durationSec}
+            deathTimes={deathTimes}
             ringIndex={ringPhases.findIndex((p) => time >= p.startSec && time <= p.endSec)}
             ringCount={ringPhases.length}
             controls={{ showTrails, setShowTrails, showRing, setShowRing, showLabels, setShowLabels }}
@@ -500,12 +538,15 @@ function PanelHeader({ title, subtitle }: { title: string; subtitle?: React.Reac
   );
 }
 
-function TeamRow({ team, active, hovered, onToggle, onHover, logoSize = 20, compact = false }: {
+function TeamRow({ team, active, hovered, onToggle, onHover, logoSize = 20, compact = false, alive }: {
   team: Team; active: boolean; hovered: boolean; onToggle: () => void; onHover: (v: boolean) => void;
   logoSize?: number; compact?: boolean;
+  /** Live alive override; falls back to the static `team.alive` flag. */
+  alive?: boolean;
 }) {
   const slotColor = getSlotColor(teams.indexOf(team));
   const nameSize = Math.max(12, Math.min(18, Math.round(logoSize * 0.6)));
+  const isAlive = alive ?? team.alive;
   if (compact) {
     return (
       <div onMouseEnter={() => onHover(true)} onMouseLeave={() => onHover(false)}
@@ -518,7 +559,7 @@ function TeamRow({ team, active, hovered, onToggle, onHover, logoSize = 20, comp
         </div>
         <span className="absolute left-1.5 top-1.5 h-2.5 w-2.5 rounded-sm"
           style={{ backgroundColor: slotColor }} />
-        <span className={`absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full ${team.alive ? "bg-success" : "bg-destructive/70"}`} />
+        <span className={`absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full ${isAlive ? "bg-success" : "bg-destructive/70"}`} />
       </div>
     );
   }
@@ -532,7 +573,7 @@ function TeamRow({ team, active, hovered, onToggle, onHover, logoSize = 20, comp
       <TeamLogo team={team} size={logoSize} />
       <span className="text-mono w-6 text-[10px] tabular-nums text-muted-foreground">#{team.placement}</span>
       <span className="min-w-0 flex-1 truncate font-semibold" style={{ fontSize: nameSize }}>{team.name}</span>
-      <span className={`h-1.5 w-1.5 rounded-full ${team.alive ? "bg-success" : "bg-destructive/70"}`} />
+      <span className={`h-1.5 w-1.5 rounded-full ${isAlive ? "bg-success" : "bg-destructive/70"}`} />
     </div>
   );
 }
@@ -607,7 +648,7 @@ type Dwell = { x: number; y: number; tStart: number; tEnd: number };
 function MapCanvas({
   time, ring, trajectories, dwellsByTeam, cfg, onCfg, showConfig, setShowConfig,
   selectedTeams, hoverTeam, showTrails, showLabels,
-  mapImage, mapName, aliveTeams, totalKills, duration, ringIndex, ringCount, controls,
+  mapImage, mapName, aliveTeams, totalKills, duration, deathTimes, ringIndex, ringCount, controls,
   focusRequest, onEventClick,
 }: {
   time: number; ring: RingPhase | null;
@@ -621,6 +662,8 @@ function MapCanvas({
   showTrails: boolean; showLabels: boolean;
   mapImage: string; mapName: string;
   aliveTeams: number; totalKills: number; duration: number;
+  /** Per-team death timestamps (sec). Absent → still alive. */
+  deathTimes: Record<string, number>;
   ringIndex: number; ringCount: number;
   controls: {
     showTrails: boolean; setShowTrails: (v: boolean) => void;
@@ -752,11 +795,15 @@ function MapCanvas({
               if (!selectedTeams.has(t.id)) return null;
               const slotColor = getSlotColor(slotIdx);
               const path = trajectories[t.id];
-              const upTo = path.filter((p) => p.t <= time);
+              const deathT = deathTimes[t.id];
+              const isDead = deathT !== undefined && time >= deathT;
+              // Freeze trajectory at the moment of death.
+              const effectiveTime = isDead ? deathT : time;
+              const upTo = path.filter((p) => p.t <= effectiveTime);
               if (upTo.length === 0) return null;
               const head = upTo[upTo.length - 1];
               const dimOthers = hoverTeam && hoverTeam !== t.id;
-              const opacity = dimOthers ? 0.15 : 1;
+              const opacity = dimOthers ? 0.15 : (isDead ? 0.55 : 1);
               const trail = upTo.slice(-60);
               const d = trail.map((p, i) => `${i === 0 ? "M" : "L"}${p.x * 1000} ${p.y * 1000}`).join(" ");
               const dwells = (dwellsByTeam[t.id] ?? []).filter((dw) => dw.tStart <= time);
@@ -793,15 +840,32 @@ function MapCanvas({
                     );
                   })}
                   {showTrails && (
-                    <path d={d} fill="none" stroke={slotColor}
-                      strokeWidth={cfg.trailWidth / view.scale} strokeOpacity={0.75}
+                    <path d={d} fill="none"
+                      stroke={isDead ? "#9ca3af" : slotColor}
+                      strokeWidth={cfg.trailWidth / view.scale}
+                      strokeOpacity={isDead ? 0.4 : 0.75}
+                      strokeDasharray={isDead ? `${4 / view.scale} ${3 / view.scale}` : undefined}
                       strokeLinecap="round" strokeLinejoin="round" />
                   )}
                   <g transform={`translate(${head.x * 1000} ${head.y * 1000})`}>
-                    <g filter="url(#glow)">
-                      <circle r={11 / view.scale} fill="none" stroke={slotColor} strokeWidth={1 / view.scale} opacity={0.5} />
-                      <circle r={6 / view.scale} fill={slotColor} stroke="rgba(0,0,0,0.8)" strokeWidth={1 / view.scale} />
-                    </g>
+                    {isDead ? (
+                      // Frozen "tombstone": desaturated body + bright slot-color ring,
+                      // so the team's identity is still readable but clearly out.
+                      <g>
+                        <circle r={9 / view.scale} fill="none"
+                          stroke={slotColor} strokeWidth={2 / view.scale} opacity={0.9} />
+                        <circle r={5.5 / view.scale} fill="#6b7280"
+                          stroke="rgba(0,0,0,0.85)" strokeWidth={1 / view.scale} />
+                        {/* X mark */}
+                        <path d={`M${-3 / view.scale},${-3 / view.scale} L${3 / view.scale},${3 / view.scale} M${3 / view.scale},${-3 / view.scale} L${-3 / view.scale},${3 / view.scale}`}
+                          stroke="#fff" strokeWidth={1.4 / view.scale} strokeLinecap="round" />
+                      </g>
+                    ) : (
+                      <g filter="url(#glow)">
+                        <circle r={11 / view.scale} fill="none" stroke={slotColor} strokeWidth={1 / view.scale} opacity={0.5} />
+                        <circle r={6 / view.scale} fill={slotColor} stroke="rgba(0,0,0,0.8)" strokeWidth={1 / view.scale} />
+                      </g>
+                    )}
                     {showLabels && (
                       <g transform={`translate(${14 / view.scale} ${-(labelH / 2) / view.scale})`}>
                         <rect
@@ -812,8 +876,9 @@ function MapCanvas({
                           width={labelW / view.scale}
                           height={labelH / view.scale}
                           fill={`rgba(0,0,0,${cfg.labelBg})`}
-                          stroke={slotColor}
+                          stroke={isDead ? "#9ca3af" : slotColor}
                           strokeWidth={2 / view.scale}
+                          strokeDasharray={isDead ? `${3 / view.scale} ${2 / view.scale}` : undefined}
                         />
                         <text
                           x={(labelW / 2) / view.scale}
@@ -821,7 +886,7 @@ function MapCanvas({
                           textAnchor="middle"
                           fontSize={cfg.labelSize / view.scale}
                           fontWeight={800}
-                          fill="#fff"
+                          fill={isDead ? "#d1d5db" : "#fff"}
                           fontFamily="Manrope, sans-serif"
                           style={{ letterSpacing: `${0.6 / view.scale}px` }}
                         >
