@@ -12,6 +12,7 @@ import {
   type RingPhase,
 } from "@/lib/mock-match";
 import { TeamLogo } from "@/components/admin/TeamLogo";
+import { getSlotColor } from "@/lib/team-colors";
 
 function formatTime(sec: number) {
   const m = Math.floor(sec / 60).toString().padStart(2, "0");
@@ -298,13 +299,14 @@ function PanelHeader({ title, subtitle }: { title: string; subtitle?: string }) 
 function TeamRow({ team, active, hovered, onToggle, onHover }: {
   team: Team; active: boolean; hovered: boolean; onToggle: () => void; onHover: (v: boolean) => void;
 }) {
+  const slotColor = getSlotColor(teams.indexOf(team));
   return (
     <div onMouseEnter={() => onHover(true)} onMouseLeave={() => onHover(false)}
       className={`group relative mb-1 flex cursor-pointer items-center gap-2.5 rounded-sm border px-2 py-1.5 transition-colors ${
         active ? "border-border-strong bg-surface-2" : "border-transparent bg-transparent opacity-50"
       } ${hovered ? "ring-1 ring-primary/40" : ""}`} onClick={onToggle}>
       <span className="h-2.5 w-2.5 shrink-0 rounded-sm"
-        style={{ backgroundColor: team.color }} />
+        style={{ backgroundColor: slotColor }} />
       <TeamLogo team={team} size={20} />
       <span className="text-mono w-6 text-[10px] tabular-nums text-muted-foreground">#{team.placement}</span>
       <span className="min-w-0 flex-1 truncate text-xs font-semibold">{team.name}</span>
@@ -472,8 +474,9 @@ function MapCanvas({
               </>
             )}
 
-            {teams.map((t) => {
+            {teams.map((t, slotIdx) => {
               if (!selectedTeams.has(t.id)) return null;
+              const slotColor = getSlotColor(slotIdx);
               const path = trajectories[t.id];
               const upTo = path.filter((p) => p.t <= time);
               if (upTo.length === 0) return null;
@@ -493,18 +496,18 @@ function MapCanvas({
                     const dur = Math.round(dw.tEnd - dw.tStart);
                     return (
                       <g key={`dw-${di}`} transform={`translate(${dw.x * 1000} ${dw.y * 1000})`}>
-                        <circle r={cfg.dwellRadius * 1000} fill={t.color} fillOpacity={0.1}
-                          stroke={t.color} strokeOpacity={0.6}
+                        <circle r={cfg.dwellRadius * 1000} fill={slotColor} fillOpacity={0.1}
+                          stroke={slotColor} strokeOpacity={0.6}
                           strokeWidth={1.2 / view.scale}
                           strokeDasharray={`${3 / view.scale} ${3 / view.scale}`} />
-                        <circle r={5 / view.scale} fill={t.color} stroke="#000" strokeWidth={0.8 / view.scale} />
+                        <circle r={5 / view.scale} fill={slotColor} stroke="#000" strokeWidth={0.8 / view.scale} />
                         <g transform={`translate(0 ${cfg.dwellRadius * 1000 + 14 / view.scale})`}>
                           <rect
                             x={-32 / view.scale} y={-9 / view.scale}
                             width={64 / view.scale} height={18 / view.scale}
                             rx={2 / view.scale} ry={2 / view.scale}
                             fill={`rgba(0,0,0,${cfg.labelBg})`}
-                            stroke={t.color} strokeWidth={1 / view.scale}
+                            stroke={slotColor} strokeWidth={1 / view.scale}
                           />
                           <text x={0} y={4 / view.scale} textAnchor="middle"
                             fontSize={11 / view.scale} fontWeight={700} fill="#fff"
@@ -516,14 +519,14 @@ function MapCanvas({
                     );
                   })}
                   {showTrails && (
-                    <path d={d} fill="none" stroke={t.color}
+                    <path d={d} fill="none" stroke={slotColor}
                       strokeWidth={cfg.trailWidth / view.scale} strokeOpacity={0.75}
                       strokeLinecap="round" strokeLinejoin="round" />
                   )}
                   <g transform={`translate(${head.x * 1000} ${head.y * 1000})`}>
                     <g filter="url(#glow)">
-                      <circle r={11 / view.scale} fill="none" stroke={t.color} strokeWidth={1 / view.scale} opacity={0.5} />
-                      <circle r={6 / view.scale} fill={t.color} stroke="rgba(0,0,0,0.8)" strokeWidth={1 / view.scale} />
+                      <circle r={11 / view.scale} fill="none" stroke={slotColor} strokeWidth={1 / view.scale} opacity={0.5} />
+                      <circle r={6 / view.scale} fill={slotColor} stroke="rgba(0,0,0,0.8)" strokeWidth={1 / view.scale} />
                     </g>
                     {showLabels && (
                       <g transform={`translate(${14 / view.scale} ${-(labelH / 2) / view.scale})`}>
@@ -535,7 +538,7 @@ function MapCanvas({
                           width={labelW / view.scale}
                           height={labelH / view.scale}
                           fill={`rgba(0,0,0,${cfg.labelBg})`}
-                          stroke={t.color}
+                          stroke={slotColor}
                           strokeWidth={2 / view.scale}
                         />
                         <text

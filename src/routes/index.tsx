@@ -215,10 +215,7 @@ function Hub() {
                 className="hud-panel hover-lift flex items-center gap-3 px-3 py-2.5 animate-fade-in"
                 style={{ animationDelay: `${200 + i * 30}ms` }}
               >
-                <div className="relative">
-                  <span className="absolute -left-1 -top-1 h-2 w-2 rounded-full ring-2 ring-surface" style={{ backgroundColor: team.color }} />
-                  <TeamLogo team={team} size={32} />
-                </div>
+                <TeamLogo team={team} size={32} />
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-xs font-semibold">{team.name}</div>
                   <div className="text-mono text-[10px] text-muted-foreground">
