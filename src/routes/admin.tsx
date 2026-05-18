@@ -2,6 +2,7 @@ import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-r
 import { useState } from "react";
 import { RouteGuard } from "@/components/auth/RouteGuard";
 import { useAuth } from "@/lib/auth";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const Route = createFileRoute("/admin")({
   component: () => (
@@ -99,6 +100,9 @@ function AdminLayout() {
         <div className="space-y-2 border-t border-border p-3">
           <div className="text-mono truncate text-[10px] text-muted-foreground" title={user?.email ?? ""}>
             {user?.email} · {role}
+          </div>
+          <div className="flex justify-center">
+            <ThemeToggle compact />
           </div>
           <button
             onClick={() => signOut()}
