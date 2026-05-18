@@ -668,89 +668,59 @@ function MapCanvas({
               );
             })}
 
-            {eventMarkers.map(({ e, p }, i) => {
-              const c = eventColor(e.type);
-              return (
-                <g key={`evm-${i}`} transform={`translate(${p.x * 1000} ${p.y * 1000})`}>
-                  <circle r={14 / view.scale} fill={c} fillOpacity={0.15}
-                    stroke={c} strokeWidth={1.5 / view.scale} />
-                  <circle r={4 / view.scale} fill={c} stroke="#000" strokeWidth={0.6 / view.scale} />
-                  <g transform={`translate(0 ${22 / view.scale})`}>
-                    <rect x={-30 / view.scale} y={-9 / view.scale}
-                      width={60 / view.scale} height={18 / view.scale}
-                      rx={2 / view.scale} ry={2 / view.scale}
-                      fill="rgba(0,0,0,0.75)" stroke={c} strokeWidth={1 / view.scale} />
-                    <text x={0} y={4 / view.scale} textAnchor="middle"
-                      fontSize={11 / view.scale} fontWeight={700} fill="#fff"
-                      fontFamily="Manrope, sans-serif">
-                      {formatTime(e.t)}
-                    </text>
-                  </g>
-                </g>
-              );
-            })}
           </svg>
         </div>
       </div>
 
-      {/* Overlay HUD (not transformed) */}
-      <div className="pointer-events-none absolute left-4 top-4 flex flex-col gap-2">
+      {/* Map label (top-left) */}
+      <div className="pointer-events-none absolute left-4 top-4">
         <div className="hud-panel-strong pointer-events-auto flex items-center gap-3 px-3 py-2 text-xs">
           <span className="label-eyebrow">Map</span>
           <span className="text-mono font-semibold tracking-wider">{mapName.toUpperCase()}</span>
         </div>
-        <div className="hud-panel-strong pointer-events-auto flex flex-wrap gap-1 p-1.5">
-          {VIEW_MODES.map(m => {
-            const active = viewMode === m.id;
-            return (
-              <button key={m.id} onClick={() => setViewMode(m.id)}
-                className={`text-mono rounded-sm border px-2 py-1 text-[10px] uppercase tracking-wider transition-colors ${
-                  active
-                    ? "border-primary bg-primary/15 text-primary"
-                    : "border-border bg-surface-2 text-muted-foreground hover:text-foreground"
-                }`}>
-                {m.label}
-              </button>
-            );
-          })}
-        </div>
       </div>
 
-      <div className="pointer-events-auto absolute right-4 top-4 hud-panel-strong flex flex-col gap-1 p-1.5 text-xs">
-        <LayerToggle label="Trails" active={controls.showTrails} onChange={controls.setShowTrails} />
-        <LayerToggle label="Ring" active={controls.showRing} onChange={controls.setShowRing} />
-        <LayerToggle label="Labels" active={controls.showLabels} onChange={controls.setShowLabels} />
+      {/* Single CONFIG button (top-right) */}
+      <div className="pointer-events-auto absolute right-4 top-4">
         <button onClick={() => setShowConfig(!showConfig)}
-          className={`mt-1 flex items-center justify-between gap-3 rounded-sm px-2 py-1 text-[11px] transition-colors ${
-            showConfig ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted"}`}>
-          <span className="label-eyebrow text-[10px]">Config</span>
-          <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={2}>
+          className={`hud-panel-strong flex items-center gap-2 px-3 py-2 text-xs transition-colors ${
+            showConfig ? "text-primary" : "text-foreground hover:text-primary"}`}>
+          <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2}>
             <circle cx="12" cy="12" r="3" />
             <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5h0a1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
           </svg>
+          <span className="label-eyebrow text-[10px]">Config</span>
         </button>
-      </div>
 
-      {showConfig && (
-        <div className="pointer-events-auto absolute right-4 top-40 hud-panel-strong w-60 p-3 text-xs space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="label-eyebrow">Map config</span>
-            <button onClick={() => setShowConfig(false)} className="text-muted-foreground hover:text-foreground">×</button>
+        {showConfig && (
+          <div className="mt-2 hud-panel-strong w-64 p-3 text-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="label-eyebrow">Layers</span>
+              <button onClick={() => setShowConfig(false)} className="text-muted-foreground hover:text-foreground">×</button>
+            </div>
+            <div className="flex flex-col gap-1">
+              <LayerToggle label="Trails" active={controls.showTrails} onChange={controls.setShowTrails} />
+              <LayerToggle label="Ring" active={controls.showRing} onChange={controls.setShowRing} />
+              <LayerToggle label="Labels" active={controls.showLabels} onChange={controls.setShowLabels} />
+            </div>
+            <div className="border-t border-border pt-2 space-y-3">
+              <span className="label-eyebrow block">Map config</span>
+              <CfgSlider label="Trail width" value={cfg.trailWidth} min={0.5} max={6} step={0.5}
+                onChange={(v) => onCfg({ ...cfg, trailWidth: v })} />
+              <CfgSlider label="Label size" value={cfg.labelSize} min={8} max={40} step={1}
+                onChange={(v) => onCfg({ ...cfg, labelSize: v })} />
+              <CfgSlider label="Label bg" value={cfg.labelBg} min={0} max={1} step={0.05}
+                onChange={(v) => onCfg({ ...cfg, labelBg: v })} />
+            </div>
+            <div className="border-t border-border pt-2 space-y-3">
+              <CfgSlider label="Dwell window (s)" value={cfg.dwellWindow} min={10} max={120} step={5}
+                onChange={(v) => onCfg({ ...cfg, dwellWindow: v })} />
+              <CfgSlider label="Dwell radius" value={cfg.dwellRadius} min={0.01} max={0.12} step={0.005}
+                onChange={(v) => onCfg({ ...cfg, dwellRadius: v })} />
+            </div>
           </div>
-          <CfgSlider label="Trail width" value={cfg.trailWidth} min={0.5} max={6} step={0.5}
-            onChange={(v) => onCfg({ ...cfg, trailWidth: v })} />
-          <CfgSlider label="Label size" value={cfg.labelSize} min={8} max={40} step={1}
-            onChange={(v) => onCfg({ ...cfg, labelSize: v })} />
-          <CfgSlider label="Label bg" value={cfg.labelBg} min={0} max={1} step={0.05}
-            onChange={(v) => onCfg({ ...cfg, labelBg: v })} />
-          <div className="border-t border-border pt-2 space-y-3">
-            <CfgSlider label="Dwell window (s)" value={cfg.dwellWindow} min={10} max={120} step={5}
-              onChange={(v) => onCfg({ ...cfg, dwellWindow: v })} />
-            <CfgSlider label="Dwell radius" value={cfg.dwellRadius} min={0.01} max={0.12} step={0.005}
-              onChange={(v) => onCfg({ ...cfg, dwellRadius: v })} />
-          </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Zoom controls */}
       <div className="pointer-events-auto absolute right-4 bottom-4 hud-panel-strong flex flex-col overflow-hidden text-xs">
