@@ -21,17 +21,7 @@ function formatTime(sec: number) {
   return `${m}:${s}`;
 }
 
-type ViewMode = "overview" | "selected" | "live" | "trails" | "rings" | "events";
 type EventFilter = "all" | "fights" | "rings" | "eliminations" | "rotations" | "errors";
-
-const VIEW_MODES: { id: ViewMode; label: string }[] = [
-  { id: "overview", label: "Обзор" },
-  { id: "selected", label: "Выбранные" },
-  { id: "live",     label: "Живые" },
-  { id: "trails",   label: "Треки" },
-  { id: "rings",    label: "Кольца" },
-  { id: "events",   label: "События" },
-];
 
 const EVENT_FILTERS: { id: EventFilter; label: string }[] = [
   { id: "all",          label: "Все" },
@@ -52,6 +42,18 @@ function matchesFilter(e: GameEvent, f: EventFilter) {
   return true;
 }
 
+/** Split each ring phase into CD (waiting) and Closing windows. */
+const RING_CLOSE_FRACTION = 0.4;
+type RingSegment = { phaseIndex: number; kind: "CD" | "Closing"; startSec: number; endSec: number };
+const ringSegments: RingSegment[] = ringPhases.flatMap((p, i) => {
+  const dur = p.endSec - p.startSec;
+  const closeStart = p.startSec + dur * (1 - RING_CLOSE_FRACTION);
+  return [
+    { phaseIndex: i, kind: "CD",      startSec: p.startSec, endSec: closeStart } as RingSegment,
+    { phaseIndex: i, kind: "Closing", startSec: closeStart, endSec: p.endSec }    as RingSegment,
+  ];
+});
+
 export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
   const firstId = initialMatchId ?? matches[0].id;
   const initialMatch = matches.find((m) => m.id === firstId) ?? matches[0];
@@ -71,7 +73,6 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
   const [showRing, setShowRing] = useState(true);
   const [showLabels, setShowLabels] = useState(true);
   const [showConfig, setShowConfig] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>("overview");
   const [eventFilter, setEventFilter] = useState<EventFilter>("all");
   const [focusRequest, setFocusRequest] = useState<{ x: number; y: number; token: number } | null>(null);
   const [cfg, setCfg] = useState({
@@ -162,24 +163,6 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
   const aliveTeams = teams.filter((t) => t.alive).length;
   const totalKills = teams.reduce((acc, t) => acc + t.kills, 0);
 
-  // ----- View-mode preset → effective layer flags -----
-  const effective = useMemo(() => {
-    switch (viewMode) {
-      case "overview":
-        return { trails: false, labels: false, ring: true,  dwells: false, teamsVisible: new Set(teams.map(t => t.id)), showEvents: false };
-      case "selected":
-        return { trails: showTrails, labels: showLabels, ring: showRing, dwells: true, teamsVisible: selectedTeams, showEvents: false };
-      case "live":
-        return { trails: false, labels: true, ring: true, dwells: false, teamsVisible: new Set(teams.filter(t => t.alive).map(t => t.id)), showEvents: false };
-      case "trails":
-        return { trails: true, labels: false, ring: false, dwells: false, teamsVisible: selectedTeams, showEvents: false };
-      case "rings":
-        return { trails: false, labels: false, ring: true, dwells: false, teamsVisible: new Set<string>(), showEvents: false };
-      case "events":
-        return { trails: false, labels: false, ring: false, dwells: false, teamsVisible: new Set<string>(), showEvents: true };
-    }
-  }, [viewMode, selectedTeams, showTrails, showRing, showLabels]);
-
   const teamByTag = useMemo(() => new Map(teams.map(t => [t.tag, t])), []);
 
   /** Resolve an event's spatial position so we can plot it / focus the map. */
@@ -201,10 +184,6 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
   }, [teamByTag, trajectories]);
 
   const filteredEvents = useMemo(() => events.filter(e => matchesFilter(e, eventFilter)), [eventFilter]);
-
-  const eventMarkers = useMemo(() => {
-    return events.map(e => ({ e, p: eventPoint(e) })).filter(x => x.p) as { e: GameEvent; p: { x: number; y: number } }[];
-  }, [eventPoint]);
 
   const handleEventClick = useCallback((e: GameEvent) => {
     setTime(e.t);
@@ -231,7 +210,7 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
           <div className="min-h-0 flex-1 overflow-y-auto p-2">
             {[...teams].sort((a, b) => a.placement - b.placement).map((t) => (
               <TeamRow key={t.id} team={t} active={selectedTeams.has(t.id)} hovered={hoverTeam === t.id}
-                onToggle={() => { toggleTeam(t.id); if (viewMode !== "selected") setViewMode("selected"); }}
+                onToggle={() => toggleTeam(t.id)}
                 onHover={(v) => setHoverTeam(v ? t.id : null)} />
             ))}
           </div>
@@ -248,17 +227,17 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
         <main className="flex min-w-0 flex-1 flex-col">
           <MapCanvas
             time={time}
-            ring={effective.ring ? ring : null}
+            ring={showRing ? ring : null}
             trajectories={trajectories}
-            dwellsByTeam={effective.dwells ? dwellsByTeam : {}}
+            dwellsByTeam={dwellsByTeam}
             cfg={cfg}
             onCfg={setCfg}
             showConfig={showConfig}
             setShowConfig={setShowConfig}
-            selectedTeams={effective.teamsVisible}
+            selectedTeams={selectedTeams}
             hoverTeam={hoverTeam}
-            showTrails={effective.trails}
-            showLabels={effective.labels}
+            showTrails={showTrails}
+            showLabels={showLabels}
             mapImage={apexMap.image}
             mapName={apexMap.name}
             aliveTeams={aliveTeams}
@@ -266,9 +245,6 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
             ringIndex={ringPhases.findIndex((p) => time >= p.startSec && time <= p.endSec)}
             ringCount={ringPhases.length}
             controls={{ showTrails, setShowTrails, showRing, setShowRing, showLabels, setShowLabels }}
-            viewMode={viewMode}
-            setViewMode={setViewMode}
-            eventMarkers={effective.showEvents ? eventMarkers : []}
             focusRequest={focusRequest}
             onEventClick={handleEventClick}
           />
@@ -475,7 +451,7 @@ function MapCanvas({
   time, ring, trajectories, dwellsByTeam, cfg, onCfg, showConfig, setShowConfig,
   selectedTeams, hoverTeam, showTrails, showLabels,
   mapImage, mapName, aliveTeams, totalKills, ringIndex, ringCount, controls,
-  viewMode, setViewMode, eventMarkers, focusRequest, onEventClick,
+  focusRequest, onEventClick,
 }: {
   time: number; ring: RingPhase | null;
   trajectories: Record<string, { t: number; x: number; y: number }[]>;
@@ -494,9 +470,6 @@ function MapCanvas({
     showRing: boolean; setShowRing: (v: boolean) => void;
     showLabels: boolean; setShowLabels: (v: boolean) => void;
   };
-  viewMode: ViewMode;
-  setViewMode: (m: ViewMode) => void;
-  eventMarkers: { e: GameEvent; p: { x: number; y: number } }[];
   focusRequest: { x: number; y: number; token: number } | null;
   onEventClick: (e: GameEvent) => void;
 }) {
@@ -695,89 +668,59 @@ function MapCanvas({
               );
             })}
 
-            {eventMarkers.map(({ e, p }, i) => {
-              const c = eventColor(e.type);
-              return (
-                <g key={`evm-${i}`} transform={`translate(${p.x * 1000} ${p.y * 1000})`}>
-                  <circle r={14 / view.scale} fill={c} fillOpacity={0.15}
-                    stroke={c} strokeWidth={1.5 / view.scale} />
-                  <circle r={4 / view.scale} fill={c} stroke="#000" strokeWidth={0.6 / view.scale} />
-                  <g transform={`translate(0 ${22 / view.scale})`}>
-                    <rect x={-30 / view.scale} y={-9 / view.scale}
-                      width={60 / view.scale} height={18 / view.scale}
-                      rx={2 / view.scale} ry={2 / view.scale}
-                      fill="rgba(0,0,0,0.75)" stroke={c} strokeWidth={1 / view.scale} />
-                    <text x={0} y={4 / view.scale} textAnchor="middle"
-                      fontSize={11 / view.scale} fontWeight={700} fill="#fff"
-                      fontFamily="Manrope, sans-serif">
-                      {formatTime(e.t)}
-                    </text>
-                  </g>
-                </g>
-              );
-            })}
           </svg>
         </div>
       </div>
 
-      {/* Overlay HUD (not transformed) */}
-      <div className="pointer-events-none absolute left-4 top-4 flex flex-col gap-2">
+      {/* Map label (top-left) */}
+      <div className="pointer-events-none absolute left-4 top-4">
         <div className="hud-panel-strong pointer-events-auto flex items-center gap-3 px-3 py-2 text-xs">
           <span className="label-eyebrow">Map</span>
           <span className="text-mono font-semibold tracking-wider">{mapName.toUpperCase()}</span>
         </div>
-        <div className="hud-panel-strong pointer-events-auto flex flex-wrap gap-1 p-1.5">
-          {VIEW_MODES.map(m => {
-            const active = viewMode === m.id;
-            return (
-              <button key={m.id} onClick={() => setViewMode(m.id)}
-                className={`text-mono rounded-sm border px-2 py-1 text-[10px] uppercase tracking-wider transition-colors ${
-                  active
-                    ? "border-primary bg-primary/15 text-primary"
-                    : "border-border bg-surface-2 text-muted-foreground hover:text-foreground"
-                }`}>
-                {m.label}
-              </button>
-            );
-          })}
-        </div>
       </div>
 
-      <div className="pointer-events-auto absolute right-4 top-4 hud-panel-strong flex flex-col gap-1 p-1.5 text-xs">
-        <LayerToggle label="Trails" active={controls.showTrails} onChange={controls.setShowTrails} />
-        <LayerToggle label="Ring" active={controls.showRing} onChange={controls.setShowRing} />
-        <LayerToggle label="Labels" active={controls.showLabels} onChange={controls.setShowLabels} />
+      {/* Single CONFIG button (top-right) */}
+      <div className="pointer-events-auto absolute right-4 top-4">
         <button onClick={() => setShowConfig(!showConfig)}
-          className={`mt-1 flex items-center justify-between gap-3 rounded-sm px-2 py-1 text-[11px] transition-colors ${
-            showConfig ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted"}`}>
-          <span className="label-eyebrow text-[10px]">Config</span>
-          <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={2}>
+          className={`hud-panel-strong flex items-center gap-2 px-3 py-2 text-xs transition-colors ${
+            showConfig ? "text-primary" : "text-foreground hover:text-primary"}`}>
+          <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2}>
             <circle cx="12" cy="12" r="3" />
             <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5h0a1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
           </svg>
+          <span className="label-eyebrow text-[10px]">Config</span>
         </button>
-      </div>
 
-      {showConfig && (
-        <div className="pointer-events-auto absolute right-4 top-40 hud-panel-strong w-60 p-3 text-xs space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="label-eyebrow">Map config</span>
-            <button onClick={() => setShowConfig(false)} className="text-muted-foreground hover:text-foreground">×</button>
+        {showConfig && (
+          <div className="mt-2 hud-panel-strong w-64 p-3 text-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="label-eyebrow">Layers</span>
+              <button onClick={() => setShowConfig(false)} className="text-muted-foreground hover:text-foreground">×</button>
+            </div>
+            <div className="flex flex-col gap-1">
+              <LayerToggle label="Trails" active={controls.showTrails} onChange={controls.setShowTrails} />
+              <LayerToggle label="Ring" active={controls.showRing} onChange={controls.setShowRing} />
+              <LayerToggle label="Labels" active={controls.showLabels} onChange={controls.setShowLabels} />
+            </div>
+            <div className="border-t border-border pt-2 space-y-3">
+              <span className="label-eyebrow block">Map config</span>
+              <CfgSlider label="Trail width" value={cfg.trailWidth} min={0.5} max={6} step={0.5}
+                onChange={(v) => onCfg({ ...cfg, trailWidth: v })} />
+              <CfgSlider label="Label size" value={cfg.labelSize} min={8} max={40} step={1}
+                onChange={(v) => onCfg({ ...cfg, labelSize: v })} />
+              <CfgSlider label="Label bg" value={cfg.labelBg} min={0} max={1} step={0.05}
+                onChange={(v) => onCfg({ ...cfg, labelBg: v })} />
+            </div>
+            <div className="border-t border-border pt-2 space-y-3">
+              <CfgSlider label="Dwell window (s)" value={cfg.dwellWindow} min={10} max={120} step={5}
+                onChange={(v) => onCfg({ ...cfg, dwellWindow: v })} />
+              <CfgSlider label="Dwell radius" value={cfg.dwellRadius} min={0.01} max={0.12} step={0.005}
+                onChange={(v) => onCfg({ ...cfg, dwellRadius: v })} />
+            </div>
           </div>
-          <CfgSlider label="Trail width" value={cfg.trailWidth} min={0.5} max={6} step={0.5}
-            onChange={(v) => onCfg({ ...cfg, trailWidth: v })} />
-          <CfgSlider label="Label size" value={cfg.labelSize} min={8} max={40} step={1}
-            onChange={(v) => onCfg({ ...cfg, labelSize: v })} />
-          <CfgSlider label="Label bg" value={cfg.labelBg} min={0} max={1} step={0.05}
-            onChange={(v) => onCfg({ ...cfg, labelBg: v })} />
-          <div className="border-t border-border pt-2 space-y-3">
-            <CfgSlider label="Dwell window (s)" value={cfg.dwellWindow} min={10} max={120} step={5}
-              onChange={(v) => onCfg({ ...cfg, dwellWindow: v })} />
-            <CfgSlider label="Dwell radius" value={cfg.dwellRadius} min={0.01} max={0.12} step={0.005}
-              onChange={(v) => onCfg({ ...cfg, dwellRadius: v })} />
-          </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Zoom controls */}
       <div className="pointer-events-auto absolute right-4 bottom-4 hud-panel-strong flex flex-col overflow-hidden text-xs">
@@ -845,16 +788,26 @@ function Timeline({
 
       <div className="px-4 pb-3">
         <div ref={trackRef} onClick={onTrack} className="relative h-9 cursor-pointer rounded-sm border border-border bg-background">
-          {ringPhases.map((p, i) => (
-            <div key={i} className="absolute top-0 h-full border-r border-border/60"
-              style={{
-                left: `${(p.startSec / duration) * 100}%`,
-                width: `${((p.endSec - p.startSec) / duration) * 100}%`,
-                background: `rgba(255,91,18,${0.04 + i * 0.025})`,
-              }}>
-              <div className="text-mono absolute left-1 top-0.5 text-[9px] uppercase text-muted-foreground/80">R{i + 1}</div>
-            </div>
-          ))}
+          {ringSegments.map((seg, i) => {
+            const isClosing = seg.kind === "Closing";
+            const intensity = 0.04 + seg.phaseIndex * 0.025;
+            return (
+              <div key={i}
+                className={`absolute top-0 h-full ${isClosing ? "border-l border-r border-primary/40" : "border-r border-border/60"}`}
+                style={{
+                  left: `${(seg.startSec / duration) * 100}%`,
+                  width: `${((seg.endSec - seg.startSec) / duration) * 100}%`,
+                  background: isClosing
+                    ? `repeating-linear-gradient(45deg, rgba(255,91,18,${intensity + 0.12}) 0 4px, rgba(255,91,18,${intensity + 0.04}) 4px 8px)`
+                    : `rgba(255,91,18,${intensity})`,
+                }}>
+                <div className={`text-mono absolute left-1 top-0.5 text-[9px] uppercase tracking-wider ${
+                  isClosing ? "text-primary font-bold" : "text-muted-foreground/80"}`}>
+                  R{seg.phaseIndex + 1} {seg.kind}
+                </div>
+              </div>
+            );
+          })}
           {events.map((e, i) => (
             <div key={i} className="absolute top-0 h-full w-px"
               style={{ left: `${(e.t / duration) * 100}%`, backgroundColor: eventColor(e.type), opacity: 0.7 }}
