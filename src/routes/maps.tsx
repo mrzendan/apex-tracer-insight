@@ -68,7 +68,7 @@ function MapsGrid() {
                 className="hud-panel group overflow-hidden text-left transition hover:border-primary/50"
               >
                 <div className="aspect-video w-full overflow-hidden bg-surface-2">
-                  <img src={mp.image} alt={mp.name} className="h-full w-full object-cover transition group-hover:scale-105" />
+                  <img src={mp.image} alt={mp.name} loading="lazy" decoding="async" className="h-full w-full object-cover transition group-hover:scale-105" />
                 </div>
                 <div className="flex items-center justify-between border-t border-border px-3 py-2">
                   <div className="text-xs font-semibold">{mp.name}</div>
