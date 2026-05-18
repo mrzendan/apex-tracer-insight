@@ -38,7 +38,7 @@ function MatchesPage() {
                 className="hud-panel hover-lift group overflow-hidden">
                 {mp?.image && (
                   <div className="relative h-28 overflow-hidden">
-                    <img src={mp.image} alt={mp.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                    <img src={mp.image} alt={mp.name} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
                     <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/40 to-transparent" />
                   </div>
                 )}
