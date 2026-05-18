@@ -242,6 +242,7 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
             mapName={apexMap.name}
             aliveTeams={aliveTeams}
             totalKills={totalKills}
+            duration={match.durationSec}
             ringIndex={ringPhases.findIndex((p) => time >= p.startSec && time <= p.endSec)}
             ringCount={ringPhases.length}
             controls={{ showTrails, setShowTrails, showRing, setShowRing, showLabels, setShowLabels }}
@@ -303,11 +304,11 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
 function eventColor(type: string) {
   switch (type) {
     case "kill":
-    case "wipe":  return "#ff5b12";
-    case "knock": return "#fde68a";
-    case "ring":  return "#22c4f5";
-    case "care":  return "#86efac";
-    default:      return "#94a3b8";
+    case "wipe":  return "#ef4444"; // danger
+    case "knock": return "#fbbf24"; // warning
+    case "ring":  return "#22c4f5"; // info
+    case "care":  return "#34d399"; // success
+    default:      return "#94a3b8"; // neutral
   }
 }
 
@@ -443,6 +444,69 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
   );
 }
 
+/* ---------- CURRENT STATE block (bottom-left of map) ---------- */
+function CurrentState({
+  aliveTeams, totalTeams, totalKills, ringIndex, ringCount, time, duration,
+}: {
+  aliveTeams: number; totalTeams: number; totalKills: number;
+  ringIndex: number; ringCount: number; time: number; duration: number;
+}) {
+  // Resolve the active ring segment (CD vs Closing) for the phase headline.
+  const seg = ringSegments.find(s => time >= s.startSec && time <= s.endSec)
+    ?? ringSegments[ringSegments.length - 1];
+  const phaseN = seg.phaseIndex + 1;
+  const isClosing = seg.kind === "Closing";
+  // Color the phase chip per the design language:
+  //   Closing = danger (red); CD = info (cyan).
+  const phaseColor = isClosing ? "text-destructive" : "text-cyan";
+  const phaseDot   = isClosing ? "bg-destructive" : "bg-cyan";
+  return (
+    <div className="pointer-events-none absolute bottom-4 left-4">
+      <div className="hud-panel-strong min-w-[220px] px-4 py-3">
+        <div className="label-eyebrow mb-2 text-[9px]">Текущее состояние</div>
+        <div className="space-y-1.5">
+          <Row
+            label="Живы"
+            value={`${aliveTeams}/${totalTeams}`}
+            dotClass="bg-success"
+          />
+          <Row
+            label="Убийств"
+            value={totalKills.toString()}
+            dotClass="bg-destructive"
+          />
+          <Row
+            label="Кольцо"
+            value={`${Math.max(1, phaseN)}/${ringCount}`}
+            dotClass="bg-cyan"
+          />
+          <Row
+            label="Время"
+            value={`${formatTime(time)} / ${formatTime(duration)}`}
+            dotClass="bg-primary"
+          />
+        </div>
+        <div className="mt-2.5 flex items-center gap-2 border-t border-border pt-2">
+          <span className={`h-2 w-2 shrink-0 rounded-full ${phaseDot} ${isClosing ? "animate-pulse" : ""}`} />
+          <span className={`text-mono text-xs font-bold uppercase tracking-wider ${phaseColor}`}>
+            Round {phaseN} — {seg.kind}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Row({ label, value, dotClass }: { label: string; value: string; dotClass: string }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${dotClass}`} />
+      <span className="label-eyebrow w-16 text-[9px]">{label}</span>
+      <span className="text-mono ml-auto text-sm font-bold tabular-nums text-foreground">{value}</span>
+    </div>
+  );
+}
+
 type Cfg = { trailWidth: number; labelSize: number; labelBg: number; dwellWindow: number; dwellRadius: number };
 type Dwell = { x: number; y: number; tStart: number; tEnd: number };
 
@@ -450,7 +514,7 @@ type Dwell = { x: number; y: number; tStart: number; tEnd: number };
 function MapCanvas({
   time, ring, trajectories, dwellsByTeam, cfg, onCfg, showConfig, setShowConfig,
   selectedTeams, hoverTeam, showTrails, showLabels,
-  mapImage, mapName, aliveTeams, totalKills, ringIndex, ringCount, controls,
+  mapImage, mapName, aliveTeams, totalKills, duration, ringIndex, ringCount, controls,
   focusRequest, onEventClick,
 }: {
   time: number; ring: RingPhase | null;
@@ -463,7 +527,7 @@ function MapCanvas({
   selectedTeams: Set<string>; hoverTeam: string | null;
   showTrails: boolean; showLabels: boolean;
   mapImage: string; mapName: string;
-  aliveTeams: number; totalKills: number;
+  aliveTeams: number; totalKills: number; duration: number;
   ringIndex: number; ringCount: number;
   controls: {
     showTrails: boolean; setShowTrails: (v: boolean) => void;
@@ -577,8 +641,8 @@ function MapCanvas({
                     strokeDasharray={`${4 / view.scale} ${4 / view.scale}`} />
                 ))}
                 <circle cx={ring.cx * 1000} cy={ring.cy * 1000} r={ring.r * 1000}
-                  fill="rgba(255,91,18,0.1)" stroke="rgba(255,91,18,1)" strokeWidth={3.5 / view.scale} strokeDasharray={`${10 / view.scale} ${5 / view.scale}`} />
-                <circle cx={ring.cx * 1000} cy={ring.cy * 1000} r={3 / view.scale} fill="#ff5b12" />
+                  fill="rgba(34,196,245,0.08)" stroke="#22c4f5" strokeWidth={3.5 / view.scale} strokeDasharray={`${10 / view.scale} ${5 / view.scale}`} />
+                <circle cx={ring.cx * 1000} cy={ring.cy * 1000} r={3 / view.scale} fill="#22c4f5" />
               </>
             )}
 
@@ -732,11 +796,15 @@ function MapCanvas({
         {(view.scale * 100).toFixed(0)}%
       </div>
 
-      <div className="pointer-events-none absolute bottom-4 left-4 flex gap-2">
-        <Stat label="Alive" value={`${aliveTeams}/${teams.length}`} accent />
-        <Stat label="Kills" value={totalKills.toString()} />
-        <Stat label="Ring" value={`${ringIndex + 1 || ringCount}/${ringCount}`} />
-      </div>
+      <CurrentState
+        aliveTeams={aliveTeams}
+        totalTeams={teams.length}
+        totalKills={totalKills}
+        ringIndex={ringIndex}
+        ringCount={ringCount}
+        time={time}
+        duration={duration}
+      />
     </div>
   );
 }
@@ -793,16 +861,16 @@ function Timeline({
             const intensity = 0.04 + seg.phaseIndex * 0.025;
             return (
               <div key={i}
-                className={`absolute top-0 h-full ${isClosing ? "border-l border-r border-primary/40" : "border-r border-border/60"}`}
+                className={`absolute top-0 h-full ${isClosing ? "border-l border-r border-destructive/50" : "border-r border-border/60"}`}
                 style={{
                   left: `${(seg.startSec / duration) * 100}%`,
                   width: `${((seg.endSec - seg.startSec) / duration) * 100}%`,
                   background: isClosing
-                    ? `repeating-linear-gradient(45deg, rgba(255,91,18,${intensity + 0.12}) 0 4px, rgba(255,91,18,${intensity + 0.04}) 4px 8px)`
-                    : `rgba(255,91,18,${intensity})`,
+                    ? `repeating-linear-gradient(45deg, rgba(239,68,68,${intensity + 0.18}) 0 4px, rgba(239,68,68,${intensity + 0.05}) 4px 8px)`
+                    : `rgba(34,196,245,${intensity})`,
                 }}>
                 <div className={`text-mono absolute left-1 top-0.5 text-[9px] uppercase tracking-wider ${
-                  isClosing ? "text-primary font-bold" : "text-muted-foreground/80"}`}>
+                  isClosing ? "text-destructive font-bold" : "text-muted-foreground/80"}`}>
                   R{seg.phaseIndex + 1} {seg.kind}
                 </div>
               </div>
