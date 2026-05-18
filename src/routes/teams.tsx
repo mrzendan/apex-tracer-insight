@@ -23,11 +23,13 @@ function TeamsPage() {
         <span className="text-mono text-[10px] text-muted-foreground">/ Команды</span>
         <div className="ml-auto flex items-center gap-2">
           <ThemeToggle compact />
-          <Link to="/" className="rounded-sm border border-border-strong bg-surface-2 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider hover:bg-muted">← На главную</Link>
         </div>
       </header>
       <div className="mx-auto max-w-7xl p-6">
-        <h1 className="mb-4 text-xl font-bold">Команды</h1>
+        <div className="mb-4 flex items-center gap-3">
+          <Link to="/" aria-label="Назад" className="flex h-8 w-8 items-center justify-center rounded-sm border border-border-strong bg-surface-2 text-sm hover:bg-muted">←</Link>
+          <h1 className="text-xl font-bold">Команды</h1>
+        </div>
         <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {[...teams].sort((a, b) => a.placement - b.placement).map((team) => (
             <Link key={team.id} to="/teams/$teamId" params={{ teamId: team.id }}
