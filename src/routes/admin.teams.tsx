@@ -161,13 +161,38 @@ function TeamDialog({ row, isNew, onChange, onCancel, onSave }: {
 }) {
   const set = <K extends keyof Team>(k: K, v: Team[K]) => onChange({ ...row, [k]: v });
   const base = "mt-1 w-full rounded-sm border border-border bg-background px-2 py-1.5 text-sm";
+  const readFile = (file: File | undefined, key: "logo" | "logoLight" | "logoDark") => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => set(key, String(reader.result));
+    reader.readAsDataURL(file);
+  };
+  const logoField = (key: "logo" | "logoLight" | "logoDark", label: string, hint: string) => (
+    <div>
+      <label className="label-eyebrow text-xs">{label}</label>
+      <input className={base + " text-mono text-xs"} placeholder="https://... or upload below" value={row[key] ?? ""} onChange={(e) => set(key, e.target.value)} />
+      <div className="mt-2 flex items-center gap-2">
+        <TeamLogo team={{ ...row, logo: row[key] ?? row.logo, logoLight: key === "logoLight" ? row[key] : row.logoLight, logoDark: key === "logoDark" ? row[key] : row.logoDark }} size={36} />
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => readFile(e.target.files?.[0], key)}
+          className="text-xs"
+        />
+        {row[key] && (
+          <button type="button" onClick={() => set(key, "")} className="rounded-sm border border-border bg-surface px-2 py-1 text-xs hover:bg-muted">Clear</button>
+        )}
+      </div>
+      <div className="mt-1 text-xs text-muted-foreground">{hint}</div>
+    </div>
+  );
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onCancel}>
-      <div className="hud-panel w-full max-w-md bg-surface" onClick={(e) => e.stopPropagation()}>
+      <div className="hud-panel w-full max-w-lg bg-surface" onClick={(e) => e.stopPropagation()}>
         <div className="border-b border-border px-4 py-3">
           <h2 className="text-sm font-bold uppercase tracking-wider">{isNew ? "New team" : "Edit team"}</h2>
         </div>
-        <div className="space-y-3 p-4">
+        <div className="max-h-[70vh] space-y-3 overflow-auto p-4">
           <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="label-eyebrow text-xs">Tag</label>
@@ -178,13 +203,10 @@ function TeamDialog({ row, isNew, onChange, onCancel, onSave }: {
               <input className={base} value={row.name} onChange={(e) => set("name", e.target.value)} />
             </div>
           </div>
-          <div>
-            <label className="label-eyebrow text-xs">Logo URL</label>
-            <input className={base + " text-mono text-xs"} placeholder="https://..." value={row.logo ?? ""} onChange={(e) => set("logo", e.target.value)} />
-            <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-              Preview: <TeamLogo team={{ ...row, logo: row.logo ?? "" }} size={36} />
-              {!row.logo && <span>Site logo fallback in use</span>}
-            </div>
+          {logoField("logo", "Logo (default)", "Used when a theme-specific variant is missing.")}
+          <div className="grid grid-cols-2 gap-3">
+            {logoField("logoDark", "Logo · dark theme", "Shown on dark / OLED themes.")}
+            {logoField("logoLight", "Logo · light theme", "Shown on light theme.")}
           </div>
         </div>
         <div className="flex justify-end gap-2 border-t border-border bg-surface-2 px-4 py-3">
