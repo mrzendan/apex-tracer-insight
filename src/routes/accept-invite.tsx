@@ -63,7 +63,7 @@ function AcceptInvitePage() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="hud-panel w-full max-w-sm space-y-4 p-6">
         <div>
-          <div className="label-eyebrow text-[10px]">Apex Stats</div>
+          <div className="label-eyebrow text-xs">Apex Stats</div>
           <h1 className="mt-1 text-lg font-bold">Accept invite</h1>
         </div>
 
@@ -89,12 +89,12 @@ function AcceptInvitePage() {
         {status.kind === "ok" && (
           <form onSubmit={onSubmit} className="space-y-3">
             <div className="rounded-sm border border-border bg-surface-2 p-3 text-xs">
-              <div className="label-eyebrow text-[10px]">Invited as</div>
+              <div className="label-eyebrow text-xs">Invited as</div>
               <div className="mt-1 font-mono">{status.email}</div>
               <div className="mt-1 text-muted-foreground">role: {status.role}</div>
             </div>
             <div className="space-y-1">
-              <label className="label-eyebrow text-[10px]">Display name (optional)</label>
+              <label className="label-eyebrow text-xs">Display name (optional)</label>
               <input
                 type="text"
                 value={displayName}
@@ -103,7 +103,7 @@ function AcceptInvitePage() {
               />
             </div>
             <div className="space-y-1">
-              <label className="label-eyebrow text-[10px]">Password</label>
+              <label className="label-eyebrow text-xs">Password</label>
               <input
                 type="password"
                 required

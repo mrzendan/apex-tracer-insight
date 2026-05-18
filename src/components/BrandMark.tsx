@@ -11,7 +11,7 @@ export function BrandMark({ subtitle }: { subtitle?: string }) {
       </div>
       <div className="leading-tight">
         <div className="text-sm font-bold tracking-tight">APEX STATS</div>
-        {subtitle ? <div className="label-eyebrow text-[9px]">{subtitle}</div> : null}
+        {subtitle ? <div className="label-eyebrow text-xs">{subtitle}</div> : null}
       </div>
     </Link>
   );

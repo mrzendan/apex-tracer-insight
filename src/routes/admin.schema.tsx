@@ -357,13 +357,13 @@ function SchemaEditor() {
     <div className="flex h-full flex-col overflow-hidden">
       <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-surface px-4">
         <h1 className="text-sm font-bold uppercase tracking-wider">Schema editor</h1>
-        <span className="text-mono text-[10px] text-muted-foreground">{doc.blocks.length} tables · {doc.relations.length} relations</span>
+        <span className="text-mono text-xs text-muted-foreground">{doc.blocks.length} tables · {doc.relations.length} relations</span>
         <div className="ml-2 flex items-center gap-1 rounded-sm border border-border bg-surface-2 p-0.5">
           {MODULE_PRESETS.map((p) => {
             const eq = p.mods.length === prefs.modules.length && p.mods.every((m) => activeModules.has(m));
             return (
               <button key={p.id} onClick={() => setPrefs((pp) => ({ ...pp, modules: [...p.mods] }))}
-                className={`px-2 py-0.5 text-[10px] uppercase tracking-wider rounded-sm ${eq ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"}`}>
+                className={`px-2 py-0.5 text-xs uppercase tracking-wider rounded-sm ${eq ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"}`}>
                 {p.label}
               </button>
             );
@@ -374,7 +374,7 @@ function SchemaEditor() {
             const on = activeModules.has(k);
             return (
               <button key={k} onClick={() => toggleModule(k)}
-                className={`rounded-sm border px-1.5 py-0.5 text-[10px] uppercase tracking-wider ${on ? "border-primary/40 bg-primary/15 text-primary" : "border-border bg-surface-2 text-muted-foreground hover:text-foreground"}`}>
+                className={`rounded-sm border px-1.5 py-0.5 text-xs uppercase tracking-wider ${on ? "border-primary/40 bg-primary/15 text-primary" : "border-border bg-surface-2 text-muted-foreground hover:text-foreground"}`}>
                 {MODULE_LABELS[k]}
               </button>
             );
@@ -384,25 +384,25 @@ function SchemaEditor() {
           <div className="flex items-center gap-1 rounded-sm border border-border bg-surface-2 p-0.5">
             {(["color", "mono"] as Theme[]).map((t) => (
               <button key={t} onClick={() => setPrefs((p) => ({ ...p, theme: t }))}
-                className={`px-2 py-0.5 text-[10px] uppercase tracking-wider rounded-sm ${prefs.theme === t ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"}`}>
+                className={`px-2 py-0.5 text-xs uppercase tracking-wider rounded-sm ${prefs.theme === t ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"}`}>
                 {t === "color" ? "Color" : "B/W"}
               </button>
             ))}
           </div>
           <select value={prefs.arrow} onChange={(e) => setPrefs((p) => ({ ...p, arrow: e.target.value as ArrowStyle }))}
-            className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-[10px] uppercase tracking-wider">
+            className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs uppercase tracking-wider">
             <option value="triangle">▶ Triangle</option>
             <option value="crowfoot">⋈ Crow's foot</option>
             <option value="circle">● Circle</option>
             <option value="diamond">◆ Diamond</option>
             <option value="none">— None</option>
           </select>
-          <button onClick={addBlock} className="rounded-sm border border-primary/40 bg-primary/15 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-primary hover:bg-primary/25">+ Table</button>
-          <button onClick={() => { setDoc(seed()); setSelected(null); setSelectedRel(null); }} className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-[10px] uppercase tracking-wider hover:bg-muted">Reset to proposed</button>
-          <div className="text-mono ml-2 text-[10px] text-muted-foreground">zoom {(zoom * 100).toFixed(0)}%</div>
-          <button onClick={() => setZoom((z) => Math.min(2, z * 1.1))} className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-[10px] hover:bg-muted">+</button>
-          <button onClick={() => setZoom((z) => Math.max(0.4, z * 0.9))} className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-[10px] hover:bg-muted">−</button>
-          <button onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }} className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-[10px] hover:bg-muted">Fit</button>
+          <button onClick={addBlock} className="rounded-sm border border-primary/40 bg-primary/15 px-2 py-1 text-xs font-bold uppercase tracking-wider text-primary hover:bg-primary/25">+ Table</button>
+          <button onClick={() => { setDoc(seed()); setSelected(null); setSelectedRel(null); }} className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted">Reset to proposed</button>
+          <div className="text-mono ml-2 text-xs text-muted-foreground">zoom {(zoom * 100).toFixed(0)}%</div>
+          <button onClick={() => setZoom((z) => Math.min(2, z * 1.1))} className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs hover:bg-muted">+</button>
+          <button onClick={() => setZoom((z) => Math.max(0.4, z * 0.9))} className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs hover:bg-muted">−</button>
+          <button onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }} className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs hover:bg-muted">Fit</button>
         </div>
       </header>
 
@@ -508,7 +508,7 @@ function SchemaEditor() {
           </svg>
 
           {connect && (
-            <div className="absolute left-1/2 top-3 -translate-x-1/2 rounded-sm border border-primary/40 bg-primary/15 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-primary">
+            <div className="absolute left-1/2 top-3 -translate-x-1/2 rounded-sm border border-primary/40 bg-primary/15 px-2 py-1 text-xs font-bold uppercase tracking-wider text-primary">
               Click another field's port to connect · <button className="underline" onClick={() => setConnect(null)}>cancel</button>
             </div>
           )}
@@ -516,48 +516,48 @@ function SchemaEditor() {
 
         {/* Inspector */}
         <aside className="flex w-[300px] shrink-0 flex-col border-l border-border bg-surface">
-          <div className="label-eyebrow border-b border-border px-3 py-2 text-[10px]">Inspector</div>
+          <div className="label-eyebrow border-b border-border px-3 py-2 text-xs">Inspector</div>
           <div className="flex-1 overflow-y-auto p-3 text-xs">
             {!selected && !selRel && <div className="text-muted-foreground">Select a table, field, or relation.</div>}
 
             {selRel && (
               <div className="space-y-2">
-                <div className="label-eyebrow text-[10px]">Relation</div>
-                <div className="text-mono rounded-sm border border-border bg-background p-2 text-[10px]">
+                <div className="label-eyebrow text-xs">Relation</div>
+                <div className="text-mono rounded-sm border border-border bg-background p-2 text-xs">
                   {blocksById[selRel.fromBlock]?.name}.{blocksById[selRel.fromBlock]?.fields.find((f) => f.id === selRel.fromField)?.name}
                   <br />→ {blocksById[selRel.toBlock]?.name}.{blocksById[selRel.toBlock]?.fields.find((f) => f.id === selRel.toField)?.name}
                 </div>
                 <div className="flex gap-1">
                   {(["1-1", "1-N", "N-M"] as RelKind[]).map((k) => (
                     <button key={k} onClick={() => setRelKind(selRel.id, k)}
-                      className={`flex-1 rounded-sm border px-2 py-1 text-[10px] ${selRel.kind === k ? "border-primary/40 bg-primary/15 text-primary" : "border-border bg-background hover:bg-muted"}`}>{k}</button>
+                      className={`flex-1 rounded-sm border px-2 py-1 text-xs ${selRel.kind === k ? "border-primary/40 bg-primary/15 text-primary" : "border-border bg-background hover:bg-muted"}`}>{k}</button>
                   ))}
                 </div>
-                <button onClick={() => { deleteRel(selRel.id); setSelectedRel(null); }} className="w-full rounded-sm border border-destructive/40 bg-destructive/10 px-2 py-1 text-[10px] uppercase text-destructive hover:bg-destructive/20">Delete relation</button>
+                <button onClick={() => { deleteRel(selRel.id); setSelectedRel(null); }} className="w-full rounded-sm border border-destructive/40 bg-destructive/10 px-2 py-1 text-xs uppercase text-destructive hover:bg-destructive/20">Delete relation</button>
               </div>
             )}
 
             {selBlock && (
               <div className="space-y-3">
                 <div>
-                  <div className="label-eyebrow mb-1 text-[10px]">Table</div>
+                  <div className="label-eyebrow mb-1 text-xs">Table</div>
                   <input value={selBlock.name} onChange={(e) => renameBlock(selBlock.id, e.target.value)} className="w-full rounded-sm border border-border bg-background px-2 py-1 font-mono text-xs" />
                 </div>
                 <div>
-                  <div className="label-eyebrow mb-1 text-[10px]">Module</div>
+                  <div className="label-eyebrow mb-1 text-xs">Module</div>
                   <div className="flex flex-wrap gap-1">
                     {ALL_MODULES.map((k) => (
                       <button key={k} onClick={() => setBlockModule(selBlock.id, k)}
-                        className={`rounded-sm border px-1.5 py-0.5 text-[10px] uppercase tracking-wider ${selBlock.module === k ? "border-primary/40 bg-primary/15 text-primary" : "border-border bg-background hover:bg-muted"}`}>
+                        className={`rounded-sm border px-1.5 py-0.5 text-xs uppercase tracking-wider ${selBlock.module === k ? "border-primary/40 bg-primary/15 text-primary" : "border-border bg-background hover:bg-muted"}`}>
                         {MODULE_LABELS[k]}
                       </button>
                     ))}
                   </div>
                 </div>
                 <div>
-                  <div className="label-eyebrow mb-1 flex items-center justify-between text-[10px]">
+                  <div className="label-eyebrow mb-1 flex items-center justify-between text-xs">
                     <span>Fields ({selBlock.fields.length})</span>
-                    <button onClick={() => addField(selBlock.id)} className="rounded-sm border border-border bg-background px-1.5 py-0.5 text-[10px] hover:bg-muted">+ field</button>
+                    <button onClick={() => addField(selBlock.id)} className="rounded-sm border border-border bg-background px-1.5 py-0.5 text-xs hover:bg-muted">+ field</button>
                   </div>
                   <ul className="space-y-1">
                     {selBlock.fields.map((f) => {
@@ -565,12 +565,12 @@ function SchemaEditor() {
                       return (
                         <li key={f.id} className={`rounded-sm border p-1.5 ${isSel ? "border-primary/40 bg-primary/5" : "border-border bg-background"}`} onClick={() => setSelected({ blockId: selBlock.id, fieldId: f.id })}>
                           <div className="flex items-center gap-1">
-                            <button onClick={(e) => { e.stopPropagation(); togglePk(selBlock.id, f.id); }} title="Primary key" className={`text-mono w-5 rounded-sm border px-1 py-0.5 text-[10px] ${f.pk ? "border-primary/40 bg-primary/15 text-primary" : "border-border bg-surface-2 text-muted-foreground"}`}>★</button>
-                            <input value={f.name} onChange={(e) => renameField(selBlock.id, f.id, e.target.value)} className="min-w-0 flex-1 rounded-sm border border-border bg-surface-2 px-1.5 py-0.5 font-mono text-[11px]" />
-                            <select value={f.type} onChange={(e) => setFieldType(selBlock.id, f.id, e.target.value as FieldType)} className="rounded-sm border border-border bg-surface-2 px-1 py-0.5 font-mono text-[10px]">
+                            <button onClick={(e) => { e.stopPropagation(); togglePk(selBlock.id, f.id); }} title="Primary key" className={`text-mono w-5 rounded-sm border px-1 py-0.5 text-xs ${f.pk ? "border-primary/40 bg-primary/15 text-primary" : "border-border bg-surface-2 text-muted-foreground"}`}>★</button>
+                            <input value={f.name} onChange={(e) => renameField(selBlock.id, f.id, e.target.value)} className="min-w-0 flex-1 rounded-sm border border-border bg-surface-2 px-1.5 py-0.5 font-mono text-xs" />
+                            <select value={f.type} onChange={(e) => setFieldType(selBlock.id, f.id, e.target.value as FieldType)} className="rounded-sm border border-border bg-surface-2 px-1 py-0.5 font-mono text-xs">
                               {(["uuid", "text", "int", "float", "bool", "timestamp", "enum", "jsonb"] as FieldType[]).map((t) => <option key={t}>{t}</option>)}
                             </select>
-                            <button onClick={(e) => { e.stopPropagation(); removeField(selBlock.id, f.id); }} className="rounded-sm border border-destructive/40 bg-destructive/10 px-1 py-0.5 text-[10px] text-destructive hover:bg-destructive/20">×</button>
+                            <button onClick={(e) => { e.stopPropagation(); removeField(selBlock.id, f.id); }} className="rounded-sm border border-destructive/40 bg-destructive/10 px-1 py-0.5 text-xs text-destructive hover:bg-destructive/20">×</button>
                           </div>
                         </li>
                       );
@@ -578,17 +578,17 @@ function SchemaEditor() {
                   </ul>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => deleteBlock(selBlock.id)} className="flex-1 rounded-sm border border-destructive/40 bg-destructive/10 px-2 py-1 text-[10px] uppercase text-destructive hover:bg-destructive/20">Delete table</button>
+                  <button onClick={() => deleteBlock(selBlock.id)} className="flex-1 rounded-sm border border-destructive/40 bg-destructive/10 px-2 py-1 text-xs uppercase text-destructive hover:bg-destructive/20">Delete table</button>
                 </div>
                 {selField && (
-                  <div className="rounded-sm border border-border bg-background p-2 text-[10px] text-muted-foreground">
+                  <div className="rounded-sm border border-border bg-background p-2 text-xs text-muted-foreground">
                     Tip: drag from the port (●) on a field row to connect to another field.
                   </div>
                 )}
               </div>
             )}
           </div>
-          <div className="border-t border-border p-2 text-[10px] text-muted-foreground">
+          <div className="border-t border-border p-2 text-xs text-muted-foreground">
             Drag canvas to pan · Ctrl/⌘+wheel to zoom · drag table header to move · click a port (●) then another to connect.
           </div>
         </aside>

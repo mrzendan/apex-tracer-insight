@@ -86,16 +86,16 @@ function MapDetail() {
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-surface px-6">
-        <button onClick={() => navigate({ to: "/admin/maps" })} className="text-mono rounded-sm border border-border bg-surface-2 px-2 py-1 text-[10px] uppercase tracking-wider hover:bg-muted">← Maps</button>
+        <button onClick={() => navigate({ to: "/admin/maps" })} className="text-mono rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted">← Maps</button>
         <h1 className="text-sm font-bold uppercase tracking-wider">{map.name}</h1>
-        <span className="text-[10px] text-muted-foreground">{mapMatches.length} matches · {mapTournaments.length} tournaments</span>
+        <span className="text-xs text-muted-foreground">{mapMatches.length} matches · {mapTournaments.length} tournaments</span>
       </header>
 
       <div className="flex-1 overflow-auto p-6">
         <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
           <div className="hud-panel p-3">
             <div className="mb-2 flex items-center justify-between">
-              <div className="label-eyebrow text-[10px]">Heat-map · {teams.find((t) => t.id === teamId)?.tag ?? "—"}</div>
+              <div className="label-eyebrow text-xs">Heat-map · {teams.find((t) => t.id === teamId)?.tag ?? "—"}</div>
               <TeamLogo team={teams.find((t) => t.id === teamId) ?? teams[0]} size={20} />
             </div>
             <div className="relative w-full overflow-hidden rounded-sm border border-border bg-surface-2">
@@ -124,7 +124,7 @@ function MapDetail() {
 
           <div className="space-y-4">
             <div className="hud-panel p-3">
-              <div className="label-eyebrow mb-2 text-[10px]">Tournaments used ({mapTournaments.length})</div>
+              <div className="label-eyebrow mb-2 text-xs">Tournaments used ({mapTournaments.length})</div>
               {mapTournaments.length === 0 ? (
                 <div className="rounded-sm border border-dashed border-border px-2 py-3 text-center text-xs text-muted-foreground">No data</div>
               ) : (
@@ -132,7 +132,7 @@ function MapDetail() {
                   {mapTournaments.map((t) => (
                     <li key={t.id} className="rounded-sm border border-border bg-surface px-2 py-1.5 text-xs">
                       <div className="font-semibold">{t.name}</div>
-                      <div className="text-[10px] text-muted-foreground">Year {t.year} · {t.region} · {t.type}</div>
+                      <div className="text-xs text-muted-foreground">Year {t.year} · {t.region} · {t.type}</div>
                     </li>
                   ))}
                 </ul>
@@ -140,22 +140,22 @@ function MapDetail() {
             </div>
 
             <div className="hud-panel p-3">
-              <div className="label-eyebrow mb-2 text-[10px]">Heat-map filters</div>
+              <div className="label-eyebrow mb-2 text-xs">Heat-map filters</div>
               <div className="space-y-2 text-xs">
                 <div>
-                  <label className="label-eyebrow text-[10px]">Team</label>
+                  <label className="label-eyebrow text-xs">Team</label>
                   <select value={teamId} onChange={(e) => setTeamId(e.target.value)} className="mt-1 w-full rounded-sm border border-border bg-background px-2 py-1.5 text-sm">
                     {teams.map((t) => <option key={t.id} value={t.id}>{t.tag} · {t.name}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="label-eyebrow text-[10px]">Period</label>
+                  <label className="label-eyebrow text-xs">Period</label>
                   <div className="mt-1 grid grid-cols-3 gap-1">
                     {(["all", "year", "tournaments"] as Mode[]).map((m) => (
                       <button
                         key={m}
                         onClick={() => setMode(m)}
-                        className={`rounded-sm border px-2 py-1 text-[10px] uppercase tracking-wider ${mode === m ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface hover:bg-muted"}`}
+                        className={`rounded-sm border px-2 py-1 text-xs uppercase tracking-wider ${mode === m ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface hover:bg-muted"}`}
                       >
                         {m === "all" ? "All" : m === "year" ? "Year" : "Tournaments"}
                       </button>
@@ -164,7 +164,7 @@ function MapDetail() {
                 </div>
                 {mode === "year" && (
                   <div>
-                    <label className="label-eyebrow text-[10px]">Year</label>
+                    <label className="label-eyebrow text-xs">Year</label>
                     <select value={year} onChange={(e) => setYear(Number(e.target.value))} className="mt-1 w-full rounded-sm border border-border bg-background px-2 py-1.5 text-sm">
                       {allYears.map((y) => <option key={y} value={y}>Year {y}</option>)}
                     </select>
@@ -172,7 +172,7 @@ function MapDetail() {
                 )}
                 {mode === "tournaments" && (
                   <div className="space-y-1">
-                    <label className="label-eyebrow text-[10px]">Tournaments (multi-select)</label>
+                    <label className="label-eyebrow text-xs">Tournaments (multi-select)</label>
                     <div className="flex flex-wrap gap-1">
                       {mapTournaments.map((t) => {
                         const on = selectedTours.includes(t.id);
@@ -180,7 +180,7 @@ function MapDetail() {
                           <button
                             key={t.id}
                             onClick={() => setSelectedTours(on ? selectedTours.filter((x) => x !== t.id) : [...selectedTours, t.id])}
-                            className={`rounded-sm border px-1.5 py-0.5 text-[10px] ${on ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface hover:bg-muted"}`}
+                            className={`rounded-sm border px-1.5 py-0.5 text-xs ${on ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface hover:bg-muted"}`}
                           >
                             {t.name}
                           </button>
@@ -189,7 +189,7 @@ function MapDetail() {
                     </div>
                   </div>
                 )}
-                <div className="text-[10px] text-muted-foreground">
+                <div className="text-xs text-muted-foreground">
                   Sampling {filteredMatches.length} matches
                 </div>
               </div>

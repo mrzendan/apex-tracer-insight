@@ -13,9 +13,9 @@ function MapDetailPage() {
   return (
     <div className="flex h-screen flex-col bg-background text-foreground">
       <header className="sticky top-0 z-20 flex h-12 shrink-0 items-center gap-3 border-b border-border bg-surface/80 px-4 backdrop-blur">
-        <Link to="/" className="text-mono text-[10px] uppercase tracking-wider text-muted-foreground hover:text-foreground">APEX STATS</Link>
-        <span className="text-mono text-[10px] text-muted-foreground">/</span>
-        <Link to="/maps" className="text-mono text-[10px] uppercase tracking-wider text-muted-foreground hover:text-foreground">Карты</Link>
+        <Link to="/" className="text-mono text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground">APEX STATS</Link>
+        <span className="text-mono text-xs text-muted-foreground">/</span>
+        <Link to="/maps" className="text-mono text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground">Карты</Link>
         <div className="ml-auto"><ThemeToggle compact /></div>
       </header>
       <div className="min-h-0 flex-1">

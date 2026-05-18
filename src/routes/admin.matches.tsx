@@ -84,7 +84,7 @@ function MatchesAdmin() {
         <div className="hud-panel overflow-hidden">
           <table className="w-full text-sm">
             <thead className="border-b border-border bg-surface-2">
-              <tr className="label-eyebrow text-left text-[10px]">
+              <tr className="label-eyebrow text-left text-xs">
                 <th className="px-3 py-2 w-8"></th>
                 <th className="px-3 py-2 w-[120px]">ID</th>
                 <th className="px-3 py-2">Match</th>
@@ -138,14 +138,14 @@ function MatchesAdmin() {
                         <td colSpan={8} className="p-0">
                           <div className="grid gap-4 p-5 md:grid-cols-3">
                             <div className="hud-panel p-3">
-                              <div className="label-eyebrow mb-2 text-[10px]">Top 3 teams</div>
+                              <div className="label-eyebrow mb-2 text-xs">Top 3 teams</div>
                               <ol className="space-y-1.5">
                                 {topTeams.map((t, i) => (
                                   <li key={t.id} className="flex items-center gap-2 rounded-sm border border-border bg-surface px-2 py-1.5 text-xs">
-                                    <span className="w-5 text-mono text-[10px] text-muted-foreground">#{i + 1}</span>
+                                    <span className="w-5 text-mono text-xs text-muted-foreground">#{i + 1}</span>
                                     <TeamLogo team={t} size={22} />
                                     <span className="flex-1 truncate font-semibold">{t.tag} · {t.name}</span>
-                                    <span className="text-mono text-[10px] tabular-nums text-muted-foreground">{t.kills}K</span>
+                                    <span className="text-mono text-xs tabular-nums text-muted-foreground">{t.kills}K</span>
                                   </li>
                                 ))}
                               </ol>
@@ -155,31 +155,31 @@ function MatchesAdmin() {
                               </div>
                             </div>
                             <div className="hud-panel p-3">
-                              <div className="label-eyebrow mb-2 text-[10px]">Map order ({mapIds.length})</div>
+                              <div className="label-eyebrow mb-2 text-xs">Map order ({mapIds.length})</div>
                               <ol className="space-y-2">
                                 {mapIds.map((id, i) => {
                                   const mp = allMaps.find((x) => x.id === id);
                                   if (!mp) return null;
                                   return (
                                     <li key={`${id}-${i}`} className="flex items-center gap-3 rounded-sm border border-border bg-surface p-2">
-                                      <span className="text-mono text-[10px] text-muted-foreground">#{i + 1}</span>
+                                      <span className="text-mono text-xs text-muted-foreground">#{i + 1}</span>
                                       <img src={mp.image} alt={mp.name} className="h-10 w-14 rounded-sm object-cover" />
                                       <div className="flex-1 text-xs font-semibold">{mp.name}</div>
                                       <div className="flex flex-col gap-0.5">
                                         <button
                                           onClick={(e) => { e.stopPropagation(); if (i === 0) return; const next = [...mapIds]; [next[i - 1], next[i]] = [next[i], next[i - 1]]; updateMatch(m.id, { mapIds: next, mapId: next[0] }); }}
                                           disabled={i === 0}
-                                          className="rounded-sm border border-border bg-surface px-1 text-[10px] hover:bg-muted disabled:opacity-30"
+                                          className="rounded-sm border border-border bg-surface px-1 text-xs hover:bg-muted disabled:opacity-30"
                                         >▲</button>
                                         <button
                                           onClick={(e) => { e.stopPropagation(); if (i === mapIds.length - 1) return; const next = [...mapIds]; [next[i + 1], next[i]] = [next[i], next[i + 1]]; updateMatch(m.id, { mapIds: next, mapId: next[0] }); }}
                                           disabled={i === mapIds.length - 1}
-                                          className="rounded-sm border border-border bg-surface px-1 text-[10px] hover:bg-muted disabled:opacity-30"
+                                          className="rounded-sm border border-border bg-surface px-1 text-xs hover:bg-muted disabled:opacity-30"
                                         >▼</button>
                                       </div>
                                       <button
                                         onClick={(e) => { e.stopPropagation(); const next = mapIds.filter((_, idx) => idx !== i); if (next.length === 0) return; updateMatch(m.id, { mapIds: next, mapId: next[0] }); }}
-                                        className="rounded-sm border border-destructive/40 bg-surface px-1.5 text-[10px] text-destructive hover:bg-destructive/10"
+                                        className="rounded-sm border border-destructive/40 bg-surface px-1.5 text-xs text-destructive hover:bg-destructive/10"
                                       >×</button>
                                     </li>
                                   );
@@ -205,7 +205,7 @@ function MatchesAdmin() {
                               </div>
                             </div>
                             <div className="hud-panel p-3">
-                              <div className="label-eyebrow mb-2 text-[10px]">Teams ({matchTeams.length}) · POV VODs</div>
+                              <div className="label-eyebrow mb-2 text-xs">Teams ({matchTeams.length}) · POV VODs</div>
                               <ul className="grid grid-cols-2 gap-1">
                                 {matchTeams.map((t) => {
                                   const url = m.teamVods?.[t.id] ?? "";
@@ -249,7 +249,7 @@ function MatchesAdmin() {
               <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider"><YoutubeIcon className="h-4 w-4 text-primary" /> POV VOD link</h2>
             </div>
             <div className="p-4">
-              <label className="label-eyebrow text-[10px]">YouTube URL</label>
+              <label className="label-eyebrow text-xs">YouTube URL</label>
               <input autoFocus value={vodValue} onChange={(e) => setVodValue(e.target.value)} placeholder="https://youtube.com/watch?v=..." className="mt-1 w-full rounded-sm border border-border bg-background px-2 py-1.5 text-sm text-mono" />
             </div>
             <div className="flex justify-end gap-2 border-t border-border bg-surface-2 px-4 py-3">
@@ -280,31 +280,31 @@ function MatchDialog({ row, isNew, onChange, onCancel, onSave }: {
         </div>
         <div className="max-h-[70vh] space-y-3 overflow-auto p-4">
           <div>
-            <label className="label-eyebrow text-[10px]">Name</label>
+            <label className="label-eyebrow text-xs">Name</label>
             <input className={base} value={row.name} onChange={(e) => set("name", e.target.value)} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="label-eyebrow text-[10px]">Tournament</label>
+              <label className="label-eyebrow text-xs">Tournament</label>
               <select className={base} value={row.tournamentId} onChange={(e) => set("tournamentId", e.target.value)}>
                 {tournaments.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="label-eyebrow text-[10px]">Duration (sec)</label>
+              <label className="label-eyebrow text-xs">Duration (sec)</label>
               <input type="number" className={base} value={row.durationSec} onChange={(e) => set("durationSec", Number(e.target.value))} />
             </div>
           </div>
           <div>
-            <label className="label-eyebrow text-[10px]">VOD link</label>
+            <label className="label-eyebrow text-xs">VOD link</label>
             <input className={base + " text-mono text-xs"} placeholder="https://..." value={row.vodLink ?? ""} onChange={(e) => set("vodLink", e.target.value)} />
           </div>
           <div>
-            <label className="label-eyebrow text-[10px]">Map order</label>
+            <label className="label-eyebrow text-xs">Map order</label>
             <div className="mt-1 space-y-1">
               {mapIds.map((id, i) => (
                 <div key={i} className="flex items-center gap-2">
-                  <span className="text-mono text-[10px] w-6 text-muted-foreground">#{i + 1}</span>
+                  <span className="text-mono text-xs w-6 text-muted-foreground">#{i + 1}</span>
                   <select
                     className={base.replace("mt-1 ", "") + " flex-1"}
                     value={id}
@@ -317,14 +317,14 @@ function MatchDialog({ row, isNew, onChange, onCancel, onSave }: {
                   >
                     {allMaps.map((mp) => <option key={mp.id} value={mp.id}>{mp.name}</option>)}
                   </select>
-                  <button type="button" onClick={() => set("mapIds", mapIds.filter((_, idx) => idx !== i))} className="rounded-sm border border-border bg-surface px-2 py-1 text-[10px] hover:bg-muted">Remove</button>
+                  <button type="button" onClick={() => set("mapIds", mapIds.filter((_, idx) => idx !== i))} className="rounded-sm border border-border bg-surface px-2 py-1 text-xs hover:bg-muted">Remove</button>
                 </div>
               ))}
-              <button type="button" onClick={() => set("mapIds", [...mapIds, allMaps[0]?.id ?? ""])} className="rounded-sm border border-border bg-surface px-2 py-1 text-[10px] hover:bg-muted">+ Add map</button>
+              <button type="button" onClick={() => set("mapIds", [...mapIds, allMaps[0]?.id ?? ""])} className="rounded-sm border border-border bg-surface px-2 py-1 text-xs hover:bg-muted">+ Add map</button>
             </div>
           </div>
           <div>
-            <label className="label-eyebrow text-[10px]">Teams</label>
+            <label className="label-eyebrow text-xs">Teams</label>
             <div className="mt-1 flex flex-wrap gap-1">
               {teams.map((t) => {
                 const on = (row.teamIds ?? []).includes(t.id);
@@ -333,7 +333,7 @@ function MatchDialog({ row, isNew, onChange, onCancel, onSave }: {
                     key={t.id}
                     type="button"
                     onClick={() => set("teamIds", on ? (row.teamIds ?? []).filter((x) => x !== t.id) : [...(row.teamIds ?? []), t.id])}
-                    className={`flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[10px] ${on ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface text-muted-foreground hover:bg-muted"}`}
+                    className={`flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-xs ${on ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface text-muted-foreground hover:bg-muted"}`}
                   >
                     <TeamLogo team={t} size={14} /> {t.tag}
                   </button>
@@ -362,7 +362,7 @@ function YoutubeIcon({ className = "" }: { className?: string }) {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-sm border border-border bg-surface px-2 py-1">
-      <div className="label-eyebrow text-[9px]">{label}</div>
+      <div className="label-eyebrow text-xs">{label}</div>
       <div className="text-mono text-xs tabular-nums">{value}</div>
     </div>
   );

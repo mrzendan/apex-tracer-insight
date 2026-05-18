@@ -250,7 +250,7 @@ function CameraAdmin() {
       <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-surface px-6">
         <div className="flex items-center gap-3">
           <h1 className="text-sm font-bold uppercase tracking-wider">Camera tracking</h1>
-          <span className="text-mono text-[10px] text-muted-foreground">·</span>
+          <span className="text-mono text-xs text-muted-foreground">·</span>
           <select value={tournamentId} onChange={(e) => setTournamentId(e.target.value)}
             className="rounded-sm border border-border bg-background px-2 py-1 text-xs">
             {tournaments.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
@@ -273,9 +273,9 @@ function CameraAdmin() {
             className="rounded-sm border border-border bg-background px-2 py-1 text-xs">
             {presets.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
-          <button onClick={updateActivePreset} className="rounded-sm border border-border bg-surface px-2 py-1 text-[10px] uppercase tracking-wider hover:bg-muted">Update</button>
-          <button onClick={saveCurrentAsPreset} className="rounded-sm border border-border bg-surface px-2 py-1 text-[10px] uppercase tracking-wider hover:bg-muted">Save as…</button>
-          <button onClick={deleteActivePreset} className="rounded-sm border border-destructive/40 bg-surface px-2 py-1 text-[10px] uppercase tracking-wider text-destructive hover:bg-destructive/10">Delete</button>
+          <button onClick={updateActivePreset} className="rounded-sm border border-border bg-surface px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted">Update</button>
+          <button onClick={saveCurrentAsPreset} className="rounded-sm border border-border bg-surface px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted">Save as…</button>
+          <button onClick={deleteActivePreset} className="rounded-sm border border-destructive/40 bg-surface px-2 py-1 text-xs uppercase tracking-wider text-destructive hover:bg-destructive/10">Delete</button>
         </div>
       </header>
 
@@ -285,8 +285,8 @@ function CameraAdmin() {
             {/* Video player — source 1920×1080, crop 420px each side by default */}
             <div className="hud-panel relative flex min-h-0 flex-col overflow-hidden bg-black">
               <div className="flex items-center justify-between border-b border-border bg-surface px-3 py-1.5">
-                <div className="label-eyebrow text-[10px]">Observer video · crop L{cropLeft} / R{cropRight} px</div>
-                <div className="text-mono text-[10px] text-muted-foreground">{fmt(time)} / {fmt(duration)}</div>
+                <div className="label-eyebrow text-xs">Observer video · crop L{cropLeft} / R{cropRight} px</div>
+                <div className="text-mono text-xs text-muted-foreground">{fmt(time)} / {fmt(duration)}</div>
               </div>
               <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-black p-2">
                 <div
@@ -313,8 +313,8 @@ function CameraAdmin() {
             {/* Map */}
             <div className="hud-panel relative flex min-h-0 flex-col overflow-hidden">
               <div className="flex items-center justify-between border-b border-border bg-surface px-3 py-1.5">
-                <div className="label-eyebrow text-[10px]">Map · {map.name}</div>
-                <div className="text-mono text-[10px] text-muted-foreground">viewport {(viewport.size * 100).toFixed(0)}%</div>
+                <div className="label-eyebrow text-xs">Map · {map.name}</div>
+                <div className="text-mono text-xs text-muted-foreground">viewport {(viewport.size * 100).toFixed(0)}%</div>
               </div>
               <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-background p-2">
                 <div ref={mapRef} className="relative" style={{ aspectRatio: "1 / 1", height: "100%", maxWidth: "100%" }}>
@@ -382,10 +382,10 @@ function CameraAdmin() {
               <button onClick={togglePlay} className="rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">
                 {playing ? "Pause" : "Play"}
               </button>
-              <span className="text-mono text-[10px] text-muted-foreground">{fmt(time)}</span>
+              <span className="text-mono text-xs text-muted-foreground">{fmt(time)}</span>
               <input type="range" min={0} max={duration} step={0.05} value={time}
                 onChange={(e) => seek(Number(e.target.value))} className="flex-1 accent-primary" />
-              <span className="text-mono text-[10px] text-muted-foreground">{fmt(duration)}</span>
+              <span className="text-mono text-xs text-muted-foreground">{fmt(duration)}</span>
             </div>
           </div>
 
@@ -395,8 +395,8 @@ function CameraAdmin() {
         {/* Tracking settings */}
         <aside className="w-80 shrink-0 overflow-auto border-l border-border bg-surface">
           <div className="border-b border-border px-4 py-3">
-            <div className="label-eyebrow text-[10px]">Camera tracking settings</div>
-            <div className="mt-0.5 text-[10px] text-muted-foreground">Sent to backend tracker · preset: <span className="text-foreground">{active.name}</span></div>
+            <div className="label-eyebrow text-xs">Camera tracking settings</div>
+            <div className="mt-0.5 text-xs text-muted-foreground">Sent to backend tracker · preset: <span className="text-foreground">{active.name}</span></div>
           </div>
           <div className="space-y-4 p-4">
             <Field label="Video URL">
@@ -453,13 +453,13 @@ function CameraAdmin() {
             </Section>
 
             <div className="border-t border-border pt-3">
-              <div className="label-eyebrow mb-2 text-[10px]">Presets ({presets.length})</div>
+              <div className="label-eyebrow mb-2 text-xs">Presets ({presets.length})</div>
               <ul className="space-y-1">
                 {presets.map((p) => (
                   <li key={p.id}>
                     <button onClick={() => loadPreset(p.id)} className={`w-full rounded-sm border px-2 py-1.5 text-left text-xs hover:bg-muted ${p.id === activePresetId ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface-2"}`}>
                       <div className="font-semibold">{p.name}</div>
-                      <div className="text-mono text-[10px] text-muted-foreground">smooth {p.settings.smoothing.toFixed(2)} · zoomLerp {p.settings.zoomLerp.toFixed(2)} · ema {p.settings.ema}</div>
+                      <div className="text-mono text-xs text-muted-foreground">smooth {p.settings.smoothing.toFixed(2)} · zoomLerp {p.settings.zoomLerp.toFixed(2)} · ema {p.settings.ema}</div>
                     </button>
                   </li>
                 ))}
@@ -473,12 +473,12 @@ function CameraAdmin() {
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div><div className="label-eyebrow mb-1 text-[10px]">{label}</div>{children}</div>;
+  return <div><div className="label-eyebrow mb-1 text-xs">{label}</div>{children}</div>;
 }
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="border-t border-border pt-3">
-      <div className="label-eyebrow mb-2 text-[10px]">{title}</div>
+      <div className="label-eyebrow mb-2 text-xs">{title}</div>
       <div className="space-y-2">{children}</div>
     </div>
   );
@@ -486,7 +486,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function SliderField({ label, value, min, max, step, onChange }: { label: string; value: number; min: number; max: number; step: number; onChange: (v: number) => void }) {
   return (
     <div>
-      <div className="mb-1 flex items-baseline justify-between text-[10px]">
+      <div className="mb-1 flex items-baseline justify-between text-xs">
         <span className="text-muted-foreground uppercase tracking-wider">{label}</span>
         <span className="text-mono">{value.toFixed(2)}</span>
       </div>
@@ -498,7 +498,7 @@ function SliderField({ label, value, min, max, step, onChange }: { label: string
 function NumField({ label, value, min, max, step, onChange }: { label: string; value: number; min: number; max: number; step: number; onChange: (v: number) => void }) {
   return (
     <div>
-      <div className="label-eyebrow mb-1 text-[10px]">{label}</div>
+      <div className="label-eyebrow mb-1 text-xs">{label}</div>
       <input type="number" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(Number(e.target.value))}
         className="w-full rounded-sm border border-border bg-background px-2 py-1 text-xs text-mono" />
@@ -560,7 +560,7 @@ function OscillationChart({ time, duration, onSeek }: { time: number; duration: 
 
   return (
     <div className="shrink-0 border-t border-border bg-background">
-      <div className="flex items-center gap-4 border-b border-border px-3 py-1.5 text-[10px] text-muted-foreground">
+      <div className="flex items-center gap-4 border-b border-border px-3 py-1.5 text-xs text-muted-foreground">
         <div className="flex items-center gap-1"><span className="h-2 w-3 bg-zinc-500" />raw</div>
         <div className="flex items-center gap-1"><span className="h-2 w-3 bg-emerald-400" />smoothed</div>
         <div className="flex items-center gap-1"><span className="h-2 w-3 bg-amber-500" />ring center</div>

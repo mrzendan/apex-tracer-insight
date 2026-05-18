@@ -450,7 +450,7 @@ export function MatchViewer({ initialGameId }: { initialGameId?: string }) {
               const active = eventFilter === f.id;
               return (
                 <button key={f.id} onClick={() => setEventFilter(f.id)}
-                  className={`text-mono rounded-sm border px-1.5 py-0.5 text-[10px] uppercase tracking-wider transition-colors ${
+                  className={`text-mono rounded-sm border px-1.5 py-0.5 text-xs uppercase tracking-wider transition-colors ${
                     active
                       ? "border-primary bg-primary/15 text-primary"
                       : "border-border bg-surface-2 text-muted-foreground hover:text-foreground"
@@ -462,7 +462,7 @@ export function MatchViewer({ initialGameId }: { initialGameId?: string }) {
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto scrollbar-slim">
             {filteredEvents.length === 0 && (
-              <div className="px-3 py-6 text-center text-[11px] text-muted-foreground">
+              <div className="px-3 py-6 text-center text-xs text-muted-foreground">
                 Нет событий в этой категории
               </div>
             )}
@@ -481,7 +481,7 @@ export function MatchViewer({ initialGameId }: { initialGameId?: string }) {
                     <EventIcon type={e.type} />
                   </span>
                   <span className="min-w-0 text-xs leading-snug">
-                    <span className="label-eyebrow mr-1.5 text-[10px]">{e.type}</span>
+                    <span className="label-eyebrow mr-1.5 text-xs">{e.type}</span>
                     <span className="text-foreground">{e.label}</span>
                   </span>
                 </button>
@@ -557,7 +557,7 @@ function TopBar({
         </div>
         <div className="leading-tight">
           <div className="text-sm font-bold tracking-tight">APEX STATS</div>
-          <div className="label-eyebrow text-[9px]">VOD analytics</div>
+          <div className="label-eyebrow text-xs">VOD analytics</div>
         </div>
       </Link>
 
@@ -570,14 +570,14 @@ function TopBar({
       <Select label="Game" value={gameId} onChange={onGameChange}
         options={games.map((g) => ({ value: g.id, label: `G${g.index + 1} · ${maps.find((mp) => mp.id === g.mapId)?.name ?? g.mapId}` }))} />
       <div className="hud-panel hidden items-center gap-2 px-3 py-1.5 text-xs md:flex">
-        <span className="label-eyebrow text-[10px]">Map</span>
+        <span className="label-eyebrow text-xs">Map</span>
         <span className="text-mono font-semibold">{mapName}</span>
       </div>
 
       <div className="ml-auto flex items-center gap-2">
         <span className="flex items-center gap-1.5 rounded-sm border border-border bg-surface-2 px-2.5 py-1 text-xs">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-success" />
-          <span className="label-eyebrow text-[10px]">Live</span>
+          <span className="label-eyebrow text-xs">Live</span>
         </span>
         <ThemeToggle compact />
         <DensityToggle compact />
@@ -594,7 +594,7 @@ function Select({ label, value, onChange, options }: {
 }) {
   return (
     <label className="hud-panel flex items-center gap-2 px-2.5 py-1.5 text-xs">
-      <span className="label-eyebrow text-[10px]">{label}</span>
+      <span className="label-eyebrow text-xs">{label}</span>
       <select value={value} onChange={(e) => onChange(e.target.value)}
         className="text-mono bg-transparent text-xs font-medium text-foreground outline-none">
         {options.map((o) => (
@@ -609,7 +609,7 @@ function PanelHeader({ title, subtitle }: { title: string; subtitle?: React.Reac
   return (
     <div className="flex items-center justify-between border-b border-border px-3 py-2.5">
       <h2 className="text-xs font-bold uppercase tracking-wider">{title}</h2>
-      {subtitle && <span className="text-mono text-[10px] text-muted-foreground">{subtitle}</span>}
+      {subtitle && <span className="text-mono text-xs text-muted-foreground">{subtitle}</span>}
     </div>
   );
 }
@@ -647,7 +647,7 @@ function TeamRow({ team, active, hovered, onToggle, onHover, logoSize = 20, comp
       <span className="h-2.5 w-2.5 shrink-0 rounded-sm"
         style={{ backgroundColor: slotColor }} />
       <TeamLogo team={team} size={logoSize} />
-      <span className="text-mono w-6 text-[10px] tabular-nums text-muted-foreground">#{team.placement}</span>
+      <span className="text-mono w-6 text-xs tabular-nums text-muted-foreground">#{team.placement}</span>
       <span className="min-w-0 flex-1 truncate font-semibold" style={{ fontSize: nameSize }}>{team.name}</span>
       <span className={`h-1.5 w-1.5 rounded-full ${isAlive ? "bg-success" : "bg-destructive/70"}`} />
     </div>
@@ -657,9 +657,9 @@ function TeamRow({ team, active, hovered, onToggle, onHover, logoSize = 20, comp
 function LayerToggle({ label, active, onChange }: { label: string; active: boolean; onChange: (v: boolean) => void }) {
   return (
     <button onClick={() => onChange(!active)}
-      className={`flex items-center justify-between gap-3 rounded-sm px-2 py-1 text-[11px] transition-colors ${
+      className={`flex items-center justify-between gap-3 rounded-sm px-2 py-1 text-xs transition-colors ${
         active ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-muted"}`}>
-      <span className="label-eyebrow text-[10px]">{label}</span>
+      <span className="label-eyebrow text-xs">{label}</span>
       <span className={`h-1.5 w-3 rounded-full ${active ? "bg-primary" : "bg-border-strong"}`} />
     </button>
   );
@@ -672,8 +672,8 @@ function CfgSlider({ label, value, min, max, step, onChange }: {
   return (
     <label className="block">
       <div className="flex items-center justify-between mb-0.5">
-        <span className="label-eyebrow text-[10px]">{label}</span>
-        <span className="text-mono text-[10px] text-muted-foreground tabular-nums">
+        <span className="label-eyebrow text-xs">{label}</span>
+        <span className="text-mono text-xs text-muted-foreground tabular-nums">
           {Number.isInteger(step) ? value : value.toFixed(2)}
         </span>
       </div>
@@ -687,7 +687,7 @@ function CfgSlider({ label, value, min, max, step, onChange }: {
 function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
     <div className="hud-panel-strong px-3 py-1.5">
-      <div className="label-eyebrow text-[9px]">{label}</div>
+      <div className="label-eyebrow text-xs">{label}</div>
       <div className={`text-mono text-sm font-bold tabular-nums ${accent ? "text-primary" : ""}`}>{value}</div>
     </div>
   );
@@ -705,12 +705,12 @@ function RingPhaseChip({ time }: { time: number }) {
     <div className="hud-panel-strong flex items-center gap-2.5 px-3 py-1.5">
       <span className={`h-2 w-2 shrink-0 rounded-full ${dot} ${isClosing ? "animate-pulse" : ""}`} />
       <div className="leading-tight">
-        <div className="label-eyebrow text-[9px]">Phase</div>
+        <div className="label-eyebrow text-xs">Phase</div>
         <div className={`text-mono text-sm font-bold uppercase tracking-wider ${accent}`}>
           R{seg.phaseIndex + 1} {seg.kind}
         </div>
       </div>
-      <div className="text-mono ml-1 border-l border-border pl-2.5 text-[10px] tabular-nums text-muted-foreground">
+      <div className="text-mono ml-1 border-l border-border pl-2.5 text-xs tabular-nums text-muted-foreground">
         {formatTime(remaining)}
       </div>
     </div>
@@ -992,7 +992,7 @@ function MapCanvas({
             <circle cx="12" cy="12" r="3" />
             <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5h0a1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
           </svg>
-          <span className="label-eyebrow text-[10px]">Config</span>
+          <span className="label-eyebrow text-xs">Config</span>
         </button>
 
         {showConfig && (
@@ -1029,9 +1029,9 @@ function MapCanvas({
       <div className="pointer-events-auto absolute right-4 bottom-4 hud-panel-strong flex flex-col overflow-hidden text-xs">
         <button onClick={() => zoomBy(1.5)} className="flex h-8 w-8 items-center justify-center border-b border-border hover:bg-muted" aria-label="Zoom in">+</button>
         <button onClick={() => zoomBy(1 / 1.5)} className="flex h-8 w-8 items-center justify-center border-b border-border hover:bg-muted" aria-label="Zoom out">−</button>
-        <button onClick={resetView} className="text-mono flex h-8 w-8 items-center justify-center text-[9px] hover:bg-muted" aria-label="Reset zoom">1:1</button>
+        <button onClick={resetView} className="text-mono flex h-8 w-8 items-center justify-center text-xs hover:bg-muted" aria-label="Reset zoom">1:1</button>
       </div>
-      <div className="pointer-events-none absolute bottom-4 right-16 hud-panel-strong px-2 py-1 text-mono text-[10px] text-muted-foreground">
+      <div className="pointer-events-none absolute bottom-4 right-16 hud-panel-strong px-2 py-1 text-mono text-xs text-muted-foreground">
         {(view.scale * 100).toFixed(0)}%
       </div>
 
@@ -1086,8 +1086,8 @@ function Timeline({
             <svg className="h-3.5 w-3.5 translate-x-[1px]" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4 L20 12 L6 20 Z" /></svg>
           )}
         </button>
-        <button onClick={() => onSeek(Math.max(0, time - 10))} className="text-mono rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-[10px] hover:bg-muted">−10s</button>
-        <button onClick={() => onSeek(Math.min(duration, time + 10))} className="text-mono rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-[10px] hover:bg-muted">+10s</button>
+        <button onClick={() => onSeek(Math.max(0, time - 10))} className="text-mono rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs hover:bg-muted">−10s</button>
+        <button onClick={() => onSeek(Math.min(duration, time + 10))} className="text-mono rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs hover:bg-muted">+10s</button>
 
         <div className="text-mono flex items-center gap-1 text-xs tabular-nums">
           <span className="font-semibold">{formatTime(time)}</span>
@@ -1095,10 +1095,10 @@ function Timeline({
         </div>
 
         <div className="ml-auto flex items-center gap-1">
-          <span className="label-eyebrow text-[10px] mr-1">Speed</span>
+          <span className="label-eyebrow text-xs mr-1">Speed</span>
           {speeds.map((s) => (
             <button key={s} onClick={() => onSpeedChange(s)}
-              className={`text-mono rounded-sm px-2 py-1 text-[10px] font-semibold ${
+              className={`text-mono rounded-sm px-2 py-1 text-xs font-semibold ${
                 speed === s ? "bg-primary text-primary-foreground" : "border border-border bg-surface-2 text-muted-foreground hover:text-foreground"}`}>{s}×</button>
           ))}
         </div>
@@ -1126,7 +1126,7 @@ function Timeline({
                     ? `repeating-linear-gradient(45deg, rgba(239,68,68,${intensity + 0.18}) 0 4px, rgba(239,68,68,${intensity + 0.05}) 4px 8px)`
                     : `rgba(34,196,245,${intensity})`,
                 }}>
-                <div className={`text-mono absolute left-1 top-0.5 text-[9px] uppercase tracking-wider ${
+                <div className={`text-mono absolute left-1 top-0.5 text-xs uppercase tracking-wider ${
                   isClosing ? "text-destructive font-bold" : "text-muted-foreground/80"}`}>
                   R{seg.phaseIndex + 1} {seg.kind}
                 </div>
@@ -1151,7 +1151,7 @@ function Timeline({
             {/* bottom triangle */}
             <div className="absolute -left-[5px] -bottom-1 h-0 w-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-primary" />
             {/* current time label */}
-            <div className="text-mono absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-sm bg-primary px-1.5 py-0.5 text-[9px] font-bold tabular-nums text-primary-foreground shadow-md">
+            <div className="text-mono absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-sm bg-primary px-1.5 py-0.5 text-xs font-bold tabular-nums text-primary-foreground shadow-md">
               {formatTime(time)}
             </div>
           </div>

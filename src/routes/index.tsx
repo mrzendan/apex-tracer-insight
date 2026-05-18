@@ -74,7 +74,7 @@ const STATE_META: Record<PipelineState, { label: string; cls: string; Icon: type
 function StatusChip({ state, label }: { state: PipelineState; label: string }) {
   const m = STATE_META[state];
   return (
-    <span className="text-mono inline-flex items-center gap-1 rounded-sm border border-border bg-surface-2/70 px-1.5 py-0.5 text-[10px]">
+    <span className="text-mono inline-flex items-center gap-1 rounded-sm border border-border bg-surface-2/70 px-1.5 py-0.5 text-xs">
       <m.Icon className={`h-3 w-3 ${m.cls} ${state === "processing" ? "animate-spin" : ""}`} strokeWidth={2.5} />
       <span className="text-muted-foreground">{label}</span>
     </span>
@@ -89,7 +89,7 @@ function OverallBadge({ state }: { state: PipelineState }) {
     : state === "error" ? "bg-destructive/15 border-destructive/40 text-destructive"
     : "bg-surface-2 border-border text-muted-foreground";
   return (
-    <span className={`text-mono inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[10px] uppercase tracking-wider ${bg}`}>
+    <span className={`text-mono inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-xs uppercase tracking-wider ${bg}`}>
       <m.Icon className={`h-3 w-3 ${state === "processing" ? "animate-spin" : ""}`} strokeWidth={2.5} />
       {m.label}
     </span>
@@ -179,7 +179,7 @@ function Hub() {
         <div className="ml-auto flex items-center gap-2">
           <ThemeToggle compact />
           <DensityToggle compact />
-          <span className="text-mono hidden text-[10px] text-muted-foreground sm:inline">
+          <span className="text-mono hidden text-xs text-muted-foreground sm:inline">
             {user?.email} · {role}
           </span>
           {(role === "operator" || role === "administrator") && (
@@ -196,7 +196,7 @@ function Hub() {
       <div className="mx-auto max-w-7xl px-6 pb-16 pt-8">
         {/* Compact hero */}
         <section className="animate-fade-in">
-          <div className="label-eyebrow text-[11px] text-primary">VOD analytics platform</div>
+          <div className="label-eyebrow text-xs text-primary">VOD analytics platform</div>
           <h1 className="mt-2 max-w-3xl text-2xl font-extrabold leading-tight tracking-tight sm:text-3xl lg:text-4xl">
             Превращай матчи Apex Legends <span className="text-primary">в инсайты команды.</span>
           </h1>
@@ -234,11 +234,11 @@ function Hub() {
               </div>
               <div className="flex flex-col justify-between gap-4 p-5">
                 <div>
-                  <div className="label-eyebrow text-[10px] text-muted-foreground">
+                  <div className="label-eyebrow text-xs text-muted-foreground">
                     {featuredTournament?.name} · {featuredTournament?.region}
                   </div>
                   <h3 className="mt-1.5 text-2xl font-bold leading-tight">{featured.name}</h3>
-                  <div className="text-mono mt-1 text-[11px] text-muted-foreground">
+                  <div className="text-mono mt-1 text-xs text-muted-foreground">
                     {featuredGames.length} {featuredGames.length === 1 ? "игра" : "игр"} · анализ: {featuredProc.analyzedHint}
                   </div>
                   <div className="mt-3 flex flex-wrap gap-1.5">
@@ -248,7 +248,7 @@ function Hub() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                  <span className="text-mono text-xs uppercase tracking-wider text-muted-foreground">
                     Готов к просмотру
                   </span>
                   <span className="inline-flex items-center gap-2 rounded-sm bg-primary px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-primary-foreground transition-transform group-hover:translate-x-0.5">
@@ -280,15 +280,15 @@ function Hub() {
                       <img src={mp.image} alt={mp.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
                       <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/40 to-transparent" />
                       <div className="absolute right-2 top-2"><OverallBadge state={proc.overall} /></div>
-                      <div className="text-mono absolute left-2 top-2 rounded-sm border border-border-strong bg-surface/90 px-1.5 py-0.5 text-[10px] font-bold">
+                      <div className="text-mono absolute left-2 top-2 rounded-sm border border-border-strong bg-surface/90 px-1.5 py-0.5 text-xs font-bold">
                         {gs.length} {gs.length === 1 ? "игра" : "игр"}
                       </div>
                     </div>
                   )}
                   <div className="p-3">
-                    <div className="label-eyebrow text-[9px] text-muted-foreground truncate">{t?.name}</div>
+                    <div className="label-eyebrow text-xs text-muted-foreground truncate">{t?.name}</div>
                     <div className="mt-1 text-sm font-semibold leading-tight">{m.name}</div>
-                    <div className="text-mono mt-1 text-[10px] text-muted-foreground truncate">
+                    <div className="text-mono mt-1 text-xs text-muted-foreground truncate">
                       {gs.map((g) => maps.find((x) => x.id === g.mapId)?.name).filter(Boolean).join(" · ")}
                     </div>
                     <div className="mt-2 flex flex-wrap gap-1">
@@ -316,18 +316,18 @@ function Hub() {
                 >
                   <div className="absolute right-0 top-0 h-24 w-24 -translate-y-8 translate-x-8 rounded-full bg-primary/10 blur-2xl opacity-60" />
                   <div className="flex items-center justify-between">
-                    <span className="label-eyebrow text-[10px] text-primary">{t.region} · {t.type}</span>
-                    <span className="text-mono rounded-sm border border-border bg-surface-2 px-1.5 py-0.5 text-[10px] text-muted-foreground">Y{t.year}</span>
+                    <span className="label-eyebrow text-xs text-primary">{t.region} · {t.type}</span>
+                    <span className="text-mono rounded-sm border border-border bg-surface-2 px-1.5 py-0.5 text-xs text-muted-foreground">Y{t.year}</span>
                   </div>
                   <h3 className="mt-2 text-lg font-bold leading-tight">{t.name}</h3>
-                  <div className="text-mono mt-1 text-[10px] text-muted-foreground">
+                  <div className="text-mono mt-1 text-xs text-muted-foreground">
                     {t.startDate} → {t.endDate}
                   </div>
 
                   {/* Progress */}
                   <div className="mt-4">
                     <div className="flex items-baseline justify-between">
-                      <span className="text-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                      <span className="text-mono text-xs uppercase tracking-wider text-muted-foreground">
                         Обработано матчей
                       </span>
                       <span className="text-mono text-xs font-bold tabular-nums">
@@ -362,7 +362,7 @@ function Hub() {
                                 <img src={mp.image} alt="" className="h-6 w-6 shrink-0 rounded-sm object-cover ring-1 ring-border" />
                               )}
                               <span className="truncate">{m.name}</span>
-                              <span className="text-mono shrink-0 text-[9px] text-muted-foreground">· {gs.length}</span>
+                              <span className="text-mono shrink-0 text-xs text-muted-foreground">· {gs.length}</span>
                             </span>
                             <OverallBadge state={proc.overall} />
                           </Link>
@@ -370,12 +370,12 @@ function Hub() {
                       );
                     })}
                     {tMatches.length > 3 && (
-                      <li className="text-mono px-2.5 text-[10px] text-muted-foreground">
+                      <li className="text-mono px-2.5 text-xs text-muted-foreground">
                         +{tMatches.length - 3} ещё
                       </li>
                     )}
                     {tMatches.length === 0 && (
-                      <li className="text-[11px] text-muted-foreground">Матчей пока нет</li>
+                      <li className="text-xs text-muted-foreground">Матчей пока нет</li>
                     )}
                   </ul>
 
@@ -408,7 +408,7 @@ function Hub() {
                 <TeamLogo team={team} size={32} />
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-xs font-semibold">{team.name}</div>
-                  <div className="text-mono text-[10px] text-muted-foreground">
+                  <div className="text-mono text-xs text-muted-foreground">
                     {team.tag} · #{team.placement} · {team.kills}K
                   </div>
                 </div>
@@ -428,7 +428,7 @@ function MiniStat({ label, value, mono = true }: { label: string; value: number 
   return (
     <div className="rounded-sm border border-border bg-surface/60 px-2 py-1.5">
       <div className={`${mono ? "text-mono tabular-nums" : ""} text-xs font-bold leading-none`}>{value}</div>
-      <div className="label-eyebrow mt-1 text-[9px]">{label}</div>
+      <div className="label-eyebrow mt-1 text-xs">{label}</div>
     </div>
   );
 }
@@ -440,7 +440,7 @@ function StatPill({ label, value, Icon, to }: { label: string; value: number; Ic
         <Icon className="h-4 w-4" strokeWidth={2} />
       </div>
       <div>
-        <div className="label-eyebrow text-[9px] group-hover:text-primary">{label}</div>
+        <div className="label-eyebrow text-xs group-hover:text-primary">{label}</div>
         <div className="text-mono mt-0.5 text-xl font-bold tabular-nums">{value}</div>
       </div>
     </Link>
@@ -455,7 +455,7 @@ function SectionHead({ title, subtitle, badge }: { title: string; subtitle?: str
         {subtitle && <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>}
       </div>
       {badge && (
-        <span className="text-mono inline-flex items-center gap-1.5 rounded-sm border border-border bg-surface-2 px-2 py-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+        <span className="text-mono inline-flex items-center gap-1.5 rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs uppercase tracking-wider text-muted-foreground">
           {badge}
         </span>
       )}

@@ -63,7 +63,7 @@ function MapsGrid() {
                 </div>
                 <div className="flex items-center justify-between border-t border-border px-3 py-2">
                   <div className="text-xs font-semibold">{mp.name}</div>
-                  <div className="text-mono text-[10px] text-muted-foreground">{playedIn} игр</div>
+                  <div className="text-mono text-xs text-muted-foreground">{playedIn} игр</div>
                 </div>
               </button>
             );

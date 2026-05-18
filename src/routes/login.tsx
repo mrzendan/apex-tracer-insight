@@ -38,14 +38,14 @@ function LoginPage() {
         className="hud-panel w-full max-w-sm space-y-4 p-6"
       >
         <div>
-          <div className="label-eyebrow text-[10px]">Apex Stats</div>
+          <div className="label-eyebrow text-xs">Apex Stats</div>
           <h1 className="mt-1 text-lg font-bold">Sign in</h1>
           <p className="mt-1 text-xs text-muted-foreground">
             Accounts are issued by the administrator. Contact them for access.
           </p>
         </div>
         <div className="space-y-2">
-          <label className="label-eyebrow text-[10px]" htmlFor="email">Email</label>
+          <label className="label-eyebrow text-xs" htmlFor="email">Email</label>
           <input
             id="email"
             type="email"
@@ -57,7 +57,7 @@ function LoginPage() {
           />
         </div>
         <div className="space-y-2">
-          <label className="label-eyebrow text-[10px]" htmlFor="password">Password</label>
+          <label className="label-eyebrow text-xs" htmlFor="password">Password</label>
           <input
             id="password"
             type="password"
