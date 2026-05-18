@@ -844,10 +844,24 @@ function Timeline({
   onSeek: (t: number) => void; onTogglePlay: () => void; onSpeedChange: (s: number) => void;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
-  const onTrack = (e: React.MouseEvent) => {
+  const dragging = useRef(false);
+  const seekFromClientX = (clientX: number) => {
     const r = trackRef.current!.getBoundingClientRect();
-    const k = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+    const k = Math.max(0, Math.min(1, (clientX - r.left) / r.width));
     onSeek(k * duration);
+  };
+  const onTrackPointerDown = (e: React.PointerEvent) => {
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    dragging.current = true;
+    seekFromClientX(e.clientX);
+  };
+  const onTrackPointerMove = (e: React.PointerEvent) => {
+    if (!dragging.current) return;
+    seekFromClientX(e.clientX);
+  };
+  const onTrackPointerUp = (e: React.PointerEvent) => {
+    dragging.current = false;
+    try { (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId); } catch {}
   };
   const speeds = [1, 2, 4, 8];
 
@@ -882,7 +896,14 @@ function Timeline({
       </div>
 
       <div className="px-4 pb-3">
-        <div ref={trackRef} onClick={onTrack} className="relative h-9 cursor-pointer rounded-sm border border-border bg-background">
+        <div
+          ref={trackRef}
+          onPointerDown={onTrackPointerDown}
+          onPointerMove={onTrackPointerMove}
+          onPointerUp={onTrackPointerUp}
+          onPointerCancel={onTrackPointerUp}
+          className="relative h-9 cursor-pointer touch-none select-none rounded-sm border border-border bg-background"
+        >
           {ringSegments.map((seg, i) => {
             const isClosing = seg.kind === "Closing";
             const intensity = 0.04 + seg.phaseIndex * 0.025;
@@ -908,7 +929,7 @@ function Timeline({
               style={{ left: `${(e.t / duration) * 100}%`, backgroundColor: eventColor(e.type), opacity: 0.7 }}
               title={`${formatTime(e.t)} — ${e.label}`} />
           ))}
-          <div className="absolute top-0 h-full w-0.5 bg-primary shadow-[0_0_8px_rgba(255,91,18,0.8)]"
+          <div className="pointer-events-none absolute top-0 h-full w-0.5 bg-primary shadow-[0_0_8px_rgba(255,91,18,0.8)]"
             style={{ left: `${(time / duration) * 100}%` }}>
             <div className="absolute -left-1.5 -top-1 h-2.5 w-2.5 rotate-45 bg-primary" />
           </div>
