@@ -148,6 +148,10 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
+  /* UI density — scales every rem-based size (Tailwind defaults).
+     Reversible: remove .density-* class on <html> to return to normal. */
+  html.density-compact { font-size: 14px; }
+  html.density-large   { font-size: 19.2px; } /* 120% of 16px */
 }
 
 /* HUD utilities */
