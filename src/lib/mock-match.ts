@@ -176,7 +176,7 @@ export const ringPhases: RingPhase[] = buildRingPhases();
 
 export type GameEvent = {
   t: number;
-  type: "kill" | "knock" | "ring" | "care" | "wipe";
+  type: "kill" | "knock" | "ring" | "care" | "wipe" | "endgame";
   team?: string;
   label: string;
 };
@@ -193,5 +193,6 @@ export const events: GameEvent[] = [
   { t: 845,  type: "wipe",  team: "DZ",   label: "DarkZero wipes FA" },
   { t: 980,  type: "kill",  team: "NRG",  label: "NRG eliminates LG" },
   { t: 1080, type: "ring",  label: "Ring 4 closing" },
-  { t: 1210, type: "wipe",  team: "TSM",  label: "TSM wipes MV — endgame" },
+  { t: 1210, type: "wipe",    team: "TSM", label: "TSM wipes MV" },
+  { t: 1211, type: "endgame",              label: "Game ended" },
 ];
