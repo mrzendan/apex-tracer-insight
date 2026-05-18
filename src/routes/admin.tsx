@@ -22,24 +22,34 @@ const dataItems: NavItem[] = [
   { to: "/admin/teams",       label: "Teams",       hint: "Rosters & colors" },
 ];
 
-const toolItems: NavItem[] = [
-  { to: "/admin/processes", label: "Processes", hint: "Analysis & tracking" },
-  { to: "/admin/hsv",      label: "HSV",      hint: "Team color calibration" },
-  { to: "/admin/zones",    label: "Zones",    hint: "HUD areas (1920×1080)" },
-  { to: "/admin/polygons", label: "Polygons", hint: "Map areas" },
-  { to: "/admin/camera",   label: "Camera",   hint: "Camera tracking" },
-  { to: "/admin/minimap",  label: "Minimap",  hint: "Minimap detection" },
-  { to: "/admin/schema",   label: "Schema",   hint: "DB schema editor" },
-  { to: "/admin/diagrams", label: "Diagrams", hint: "Flowcharts for reports" },
+const calibrationItems: NavItem[] = [
+  { to: "/admin/hsv",      label: "HSV",          hint: "Team color calibration" },
+  { to: "/admin/zones",    label: "HUD Zones",    hint: "HUD areas (1920×1080)" },
+  { to: "/admin/polygons", label: "Map Polygons", hint: "Forbidden / safe areas" },
+  { to: "/admin/camera",   label: "Camera",       hint: "Observer camera tracking" },
+];
+
+const analysisItems: NavItem[] = [
+  { to: "/admin/processes", label: "Processes",       hint: "Analysis & tracking" },
+  { to: "/admin/minimap",   label: "Minimap Locator", hint: "Minimap detection" },
+];
+
+const systemItems: NavItem[] = [
+  { to: "/admin/schema",   label: "Database Schema", hint: "DB schema editor" },
+  { to: "/admin/diagrams", label: "Diagrams",        hint: "Flowcharts for reports" },
 ];
 
 function AdminLayout() {
   const { role, user, signOut } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const dataActive = dataItems.some((i) => pathname.startsWith(i.to));
-  const toolsActive = toolItems.some((i) => pathname.startsWith(i.to));
+  const calibActive = calibrationItems.some((i) => pathname.startsWith(i.to));
+  const analysisActive = analysisItems.some((i) => pathname.startsWith(i.to));
+  const systemActive = systemItems.some((i) => pathname.startsWith(i.to));
   const [openData, setOpenData] = useState<boolean>(true);
-  const [openTools, setOpenTools] = useState<boolean>(true);
+  const [openCalib, setOpenCalib] = useState<boolean>(true);
+  const [openAnalysis, setOpenAnalysis] = useState<boolean>(true);
+  const [openSystem, setOpenSystem] = useState<boolean>(true);
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
@@ -90,11 +100,27 @@ function AdminLayout() {
           />
 
           <NavGroup
-            label="Tools"
-            count={toolItems.length}
-            open={openTools || toolsActive}
-            onToggle={() => setOpenTools((v) => !v)}
-            items={toolItems}
+            label="Calibration"
+            count={calibrationItems.length}
+            open={openCalib || calibActive}
+            onToggle={() => setOpenCalib((v) => !v)}
+            items={calibrationItems}
+          />
+
+          <NavGroup
+            label="Analysis"
+            count={analysisItems.length}
+            open={openAnalysis || analysisActive}
+            onToggle={() => setOpenAnalysis((v) => !v)}
+            items={analysisItems}
+          />
+
+          <NavGroup
+            label="System"
+            count={systemItems.length}
+            open={openSystem || systemActive}
+            onToggle={() => setOpenSystem((v) => !v)}
+            items={systemItems}
           />
         </nav>
 
