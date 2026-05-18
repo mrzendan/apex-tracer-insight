@@ -191,6 +191,9 @@ function Hub() {
           <span className="text-mono hidden text-[10px] text-muted-foreground sm:inline">
             {user?.email} · {role}
           </span>
+          <Link to="/maps" className="rounded-sm border border-border-strong bg-surface-2 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider transition-colors hover:bg-muted">
+            Карты
+          </Link>
           {(role === "operator" || role === "administrator") && (
             <Link to="/admin" className="rounded-sm border border-border-strong bg-surface-2 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider transition-colors hover:bg-muted">
               Admin

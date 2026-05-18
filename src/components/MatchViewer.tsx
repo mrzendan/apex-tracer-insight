@@ -16,7 +16,7 @@ import { TeamLogo } from "@/components/admin/TeamLogo";
 import { getSlotColor } from "@/lib/team-colors";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { DensityToggle } from "@/components/DensityToggle";
-import { Users, Swords, Skull, ShieldAlert, Package, Circle } from "lucide-react";
+import { Users, Swords, Skull, ShieldAlert, Package, Circle, Flag } from "lucide-react";
 import damageIcon from "@/assets/icons/damage.svg";
 
 function formatTime(sec: number) {
@@ -467,6 +467,7 @@ function eventColor(type: string) {
     case "knock": return "#fbbf24"; // warning
     case "ring":  return "#22c4f5"; // info
     case "care":  return "#34d399"; // success
+    case "endgame": return "#a78bfa"; // accent
     default:      return "#94a3b8"; // neutral
   }
 }
@@ -497,6 +498,7 @@ function EventIcon({ type }: { type: string }) {
     );
     case "ring":  return <ShieldAlert className={cls} strokeWidth={2.5} />;
     case "care":  return <Package className={cls} strokeWidth={2.5} />;
+    case "endgame": return <Flag className={cls} strokeWidth={2.5} />;
     default:      return <Circle className={cls} strokeWidth={2.5} />;
   }
 }
@@ -801,10 +803,13 @@ function MapCanvas({
                 <feGaussianBlur stdDeviation="2.5" result="b" />
                 <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
               </filter>
+              <clipPath id="mapBounds">
+                <rect x="0" y="0" width="1000" height="1000" />
+              </clipPath>
             </defs>
 
             {ring && (
-              <>
+              <g clipPath="url(#mapBounds)">
                 {/* Red DANGER ZONE — everything outside the active safe area.
                     Rendered as a single path: full map rectangle minus a circle
                     at the safe area, using even-odd fill-rule. */}
@@ -824,7 +829,7 @@ function MapCanvas({
                 <circle cx={ring.cx * 1000} cy={ring.cy * 1000} r={ring.r * 1000}
                   fill="rgba(34,196,245,0.08)" stroke="#22c4f5" strokeWidth={3.5 / view.scale} strokeDasharray={`${10 / view.scale} ${5 / view.scale}`} />
                 <circle cx={ring.cx * 1000} cy={ring.cy * 1000} r={3 / view.scale} fill="#22c4f5" />
-              </>
+              </g>
             )}
 
             {teams.map((t, slotIdx) => {
