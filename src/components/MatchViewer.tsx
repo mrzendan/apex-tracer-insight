@@ -726,13 +726,6 @@ function MapCanvas({
         </div>
       </div>
 
-      {/* Map label (top-left) */}
-      <div className="pointer-events-none absolute left-4 top-4">
-        <div className="hud-panel-strong pointer-events-auto flex items-center gap-3 px-3 py-2 text-xs">
-          <span className="label-eyebrow">Map</span>
-          <span className="text-mono font-semibold tracking-wider">{mapName.toUpperCase()}</span>
-        </div>
-      </div>
 
       {/* Single CONFIG button (top-right) */}
       <div className="pointer-events-auto absolute right-4 top-4">
