@@ -16,6 +16,7 @@ import { TeamLogo } from "@/components/admin/TeamLogo";
 import { getSlotColor } from "@/lib/team-colors";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { DensityToggle } from "@/components/DensityToggle";
+import { Users, Swords } from "lucide-react";
 
 function formatTime(sec: number) {
   const m = Math.floor(sec / 60).toString().padStart(2, "0");
@@ -218,6 +219,7 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
   const [leftWidth, setLeftWidth] = useState(260);
   const [leftCollapsed, setLeftCollapsed] = useState(false);
   const [rightWidth, setRightWidth] = useState(300);
+  const [rightCollapsed, setRightCollapsed] = useState(false);
   const startResize = (side: "left" | "right") => (e: React.PointerEvent) => {
     e.preventDefault();
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
@@ -234,7 +236,12 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
           setLeftWidth(Math.max(160, Math.min(560, next)));
         }
       } else {
-        setRightWidth(Math.max(200, Math.min(560, next)));
+        if (next < 150) {
+          setRightCollapsed(true);
+        } else {
+          setRightCollapsed(false);
+          setRightWidth(Math.max(160, Math.min(560, next)));
+        }
       }
     };
     const onUp = () => {
@@ -268,11 +275,8 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
               title="Show teams"
               className="flex h-10 w-10 items-center justify-center rounded-sm border border-border-strong bg-surface-2 text-foreground hover:bg-muted"
             >
-              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2}>
-                <path d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
+              <Users className="h-5 w-5" />
             </button>
-            <div className="label-eyebrow mt-2 text-[9px]">Teams</div>
           </div>
         ) : (
         <aside
@@ -334,6 +338,17 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
             onSeek={setTime} onTogglePlay={() => setPlaying((p) => !p)} onSpeedChange={setSpeed} />
         </main>
 
+        {rightCollapsed ? (
+          <div className="hidden shrink-0 flex-col items-center border-l border-border bg-surface p-2 xl:flex">
+            <button
+              onClick={() => setRightCollapsed(false)}
+              title="Show match feed"
+              className="flex h-10 w-10 items-center justify-center rounded-sm border border-border-strong bg-surface-2 text-foreground hover:bg-muted"
+            >
+              <Swords className="h-5 w-5" />
+            </button>
+          </div>
+        ) : (
         <aside
           className="relative hidden shrink-0 flex-col border-l border-border bg-surface xl:flex"
           style={{ width: rightWidth }}
@@ -384,6 +399,7 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
             })}
           </div>
         </aside>
+        )}
       </div>
     </div>
   );
