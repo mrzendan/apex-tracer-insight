@@ -475,6 +475,7 @@ function MapCanvas({
   time, ring, trajectories, dwellsByTeam, cfg, onCfg, showConfig, setShowConfig,
   selectedTeams, hoverTeam, showTrails, showLabels,
   mapImage, mapName, aliveTeams, totalKills, ringIndex, ringCount, controls,
+  viewMode, setViewMode, eventMarkers, focusRequest, onEventClick,
 }: {
   time: number; ring: RingPhase | null;
   trajectories: Record<string, { t: number; x: number; y: number }[]>;
@@ -493,6 +494,11 @@ function MapCanvas({
     showRing: boolean; setShowRing: (v: boolean) => void;
     showLabels: boolean; setShowLabels: (v: boolean) => void;
   };
+  viewMode: ViewMode;
+  setViewMode: (m: ViewMode) => void;
+  eventMarkers: { e: GameEvent; p: { x: number; y: number } }[];
+  focusRequest: { x: number; y: number; token: number } | null;
+  onEventClick: (e: GameEvent) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [view, setView] = useState({ scale: 1, tx: 0, ty: 0 });
@@ -544,6 +550,22 @@ function MapCanvas({
     });
   };
   const resetView = () => setView({ scale: 1, tx: 0, ty: 0 });
+
+  // Center the map on an external focus request (event click in feed).
+  useEffect(() => {
+    if (!focusRequest || !containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const size = Math.min(rect.width, rect.height);
+    const offsetX = (rect.width - size) / 2;
+    const offsetY = (rect.height - size) / 2;
+    const targetScale = 2.5;
+    const px = offsetX + focusRequest.x * size;
+    const py = offsetY + focusRequest.y * size;
+    const tx = rect.width / 2 - targetScale * px;
+    const ty = rect.height / 2 - targetScale * py;
+    setView(clampPan({ scale: targetScale, tx, ty }, rect.width, rect.height));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusRequest?.token]);
 
   return (
     <div
@@ -672,6 +694,28 @@ function MapCanvas({
                 </g>
               );
             })}
+
+            {eventMarkers.map(({ e, p }, i) => {
+              const c = eventColor(e.type);
+              return (
+                <g key={`evm-${i}`} transform={`translate(${p.x * 1000} ${p.y * 1000})`}>
+                  <circle r={14 / view.scale} fill={c} fillOpacity={0.15}
+                    stroke={c} strokeWidth={1.5 / view.scale} />
+                  <circle r={4 / view.scale} fill={c} stroke="#000" strokeWidth={0.6 / view.scale} />
+                  <g transform={`translate(0 ${22 / view.scale})`}>
+                    <rect x={-30 / view.scale} y={-9 / view.scale}
+                      width={60 / view.scale} height={18 / view.scale}
+                      rx={2 / view.scale} ry={2 / view.scale}
+                      fill="rgba(0,0,0,0.75)" stroke={c} strokeWidth={1 / view.scale} />
+                    <text x={0} y={4 / view.scale} textAnchor="middle"
+                      fontSize={11 / view.scale} fontWeight={700} fill="#fff"
+                      fontFamily="Manrope, sans-serif">
+                      {formatTime(e.t)}
+                    </text>
+                  </g>
+                </g>
+              );
+            })}
           </svg>
         </div>
       </div>
@@ -681,6 +725,21 @@ function MapCanvas({
         <div className="hud-panel-strong pointer-events-auto flex items-center gap-3 px-3 py-2 text-xs">
           <span className="label-eyebrow">Map</span>
           <span className="text-mono font-semibold tracking-wider">{mapName.toUpperCase()}</span>
+        </div>
+        <div className="hud-panel-strong pointer-events-auto flex flex-wrap gap-1 p-1.5">
+          {VIEW_MODES.map(m => {
+            const active = viewMode === m.id;
+            return (
+              <button key={m.id} onClick={() => setViewMode(m.id)}
+                className={`text-mono rounded-sm border px-2 py-1 text-[10px] uppercase tracking-wider transition-colors ${
+                  active
+                    ? "border-primary bg-primary/15 text-primary"
+                    : "border-border bg-surface-2 text-muted-foreground hover:text-foreground"
+                }`}>
+                {m.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
