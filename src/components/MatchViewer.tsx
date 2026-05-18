@@ -303,11 +303,11 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
 function eventColor(type: string) {
   switch (type) {
     case "kill":
-    case "wipe":  return "#ff5b12";
-    case "knock": return "#fde68a";
-    case "ring":  return "#22c4f5";
-    case "care":  return "#86efac";
-    default:      return "#94a3b8";
+    case "wipe":  return "#ef4444"; // danger
+    case "knock": return "#fbbf24"; // warning
+    case "ring":  return "#22c4f5"; // info
+    case "care":  return "#34d399"; // success
+    default:      return "#94a3b8"; // neutral
   }
 }
 
