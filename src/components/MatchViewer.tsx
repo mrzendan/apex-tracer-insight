@@ -160,8 +160,11 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
     const seg = ringSegments.find(s => time >= s.startSec && time <= s.endSec)
       ?? ringSegments[ringSegments.length - 1];
     const target = ringPhases[seg.phaseIndex];
+    // For R1 there is no "previous" ring. Use a synthetic starting circle that
+    // just inscribes the map corners (≈ √0.5) so the danger zone is invisible
+    // at CD but starts shrinking from the corners the moment R1 Closing begins.
     const prev: RingPhase = seg.phaseIndex === 0
-      ? { startSec: 0, endSec: 0, cx: 0.5, cy: 0.5, r: 1.5 }
+      ? { startSec: 0, endSec: 0, cx: 0.5, cy: 0.5, r: 0.72 }
       : ringPhases[seg.phaseIndex - 1];
     if (seg.kind === "CD") return prev;
     const k = Math.max(0, Math.min(1, (time - seg.startSec) / (seg.endSec - seg.startSec)));
