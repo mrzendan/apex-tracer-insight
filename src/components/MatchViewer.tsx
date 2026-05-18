@@ -648,7 +648,7 @@ type Dwell = { x: number; y: number; tStart: number; tEnd: number };
 function MapCanvas({
   time, ring, trajectories, dwellsByTeam, cfg, onCfg, showConfig, setShowConfig,
   selectedTeams, hoverTeam, showTrails, showLabels,
-  mapImage, mapName, aliveTeams, totalKills, duration, ringIndex, ringCount, controls,
+  mapImage, mapName, aliveTeams, totalKills, duration, deathTimes, ringIndex, ringCount, controls,
   focusRequest, onEventClick,
 }: {
   time: number; ring: RingPhase | null;
@@ -662,6 +662,8 @@ function MapCanvas({
   showTrails: boolean; showLabels: boolean;
   mapImage: string; mapName: string;
   aliveTeams: number; totalKills: number; duration: number;
+  /** Per-team death timestamps (sec). Absent → still alive. */
+  deathTimes: Record<string, number>;
   ringIndex: number; ringCount: number;
   controls: {
     showTrails: boolean; setShowTrails: (v: boolean) => void;
