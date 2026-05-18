@@ -451,7 +451,7 @@ function MapCanvas({
   time, ring, trajectories, dwellsByTeam, cfg, onCfg, showConfig, setShowConfig,
   selectedTeams, hoverTeam, showTrails, showLabels,
   mapImage, mapName, aliveTeams, totalKills, ringIndex, ringCount, controls,
-  viewMode, setViewMode, eventMarkers, focusRequest, onEventClick,
+  focusRequest, onEventClick,
 }: {
   time: number; ring: RingPhase | null;
   trajectories: Record<string, { t: number; x: number; y: number }[]>;
@@ -470,9 +470,6 @@ function MapCanvas({
     showRing: boolean; setShowRing: (v: boolean) => void;
     showLabels: boolean; setShowLabels: (v: boolean) => void;
   };
-  viewMode: ViewMode;
-  setViewMode: (m: ViewMode) => void;
-  eventMarkers: { e: GameEvent; p: { x: number; y: number } }[];
   focusRequest: { x: number; y: number; token: number } | null;
   onEventClick: (e: GameEvent) => void;
 }) {
