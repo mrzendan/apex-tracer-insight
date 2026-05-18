@@ -118,6 +118,10 @@ export type Team = {
   color: string;
   /** Optional logo URL. When absent, the UI falls back to the site logo. */
   logo?: string;
+  /** Optional logo variant for light theme. Falls back to `logo`. */
+  logoLight?: string;
+  /** Optional logo variant for dark theme. Falls back to `logo`. */
+  logoDark?: string;
   players: string[];
   placement: number;
   kills: number;
