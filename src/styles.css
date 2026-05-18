@@ -88,6 +88,56 @@
   /* same as root — site is dark-first */
 }
 
+/* Light theme — переопределяем только токены. */
+:root.light {
+  --background: oklch(0.985 0.003 240);
+  --foreground: oklch(0.18 0.018 252);
+  --surface:    oklch(0.965 0.005 240);
+  --surface-2:  oklch(0.94 0.006 240);
+
+  --card:                oklch(1 0 0);
+  --card-foreground:     oklch(0.18 0.018 252);
+  --popover:             oklch(1 0 0);
+  --popover-foreground:  oklch(0.18 0.018 252);
+
+  --primary-foreground:  oklch(0.99 0 0);
+
+  --secondary:           oklch(0.92 0.008 240);
+  --secondary-foreground: oklch(0.2 0.02 252);
+
+  --muted:               oklch(0.93 0.006 240);
+  --muted-foreground:    oklch(0.45 0.02 250);
+
+  --accent:              oklch(0.92 0.008 240);
+  --accent-foreground:   oklch(0.2 0.02 252);
+
+  --border:        oklch(0 0 0 / 10%);
+  --border-strong: oklch(0 0 0 / 18%);
+  --input:         oklch(0 0 0 / 12%);
+  --grid:          oklch(0 0 0 / 5%);
+}
+
+/* OLED — чистый чёрный фон. */
+:root.oled {
+  --background: oklch(0 0 0);
+  --foreground: oklch(0.97 0.005 240);
+  --surface:    oklch(0.08 0.01 252);
+  --surface-2:  oklch(0.13 0.012 252);
+
+  --card:    oklch(0.08 0.01 252);
+  --popover: oklch(0.08 0.01 252);
+
+  --muted:            oklch(0.16 0.012 252);
+  --muted-foreground: oklch(0.62 0.015 250);
+  --accent:           oklch(0.16 0.012 252);
+  --secondary:        oklch(0.16 0.012 252);
+
+  --border:        oklch(1 0 0 / 12%);
+  --border-strong: oklch(1 0 0 / 22%);
+  --input:         oklch(1 0 0 / 14%);
+  --grid:          oklch(1 0 0 / 6%);
+}
+
 @layer base {
   * {
     border-color: var(--color-border);
@@ -125,5 +175,37 @@
     text-transform: uppercase;
     color: var(--color-muted-foreground);
     font-weight: 600;
+  }
+}
+
+/* Animations */
+@layer utilities {
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.96); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  @keyframes slide-in-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes blob-drift {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -20px) scale(1.05); }
+    66% { transform: translate(-20px, 25px) scale(0.97); }
+  }
+  .animate-fade-in   { animation: fade-in 0.45s ease-out both; }
+  .animate-scale-in  { animation: scale-in 0.35s ease-out both; }
+  .animate-slide-up  { animation: slide-in-up 0.5s ease-out both; }
+
+  .hover-lift {
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px -10px oklch(0 0 0 / 35%);
   }
 }
