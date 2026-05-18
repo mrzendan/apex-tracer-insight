@@ -3,7 +3,6 @@ import { useMemo } from "react";
 import { tournaments, matches, maps, teams, matchSeedExtras, getGames, type Match } from "@/lib/mock-match";
 import { TeamLogo } from "@/components/admin/TeamLogo";
 import { RouteGuard } from "@/components/auth/RouteGuard";
-import { useAuth } from "@/lib/auth";
 import { BrandMark } from "@/components/BrandMark";
 import {
   Trophy, Swords, MapIcon as MapMarker, Users, ArrowRight, Activity,
