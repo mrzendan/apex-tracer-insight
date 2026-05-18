@@ -16,7 +16,7 @@ import { TeamLogo } from "@/components/admin/TeamLogo";
 import { getSlotColor } from "@/lib/team-colors";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { DensityToggle } from "@/components/DensityToggle";
-import { Users, Swords, Crosshair, Skull, ShieldAlert, Package, Circle } from "lucide-react";
+import { Users, Swords, Skull, ShieldAlert, Package, Circle } from "lucide-react";
 import damageIcon from "@/assets/icons/damage.svg";
 
 function formatTime(sec: number) {
@@ -474,7 +474,16 @@ function eventColor(type: string) {
 function EventIcon({ type }: { type: string }) {
   const cls = "h-5 w-5";
   switch (type) {
-    case "kill":  return <Crosshair className={cls} strokeWidth={2.5} />;
+    case "kill":  return (
+      <img
+        src={damageIcon}
+        alt="kill"
+        className={cls}
+        style={{
+          filter: "brightness(0) saturate(100%) invert(38%) sepia(93%) saturate(3000%) hue-rotate(346deg) brightness(96%) contrast(97%)",
+        }}
+      />
+    );
     case "wipe":  return <Skull className={cls} strokeWidth={2.5} />;
     case "knock": return (
       <img
