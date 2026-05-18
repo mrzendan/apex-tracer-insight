@@ -142,7 +142,7 @@ function TaskRow({ task }: { task: typeof activeTasks[number] }) {
               {typeof task.progress === "number" && task.status === "processing" ? ` ${task.progress}%` : ""}
             </span>
           </div>
-          <div className="mt-0.5 truncate text-[11px] text-muted-foreground">{task.subtitle}</div>
+          <div className="mt-0.5 truncate text-muted-foreground text-sm">{task.subtitle}</div>
 
           {task.status === "processing" && typeof task.progress === "number" && (
             <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-muted">
