@@ -267,17 +267,15 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
         totalKills={totalKills}
       />
 
-      <div className="flex min-h-0 flex-1">
+      <div className="relative flex min-h-0 flex-1">
         {leftCollapsed ? (
-          <div className="hidden shrink-0 flex-col items-center border-r border-border bg-surface p-2 lg:flex">
-            <button
-              onClick={() => setLeftCollapsed(false)}
-              title="Show teams"
-              className="flex h-10 w-10 items-center justify-center rounded-sm border border-border-strong bg-surface-2 text-foreground hover:bg-muted"
-            >
-              <Users className="h-5 w-5" />
-            </button>
-          </div>
+          <button
+            onClick={() => setLeftCollapsed(false)}
+            title="Show teams"
+            className="absolute left-2 top-2 z-20 hidden h-10 w-10 items-center justify-center rounded-sm border border-border-strong bg-surface-2/90 text-foreground shadow-md backdrop-blur hover:bg-muted lg:flex"
+          >
+            <Users className="h-5 w-5" />
+          </button>
         ) : (
         <aside
           className="relative hidden shrink-0 flex-col border-r border-border bg-surface lg:flex"
@@ -339,15 +337,13 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
         </main>
 
         {rightCollapsed ? (
-          <div className="hidden shrink-0 flex-col items-center border-l border-border bg-surface p-2 xl:flex">
-            <button
-              onClick={() => setRightCollapsed(false)}
-              title="Show match feed"
-              className="flex h-10 w-10 items-center justify-center rounded-sm border border-border-strong bg-surface-2 text-foreground hover:bg-muted"
-            >
-              <Swords className="h-5 w-5" />
-            </button>
-          </div>
+          <button
+            onClick={() => setRightCollapsed(false)}
+            title="Show match feed"
+            className="absolute right-2 top-2 z-20 hidden h-10 w-10 items-center justify-center rounded-sm border border-border-strong bg-surface-2/90 text-foreground shadow-md backdrop-blur hover:bg-muted xl:flex"
+          >
+            <Swords className="h-5 w-5" />
+          </button>
         ) : (
         <aside
           className="relative hidden shrink-0 flex-col border-l border-border bg-surface xl:flex"
