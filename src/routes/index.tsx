@@ -41,6 +41,21 @@ function Hub() {
   const recentMatches = matches.slice(0, 4);
   const topTeams = useMemo(() => [...teams].sort((a, b) => a.placement - b.placement).slice(0, 8), []);
 
+  // "Currently playing" = team participates in a match whose tournament window includes today.
+  const liveTeamIds = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    const liveTournamentIds = new Set(
+      tournaments.filter((t) => t.startDate <= today && today <= t.endDate).map((t) => t.id),
+    );
+    const ids = new Set<string>();
+    for (const m of matches as Array<{ tournamentId: string; teamIds?: string[] }>) {
+      if (!liveTournamentIds.has(m.tournamentId)) continue;
+      const tids = m.teamIds ?? teams.map((t) => t.id);
+      for (const id of tids) ids.add(id);
+    }
+    return ids;
+  }, []);
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Aurora background */}
@@ -224,8 +239,11 @@ function Hub() {
                     {team.tag} · #{team.placement} · {team.kills}K
                   </div>
                 </div>
-                {team.alive && (
-                  <span className="h-1.5 w-1.5 rounded-full bg-success" title="Жива" />
+                {liveTeamIds.has(team.id) && (
+                  <span
+                    className="h-1.5 w-1.5 animate-pulse rounded-full bg-success"
+                    title="Сейчас играет"
+                  />
                 )}
               </Link>
             ))}
