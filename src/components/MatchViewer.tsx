@@ -252,8 +252,10 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
     window.addEventListener("pointerup", onUp);
   };
   // Scale team-row logo size with panel width.
-  const teamLogoSize = Math.round(Math.max(18, Math.min(44, leftWidth / 11)));
   const teamCompact = leftWidth < 210;
+  const teamLogoSize = teamCompact
+    ? Math.round(leftWidth * 1.4)
+    : Math.round(Math.max(18, Math.min(44, leftWidth / 11)));
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-background text-foreground">
@@ -494,6 +496,22 @@ function TeamRow({ team, active, hovered, onToggle, onHover, logoSize = 20, comp
 }) {
   const slotColor = getSlotColor(teams.indexOf(team));
   const nameSize = Math.max(12, Math.min(18, Math.round(logoSize * 0.6)));
+  if (compact) {
+    return (
+      <div onMouseEnter={() => onHover(true)} onMouseLeave={() => onHover(false)}
+        onClick={onToggle}
+        className={`group relative mb-1 flex h-12 cursor-pointer items-center overflow-hidden rounded-sm border transition-colors ${
+          active ? "border-border-strong bg-surface-2" : "border-transparent bg-transparent opacity-50"
+        } ${hovered ? "ring-1 ring-primary/40" : ""}`}>
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <TeamLogo team={team} size={logoSize} className="!rounded-none !border-0 !bg-transparent" />
+        </div>
+        <span className="absolute left-1.5 top-1.5 h-2.5 w-2.5 rounded-sm"
+          style={{ backgroundColor: slotColor }} />
+        <span className={`absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full ${team.alive ? "bg-success" : "bg-destructive/70"}`} />
+      </div>
+    );
+  }
   return (
     <div onMouseEnter={() => onHover(true)} onMouseLeave={() => onHover(false)}
       className={`group relative mb-1 flex cursor-pointer items-center gap-2.5 rounded-sm border px-2 py-1.5 transition-colors ${
@@ -502,13 +520,8 @@ function TeamRow({ team, active, hovered, onToggle, onHover, logoSize = 20, comp
       <span className="h-2.5 w-2.5 shrink-0 rounded-sm"
         style={{ backgroundColor: slotColor }} />
       <TeamLogo team={team} size={logoSize} />
-      {!compact && (
-        <>
-          <span className="text-mono w-6 text-[10px] tabular-nums text-muted-foreground">#{team.placement}</span>
-          <span className="min-w-0 flex-1 truncate font-semibold" style={{ fontSize: nameSize }}>{team.name}</span>
-        </>
-      )}
-      {compact && <span className="flex-1" />}
+      <span className="text-mono w-6 text-[10px] tabular-nums text-muted-foreground">#{team.placement}</span>
+      <span className="min-w-0 flex-1 truncate font-semibold" style={{ fontSize: nameSize }}>{team.name}</span>
       <span className={`h-1.5 w-1.5 rounded-full ${team.alive ? "bg-success" : "bg-destructive/70"}`} />
     </div>
   );
