@@ -449,10 +449,12 @@ function PanelHeader({ title, subtitle }: { title: string; subtitle?: string }) 
   );
 }
 
-function TeamRow({ team, active, hovered, onToggle, onHover }: {
+function TeamRow({ team, active, hovered, onToggle, onHover, logoSize = 20 }: {
   team: Team; active: boolean; hovered: boolean; onToggle: () => void; onHover: (v: boolean) => void;
+  logoSize?: number;
 }) {
   const slotColor = getSlotColor(teams.indexOf(team));
+  const nameSize = Math.max(12, Math.min(18, Math.round(logoSize * 0.6)));
   return (
     <div onMouseEnter={() => onHover(true)} onMouseLeave={() => onHover(false)}
       className={`group relative mb-1 flex cursor-pointer items-center gap-2.5 rounded-sm border px-2 py-1.5 transition-colors ${
@@ -460,9 +462,9 @@ function TeamRow({ team, active, hovered, onToggle, onHover }: {
       } ${hovered ? "ring-1 ring-primary/40" : ""}`} onClick={onToggle}>
       <span className="h-2.5 w-2.5 shrink-0 rounded-sm"
         style={{ backgroundColor: slotColor }} />
-      <TeamLogo team={team} size={20} />
+      <TeamLogo team={team} size={logoSize} />
       <span className="text-mono w-6 text-[10px] tabular-nums text-muted-foreground">#{team.placement}</span>
-      <span className="min-w-0 flex-1 truncate text-xs font-semibold">{team.name}</span>
+      <span className="min-w-0 flex-1 truncate font-semibold" style={{ fontSize: nameSize }}>{team.name}</span>
       <span className={`h-1.5 w-1.5 rounded-full ${team.alive ? "bg-success" : "bg-destructive/70"}`} />
     </div>
   );
