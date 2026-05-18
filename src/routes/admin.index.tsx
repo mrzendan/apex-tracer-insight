@@ -60,7 +60,7 @@ function AdminDashboard() {
     <div className="flex h-full flex-col overflow-auto">
       <header className="flex h-14 shrink-0 items-center border-b border-border bg-surface px-6">
         <h1 className="text-sm font-bold uppercase tracking-wider">Dashboard</h1>
-        <div className="ml-auto label-eyebrow text-[10px]">Mock data · frontend only</div>
+        <div className="ml-auto label-eyebrow text-xs">Mock data · frontend only</div>
       </header>
 
 
@@ -111,7 +111,7 @@ function SectionHead({ icon: Icon, title, hint }: { icon: typeof Activity; title
         <Icon className="h-3.5 w-3.5 text-primary" />
         <h2 className="label-eyebrow">{title}</h2>
       </div>
-      {hint && <span className="text-mono text-[10px] text-muted-foreground">{hint}</span>}
+      {hint && <span className="text-mono text-xs text-muted-foreground">{hint}</span>}
     </div>
   );
 }
@@ -136,7 +136,7 @@ function TaskRow({ task }: { task: typeof activeTasks[number] }) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
             <div className="truncate text-sm font-semibold">{task.title}</div>
-            <span className={`inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${meta.cls}`}>
+            <span className={`inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-xs font-bold uppercase tracking-wider ${meta.cls}`}>
               <StatusIcon className={`h-3 w-3 ${task.status === "processing" ? "animate-spin" : ""}`} />
               {meta.label}
               {typeof task.progress === "number" && task.status === "processing" ? ` ${task.progress}%` : ""}
@@ -151,15 +151,15 @@ function TaskRow({ task }: { task: typeof activeTasks[number] }) {
           )}
 
           <div className="mt-2 flex items-center gap-1.5">
-            <Link to="/admin/processes" className="text-mono inline-flex items-center gap-1 rounded-sm border border-border bg-surface-2 px-2 py-1 text-[10px] uppercase tracking-wider hover:bg-muted">
+            <Link to="/admin/processes" className="text-mono inline-flex items-center gap-1 rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted">
               <ExternalLink className="h-3 w-3" /> Open
             </Link>
             {task.status === "failed" && (
-              <button className="text-mono inline-flex items-center gap-1 rounded-sm border border-primary/40 bg-primary/10 px-2 py-1 text-[10px] uppercase tracking-wider text-primary hover:bg-primary/20">
+              <button className="text-mono inline-flex items-center gap-1 rounded-sm border border-primary/40 bg-primary/10 px-2 py-1 text-xs uppercase tracking-wider text-primary hover:bg-primary/20">
                 <RotateCw className="h-3 w-3" /> Retry
               </button>
             )}
-            <button className="text-mono inline-flex items-center gap-1 rounded-sm border border-border bg-surface-2 px-2 py-1 text-[10px] uppercase tracking-wider hover:bg-muted">
+            <button className="text-mono inline-flex items-center gap-1 rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted">
               <Bug className="h-3 w-3" /> Debug
             </button>
           </div>
@@ -182,7 +182,7 @@ function ActionRow({ action }: { action: typeof recentActions[number] }) {
       <Icon className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${meta.color}`} />
       <div className="min-w-0 flex-1">
         <div className="truncate text-xs">{action.text}</div>
-        <div className="text-mono text-[10px] text-muted-foreground">{action.time}</div>
+        <div className="text-mono text-xs text-muted-foreground">{action.time}</div>
       </div>
     </div>
   );
