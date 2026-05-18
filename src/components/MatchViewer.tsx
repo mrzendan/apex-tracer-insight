@@ -14,6 +14,8 @@ import {
 } from "@/lib/mock-match";
 import { TeamLogo } from "@/components/admin/TeamLogo";
 import { getSlotColor } from "@/lib/team-colors";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { DensityToggle } from "@/components/DensityToggle";
 
 function formatTime(sec: number) {
   const m = Math.floor(sec / 60).toString().padStart(2, "0");
@@ -212,6 +214,30 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
     if (p) setFocusRequest({ x: p.x, y: p.y, token: Date.now() });
   }, [eventPoint]);
 
+  // Resizable side panels (Teams left, Match feed right)
+  const [leftWidth, setLeftWidth] = useState(260);
+  const [rightWidth, setRightWidth] = useState(300);
+  const startResize = (side: "left" | "right") => (e: React.PointerEvent) => {
+    e.preventDefault();
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    const startX = e.clientX;
+    const startW = side === "left" ? leftWidth : rightWidth;
+    const onMove = (ev: PointerEvent) => {
+      const dx = ev.clientX - startX;
+      const next = side === "left" ? startW + dx : startW - dx;
+      const clamped = Math.max(200, Math.min(560, next));
+      if (side === "left") setLeftWidth(clamped); else setRightWidth(clamped);
+    };
+    const onUp = () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+  };
+  // Scale team-row logo size with panel width.
+  const teamLogoSize = Math.round(Math.max(18, Math.min(40, leftWidth / 13)));
+
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-background text-foreground">
       <TopBar
@@ -225,13 +251,17 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
       />
 
       <div className="flex min-h-0 flex-1">
-        <aside className="hidden w-[260px] shrink-0 flex-col border-r border-border bg-surface lg:flex">
+        <aside
+          className="relative hidden shrink-0 flex-col border-r border-border bg-surface lg:flex"
+          style={{ width: leftWidth }}
+        >
           <PanelHeader title="Teams" subtitle={`${selectedTeams.size}/${teams.length} visible`} />
           <div className="min-h-0 flex-1 overflow-y-auto p-2">
             {[...teams].sort((a, b) => a.placement - b.placement).map((t) => (
               <TeamRow key={t.id} team={t} active={selectedTeams.has(t.id)} hovered={hoverTeam === t.id}
                 onToggle={() => toggleTeam(t.id)}
-                onHover={(v) => setHoverTeam(v ? t.id : null)} />
+                onHover={(v) => setHoverTeam(v ? t.id : null)}
+                logoSize={teamLogoSize} />
             ))}
           </div>
           <div className="border-t border-border p-3">
@@ -242,6 +272,11 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
                 className="flex-1 rounded-sm border border-border bg-surface px-2 py-1.5 text-xs font-medium hover:bg-muted">Hide all</button>
             </div>
           </div>
+          <div
+            onPointerDown={startResize("left")}
+            className="absolute top-0 right-0 z-10 h-full w-1.5 cursor-col-resize bg-transparent hover:bg-primary/40"
+            title="Drag to resize"
+          />
         </aside>
 
         <main className="flex min-w-0 flex-1 flex-col">
@@ -274,7 +309,15 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
             onSeek={setTime} onTogglePlay={() => setPlaying((p) => !p)} onSpeedChange={setSpeed} />
         </main>
 
-        <aside className="hidden w-[300px] shrink-0 flex-col border-l border-border bg-surface xl:flex">
+        <aside
+          className="relative hidden shrink-0 flex-col border-l border-border bg-surface xl:flex"
+          style={{ width: rightWidth }}
+        >
+          <div
+            onPointerDown={startResize("right")}
+            className="absolute top-0 left-0 z-10 h-full w-1.5 cursor-col-resize bg-transparent hover:bg-primary/40"
+            title="Drag to resize"
+          />
           <PanelHeader title="Match feed" subtitle={`${filteredEvents.length}/${events.length}`} />
           <div className="flex flex-wrap gap-1 border-b border-border px-2 py-2">
             {EVENT_FILTERS.map(f => {
@@ -373,6 +416,8 @@ function TopBar({
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-success" />
           <span className="label-eyebrow text-[10px]">Live</span>
         </span>
+        <ThemeToggle compact />
+        <DensityToggle compact />
         <Link to="/admin" className="rounded-sm border border-border-strong bg-surface-2 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider hover:bg-muted">
           Admin
         </Link>
@@ -406,10 +451,12 @@ function PanelHeader({ title, subtitle }: { title: string; subtitle?: string }) 
   );
 }
 
-function TeamRow({ team, active, hovered, onToggle, onHover }: {
+function TeamRow({ team, active, hovered, onToggle, onHover, logoSize = 20 }: {
   team: Team; active: boolean; hovered: boolean; onToggle: () => void; onHover: (v: boolean) => void;
+  logoSize?: number;
 }) {
   const slotColor = getSlotColor(teams.indexOf(team));
+  const nameSize = Math.max(12, Math.min(18, Math.round(logoSize * 0.6)));
   return (
     <div onMouseEnter={() => onHover(true)} onMouseLeave={() => onHover(false)}
       className={`group relative mb-1 flex cursor-pointer items-center gap-2.5 rounded-sm border px-2 py-1.5 transition-colors ${
@@ -417,9 +464,9 @@ function TeamRow({ team, active, hovered, onToggle, onHover }: {
       } ${hovered ? "ring-1 ring-primary/40" : ""}`} onClick={onToggle}>
       <span className="h-2.5 w-2.5 shrink-0 rounded-sm"
         style={{ backgroundColor: slotColor }} />
-      <TeamLogo team={team} size={20} />
+      <TeamLogo team={team} size={logoSize} />
       <span className="text-mono w-6 text-[10px] tabular-nums text-muted-foreground">#{team.placement}</span>
-      <span className="min-w-0 flex-1 truncate text-xs font-semibold">{team.name}</span>
+      <span className="min-w-0 flex-1 truncate font-semibold" style={{ fontSize: nameSize }}>{team.name}</span>
       <span className={`h-1.5 w-1.5 rounded-full ${team.alive ? "bg-success" : "bg-destructive/70"}`} />
     </div>
   );
@@ -797,10 +844,24 @@ function Timeline({
   onSeek: (t: number) => void; onTogglePlay: () => void; onSpeedChange: (s: number) => void;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
-  const onTrack = (e: React.MouseEvent) => {
+  const dragging = useRef(false);
+  const seekFromClientX = (clientX: number) => {
     const r = trackRef.current!.getBoundingClientRect();
-    const k = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+    const k = Math.max(0, Math.min(1, (clientX - r.left) / r.width));
     onSeek(k * duration);
+  };
+  const onTrackPointerDown = (e: React.PointerEvent) => {
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    dragging.current = true;
+    seekFromClientX(e.clientX);
+  };
+  const onTrackPointerMove = (e: React.PointerEvent) => {
+    if (!dragging.current) return;
+    seekFromClientX(e.clientX);
+  };
+  const onTrackPointerUp = (e: React.PointerEvent) => {
+    dragging.current = false;
+    try { (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId); } catch {}
   };
   const speeds = [1, 2, 4, 8];
 
@@ -835,7 +896,14 @@ function Timeline({
       </div>
 
       <div className="px-4 pb-3">
-        <div ref={trackRef} onClick={onTrack} className="relative h-9 cursor-pointer rounded-sm border border-border bg-background">
+        <div
+          ref={trackRef}
+          onPointerDown={onTrackPointerDown}
+          onPointerMove={onTrackPointerMove}
+          onPointerUp={onTrackPointerUp}
+          onPointerCancel={onTrackPointerUp}
+          className="relative h-9 cursor-pointer touch-none select-none rounded-sm border border-border bg-background"
+        >
           {ringSegments.map((seg, i) => {
             const isClosing = seg.kind === "Closing";
             const intensity = 0.04 + seg.phaseIndex * 0.025;
@@ -861,7 +929,7 @@ function Timeline({
               style={{ left: `${(e.t / duration) * 100}%`, backgroundColor: eventColor(e.type), opacity: 0.7 }}
               title={`${formatTime(e.t)} — ${e.label}`} />
           ))}
-          <div className="absolute top-0 h-full w-0.5 bg-primary shadow-[0_0_8px_rgba(255,91,18,0.8)]"
+          <div className="pointer-events-none absolute top-0 h-full w-0.5 bg-primary shadow-[0_0_8px_rgba(255,91,18,0.8)]"
             style={{ left: `${(time / duration) * 100}%` }}>
             <div className="absolute -left-1.5 -top-1 h-2.5 w-2.5 rotate-45 bg-primary" />
           </div>
