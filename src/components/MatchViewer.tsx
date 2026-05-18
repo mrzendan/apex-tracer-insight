@@ -12,6 +12,7 @@ import {
   type RingPhase,
 } from "@/lib/mock-match";
 import { TeamLogo } from "@/components/admin/TeamLogo";
+import { getSlotColor } from "@/lib/team-colors";
 
 function formatTime(sec: number) {
   const m = Math.floor(sec / 60).toString().padStart(2, "0");
@@ -298,13 +299,14 @@ function PanelHeader({ title, subtitle }: { title: string; subtitle?: string }) 
 function TeamRow({ team, active, hovered, onToggle, onHover }: {
   team: Team; active: boolean; hovered: boolean; onToggle: () => void; onHover: (v: boolean) => void;
 }) {
+  const slotColor = getSlotColor(teams.indexOf(team));
   return (
     <div onMouseEnter={() => onHover(true)} onMouseLeave={() => onHover(false)}
       className={`group relative mb-1 flex cursor-pointer items-center gap-2.5 rounded-sm border px-2 py-1.5 transition-colors ${
         active ? "border-border-strong bg-surface-2" : "border-transparent bg-transparent opacity-50"
       } ${hovered ? "ring-1 ring-primary/40" : ""}`} onClick={onToggle}>
       <span className="h-2.5 w-2.5 shrink-0 rounded-sm"
-        style={{ backgroundColor: team.color }} />
+        style={{ backgroundColor: slotColor }} />
       <TeamLogo team={team} size={20} />
       <span className="text-mono w-6 text-[10px] tabular-nums text-muted-foreground">#{team.placement}</span>
       <span className="min-w-0 flex-1 truncate text-xs font-semibold">{team.name}</span>
@@ -472,8 +474,9 @@ function MapCanvas({
               </>
             )}
 
-            {teams.map((t) => {
+            {teams.map((t, slotIdx) => {
               if (!selectedTeams.has(t.id)) return null;
+              const slotColor = getSlotColor(slotIdx);
               const path = trajectories[t.id];
               const upTo = path.filter((p) => p.t <= time);
               if (upTo.length === 0) return null;
