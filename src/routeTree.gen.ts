@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TournamentsRouteImport } from './routes/tournaments'
 import { Route as Presentation2RouteImport } from './routes/presentation-2'
 import { Route as PresentationRouteImport } from './routes/presentation'
+import { Route as MatchesRouteImport } from './routes/matches'
 import { Route as MapsRouteImport } from './routes/maps'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -53,6 +54,11 @@ const PresentationRoute = PresentationRouteImport.update({
   path: '/presentation',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MatchesRoute = MatchesRouteImport.update({
+  id: '/matches',
+  path: '/matches',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MapsRoute = MapsRouteImport.update({
   id: '/maps',
   path: '/maps',
@@ -89,9 +95,9 @@ const TeamsTeamIdRoute = TeamsTeamIdRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const MatchesMatchIdRoute = MatchesMatchIdRouteImport.update({
-  id: '/matches/$matchId',
-  path: '/matches/$matchId',
-  getParentRoute: () => rootRouteImport,
+  id: '/$matchId',
+  path: '/$matchId',
+  getParentRoute: () => MatchesRoute,
 } as any)
 const MapsMapIdRoute = MapsMapIdRouteImport.update({
   id: '/$mapId',
@@ -185,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
   '/maps': typeof MapsRouteWithChildren
+  '/matches': typeof MatchesRouteWithChildren
   '/presentation': typeof PresentationRoute
   '/presentation-2': typeof Presentation2Route
   '/tournaments': typeof TournamentsRoute
@@ -214,6 +221,7 @@ export interface FileRoutesByTo {
   '/accept-invite': typeof AcceptInviteRoute
   '/login': typeof LoginRoute
   '/maps': typeof MapsRouteWithChildren
+  '/matches': typeof MatchesRouteWithChildren
   '/presentation': typeof PresentationRoute
   '/presentation-2': typeof Presentation2Route
   '/tournaments': typeof TournamentsRoute
@@ -245,6 +253,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
   '/maps': typeof MapsRouteWithChildren
+  '/matches': typeof MatchesRouteWithChildren
   '/presentation': typeof PresentationRoute
   '/presentation-2': typeof Presentation2Route
   '/tournaments': typeof TournamentsRoute
@@ -277,6 +286,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/login'
     | '/maps'
+    | '/matches'
     | '/presentation'
     | '/presentation-2'
     | '/tournaments'
@@ -306,6 +316,7 @@ export interface FileRouteTypes {
     | '/accept-invite'
     | '/login'
     | '/maps'
+    | '/matches'
     | '/presentation'
     | '/presentation-2'
     | '/tournaments'
@@ -336,6 +347,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/login'
     | '/maps'
+    | '/matches'
     | '/presentation'
     | '/presentation-2'
     | '/tournaments'
@@ -367,10 +379,10 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   LoginRoute: typeof LoginRoute
   MapsRoute: typeof MapsRouteWithChildren
+  MatchesRoute: typeof MatchesRouteWithChildren
   PresentationRoute: typeof PresentationRoute
   Presentation2Route: typeof Presentation2Route
   TournamentsRoute: typeof TournamentsRoute
-  MatchesMatchIdRoute: typeof MatchesMatchIdRoute
   TeamsTeamIdRoute: typeof TeamsTeamIdRoute
 }
 
@@ -395,6 +407,13 @@ declare module '@tanstack/react-router' {
       path: '/presentation'
       fullPath: '/presentation'
       preLoaderRoute: typeof PresentationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/matches': {
+      id: '/matches'
+      path: '/matches'
+      fullPath: '/matches'
+      preLoaderRoute: typeof MatchesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/maps': {
@@ -448,10 +467,10 @@ declare module '@tanstack/react-router' {
     }
     '/matches/$matchId': {
       id: '/matches/$matchId'
-      path: '/matches/$matchId'
+      path: '/$matchId'
       fullPath: '/matches/$matchId'
       preLoaderRoute: typeof MatchesMatchIdRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof MatchesRoute
     }
     '/maps/$mapId': {
       id: '/maps/$mapId'
@@ -657,16 +676,27 @@ const MapsRouteChildren: MapsRouteChildren = {
 
 const MapsRouteWithChildren = MapsRoute._addFileChildren(MapsRouteChildren)
 
+interface MatchesRouteChildren {
+  MatchesMatchIdRoute: typeof MatchesMatchIdRoute
+}
+
+const MatchesRouteChildren: MatchesRouteChildren = {
+  MatchesMatchIdRoute: MatchesMatchIdRoute,
+}
+
+const MatchesRouteWithChildren =
+  MatchesRoute._addFileChildren(MatchesRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AcceptInviteRoute: AcceptInviteRoute,
   AdminRoute: AdminRouteWithChildren,
   LoginRoute: LoginRoute,
   MapsRoute: MapsRouteWithChildren,
+  MatchesRoute: MatchesRouteWithChildren,
   PresentationRoute: PresentationRoute,
   Presentation2Route: Presentation2Route,
   TournamentsRoute: TournamentsRoute,
-  MatchesMatchIdRoute: MatchesMatchIdRoute,
   TeamsTeamIdRoute: TeamsTeamIdRoute,
 }
 export const routeTree = rootRouteImport
