@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { tournaments, matches, maps, matchSeedExtras, getGames } from "@/lib/mock-match";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { BrandMark } from "@/components/BrandMark";
 
 export const Route = createFileRoute("/tournaments")({
@@ -44,7 +43,6 @@ function TournamentsPage() {
       <header className="sticky top-0 z-20 flex h-14 items-center gap-4 border-b border-border bg-surface/80 px-4 backdrop-blur">
         <BrandMark subtitle="Турниры" />
         <div className="ml-auto flex items-center gap-2">
-          <ThemeToggle compact />
         </div>
       </header>
       <div className="mx-auto max-w-7xl p-6">

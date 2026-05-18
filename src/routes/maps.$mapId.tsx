@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { MapDetailContent } from "@/components/maps/MapDetailContent";
-import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const Route = createFileRoute("/maps/$mapId")({
   component: MapDetailPage,
@@ -16,7 +15,6 @@ function MapDetailPage() {
         <Link to="/" className="text-mono text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground">APEX STATS</Link>
         <span className="text-mono text-xs text-muted-foreground">/</span>
         <Link to="/maps" className="text-mono text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground">Карты</Link>
-        <div className="ml-auto"><ThemeToggle compact /></div>
       </header>
       <div className="min-h-0 flex-1">
         <MapDetailContent mapId={mapId} initialTeam={search.team} backTo="/maps" backLabel="Карты" />
