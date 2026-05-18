@@ -2,6 +2,7 @@ import { useSyncExternalStore } from "react";
 import {
   teams as seedTeams,
   matches as seedMatches,
+  matchSeedExtras,
   tournaments as seedTournaments,
   type Team,
   type Tournament,
@@ -75,14 +76,18 @@ type State = {
   processes: AnalysisProcess[];
 };
 
-// Seed: assign default teamIds to each match (rotate 20 teams as participants).
-const initialMatches: MatchFull[] = seedMatches.map((m, i) => ({
-  ...m,
-  mapIds: [m.mapId],
-  vodLink: "",
-  teamIds: seedTeams.map((t) => t.id),
-  teamVods: {},
-}));
+// Seed: каждый match содержит N games (через mapIds/gameDurations). Все 20 команд участвуют.
+const initialMatches: MatchFull[] = seedMatches.map((m) => {
+  const extras = matchSeedExtras[m.id];
+  return {
+    ...m,
+    mapIds: extras?.mapIds ?? [m.mapId],
+    gameDurations: extras?.gameDurations,
+    vodLink: "",
+    teamIds: seedTeams.map((t) => t.id),
+    teamVods: {},
+  };
+});
 
 let state: State = {
   teams: seedTeams,

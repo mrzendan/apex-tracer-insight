@@ -1,84 +1,54 @@
-## План улучшений
+## Цель
 
-Все изменения разбиты на изолированные блоки, каждый в отдельном файле/коммите, чтобы можно было откатить любой по отдельности (через историю Lovable: «Restore to before this change»).
+Единая структура во всём проекте:
 
-### Этап 1. Визуал (легко откатываемый слой)
+```
+Tournament
+  └── Match (один матч турнира, день/серия)
+        └── Game (= одна карта, объект анализа)
+```
 
-**1.1 Переключатель тем (dark / light / OLED)**
-- Новый файл `src/lib/theme.tsx` — `ThemeProvider` + `useTheme`, сохранение в `localStorage` (`theme: 'dark' | 'light' | 'oled'`).
-- В `src/styles.css` добавить блоки `.light { ... }` и `.oled { ... }` с переопределением только CSS-токенов (`--background`, `--surface`, `--foreground` и т.д.) — НИ ОДИН компонент не трогаем.
-- Кнопка-тогглер в шапке Hub и в сайдбаре админки.
-- Откат: убрать `ThemeProvider` из `__root.tsx`, удалить файл темы — стили `:root` остаются нетронутыми.
+Сейчас `Match` фактически = одна карта (game). Поле `mapIds[]` уже намекает на множественность, но используется только в admin. Нужно явно ввести `Game` и сделать так, чтобы /tournaments и весь UI оперировал двухуровневой моделью.
 
-**1.2 Плавные анимации и hover-эффекты**
-- Добавить keyframes `fade-in`, `scale-in`, `slide-in-up` в `src/styles.css` (в `@layer utilities`).
-- Точечно применить `animate-fade-in` к карточкам Hub и `hover:-translate-y-0.5 transition` к кликабельным карточкам.
-- Skeleton-компонент уже есть (`src/components/ui/skeleton.tsx`) — использовать в Hub при загрузке.
-- Откат: убрать классы из 2-3 файлов.
+## Изменения в данных (`src/lib/mock-match.ts`)
 
-**1.3 Редизайн Hub-страницы (НЕ удаляя старый)**
-- Создать **новый** файл `src/routes/index.tsx` с hero-секцией, крупными карточками турниров с превью, секцией «последние матчи», улучшенной иерархией.
-- Старый Hub сохранить как `src/components/hub/HubClassic.tsx` (просто перенести код) с возможностью переключения через query-параметр `?classic=1` для быстрого сравнения.
-- Откат: вернуть содержимое старого `index.tsx`.
+- Ввести тип `Game = { id, matchId, mapId, durationSec, index }`.
+- `Match = { id, name, tournamentId, gameIds: string[] }` — без `mapId`/`durationSec`.
+- `MatchExtras` (теперь `MatchFull`) теряет `mapIds` (заменён `gameIds`), оставляет `vodLink`, `teamIds`, `teamVods`.
+- Добавить экспорт `games: Game[]` и хелперы: `getGamesOfMatch(matchId)`, `getMatchOfGame(gameId)`, `matchDurationSec(match)`, `firstGameMapId(match)`.
+- Перегенерировать seed: 6 текущих "матчей" становятся 6 `Game`-ами, сгруппированными в 2–3 `Match` (по турниру). Например:
+  - `algs-2026-split-1` → `m-101` (Match Day 1) с 4 games (Worlds Edge, Storm Point, Broken Moon, E-District).
+  - `esl-pro-league-12` → `m-102` (Week 1) с 2 games (Olympus, King's Canyon).
+- Маршрут анализа `/matches/$matchId` смыслово становится "просмотр карты", поэтому переименуем в `/games/$gameId`. `MatchViewer` принимает `initialGameId`.
 
----
+## Маршруты
 
-### Этап 2. Аналитика
+- Переименовать `src/routes/matches.$matchId.tsx` → `src/routes/games.$gameId.tsx` (просмотрщик одной карты).
+- `src/routes/matches.tsx` оставить как список матчей, но карточка показывает: турнир, название матча, число игр, превью первой карты, список карт. По клику открывается страница матча с играми.
+- Новый файл `src/routes/matches.$matchId.tsx` — детальная страница матча: список Games со ссылками на `/games/$gameId`.
+- `/tournaments` — для каждого турнира показывает список Matches (не игр). У матча: название + чипы карт (games).
 
-**2.1 Графики по командам/матчам (Recharts)**
-- На странице `src/routes/teams.$teamId.tsx` добавить блок с графиками: размещение по матчам (LineChart), убийства/урон (BarChart), стат-карты сверху.
-- На `src/routes/matches.$matchId.tsx` добавить вкладку «Статистика» рядом с VOD-вьюером — графики по командам матча.
-- Данные пока из `mock-match.ts` (расширим mock если нужно).
-- Recharts уже в проекте (`src/components/ui/chart.tsx`).
+## Admin
 
-**2.2 Timeline матча**
-- Новый компонент `src/components/match/MatchTimeline.tsx`: горизонтальная шкала раундов с маркерами ключевых событий (start, ring close, team eliminated).
-- Встроить в страницу матча между VOD-плеером и статистикой.
-- Hover на маркер → tooltip с деталями.
+- `admin-store`: seed строит `games`, обновить `MatchFull` shape, добавить CRUD по `games` (минимально: `setGames`, `updateGame`).
+- `admin.matches.tsx`: колонка "Map" заменена на "Games (N)" с превью карт; модалка редактирования матча редактирует `gameIds` (порядок, добавить/удалить game, в подформе game — выбрать map и durationSec).
+- `admin.matches.$matchId.tsx`: блок "Map order" становится "Games" — те же действия, но создаёт/удаляет записи в `games`.
+- `admin.processes.tsx`, `admin.maps.tsx`, `admin.minimap.tsx`, `admin.camera.tsx`, `admin.hsv.tsx`, `admin.polygons.tsx`: заменить чтение `match.mapId`/`match.durationSec` на game-based выбор. Где раньше выбирали матч и затем смотрели карту — теперь выбирают game (или match → game).
 
-**2.3 Глобальный поиск (Cmd+K)**
-- Новый компонент `src/components/CommandPalette.tsx` на основе уже имеющегося `src/components/ui/command.tsx`.
-- Хоткей `Cmd+K` / `Ctrl+K` открывает диалог; поиск по турнирам, матчам, командам, картам, разделам админки.
-- Подключить глобально в `__root.tsx`.
+## Frontend (index/teams/maps)
 
----
+- `src/routes/index.tsx`: stats `matches` остаётся (это число матчей), добавить stat `games`. "Последние матчи" → "Последние игры" (Games) и линкуем на `/games/$gameId`; либо оставить матчи и показывать их превью + список игр. Выберу второе: featured = последняя готовая game, "recent matches" = последние матчи с их играми.
+- `src/routes/teams.$teamId.tsx`: панели "Next matches" / "Matches" работают с матчами, но статистика по картам считается по `games` команды.
+- `src/routes/maps.$mapId.tsx`, `src/components/maps/MapDetailContent.tsx`: список "матчей на карте" → "игр на карте" (Games).
 
-### Этап 3. Админка и пользователи (требует БД-изменения)
+## Адаптеры/совместимость
 
-**3.1 Профиль пользователя**
-- Расширить `profiles`: добавить `avatar_url`, `bio`.
-- Создать storage bucket `avatars` (публичный) для аватаров.
-- Новая страница `src/routes/profile.tsx` — редактирование display_name, аватара, смена пароля через `supabase.auth.updateUser`.
-- Ссылка «Профиль» в шапке Hub и сайдбаре админки.
+`MatchViewer` сейчас живёт от `matchId` + `mock-match.events/ringPhases`. Эти моки относятся к одной игре, поэтому привязываем их к `gameId`. `events`/`ringPhases` экспортируем как функции `eventsFor(gameId)` / `ringsFor(gameId)` (пока возвращают одно и то же — это мок).
 
-**3.2 Invite links**
-- Таблица `invites` (id, email, role, token, expires_at, used_at, created_by).
-- Server-fn `createInvite` (admin only) → возвращает ссылку вида `/accept-invite?token=...`.
-- Страница `src/routes/accept-invite.tsx` — приглашённый задаёт пароль → создаётся аккаунт с указанной ролью.
-- На `admin.users.tsx` добавить вкладку «Invites» рядом с «Create user».
+## Проверка консистентности
 
-**3.3 Блокировка/разблокировка аккаунтов**
-- Использовать `supabase.auth.admin.updateUserById({ ban_duration: ... })` — встроенный механизм Supabase, данные не удаляются.
-- Server-fn `setUserBlocked` (admin only).
-- Кнопка «Block / Unblock» в таблице юзеров с индикатором статуса.
+После рефакторинга прогон по проекту: `rg "\\.mapId\\b|mapIds"` — все оставшиеся вхождения должны относиться к `Game` или к `Map` (карте), не к `Match`. Названия в UI: "матч" = Match (контейнер игр), "игра/карта" = Game.
 
----
+## Объём
 
-### Технические детали
-
-- **Темы**: только переопределение CSS-переменных в `:root.light` и `:root.oled` — изолированно, нулевой риск сломать компоненты.
-- **Hub-редизайн**: новый файл вместо in-place правки → откат = git revert одного файла.
-- **БД**: одна миграция на этап 3 (`profiles.avatar_url`, `profiles.bio`, таблица `invites`, storage bucket `avatars`, RLS-политики).
-- **Recharts**: уже стоит, новых зависимостей не нужно.
-- **Cmd+K**: только новый компонент + 1 строчка в `__root.tsx`.
-
-### Что НЕ делаем (вынесено в будущие итерации)
-- Snap-to-grid, undo/redo, экспорт презентаций — отдельный крупный блок.
-- Activity log — требует триггеров на все таблицы, лучше отдельной задачей.
-- Замена mock на реальную БД для матчей/турниров/команд.
-
-### Порядок выполнения
-Этапы независимы. Предлагаю в порядке 1 → 2 → 3, но можем начать с любого. Если хочешь — реализую все три за одну сессию.
-
-### Вопрос
-Подтверди план или скажи, какие пункты убрать/изменить. Также: **начинаем со всех трёх этапов сразу** или **поэтапно** (сначала 1, проверим визуал, потом продолжим)?
+~14 файлов: `mock-match.ts`, `admin-store.ts`, 2 admin matches + ~5 других admin, `index.tsx`, `matches.tsx`, `matches.$matchId.tsx` (новый), `games.$gameId.tsx` (переименован), `tournaments.tsx`, `teams.$teamId.tsx`, `maps.$mapId.tsx`, `MapDetailContent.tsx`, `MatchViewer.tsx` (мелкая правка пропа).

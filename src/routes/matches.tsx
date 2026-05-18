@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { matches, maps, tournaments } from "@/lib/mock-match";
+import { matches, maps, tournaments, matchSeedExtras, getGames, matchDurationSec } from "@/lib/mock-match";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const Route = createFileRoute("/matches")({
@@ -31,21 +31,38 @@ function MatchesPage() {
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {matches.map((m) => {
-            const mp = maps.find((x) => x.id === m.mapId);
+            const extras = matchSeedExtras[m.id];
+            const enriched = { ...m, mapIds: extras?.mapIds, gameDurations: extras?.gameDurations };
+            const games = getGames(enriched);
+            const total = matchDurationSec(enriched);
+            const firstMap = maps.find((x) => x.id === games[0].mapId);
             const t = tournaments.find((x) => x.id === m.tournamentId);
             return (
               <Link key={m.id} to="/matches/$matchId" params={{ matchId: m.id }}
                 className="hud-panel hover-lift group overflow-hidden">
-                {mp?.image && (
+                {firstMap?.image && (
                   <div className="relative h-28 overflow-hidden">
-                    <img src={mp.image} alt={mp.name} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                    <img src={firstMap.image} alt={firstMap.name} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
                     <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/40 to-transparent" />
+                    <div className="text-mono absolute right-2 top-2 rounded-sm border border-border-strong bg-surface/90 px-1.5 py-0.5 text-[10px] font-bold">
+                      {games.length} {games.length === 1 ? "игра" : "игр"}
+                    </div>
                   </div>
                 )}
                 <div className="p-3">
                   <div className="label-eyebrow text-[9px] text-muted-foreground truncate">{t?.name}</div>
                   <div className="mt-1 text-sm font-semibold leading-tight">{m.name}</div>
-                  <div className="text-mono mt-1 text-[10px] text-muted-foreground">{mp?.name} · {Math.round(m.durationSec / 60)} мин</div>
+                  <div className="text-mono mt-1 flex flex-wrap gap-1 text-[10px] text-muted-foreground">
+                    {games.map((g) => {
+                      const gmp = maps.find((x) => x.id === g.mapId);
+                      return (
+                        <span key={g.id} className="rounded-sm border border-border bg-surface-2 px-1.5 py-0.5">
+                          {gmp?.name ?? g.mapId}
+                        </span>
+                      );
+                    })}
+                  </div>
+                  <div className="text-mono mt-1 text-[10px] text-muted-foreground">{Math.round(total / 60)} мин</div>
                 </div>
               </Link>
             );

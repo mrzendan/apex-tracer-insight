@@ -30,6 +30,8 @@ export type MatchExtras = {
   vodLink?: string;
   /** Ordered list of maps played within this match. Falls back to [mapId]. */
   mapIds?: string[];
+  /** Per-game duration in seconds, aligned with mapIds. Falls back to match.durationSec for each. */
+  gameDurations?: number[];
   /** Per-team POV VOD links (YouTube URLs). */
   teamVods?: Record<string, string>;
   /** Teams that participated. */
@@ -37,6 +39,41 @@ export type MatchExtras = {
 };
 export type MatchFull = Match & MatchExtras;
 export type ApexMap = { id: string; name: string; image: string };
+
+/**
+ * A Game = a single map analyzed inside a Match.
+ * Tournament → Match → Game (carte) is the canonical project hierarchy.
+ */
+export type Game = {
+  id: string;
+  matchId: string;
+  index: number;
+  mapId: string;
+  durationSec: number;
+};
+
+export function gameIdFor(matchId: string, index: number): string {
+  return `${matchId}-g${index + 1}`;
+}
+export function parseGameId(gameId: string): { matchId: string; index: number } | null {
+  const m = /^(.*)-g(\d+)$/.exec(gameId);
+  if (!m) return null;
+  return { matchId: m[1], index: Number(m[2]) - 1 };
+}
+/** Resolve the ordered list of games for a match, deriving from mapIds (fallback [mapId]). */
+export function getGames(match: Pick<MatchFull, "id" | "mapId" | "mapIds" | "durationSec" | "gameDurations">): Game[] {
+  const ids = match.mapIds && match.mapIds.length > 0 ? match.mapIds : [match.mapId];
+  return ids.map((mapId, i) => ({
+    id: gameIdFor(match.id, i),
+    matchId: match.id,
+    index: i,
+    mapId,
+    durationSec: match.gameDurations?.[i] ?? match.durationSec,
+  }));
+}
+export function matchDurationSec(match: Pick<MatchFull, "id" | "mapId" | "mapIds" | "durationSec" | "gameDurations">): number {
+  return getGames(match).reduce((s, g) => s + g.durationSec, 0);
+}
 
 export const tournaments: Tournament[] = [
   { id: "algs-2026-split-1", name: "ALGS 2026 — Split 1 Playoffs", startDate: "2026-02-14", endDate: "2026-02-18", year: 6, type: "LAN",       region: "North America" },
@@ -57,13 +94,22 @@ export const maps: ApexMap[] = [
 ];
 
 export const matches: Match[] = [
-  { id: "m-001", name: "Game 1 — World's Edge", tournamentId: "algs-2026-split-1", mapId: "worlds-edge", durationSec: 1320 },
-  { id: "m-002", name: "Game 2 — Storm Point",  tournamentId: "algs-2026-split-1", mapId: "storm-point", durationSec: 1480 },
-  { id: "m-003", name: "Game 3 — Broken Moon",  tournamentId: "algs-2026-split-1", mapId: "broken-moon", durationSec: 1190 },
-  { id: "m-004", name: "Game 4 — E-District",   tournamentId: "algs-2026-split-1", mapId: "e-district",  durationSec: 1260 },
-  { id: "m-005", name: "Game 5 — Olympus",      tournamentId: "esl-pro-league-12", mapId: "olympus",     durationSec: 1400 },
-  { id: "m-006", name: "Game 6 — King's Canyon",tournamentId: "esl-pro-league-12", mapId: "kings-canyon",durationSec: 1320 },
+  // Match = серия игр (карт) внутри турнира. mapId/durationSec — это первая игра (для обратной совместимости),
+  // полный список игр живёт в MatchExtras.mapIds (см. admin-store / getGames()).
+  { id: "m-001", name: "Match Day 1", tournamentId: "algs-2026-split-1", mapId: "worlds-edge", durationSec: 1320 },
+  { id: "m-002", name: "Match Day 2", tournamentId: "algs-2026-split-1", mapId: "broken-moon", durationSec: 1190 },
+  { id: "m-003", name: "Week 1",      tournamentId: "esl-pro-league-12", mapId: "olympus",     durationSec: 1400 },
 ];
+
+/**
+ * Расширенный seed: каждый Match содержит несколько games (карт).
+ * Применяется через admin-store. Длительности по каждой game — gameDurations.
+ */
+export const matchSeedExtras: Record<string, Pick<MatchExtras, "mapIds" | "gameDurations">> = {
+  "m-001": { mapIds: ["worlds-edge", "storm-point"],                 gameDurations: [1320, 1480] },
+  "m-002": { mapIds: ["broken-moon", "e-district"],                  gameDurations: [1190, 1260] },
+  "m-003": { mapIds: ["olympus", "kings-canyon"],                    gameDurations: [1400, 1320] },
+};
 
 export type Team = {
   id: string;

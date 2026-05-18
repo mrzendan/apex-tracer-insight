@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { tournaments, matches, maps } from "@/lib/mock-match";
+import { tournaments, matches, maps, matchSeedExtras, getGames } from "@/lib/mock-match";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const Route = createFileRoute("/tournaments")({
@@ -96,13 +96,26 @@ function TournamentsPage() {
                       <div className="text-mono mt-0.5 text-[10px] text-muted-foreground">{t.startDate} → {t.endDate}</div>
                       <ul className="mt-3 space-y-1">
                         {tMatches.map((m) => {
-                          const mp = maps.find((x) => x.id === m.mapId);
+                          const extras = matchSeedExtras[m.id];
+                          const games = getGames({ ...m, mapIds: extras?.mapIds, gameDurations: extras?.gameDurations });
                           return (
                             <li key={m.id}>
                               <Link to="/matches/$matchId" params={{ matchId: m.id }}
-                                className="flex items-center justify-between rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs hover:border-primary/40 hover:text-primary">
-                                <span className="font-semibold">{m.name}</span>
-                                <span className="text-muted-foreground">{mp?.name}</span>
+                                className="block rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs hover:border-primary/40 hover:text-primary">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="font-semibold">{m.name}</span>
+                                  <span className="text-mono text-[10px] text-muted-foreground">{games.length} {games.length === 1 ? "игра" : "игр"}</span>
+                                </div>
+                                <div className="mt-1 flex flex-wrap gap-1">
+                                  {games.map((g) => {
+                                    const gmp = maps.find((x) => x.id === g.mapId);
+                                    return (
+                                      <span key={g.id} className="text-mono rounded-sm border border-border bg-surface px-1 py-0.5 text-[9px] text-muted-foreground">
+                                        {gmp?.name ?? g.mapId}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
                               </Link>
                             </li>
                           );

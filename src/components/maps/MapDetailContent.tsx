@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { maps as allMaps, generateTrajectory } from "@/lib/mock-match";
+import { maps as allMaps, generateTrajectory, getGames } from "@/lib/mock-match";
 import { useAdminStore } from "@/lib/admin-store";
 import { TeamLogo } from "@/components/admin/TeamLogo";
 
@@ -22,8 +22,13 @@ export function MapDetailContent({
   const map = allMaps.find((m) => m.id === mapId);
 
   const mapMatches = useMemo(
-    () => matches.filter((m) => (m.mapIds ?? [m.mapId]).includes(mapId)),
+    () => matches.filter((m) => getGames(m).some((g) => g.mapId === mapId)),
     [matches, mapId],
+  );
+  /** All Game records on this map (across all matches). */
+  const mapGames = useMemo(
+    () => mapMatches.flatMap((m) => getGames(m).filter((g) => g.mapId === mapId).map((g) => ({ game: g, match: m }))),
+    [mapMatches, mapId],
   );
   const mapTournaments = useMemo(() => {
     const ids = Array.from(new Set(mapMatches.map((m) => m.tournamentId)));
@@ -48,7 +53,7 @@ export function MapDetailContent({
     );
   }
 
-  const filteredMatches = mapMatches.filter((m) => {
+  const filteredGames = mapGames.filter(({ match: m }) => {
     if (mode === "year") return tournaments.find((t) => t.id === m.tournamentId)?.year === year;
     if (mode === "tournaments") return selectedTours.includes(m.tournamentId);
     return true;
@@ -58,9 +63,9 @@ export function MapDetailContent({
   const heat = useMemo(() => {
     const cells = new Array(GRID * GRID).fill(0) as number[];
     if (!teamId) return cells;
-    filteredMatches.forEach((m, mi) => {
-      const seed = (m.id.charCodeAt(m.id.length - 1) + mi * 17 + teamId.charCodeAt(teamId.length - 1) * 31) % 9999;
-      const pts = generateTrajectory(seed, m.durationSec);
+    filteredGames.forEach(({ game: g, match: m }, mi) => {
+      const seed = (m.id.charCodeAt(m.id.length - 1) + g.index * 13 + mi * 17 + teamId.charCodeAt(teamId.length - 1) * 31) % 9999;
+      const pts = generateTrajectory(seed, g.durationSec);
       pts.forEach((p) => {
         const gx = Math.min(GRID - 1, Math.max(0, Math.floor(p.x * GRID)));
         const gy = Math.min(GRID - 1, Math.max(0, Math.floor(p.y * GRID)));
@@ -68,7 +73,7 @@ export function MapDetailContent({
       });
     });
     return cells;
-  }, [filteredMatches, teamId]);
+  }, [filteredGames, teamId]);
 
   const maxHeat = Math.max(1, ...heat);
   const heatColor = (t: number) => {
@@ -85,7 +90,7 @@ export function MapDetailContent({
       <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-surface px-6">
         <button onClick={() => navigate({ to: backTo })} className="text-mono rounded-sm border border-border bg-surface-2 px-2 py-1 text-[10px] uppercase tracking-wider hover:bg-muted">← {backLabel}</button>
         <h1 className="text-sm font-bold uppercase tracking-wider">{map.name}</h1>
-        <span className="text-[10px] text-muted-foreground">{mapMatches.length} matches · {mapTournaments.length} tournaments</span>
+        <span className="text-[10px] text-muted-foreground">{mapGames.length} games · {mapMatches.length} matches · {mapTournaments.length} tournaments</span>
       </header>
 
       <div className="flex-1 overflow-auto p-6">
@@ -175,7 +180,7 @@ export function MapDetailContent({
                     </div>
                   </div>
                 )}
-                <div className="text-[10px] text-muted-foreground">Sampling {filteredMatches.length} matches</div>
+                <div className="text-[10px] text-muted-foreground">Sampling {filteredGames.length} games</div>
               </div>
             </div>
           </div>
