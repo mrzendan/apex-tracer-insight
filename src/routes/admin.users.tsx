@@ -35,10 +35,6 @@ function UsersPage() {
   const create = useServerFn(createUserAccount);
   const setRole = useServerFn(setUserRole);
   const del = useServerFn(deleteUserAccount);
-  const invCreate = useServerFn(createInvite);
-  const invList = useServerFn(listInvites);
-  const invDelete = useServerFn(deleteInvite);
-
   const [tab, setTab] = useState<"accounts" | "invites">("accounts");
 
   const [rows, setRows] = useState<Row[]>([]);
@@ -263,13 +259,7 @@ function UsersPage() {
       </div>
       )}
 
-      {tab === "invites" && (
-        <InvitesTab
-          invCreate={invCreate}
-          invList={invList}
-          invDelete={invDelete}
-        />
-      )}
+      {tab === "invites" && <InvitesTab />}
     </div>
   );
 }
@@ -316,15 +306,10 @@ type InviteRow = {
   created_at: string;
 };
 
-function InvitesTab({
-  invCreate,
-  invList,
-  invDelete,
-}: {
-  invCreate: ReturnType<typeof useServerFn<typeof createInvite>>;
-  invList: ReturnType<typeof useServerFn<typeof listInvites>>;
-  invDelete: ReturnType<typeof useServerFn<typeof deleteInvite>>;
-}) {
+function InvitesTab() {
+  const invCreate = useServerFn(createInvite);
+  const invList = useServerFn(listInvites);
+  const invDelete = useServerFn(deleteInvite);
   const [rows, setRows] = useState<InviteRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
