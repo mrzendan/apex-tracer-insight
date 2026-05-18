@@ -42,6 +42,9 @@ export const tournaments: Tournament[] = [
   { id: "algs-2026-split-1", name: "ALGS 2026 — Split 1 Playoffs", startDate: "2026-02-14", endDate: "2026-02-18", year: 6, type: "LAN",       region: "North America" },
   { id: "esl-pro-league-12", name: "ESL Apex Pro League S12",      startDate: "2026-03-02", endDate: "2026-03-29", year: 6, type: "Online",    region: "EMEA" },
   { id: "scrims-eu-week-4",  name: "EU Pro Scrims — Week 4",       startDate: "2026-04-06", endDate: "2026-04-10", year: 6, type: "Qualifier", region: "EMEA" },
+  { id: "algs-2026-split-2", name: "ALGS 2026 — Split 2 Playoffs", startDate: "2026-05-15", endDate: "2026-05-22", year: 6, type: "LAN",       region: "APAC" },
+  { id: "apac-pro-league",   name: "APAC Pro League S3",           startDate: "2026-06-10", endDate: "2026-06-28", year: 6, type: "Online",    region: "APAC" },
+  { id: "algs-championship", name: "ALGS Championship 2026",       startDate: "2026-08-20", endDate: "2026-08-30", year: 6, type: "LAN",       region: "EMEA" },
 ];
 
 export const maps: ApexMap[] = [
