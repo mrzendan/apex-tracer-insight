@@ -297,7 +297,7 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
               </span>
             }
           />
-          <div className="min-h-0 flex-1 overflow-y-auto p-2">
+          <div className="min-h-0 flex-1 overflow-y-auto p-2 scrollbar-slim">
             {[...teams].sort((a, b) => a.placement - b.placement).map((t) => (
               <TeamRow key={t.id} team={t} active={selectedTeams.has(t.id)} hovered={hoverTeam === t.id}
                 onToggle={() => toggleTeam(t.id)}
@@ -386,7 +386,7 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
               );
             })}
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="min-h-0 flex-1 overflow-y-auto scrollbar-slim">
             {filteredEvents.length === 0 && (
               <div className="px-3 py-6 text-center text-[11px] text-muted-foreground">
                 Нет событий в этой категории
