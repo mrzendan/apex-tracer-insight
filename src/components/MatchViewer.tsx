@@ -338,6 +338,17 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
             onSeek={setTime} onTogglePlay={() => setPlaying((p) => !p)} onSpeedChange={setSpeed} />
         </main>
 
+        {rightCollapsed ? (
+          <div className="hidden shrink-0 flex-col items-center border-l border-border bg-surface p-2 xl:flex">
+            <button
+              onClick={() => setRightCollapsed(false)}
+              title="Show match feed"
+              className="flex h-10 w-10 items-center justify-center rounded-sm border border-border-strong bg-surface-2 text-foreground hover:bg-muted"
+            >
+              <Swords className="h-5 w-5" />
+            </button>
+          </div>
+        ) : (
         <aside
           className="relative hidden shrink-0 flex-col border-l border-border bg-surface xl:flex"
           style={{ width: rightWidth }}
@@ -388,6 +399,7 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
             })}
           </div>
         </aside>
+        )}
       </div>
     </div>
   );
