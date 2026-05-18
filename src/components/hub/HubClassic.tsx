@@ -92,7 +92,6 @@ export function HubClassic() {
                 params={{ teamId: team.id }}
                 className="hud-panel flex items-center gap-2.5 px-3 py-2 transition hover:border-primary/40"
               >
-                <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: team.color }} />
                 <TeamLogo team={team} size={28} />
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-xs font-semibold">{team.name}</div>
