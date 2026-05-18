@@ -578,8 +578,8 @@ function MapCanvas({
                     strokeDasharray={`${4 / view.scale} ${4 / view.scale}`} />
                 ))}
                 <circle cx={ring.cx * 1000} cy={ring.cy * 1000} r={ring.r * 1000}
-                  fill="rgba(255,91,18,0.1)" stroke="rgba(255,91,18,1)" strokeWidth={3.5 / view.scale} strokeDasharray={`${10 / view.scale} ${5 / view.scale}`} />
-                <circle cx={ring.cx * 1000} cy={ring.cy * 1000} r={3 / view.scale} fill="#ff5b12" />
+                  fill="rgba(34,196,245,0.08)" stroke="#22c4f5" strokeWidth={3.5 / view.scale} strokeDasharray={`${10 / view.scale} ${5 / view.scale}`} />
+                <circle cx={ring.cx * 1000} cy={ring.cy * 1000} r={3 / view.scale} fill="#22c4f5" />
               </>
             )}
 
