@@ -253,8 +253,9 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
   };
   // Scale team-row logo size with panel width.
   const teamCompact = leftWidth < 210;
+  // In compact mode the row is 48px tall with ~28px reserved for slot color + alive dot on the sides.
   const teamLogoSize = teamCompact
-    ? Math.round(leftWidth * 1.4)
+    ? Math.max(24, Math.min(44, leftWidth - 40))
     : Math.round(Math.max(18, Math.min(44, leftWidth / 11)));
 
   return (
@@ -500,10 +501,10 @@ function TeamRow({ team, active, hovered, onToggle, onHover, logoSize = 20, comp
     return (
       <div onMouseEnter={() => onHover(true)} onMouseLeave={() => onHover(false)}
         onClick={onToggle}
-        className={`group relative mb-1 flex h-12 cursor-pointer items-center overflow-hidden rounded-sm border transition-colors ${
+        className={`group relative mb-1 flex h-12 cursor-pointer items-center rounded-sm border px-4 transition-colors ${
           active ? "border-border-strong bg-surface-2" : "border-transparent bg-transparent opacity-50"
         } ${hovered ? "ring-1 ring-primary/40" : ""}`}>
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <div className="pointer-events-none flex h-full w-full items-center justify-center">
           <TeamLogo team={team} size={logoSize} className="!rounded-none !border-0 !bg-transparent" />
         </div>
         <span className="absolute left-1.5 top-1.5 h-2.5 w-2.5 rounded-sm"
