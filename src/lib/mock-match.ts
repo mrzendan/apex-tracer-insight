@@ -1,12 +1,12 @@
 // Mock data for the Apex Stats Match Viewer.
 // Coordinates are normalized in [0..1] over the map viewport.
 
-import worldsEdgeImg from "@/assets/maps/worlds-edge.png";
-import kingsCanyonImg from "@/assets/maps/kings-canyon.png";
-import stormPointImg from "@/assets/maps/storm-point.png";
-import brokenMoonImg from "@/assets/maps/broken-moon.png";
-import olympusImg from "@/assets/maps/olympus.png";
-import eDistrictImg from "@/assets/maps/e-district.png";
+import worldsEdgeImg from "@/assets/maps/worlds-edge.webp";
+import kingsCanyonImg from "@/assets/maps/kings-canyon.webp";
+import stormPointImg from "@/assets/maps/storm-point.webp";
+import brokenMoonImg from "@/assets/maps/broken-moon.webp";
+import olympusImg from "@/assets/maps/olympus.webp";
+import eDistrictImg from "@/assets/maps/e-district.webp";
 import liquidLogo from "@/assets/teams/liquid.png";
 import fazeLogo from "@/assets/teams/faze.png";
 import luminosityLogo from "@/assets/teams/luminosity.png";
