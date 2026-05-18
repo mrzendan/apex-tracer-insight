@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useAdminStore } from "@/lib/admin-store";
 import { maps as allMaps, type MatchFull } from "@/lib/mock-match";
 import { TeamLogo } from "@/components/admin/TeamLogo";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 
 export const Route = createFileRoute("/admin/teams/$teamId")({ component: TeamDetail });
 
@@ -143,36 +144,66 @@ function TeamDetail() {
         <div className="hud-panel mb-4 p-3">
           <div className="flex flex-wrap items-center gap-3">
             <div className="label-eyebrow text-xs">Period</div>
-            {(["all", "year", "tournaments"] as Mode[]).map((m) => (
-              <button
-                key={m}
-                onClick={() => setMode(m)}
-                className={`rounded-sm border px-2 py-1 text-xs uppercase tracking-wider ${mode === m ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface hover:bg-muted"}`}
-              >
-                {m === "all" ? "All time" : m === "year" ? "By year" : "By tournaments"}
-              </button>
-            ))}
-            {mode === "year" && (
-              <select value={year} onChange={(e) => setYear(Number(e.target.value))} className="rounded-sm border border-border bg-background px-2 py-1 text-xs">
-                {allYears.map((y) => <option key={y} value={y}>Year {y}</option>)}
-              </select>
-            )}
-            {mode === "tournaments" && (
-              <div className="flex flex-wrap gap-1">
+            <button
+              onClick={() => setMode("all")}
+              className={`rounded-sm border px-2 py-1 text-xs uppercase tracking-wider ${mode === "all" ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface hover:bg-muted"}`}
+            >
+              All time
+            </button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  className={`rounded-sm border px-2 py-1 text-xs uppercase tracking-wider ${mode === "year" ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface hover:bg-muted"}`}
+                >
+                  By year{mode === "year" ? ` · ${year}` : ""} ▾
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-40 p-1">
+                {allYears.map((y) => (
+                  <button
+                    key={y}
+                    onClick={() => { setMode("year"); setYear(y); }}
+                    className={`block w-full rounded-sm px-2 py-1.5 text-left text-xs hover:bg-muted ${mode === "year" && year === y ? "bg-primary/10 text-primary" : ""}`}
+                  >
+                    Year {y}
+                  </button>
+                ))}
+              </PopoverContent>
+            </Popover>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  className={`rounded-sm border px-2 py-1 text-xs uppercase tracking-wider ${mode === "tournaments" ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface hover:bg-muted"}`}
+                >
+                  By tournaments{mode === "tournaments" && selectedTours.length ? ` · ${selectedTours.length}` : ""} ▾
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="max-h-80 w-72 overflow-auto p-1">
+                <div className="flex items-center justify-between px-2 py-1 text-xs text-muted-foreground">
+                  <span>{selectedTours.length} selected</span>
+                  <button onClick={() => setSelectedTours([])} className="hover:text-foreground">Clear</button>
+                </div>
                 {teamTournaments.map((t) => {
                   const on = selectedTours.includes(t.id);
                   return (
                     <button
                       key={t.id}
-                      onClick={() => setSelectedTours(on ? selectedTours.filter((x) => x !== t.id) : [...selectedTours, t.id])}
-                      className={`rounded-sm border px-1.5 py-0.5 text-xs ${on ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface hover:bg-muted"}`}
+                      onClick={() => {
+                        setMode("tournaments");
+                        setSelectedTours(on ? selectedTours.filter((x) => x !== t.id) : [...selectedTours, t.id]);
+                      }}
+                      className={`flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-xs hover:bg-muted ${on ? "bg-primary/10 text-primary" : ""}`}
                     >
-                      {t.name}
+                      <span className={`inline-block h-3 w-3 shrink-0 rounded-sm border ${on ? "border-primary bg-primary" : "border-border"}`} />
+                      <span className="truncate">{t.name}</span>
                     </button>
                   );
                 })}
-              </div>
-            )}
+                {teamTournaments.length === 0 && (
+                  <div className="px-2 py-3 text-center text-xs text-muted-foreground">No tournaments</div>
+                )}
+              </PopoverContent>
+            </Popover>
             <span className="ml-auto text-xs text-muted-foreground">{filteredRows.length} matches in period</span>
           </div>
         </div>
@@ -281,7 +312,7 @@ function TeamDetail() {
                               <div className="text-mono text-xs text-muted-foreground">{s.count} games · avg <span className="text-foreground font-semibold">#{s.avg.toFixed(1)}</span></div>
                               <div className="mt-1.5 flex items-center gap-1.5 text-xs">
                                 <span className="inline-flex items-center gap-1 rounded-sm border border-warning/40 bg-warning/10 px-1.5 py-0.5 font-semibold text-warning" title="Победы">
-                                  TOP 1 · {s.top1}
+                                  TOP 1 {s.top1}
                                 </span>
                                 <span className="inline-flex items-center gap-1 rounded-sm border border-primary/40 bg-primary/10 px-1.5 py-0.5 font-semibold text-primary" title="Топ-5 финиши">
                                   TOP 5 {s.top5}
