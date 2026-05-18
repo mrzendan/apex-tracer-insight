@@ -91,7 +91,7 @@ function TeamsAdmin() {
         <div className="hud-panel overflow-hidden">
           <table className="w-full text-sm">
             <thead className="border-b border-border bg-surface-2">
-              <tr className="label-eyebrow text-left text-[10px]">
+              <tr className="label-eyebrow text-left text-xs">
                 <th className="px-3 py-2 w-[64px]">Logo</th>
                 <th className="px-3 py-2 w-[100px]">Tag</th>
                 <th className="px-3 py-2">Name</th>
@@ -116,7 +116,7 @@ function TeamsAdmin() {
                       {sched.last ? (
                         <div>
                           <div className="font-semibold truncate">{sched.last.match.name}</div>
-                          <div className="text-[10px] text-muted-foreground truncate">{sched.last.tour?.name ?? "—"}</div>
+                          <div className="text-xs text-muted-foreground truncate">{sched.last.tour?.name ?? "—"}</div>
                         </div>
                       ) : <span className="text-muted-foreground">—</span>}
                     </td>
@@ -125,14 +125,14 @@ function TeamsAdmin() {
                         <div className={sched.live ? "rounded-sm border border-destructive/40 bg-destructive/10 px-2 py-1" : ""}>
                           <div className="flex items-center gap-1.5 font-semibold truncate">
                             {sched.live && (
-                              <span className="inline-flex items-center gap-1 rounded-sm bg-destructive px-1 py-[1px] text-[9px] font-bold uppercase tracking-wider text-destructive-foreground">
+                              <span className="inline-flex items-center gap-1 rounded-sm bg-destructive px-1 py-[1px] text-xs font-bold uppercase tracking-wider text-destructive-foreground">
                                 <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-current" />
                                 LIVE
                               </span>
                             )}
                             <span className="truncate">{sched.next.match.name}</span>
                           </div>
-                          <div className="text-[10px] text-muted-foreground truncate">{sched.next.tour?.name ?? "—"}</div>
+                          <div className="text-xs text-muted-foreground truncate">{sched.next.tour?.name ?? "—"}</div>
                         </div>
                       ) : <span className="text-muted-foreground">—</span>}
                     </td>
@@ -170,16 +170,16 @@ function TeamDialog({ row, isNew, onChange, onCancel, onSave }: {
         <div className="space-y-3 p-4">
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="label-eyebrow text-[10px]">Tag</label>
+              <label className="label-eyebrow text-xs">Tag</label>
               <input className={base} value={row.tag} onChange={(e) => set("tag", e.target.value.toUpperCase())} />
             </div>
             <div className="col-span-2">
-              <label className="label-eyebrow text-[10px]">Name</label>
+              <label className="label-eyebrow text-xs">Name</label>
               <input className={base} value={row.name} onChange={(e) => set("name", e.target.value)} />
             </div>
           </div>
           <div>
-            <label className="label-eyebrow text-[10px]">Logo URL</label>
+            <label className="label-eyebrow text-xs">Logo URL</label>
             <input className={base + " text-mono text-xs"} placeholder="https://..." value={row.logo ?? ""} onChange={(e) => set("logo", e.target.value)} />
             <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
               Preview: <TeamLogo team={{ ...row, logo: row.logo ?? "" }} size={36} />

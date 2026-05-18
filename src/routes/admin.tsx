@@ -62,7 +62,7 @@ function AdminLayout() {
           </div>
           <div className="leading-tight">
             <div className="text-sm font-bold tracking-tight">APEX STATS</div>
-            <div className="label-eyebrow text-[9px]">Admin console</div>
+            <div className="label-eyebrow text-xs">Admin console</div>
           </div>
         </Link>
 
@@ -75,7 +75,7 @@ function AdminLayout() {
             className="mb-0.5 block rounded-sm border px-3 py-2 text-xs font-semibold uppercase tracking-wider transition-colors"
           >
             <div>Dashboard</div>
-            <div className="mt-0.5 text-[10px] font-normal normal-case tracking-normal text-muted-foreground">Overview</div>
+            <div className="mt-0.5 text-xs font-normal normal-case tracking-normal text-muted-foreground">Overview</div>
           </Link>
 
           {role === "administrator" && (
@@ -87,7 +87,7 @@ function AdminLayout() {
               className="mb-0.5 mt-0.5 block rounded-sm border px-3 py-2 text-xs font-semibold uppercase tracking-wider transition-colors"
             >
               <div>Users</div>
-              <div className="mt-0.5 text-[10px] font-normal normal-case tracking-normal text-muted-foreground">Accounts & roles</div>
+              <div className="mt-0.5 text-xs font-normal normal-case tracking-normal text-muted-foreground">Accounts & roles</div>
             </Link>
           )}
 
@@ -125,7 +125,7 @@ function AdminLayout() {
         </nav>
 
         <div className="space-y-2 border-t border-border p-3">
-          <div className="text-mono truncate text-[10px] text-muted-foreground" title={user?.email ?? ""}>
+          <div className="text-mono truncate text-xs text-muted-foreground" title={user?.email ?? ""}>
             {user?.email} · {role}
           </div>
           <div className="flex justify-center">
@@ -134,11 +134,11 @@ function AdminLayout() {
           </div>
           <button
             onClick={() => signOut()}
-            className="text-mono block w-full rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-center text-[10px] uppercase tracking-wider hover:bg-muted"
+            className="text-mono block w-full rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-center text-xs uppercase tracking-wider hover:bg-muted"
           >
             Sign out
           </button>
-          <Link to="/" className="text-mono block rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-center text-[10px] uppercase tracking-wider hover:bg-muted">
+          <Link to="/" className="text-mono block rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-center text-xs uppercase tracking-wider hover:bg-muted">
             ← Match Viewer
           </Link>
         </div>
@@ -159,7 +159,7 @@ function NavGroup({ label, count, open, onToggle, items }: {
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center justify-between px-2 py-1 label-eyebrow text-[10px] text-muted-foreground hover:text-foreground"
+        className="flex w-full items-center justify-between px-2 py-1 label-eyebrow text-xs text-muted-foreground hover:text-foreground"
       >
         <span>{label} · {count}</span>
         <span className="text-mono">{open ? "▾" : "▸"}</span>
@@ -176,7 +176,7 @@ function NavGroup({ label, count, open, onToggle, items }: {
               className="block rounded-sm border px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition-colors"
             >
               <div>{item.label}</div>
-              <div className="mt-0.5 text-[10px] font-normal normal-case tracking-normal text-muted-foreground">{item.hint}</div>
+              <div className="mt-0.5 text-xs font-normal normal-case tracking-normal text-muted-foreground">{item.hint}</div>
             </Link>
           ))}
         </div>

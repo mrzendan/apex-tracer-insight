@@ -145,19 +145,19 @@ function TeamPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-surface px-6">
-        <button onClick={() => navigate({ to: "/" })} className="text-mono rounded-sm border border-border bg-surface-2 px-2 py-1 text-[10px] uppercase tracking-wider hover:bg-muted">← Hub</button>
+        <button onClick={() => navigate({ to: "/" })} className="text-mono rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted">← Hub</button>
         <TeamLogo team={team} size={28} />
         <h1 className="text-sm font-bold uppercase tracking-wider">{team.tag} · {team.name}</h1>
       </header>
       <div className="p-6">
         <div className="hud-panel mb-4 p-3">
           <div className="flex flex-wrap items-center gap-3">
-            <div className="label-eyebrow text-[10px]">Period</div>
+            <div className="label-eyebrow text-xs">Period</div>
             {(["all", "year", "tournaments"] as Mode[]).map((m) => (
               <button
                 key={m}
                 onClick={() => setMode(m)}
-                className={`rounded-sm border px-2 py-1 text-[10px] uppercase tracking-wider ${mode === m ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface hover:bg-muted"}`}
+                className={`rounded-sm border px-2 py-1 text-xs uppercase tracking-wider ${mode === m ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface hover:bg-muted"}`}
               >
                 {m === "all" ? "All time" : m === "year" ? "By year" : "By tournaments"}
               </button>
@@ -175,7 +175,7 @@ function TeamPage() {
                     <button
                       key={t.id}
                       onClick={() => setSelectedTours(on ? selectedTours.filter((x) => x !== t.id) : [...selectedTours, t.id])}
-                      className={`rounded-sm border px-1.5 py-0.5 text-[10px] ${on ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface hover:bg-muted"}`}
+                      className={`rounded-sm border px-1.5 py-0.5 text-xs ${on ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface hover:bg-muted"}`}
                     >
                       {t.name}
                     </button>
@@ -183,7 +183,7 @@ function TeamPage() {
                 })}
               </div>
             )}
-            <span className="ml-auto text-[10px] text-muted-foreground">{filteredRows.length} matches in period</span>
+            <span className="ml-auto text-xs text-muted-foreground">{filteredRows.length} matches in period</span>
           </div>
         </div>
 
@@ -200,11 +200,11 @@ function TeamPage() {
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span className="truncate font-semibold">{r.match.name}</span>
-                        <span className="text-mono text-[10px] text-muted-foreground whitespace-nowrap">
+                        <span className="text-mono text-xs text-muted-foreground whitespace-nowrap">
                           {fmtDate(r.date)} · {fmtTime(r.date)}
                         </span>
                       </div>
-                      <div className="truncate text-[10px] text-muted-foreground">{r.tour?.name}</div>
+                      <div className="truncate text-xs text-muted-foreground">{r.tour?.name}</div>
                     </Link>
                   </li>
                 ))}
@@ -221,9 +221,9 @@ function TeamPage() {
                     <li key={t.id} className="block rounded-sm border border-border bg-surface px-2 py-1.5 text-xs">
                       <div className="flex items-center justify-between gap-2">
                         <span className="truncate font-semibold">{t.name}</span>
-                        <span className={`rounded-sm border px-1.5 py-[1px] text-[9px] font-bold uppercase tracking-wider ${st.cls}`}>{st.label}</span>
+                        <span className={`rounded-sm border px-1.5 py-[1px] text-xs font-bold uppercase tracking-wider ${st.cls}`}>{st.label}</span>
                       </div>
-                      <div className="text-mono text-[10px] text-muted-foreground">
+                      <div className="text-mono text-xs text-muted-foreground">
                         {t.startDate} → {t.endDate} · {t.region}
                       </div>
                     </li>
@@ -247,9 +247,9 @@ function TeamPage() {
                       >
                         <div className="flex items-center justify-between gap-2">
                           <span className="truncate font-semibold">{r.match.name}</span>
-                          <span className="text-[10px] text-muted-foreground whitespace-nowrap">{map?.name}</span>
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">{map?.name}</span>
                         </div>
-                        <div className="text-mono text-[10px] text-muted-foreground">{fmtDate(r.date)} · {fmtTime(r.date)}</div>
+                        <div className="text-mono text-xs text-muted-foreground">{fmtDate(r.date)} · {fmtTime(r.date)}</div>
                       </Link>
                     </li>
                   );
@@ -260,7 +260,7 @@ function TeamPage() {
         </div>
 
         <div className="hud-panel mt-4 p-3">
-          <div className="label-eyebrow mb-3 text-[10px]">Map tier list · avg placement, top 1 & top 5</div>
+          <div className="label-eyebrow mb-3 text-xs">Map tier list · avg placement, top 1 & top 5</div>
           {mapStats.length === 0 ? <Empty /> : (
             <div className="space-y-2">
               {(["S", "A", "B", "C", "D", "F"] as const).map((row) => {
@@ -280,8 +280,8 @@ function TeamPage() {
                             {map && <img src={map.image} alt={map.name} className="h-16 w-24 rounded-sm object-cover" />}
                             <div className="min-w-0">
                               <div className="truncate text-sm font-semibold">{map?.name ?? s.id}</div>
-                              <div className="text-mono text-[10px] text-muted-foreground">{s.count} games</div>
-                              <div className="text-mono mt-1 text-[10px]">
+                              <div className="text-mono text-xs text-muted-foreground">{s.count} games</div>
+                              <div className="text-mono mt-1 text-xs">
                                 <span className="text-foreground">avg #{s.avg.toFixed(1)}</span>
                                 <span className="ml-2 text-destructive">T1×{s.top1}</span>
                                 <span className="ml-2 text-primary">T5×{s.top5}</span>
@@ -305,7 +305,7 @@ function TeamPage() {
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="hud-panel p-3">
-      <div className="label-eyebrow mb-2 text-[10px]">{title}</div>
+      <div className="label-eyebrow mb-2 text-xs">{title}</div>
       {children}
     </div>
   );

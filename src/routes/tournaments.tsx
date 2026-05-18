@@ -62,7 +62,7 @@ function TournamentsPage() {
             <button
               key={f.key}
               onClick={() => setFilter(f.key)}
-              className={`rounded-sm border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider transition ${
+              className={`rounded-sm border px-2.5 py-1 text-xs font-semibold uppercase tracking-wider transition ${
                 filter === f.key
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border-strong bg-surface-2 hover:bg-muted"
@@ -81,7 +81,7 @@ function TournamentsPage() {
               <div className="mb-2 flex items-center gap-2 border-b border-border pb-1.5">
                 <StatusDot status={g.key} />
                 <h2 className="text-sm font-bold uppercase tracking-wider">{g.label}</h2>
-                <span className="text-mono text-[10px] text-muted-foreground">{items.length}</span>
+                <span className="text-mono text-xs text-muted-foreground">{items.length}</span>
               </div>
               <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                 {items.map((t) => {
@@ -89,11 +89,11 @@ function TournamentsPage() {
                   return (
                     <div key={t.id} className="hud-panel p-4">
                       <div className="flex items-start justify-between gap-2">
-                        <div className="label-eyebrow text-[10px]">{t.region} · {t.type} · Y{t.year}</div>
+                        <div className="label-eyebrow text-xs">{t.region} · {t.type} · Y{t.year}</div>
                         <StatusBadge status={t.status} />
                       </div>
                       <div className="mt-1 text-sm font-semibold">{t.name}</div>
-                      <div className="text-mono mt-0.5 text-[10px] text-muted-foreground">{t.startDate} → {t.endDate}</div>
+                      <div className="text-mono mt-0.5 text-xs text-muted-foreground">{t.startDate} → {t.endDate}</div>
                       <ul className="mt-3 space-y-1">
                         {tMatches.map((m) => {
                           const extras = matchSeedExtras[m.id];
@@ -104,13 +104,13 @@ function TournamentsPage() {
                                 className="block rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs hover:border-primary/40 hover:text-primary">
                                 <div className="flex items-center justify-between gap-2">
                                   <span className="font-semibold">{m.name}</span>
-                                  <span className="text-mono text-[10px] text-muted-foreground">{games.length} {games.length === 1 ? "игра" : "игр"}</span>
+                                  <span className="text-mono text-xs text-muted-foreground">{games.length} {games.length === 1 ? "игра" : "игр"}</span>
                                 </div>
                                 <div className="mt-1 flex flex-wrap gap-1">
                                   {games.map((g) => {
                                     const gmp = maps.find((x) => x.id === g.mapId);
                                     return (
-                                      <span key={g.id} className="text-mono rounded-sm border border-border bg-surface px-1 py-0.5 text-[9px] text-muted-foreground">
+                                      <span key={g.id} className="text-mono rounded-sm border border-border bg-surface px-1 py-0.5 text-xs text-muted-foreground">
                                         {gmp?.name ?? g.mapId}
                                       </span>
                                     );
@@ -120,7 +120,7 @@ function TournamentsPage() {
                             </li>
                           );
                         })}
-                        {tMatches.length === 0 && <li className="text-[10px] text-muted-foreground">Матчей пока нет</li>}
+                        {tMatches.length === 0 && <li className="text-xs text-muted-foreground">Матчей пока нет</li>}
                       </ul>
                     </div>
                   );
@@ -145,7 +145,7 @@ function StatusBadge({ status }: { status: "live" | "upcoming" | "finished" }) {
   } as const;
   const m = map[status];
   return (
-    <span className={`inline-flex shrink-0 items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[9px] font-bold tracking-wider ${m.cls}`}>
+    <span className={`inline-flex shrink-0 items-center gap-1 rounded-sm border px-1.5 py-0.5 text-xs font-bold tracking-wider ${m.cls}`}>
       {status === "live" && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-destructive" />}
       {m.label}
     </span>

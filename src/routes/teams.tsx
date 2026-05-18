@@ -72,7 +72,7 @@ function TeamsList() {
             <button
               key={f.key}
               onClick={() => setFilter(f.key)}
-              className={`rounded-sm border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider transition ${
+              className={`rounded-sm border px-2.5 py-1 text-xs font-semibold uppercase tracking-wider transition ${
                 filter === f.key
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border-strong bg-surface-2 hover:bg-muted"
@@ -98,7 +98,7 @@ function TeamsList() {
               <div className="mb-2 flex items-center gap-2 border-b border-border pb-1.5">
                 <StatusDot status={g.key} />
                 <h2 className="text-sm font-bold uppercase tracking-wider">{g.label}</h2>
-                <span className="text-mono text-[10px] text-muted-foreground">{items.length}</span>
+                <span className="text-mono text-xs text-muted-foreground">{items.length}</span>
               </div>
               <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                 {items.map(({ t, status }) => (
@@ -107,7 +107,7 @@ function TeamsList() {
                     <TeamLogo team={t} size={28} />
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-xs font-semibold">{t.name}</div>
-                      <div className="text-mono text-[10px] text-muted-foreground">{t.tag} · #{t.placement}</div>
+                      <div className="text-mono text-xs text-muted-foreground">{t.tag} · #{t.placement}</div>
                     </div>
                     <StatusBadge status={status} />
                   </Link>
@@ -131,7 +131,7 @@ function StatusBadge({ status }: { status: Status }) {
   } as const;
   const m = map[status];
   return (
-    <span className={`inline-flex shrink-0 items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[9px] font-bold tracking-wider ${m.cls}`}>
+    <span className={`inline-flex shrink-0 items-center gap-1 rounded-sm border px-1.5 py-0.5 text-xs font-bold tracking-wider ${m.cls}`}>
       {status === "active" && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-success" />}
       {m.label}
     </span>

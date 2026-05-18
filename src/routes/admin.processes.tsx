@@ -43,7 +43,7 @@ function FilterChip({
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-1.5 rounded-sm border px-2 py-1 text-[10px] font-semibold uppercase tracking-wider transition-colors ${toneCls} ${
+      className={`flex items-center gap-1.5 rounded-sm border px-2 py-1 text-xs font-semibold uppercase tracking-wider transition-colors ${toneCls} ${
         active ? "bg-surface-2 brightness-125" : "bg-surface hover:bg-surface-2"
       }`}
     >
@@ -293,7 +293,7 @@ function ProcessesAdmin() {
           <section className="hud-panel p-4">
             <div className="mb-2 flex items-center justify-between">
               <h2 className="label-eyebrow">Suggested · finished without analysis</h2>
-              <span className="text-mono text-[10px] text-muted-foreground">{suggestions.length}</span>
+              <span className="text-mono text-xs text-muted-foreground">{suggestions.length}</span>
             </div>
             <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
               {suggestions.slice(0, 9).map((m) => {
@@ -306,9 +306,9 @@ function ProcessesAdmin() {
                   >
                     <div>
                       <div className="text-xs font-semibold">{m.name}</div>
-                      <div className="text-[10px] text-muted-foreground">{t?.name ?? m.tournamentId}</div>
+                      <div className="text-xs text-muted-foreground">{t?.name ?? m.tournamentId}</div>
                     </div>
-                    <span className="text-mono text-[10px] text-primary">analyze →</span>
+                    <span className="text-mono text-xs text-primary">analyze →</span>
                   </button>
                 );
               })}
@@ -319,7 +319,7 @@ function ProcessesAdmin() {
         <section className="hud-panel overflow-hidden">
           <table className="w-full text-sm">
             <thead className="border-b border-border bg-surface-2">
-              <tr className="label-eyebrow text-left text-[10px]">
+              <tr className="label-eyebrow text-left text-xs">
                 <th className="px-3 py-2">POV</th>
                 <th className="px-3 py-2">Match</th>
                 <th className="px-3 py-2">Tournament</th>
@@ -344,7 +344,7 @@ function ProcessesAdmin() {
                   <tr className="border-b border-border">
                     <td className="px-3 py-2 text-xs">
                       <span className="rounded-sm border border-border bg-background px-1.5 py-0.5 text-mono uppercase">{p.pov} POV</span>
-                      {p.live && <span className="ml-1 rounded-sm bg-destructive px-1.5 py-0.5 text-[10px] font-bold text-destructive-foreground">LIVE</span>}
+                      {p.live && <span className="ml-1 rounded-sm bg-destructive px-1.5 py-0.5 text-xs font-bold text-destructive-foreground">LIVE</span>}
                     </td>
                     <td className="px-3 py-2 text-xs font-semibold">
                       <button onClick={() => setExpanded(isOpen ? null : p.id)} className="hover:text-primary">
@@ -353,8 +353,8 @@ function ProcessesAdmin() {
                     </td>
                     <td className="px-3 py-2 text-xs">{t?.name ?? p.tournamentId}</td>
                     <td className="px-3 py-2 text-xs text-muted-foreground truncate max-w-[260px]" title={p.streamUrl}>{p.streamUrl || "—"}</td>
-                    <td className="px-3 py-2 text-mono text-[10px]">{p.maps.length}</td>
-                    <td className="px-3 py-2"><span className={`rounded-sm px-1.5 py-0.5 text-[10px] uppercase ${STATUS_COLORS[p.status]}`}>{p.status}</span></td>
+                    <td className="px-3 py-2 text-mono text-xs">{p.maps.length}</td>
+                    <td className="px-3 py-2"><span className={`rounded-sm px-1.5 py-0.5 text-xs uppercase ${STATUS_COLORS[p.status]}`}>{p.status}</span></td>
                     <td className="px-3 py-2 text-right">
                       <button onClick={() => setEditing({ ...p })} className="text-xs text-primary hover:underline mr-2">Edit</button>
                       <button onClick={() => { if (confirm("Delete process?")) removeProcess(p.id); }} className="text-xs text-destructive hover:underline">Delete</button>
@@ -476,7 +476,7 @@ function ProcessEditor({
 
         <div className="space-y-4">
           <div>
-            <div className="label-eyebrow mb-1.5 text-[10px]">Point of view</div>
+            <div className="label-eyebrow mb-1.5 text-xs">Point of view</div>
             <div className="flex gap-2">
               {povBtn("map", "Map POV")}
               {povBtn("team", "Team POV")}
@@ -484,12 +484,12 @@ function ProcessEditor({
             <label className="mt-2 flex items-center gap-2 text-xs">
               <input type="checkbox" checked={value.live} onChange={(e) => set("live", e.target.checked)} />
               <span>LIVE — track stream in realtime</span>
-              {value.live && <span className="rounded-sm bg-destructive px-1.5 py-0.5 text-[10px] font-bold text-destructive-foreground">LIVE</span>}
+              {value.live && <span className="rounded-sm bg-destructive px-1.5 py-0.5 text-xs font-bold text-destructive-foreground">LIVE</span>}
             </label>
           </div>
 
           <div>
-            <div className="label-eyebrow mb-1.5 text-[10px]">Stream URL</div>
+            <div className="label-eyebrow mb-1.5 text-xs">Stream URL</div>
             <div className="flex gap-2">
               <input
                 value={value.streamUrl}
@@ -501,7 +501,7 @@ function ProcessEditor({
               <button onClick={fetchMeta} className="rounded-sm border border-border bg-surface-2 px-3 py-1.5 text-xs hover:bg-muted">Fetch meta</button>
             </div>
             {value.videoTitle && (
-              <div className="mt-1.5 rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-[10px] text-muted-foreground">
+              <div className="mt-1.5 rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs text-muted-foreground">
                 <div className="text-foreground">{value.videoTitle}</div>
                 <div>{value.videoChannel} · {value.videoDurationSec ? mmss(value.videoDurationSec) : "—"}</div>
                 {(value.region || value.day || value.matchup) && (
@@ -517,13 +517,13 @@ function ProcessEditor({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <div className="label-eyebrow mb-1.5 text-[10px]">Tournament</div>
+              <div className="label-eyebrow mb-1.5 text-xs">Tournament</div>
               <select value={value.tournamentId} onChange={(e) => set("tournamentId", e.target.value)} className="w-full rounded-sm border border-border bg-background px-2 py-1.5 text-xs">
                 {tournaments.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
               </select>
             </div>
             <div>
-              <div className="label-eyebrow mb-1.5 text-[10px]">Match (Day)</div>
+              <div className="label-eyebrow mb-1.5 text-xs">Match (Day)</div>
               <div className="flex gap-1.5">
                 <select
                   value={value.matchId}
@@ -549,7 +549,7 @@ function ProcessEditor({
 
           {value.pov === "team" && (
             <div>
-              <div className="label-eyebrow mb-1.5 text-[10px]">Team</div>
+              <div className="label-eyebrow mb-1.5 text-xs">Team</div>
               <select value={value.teamId ?? ""} onChange={(e) => set("teamId", e.target.value || undefined)} className="w-full rounded-sm border border-border bg-background px-2 py-1.5 text-xs">
                 <option value="">— Select team —</option>
                 {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
@@ -559,9 +559,9 @@ function ProcessEditor({
 
           <div>
             <div className="mb-1.5 flex items-center justify-between">
-              <div className="label-eyebrow text-[10px]">Map timings</div>
+              <div className="label-eyebrow text-xs">Map timings</div>
               <div className="flex items-center gap-2">
-                <label className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   Games count
                   <input
                     type="number"
@@ -585,10 +585,10 @@ function ProcessEditor({
               </div>
             </div>
             <div className="space-y-1.5">
-              {value.maps.length === 0 && <div className="text-[10px] text-muted-foreground">No maps configured. Set maps count, fetch metadata, or add manually.</div>}
+              {value.maps.length === 0 && <div className="text-xs text-muted-foreground">No maps configured. Set maps count, fetch metadata, or add manually.</div>}
               {value.maps.map((mp, i) => (
                 <div key={i} className="flex items-center gap-1.5">
-                  <span className="w-6 text-[10px] text-muted-foreground text-mono">#{i + 1}</span>
+                  <span className="w-6 text-xs text-muted-foreground text-mono">#{i + 1}</span>
                   <select
                     value={mp.mapId}
                     onChange={(e) => onChange({ ...value, maps: value.maps.map((x, j) => j === i ? { ...x, mapId: e.target.value } : x) })}
@@ -607,7 +607,7 @@ function ProcessEditor({
                     className="w-24 rounded-sm border border-border bg-background px-2 py-1 text-xs text-mono"
                     placeholder="hh:mm:ss"
                   />
-                  <span className="text-[10px] text-muted-foreground">→</span>
+                  <span className="text-xs text-muted-foreground">→</span>
                   <input
                     type="text"
                     value={hhmmss(mp.endSec)}
@@ -651,7 +651,7 @@ function ProcessAnalysisDetail({
   matchTeamIds: string[];
 }) {
   if (process.maps.length === 0) {
-    return <div className="text-[10px] text-muted-foreground">No maps configured for this process.</div>;
+    return <div className="text-xs text-muted-foreground">No maps configured for this process.</div>;
   }
   return (
     <div className="space-y-3">
@@ -665,7 +665,7 @@ function ProcessAnalysisDetail({
               <div className="text-xs font-bold uppercase tracking-wider">
                 Game {mi + 1} · {map?.name ?? <span className="text-muted-foreground">Unknown map</span>}
               </div>
-              <div className="text-mono text-[10px] text-muted-foreground">
+              <div className="text-mono text-xs text-muted-foreground">
                 {hhmmss(mp.startSec)} → {hhmmss(mp.endSec)}
               </div>
             </div>
@@ -676,7 +676,7 @@ function ProcessAnalysisDetail({
             </div>
             {analysis.teams.length > 0 && (
               <div className="mt-3 border-t border-border pt-2">
-                <div className="label-eyebrow mb-1.5 text-[9px]">Per-team detection</div>
+                <div className="label-eyebrow mb-1.5 text-xs">Per-team detection</div>
                 <div className="grid grid-cols-2 gap-x-3 gap-y-1 md:grid-cols-3 xl:grid-cols-4">
                   {analysis.teams.map((tp) => {
                     const team = teams.find((t) => t.id === tp.teamId);
@@ -701,7 +701,7 @@ function ProcessAnalysisDetail({
 function TaskBar({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-sm border border-border bg-surface-2 px-2 py-1.5">
-      <div className="label-eyebrow mb-1 text-[9px]">{label}</div>
+      <div className="label-eyebrow mb-1 text-xs">{label}</div>
       <ProgressCell value={value} />
     </div>
   );
@@ -711,7 +711,7 @@ function ProgressCell({ value }: { value: number }) {
   return (
     <div className="flex items-center gap-2">
       <Progress value={value} className="h-1.5 flex-1" />
-      <span className="w-9 text-right text-mono text-[10px] text-muted-foreground">{value}%</span>
+      <span className="w-9 text-right text-mono text-xs text-muted-foreground">{value}%</span>
     </div>
   );
 }

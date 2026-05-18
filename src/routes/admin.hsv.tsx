@@ -148,10 +148,10 @@ function HsvAdmin() {
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-surface px-6">
         <h1 className="text-sm font-bold uppercase tracking-wider">HSV — Team Color Calibration</h1>
         <div className="flex items-center gap-1">
-          <span className="label-eyebrow mr-2 text-[10px]">Sample</span>
+          <span className="label-eyebrow mr-2 text-xs">Sample</span>
           {SAMPLES.map((s) => (
             <button key={s.id} onClick={() => setSampleId(s.id)}
-              className={`rounded-sm border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider transition-colors ${
+              className={`rounded-sm border px-2.5 py-1 text-xs font-semibold uppercase tracking-wider transition-colors ${
                 s.id === sampleId ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface-2 text-muted-foreground hover:bg-muted"}`}>
               {s.name}
             </button>
@@ -168,7 +168,7 @@ function HsvAdmin() {
                 t.id === teamId ? "border-primary/40 bg-primary/10" : "border-transparent hover:bg-muted"}`}>
               <span className="h-3 w-3 shrink-0 rounded-sm" style={{ backgroundColor: t.color }} />
               <span className="text-xs font-semibold">{t.displayName}</span>
-              <span className="text-mono ml-auto text-[10px] text-muted-foreground">{String(i + 1).padStart(2, "0")}</span>
+              <span className="text-mono ml-auto text-xs text-muted-foreground">{String(i + 1).padStart(2, "0")}</span>
             </button>
           ))}
         </aside>
@@ -185,8 +185,8 @@ function HsvAdmin() {
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
             <div className="hud-panel p-3">
               <div className="mb-2 flex items-center justify-between">
-                <span className="label-eyebrow text-[10px]">Sample frame — click to pick color</span>
-                <span className="text-mono text-[10px] text-muted-foreground">{sample.name}</span>
+                <span className="label-eyebrow text-xs">Sample frame — click to pick color</span>
+                <span className="text-mono text-xs text-muted-foreground">{sample.name}</span>
               </div>
               <div className="relative w-full overflow-hidden rounded-sm border border-border bg-background">
                 <canvas
@@ -199,8 +199,8 @@ function HsvAdmin() {
 
             <div className="hud-panel p-3">
               <div className="mb-2 flex items-center justify-between">
-                <span className="label-eyebrow text-[10px]">Binary HSV mask</span>
-                <span className="text-mono text-[10px] text-muted-foreground">live</span>
+                <span className="label-eyebrow text-xs">Binary HSV mask</span>
+                <span className="text-mono text-xs text-muted-foreground">live</span>
               </div>
               <div className="relative w-full overflow-hidden rounded-sm border border-border bg-background">
                 <canvas ref={maskRef} className="block w-full" />
@@ -233,13 +233,13 @@ function HsvAdmin() {
 
             <div className="hud-panel p-4">
               <div className="label-eyebrow mb-2">OpenCV snippet</div>
-              <pre className="text-mono overflow-x-auto rounded-sm border border-border bg-background p-3 text-[11px] leading-relaxed text-foreground">
+              <pre className="text-mono overflow-x-auto rounded-sm border border-border bg-background p-3 text-xs leading-relaxed text-foreground">
 {`# ${team.displayName}
 lower = np.array([${preset.h[0]}, ${preset.s[0]}, ${preset.v[0]}])
 upper = np.array([${preset.h[1]}, ${preset.s[1]}, ${preset.v[1]}])
 mask  = cv2.inRange(hsv, lower, upper)`}
               </pre>
-              <p className="mt-3 text-[11px] text-muted-foreground">
+              <p className="mt-3 text-xs text-muted-foreground">
                 Tip: click anywhere on the sample frame to pick a pixel — HSV ranges are seeded around that color. Each team keeps its own preset.
               </p>
             </div>
@@ -256,8 +256,8 @@ function Range({ label, min, max, value, onChange }: {
   return (
     <div className="mb-3">
       <div className="mb-1 flex items-center justify-between">
-        <span className="label-eyebrow text-[10px]">{label}</span>
-        <span className="text-mono text-[10px] tabular-nums text-muted-foreground">{value[0]} — {value[1]}</span>
+        <span className="label-eyebrow text-xs">{label}</span>
+        <span className="text-mono text-xs tabular-nums text-muted-foreground">{value[0]} — {value[1]}</span>
       </div>
       <div className="flex items-center gap-2">
         <input type="range" min={min} max={max} value={value[0]}

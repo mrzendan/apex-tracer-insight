@@ -135,7 +135,7 @@ function UsersPage() {
             Invites
           </TabBtn>
         </div>
-        <div className="ml-auto label-eyebrow text-[10px]">Administrator only</div>
+        <div className="ml-auto label-eyebrow text-xs">Administrator only</div>
       </header>
 
       {tab === "accounts" && (
@@ -201,13 +201,13 @@ function UsersPage() {
         <section className="hud-panel">
           <div className="flex items-center justify-between border-b border-border px-4 py-2">
             <h2 className="label-eyebrow">Accounts</h2>
-            <span className="text-mono text-[10px] text-muted-foreground">
+            <span className="text-mono text-xs text-muted-foreground">
               {loading ? "loading…" : `${rows.length} total`}
             </span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
-              <thead className="bg-surface-2 text-left label-eyebrow text-[10px]">
+              <thead className="bg-surface-2 text-left label-eyebrow text-xs">
                 <tr>
                   <th className="px-3 py-2">Email</th>
                   <th className="px-3 py-2">Display name</th>
@@ -219,13 +219,13 @@ function UsersPage() {
               <tbody>
                 {rows.map((r) => (
                   <tr key={r.id} className="border-t border-border">
-                    <td className="px-3 py-2 font-mono text-[11px]">{r.email}</td>
+                    <td className="px-3 py-2 font-mono text-xs">{r.email}</td>
                     <td className="px-3 py-2">{r.display_name ?? "—"}</td>
                     <td className="px-3 py-2">
                       <select
                         value={r.role ?? "user"}
                         onChange={(e) => onChangeRole(r.id, e.target.value as AppRole)}
-                        className="h-7 w-full rounded-sm border border-border bg-surface-2 px-2 text-[11px] outline-none focus:border-primary"
+                        className="h-7 w-full rounded-sm border border-border bg-surface-2 px-2 text-xs outline-none focus:border-primary"
                       >
                         <option value="user">User</option>
                         <option value="operator">Operator</option>
@@ -238,7 +238,7 @@ function UsersPage() {
                     <td className="px-3 py-2 text-right">
                       <button
                         onClick={() => onDelete(r.id, r.email)}
-                        className="rounded-sm border border-destructive/40 px-2 py-1 text-[10px] uppercase tracking-wider text-destructive hover:bg-destructive/10"
+                        className="rounded-sm border border-destructive/40 px-2 py-1 text-xs uppercase tracking-wider text-destructive hover:bg-destructive/10"
                       >
                         Delete
                       </button>
@@ -267,7 +267,7 @@ function UsersPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="space-y-1">
-      <div className="label-eyebrow text-[10px]">{label}</div>
+      <div className="label-eyebrow text-xs">{label}</div>
       {children}
     </label>
   );
@@ -285,7 +285,7 @@ function TabBtn({
   return (
     <button
       onClick={onClick}
-      className={`rounded-sm px-3 py-1 text-[11px] font-bold uppercase tracking-wider transition-colors ${
+      className={`rounded-sm px-3 py-1 text-xs font-bold uppercase tracking-wider transition-colors ${
         active
           ? "bg-primary text-primary-foreground"
           : "text-muted-foreground hover:bg-surface-2 hover:text-foreground"
@@ -440,13 +440,13 @@ function InvitesTab() {
       <section className="hud-panel">
         <div className="flex items-center justify-between border-b border-border px-4 py-2">
           <h2 className="label-eyebrow">Invites</h2>
-          <span className="text-mono text-[10px] text-muted-foreground">
+          <span className="text-mono text-xs text-muted-foreground">
             {loading ? "loading…" : `${rows.length} total`}
           </span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
-            <thead className="bg-surface-2 text-left label-eyebrow text-[10px]">
+            <thead className="bg-surface-2 text-left label-eyebrow text-xs">
               <tr>
                 <th className="px-3 py-2">Email</th>
                 <th className="px-3 py-2">Role</th>
@@ -461,7 +461,7 @@ function InvitesTab() {
                 const s = statusOf(r);
                 return (
                   <tr key={r.id} className="border-t border-border">
-                    <td className="px-3 py-2 font-mono text-[11px]">{r.email}</td>
+                    <td className="px-3 py-2 font-mono text-xs">{r.email}</td>
                     <td className="px-3 py-2">{r.role}</td>
                     <td className={`px-3 py-2 font-bold ${s.cls}`}>{s.label}</td>
                     <td className="px-3 py-2 text-muted-foreground">
@@ -471,7 +471,7 @@ function InvitesTab() {
                       <button
                         onClick={() => copyLink(r.token)}
                         disabled={!!r.used_at}
-                        className="rounded-sm border border-border px-2 py-1 text-[10px] uppercase tracking-wider hover:bg-surface-2 disabled:opacity-40"
+                        className="rounded-sm border border-border px-2 py-1 text-xs uppercase tracking-wider hover:bg-surface-2 disabled:opacity-40"
                       >
                         {copied === r.token ? "Copied!" : "Copy link"}
                       </button>
@@ -479,7 +479,7 @@ function InvitesTab() {
                     <td className="px-3 py-2 text-right">
                       <button
                         onClick={() => onDelete(r.id)}
-                        className="rounded-sm border border-destructive/40 px-2 py-1 text-[10px] uppercase tracking-wider text-destructive hover:bg-destructive/10"
+                        className="rounded-sm border border-destructive/40 px-2 py-1 text-xs uppercase tracking-wider text-destructive hover:bg-destructive/10"
                       >
                         Revoke
                       </button>

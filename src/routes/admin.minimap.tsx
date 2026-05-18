@@ -95,7 +95,7 @@ function MinimapAdmin() {
       <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-surface px-6">
         <div className="flex items-center gap-3">
           <h1 className="text-sm font-bold uppercase tracking-wider">Minimap analysis</h1>
-          <span className="text-mono text-[10px] text-muted-foreground">·</span>
+          <span className="text-mono text-xs text-muted-foreground">·</span>
           <select value={tournamentId} onChange={(e) => setTournamentId(e.target.value)}
             className="rounded-sm border border-border bg-background px-2 py-1 text-xs">
             {tournaments.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
@@ -126,7 +126,7 @@ function MinimapAdmin() {
               Start analysis
             </button>
           )}
-          <button onClick={clearTrack} className="rounded-sm border border-border bg-surface px-2 py-1 text-[10px] uppercase tracking-wider hover:bg-muted">
+          <button onClick={clearTrack} className="rounded-sm border border-border bg-surface px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted">
             Clear track
           </button>
         </div>
@@ -138,10 +138,10 @@ function MinimapAdmin() {
             {/* POV VOD — cropped to minimap zone */}
             <div className="hud-panel relative flex min-h-0 flex-col overflow-hidden bg-black">
               <div className="flex items-center justify-between border-b border-border bg-surface px-3 py-1.5">
-                <div className="label-eyebrow text-[10px]">
+                <div className="label-eyebrow text-xs">
                   POV minimap{team ? ` · ${team.tag}` : ""}{mz ? ` · zone ${mz.w}×${mz.h} @ (${mz.x},${mz.y})` : " · no zone configured"}
                 </div>
-                <div className="text-mono text-[10px] text-muted-foreground">{fmt(time)} / {fmt(duration)}</div>
+                <div className="text-mono text-xs text-muted-foreground">{fmt(time)} / {fmt(duration)}</div>
               </div>
               <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-black p-2">
                 {!povUrl && (
@@ -169,7 +169,7 @@ function MinimapAdmin() {
                     crossOrigin="anonymous"
                   />
                   {analyzing && (
-                    <div className="absolute right-1.5 top-1.5 z-10 flex items-center gap-1 rounded-sm bg-destructive/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-destructive">
+                    <div className="absolute right-1.5 top-1.5 z-10 flex items-center gap-1 rounded-sm bg-destructive/20 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-destructive">
                       <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-destructive" />
                       REC
                     </div>
@@ -181,8 +181,8 @@ function MinimapAdmin() {
             {/* Full map with live track */}
             <div className="hud-panel relative flex min-h-0 flex-col overflow-hidden">
               <div className="flex items-center justify-between border-b border-border bg-surface px-3 py-1.5">
-                <div className="label-eyebrow text-[10px]">Map · {map.name}</div>
-                <div className="text-mono text-[10px] text-muted-foreground">{track.length} pt{track.length === 1 ? "" : "s"}</div>
+                <div className="label-eyebrow text-xs">Map · {map.name}</div>
+                <div className="text-mono text-xs text-muted-foreground">{track.length} pt{track.length === 1 ? "" : "s"}</div>
               </div>
               <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-background p-2">
                 <div className="relative" style={{ aspectRatio: "1 / 1", height: "100%", maxWidth: "100%" }}>
@@ -220,10 +220,10 @@ function MinimapAdmin() {
               <button onClick={togglePlay} disabled={!povUrl} className="rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110 disabled:opacity-40">
                 {playing ? "Pause" : "Play"}
               </button>
-              <span className="text-mono text-[10px] text-muted-foreground">{fmt(time)}</span>
+              <span className="text-mono text-xs text-muted-foreground">{fmt(time)}</span>
               <input type="range" min={0} max={duration} step={0.05} value={time}
                 onChange={(e) => seek(Number(e.target.value))} className="flex-1 accent-primary" />
-              <span className="text-mono text-[10px] text-muted-foreground">{fmt(duration)}</span>
+              <span className="text-mono text-xs text-muted-foreground">{fmt(duration)}</span>
             </div>
           </div>
         </div>
@@ -231,38 +231,38 @@ function MinimapAdmin() {
         {/* Settings */}
         <aside className="w-80 shrink-0 overflow-auto border-l border-border bg-surface">
           <div className="border-b border-border px-4 py-3">
-            <div className="label-eyebrow text-[10px]">Analysis settings</div>
+            <div className="label-eyebrow text-xs">Analysis settings</div>
           </div>
           <div className="space-y-4 p-4">
             <div>
-              <div className="mb-1 flex items-baseline justify-between text-[10px]">
+              <div className="mb-1 flex items-baseline justify-between text-xs">
                 <span className="text-muted-foreground uppercase tracking-wider">Skip frames</span>
                 <span className="text-mono">{skipFrames}</span>
               </div>
               <input type="range" min={1} max={120} step={1} value={skipFrames}
                 onChange={(e) => setSkipFrames(Number(e.target.value))} className="w-full accent-primary" />
-              <div className="mt-1 text-[10px] text-muted-foreground">
+              <div className="mt-1 text-xs text-muted-foreground">
                 Sample once every {skipFrames} frame{skipFrames === 1 ? "" : "s"} (~{(skipFrames / FPS).toFixed(2)} s at {FPS}fps).
               </div>
             </div>
 
             <div className="border-t border-border pt-3">
-              <div className="label-eyebrow mb-2 text-[10px]">Minimap zone (from Zones)</div>
+              <div className="label-eyebrow mb-2 text-xs">Minimap zone (from Zones)</div>
               {mz ? (
-                <div className="text-mono space-y-0.5 text-[11px]">
+                <div className="text-mono space-y-0.5 text-xs">
                   <div>x: {mz.x} · y: {mz.y}</div>
                   <div>w: {mz.w} · h: {mz.h}</div>
                 </div>
               ) : (
-                <div className="text-[11px] text-muted-foreground">
+                <div className="text-xs text-muted-foreground">
                   No minimap zone defined. Open Zones → VOD stream and add a zone with tag <span className="text-foreground">minimap</span>.
                 </div>
               )}
             </div>
 
             <div className="border-t border-border pt-3">
-              <div className="label-eyebrow mb-2 text-[10px]">Track ({track.length})</div>
-              <div className="text-mono max-h-48 overflow-auto text-[11px] leading-5">
+              <div className="label-eyebrow mb-2 text-xs">Track ({track.length})</div>
+              <div className="text-mono max-h-48 overflow-auto text-xs leading-5">
                 {track.length === 0 && (
                   <div className="text-muted-foreground">Start analysis to plot points on the map.</div>
                 )}

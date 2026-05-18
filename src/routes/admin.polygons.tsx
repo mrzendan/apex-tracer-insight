@@ -101,14 +101,14 @@ function PolygonsAdmin() {
               <option key={m.id} value={m.id}>{m.name}</option>
             ))}
           </select>
-          <span className="text-mono text-[10px] text-muted-foreground">
+          <span className="text-mono text-xs text-muted-foreground">
             {mapPolys.length} polygon{mapPolys.length === 1 ? "" : "s"}
           </span>
         </div>
         <div className="flex items-center gap-2">
           {mode === "draw" ? (
             <>
-              <span className="text-mono text-[10px] text-muted-foreground">
+              <span className="text-mono text-xs text-muted-foreground">
                 {draft.length} pts · click map to add · need ≥3
               </span>
               <button
@@ -263,7 +263,7 @@ function PolygonsAdmin() {
         {/* Sidebar */}
         <aside className="w-80 shrink-0 overflow-auto border-l border-border bg-surface">
           <div className="border-b border-border px-4 py-3">
-            <div className="label-eyebrow text-[10px]">Polygons on {map?.name}</div>
+            <div className="label-eyebrow text-xs">Polygons on {map?.name}</div>
           </div>
           {mapPolys.length === 0 && (
             <div className="px-4 py-6 text-center text-xs text-muted-foreground">
@@ -326,7 +326,7 @@ function PolygonRow({ poly, selected, onSelect, onDelete }: {
         ) : (
           <div className="flex-1 truncate text-sm font-semibold">{poly.name}</div>
         )}
-        <span className={`rounded-sm border px-1.5 py-0.5 text-[10px] uppercase tracking-wider ${tagColor}`}>
+        <span className={`rounded-sm border px-1.5 py-0.5 text-xs uppercase tracking-wider ${tagColor}`}>
           {poly.tag}
         </span>
       </div>
@@ -335,22 +335,22 @@ function PolygonRow({ poly, selected, onSelect, onDelete }: {
           value={poly.tag}
           onClick={(e) => e.stopPropagation()}
           onChange={(e) => updatePolygon(poly.id, { tag: e.target.value as PolygonTag })}
-          className="rounded-sm border border-border bg-background px-1.5 py-1 text-[10px]"
+          className="rounded-sm border border-border bg-background px-1.5 py-1 text-xs"
         >
           <option value="forbidden">forbidden</option>
           <option value="safe">safe</option>
         </select>
         <button
           onClick={(e) => { e.stopPropagation(); setEditingName(true); }}
-          className="rounded-sm border border-border bg-surface px-2 py-1 text-[10px] hover:bg-muted"
+          className="rounded-sm border border-border bg-surface px-2 py-1 text-xs hover:bg-muted"
         >
           Rename
         </button>
         <span className="flex-1" />
-        <span className="text-mono text-[10px] text-muted-foreground">{poly.points.length} pts</span>
+        <span className="text-mono text-xs text-muted-foreground">{poly.points.length} pts</span>
         <button
           onClick={(e) => { e.stopPropagation(); onDelete(); }}
-          className="rounded-sm border border-destructive/40 bg-surface px-2 py-1 text-[10px] text-destructive hover:bg-destructive/10"
+          className="rounded-sm border border-destructive/40 bg-surface px-2 py-1 text-xs text-destructive hover:bg-destructive/10"
         >
           Delete
         </button>

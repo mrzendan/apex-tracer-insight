@@ -125,13 +125,13 @@ function ZonesAdmin() {
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-surface px-6">
         <div>
           <h1 className="text-sm font-bold uppercase tracking-wider">Zones</h1>
-          <div className="label-eyebrow text-[9px]">HUD areas · 1920 × 1080</div>
+          <div className="label-eyebrow text-xs">HUD areas · 1920 × 1080</div>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex rounded-sm border border-border bg-surface-2 p-0.5">
             {(["vod", "camera"] as Mode[]).map((m) => (
               <button key={m} onClick={() => switchMode(m)}
-                className={`rounded-sm px-3 py-1 text-[11px] font-semibold uppercase tracking-wider transition-colors ${
+                className={`rounded-sm px-3 py-1 text-xs font-semibold uppercase tracking-wider transition-colors ${
                   mode === m ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
                 }`}>
                 {m === "vod" ? "VOD stream" : "Player cam"}
@@ -209,7 +209,7 @@ function ZonesAdmin() {
           <div className="mb-2 flex items-center justify-between">
             <div className="label-eyebrow">Zones ({zones.length})</div>
             <button onClick={addZone}
-              className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-[11px] font-semibold hover:bg-muted">
+              className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs font-semibold hover:bg-muted">
               + Add
             </button>
           </div>
@@ -220,10 +220,10 @@ function ZonesAdmin() {
               <button onClick={() => setSel(z.id)} className="flex flex-1 items-center gap-2 text-left">
                 <span className="inline-block h-2 w-2 rounded-sm" style={{ backgroundColor: TAG_COLOR[z.tag] }} />
                 <span className="truncate text-xs font-semibold">{z.name}</span>
-                <span className="text-mono text-[9px] uppercase text-muted-foreground">{z.tag}</span>
+                <span className="text-mono text-xs uppercase text-muted-foreground">{z.tag}</span>
               </button>
               <button onClick={() => removeZone(z.id)} title="Delete"
-                className="rounded-sm px-1.5 text-[11px] text-muted-foreground hover:bg-destructive/20 hover:text-destructive">×</button>
+                className="rounded-sm px-1.5 text-xs text-muted-foreground hover:bg-destructive/20 hover:text-destructive">×</button>
             </div>
           ))}
 
@@ -232,7 +232,7 @@ function ZonesAdmin() {
               <div className="label-eyebrow mb-2">Edit</div>
               <Field label="Name" value={selZone.name} onChange={(v) => update(selZone.id, { name: v })} />
               <label className="mb-2 block">
-                <span className="label-eyebrow mb-1 block text-[10px]">Tag</span>
+                <span className="label-eyebrow mb-1 block text-xs">Tag</span>
                 <select value={selZone.tag} onChange={(e) => update(selZone.id, { tag: e.target.value as ZoneTag })}
                   className="w-full rounded-sm border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary/60">
                   {TAGS.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -245,7 +245,7 @@ function ZonesAdmin() {
                 <NumField label="H" value={selZone.h} onChange={(v) => update(selZone.id, { h: v })} />
               </div>
               <button onClick={() => removeZone(selZone.id)}
-                className="mt-3 w-full rounded-sm border border-destructive/40 bg-destructive/10 px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-destructive hover:bg-destructive/20">
+                className="mt-3 w-full rounded-sm border border-destructive/40 bg-destructive/10 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-destructive hover:bg-destructive/20">
                 Delete zone
               </button>
             </div>
@@ -259,7 +259,7 @@ function ZonesAdmin() {
 function Field({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <label className="mb-2 block">
-      <span className="label-eyebrow mb-1 block text-[10px]">{label}</span>
+      <span className="label-eyebrow mb-1 block text-xs">{label}</span>
       <input value={value} onChange={(e) => onChange(e.target.value)}
         className="w-full rounded-sm border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary/60" />
     </label>
@@ -268,7 +268,7 @@ function Field({ label, value, onChange }: { label: string; value: string; onCha
 function NumField({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
   return (
     <label className="block">
-      <span className="label-eyebrow mb-1 block text-[10px]">{label}</span>
+      <span className="label-eyebrow mb-1 block text-xs">{label}</span>
       <input type="number" value={value} onChange={(e) => onChange(+e.target.value || 0)}
         className="text-mono w-full rounded-sm border border-border bg-background px-2 py-1.5 text-xs tabular-nums outline-none focus:border-primary/60" />
     </label>

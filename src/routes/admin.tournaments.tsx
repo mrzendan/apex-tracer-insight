@@ -89,7 +89,7 @@ function TournamentsAdmin() {
         <div className="hud-panel overflow-hidden">
           <table className="w-full text-sm">
             <thead className="border-b border-border bg-surface-2">
-              <tr className="label-eyebrow text-left text-[10px]">
+              <tr className="label-eyebrow text-left text-xs">
                 <th className="px-3 py-2 w-8"></th>
                 <th className="px-3 py-2">Name</th>
                 <th className="px-3 py-2 w-[200px]">Dates</th>
@@ -166,7 +166,7 @@ function TournamentsAdmin() {
                                       className="flex items-center gap-2 rounded-sm border border-border bg-surface px-2 py-1.5 text-xs hover:bg-muted"
                                     >
                                       <TeamLogo team={t} size={22} />
-                                      <span className="text-mono text-[10px] font-bold">{t.tag}</span>
+                                      <span className="text-mono text-xs font-bold">{t.tag}</span>
                                       <span className="truncate">{t.name}</span>
                                     </Link>
                                   </li>
@@ -219,7 +219,7 @@ function TournamentsAdmin() {
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="hud-panel p-3">
-      <div className="label-eyebrow mb-2 text-[10px]">{title}</div>
+      <div className="label-eyebrow mb-2 text-xs">{title}</div>
       {children}
     </div>
   );
@@ -233,7 +233,7 @@ function TypeBadge({ type }: { type: TournamentType }) {
     type === "LAN" ? "bg-primary/15 text-primary border-primary/30"
     : type === "Online" ? "bg-success/20 text-success border-success/40"
     : "bg-cyan/15 text-cyan border-cyan/40";
-  return <span className={`rounded-sm border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${color}`}>{type}</span>;
+  return <span className={`rounded-sm border px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wider ${color}`}>{type}</span>;
 }
 
 function EditDialog({ row, isNew, onChange, onCancel, onSave }: {
@@ -250,34 +250,34 @@ function EditDialog({ row, isNew, onChange, onCancel, onSave }: {
         </div>
         <div className="space-y-3 p-4">
           <div>
-            <label className="label-eyebrow text-[10px]">Name</label>
+            <label className="label-eyebrow text-xs">Name</label>
             <input className={base} value={row.name} onChange={(e) => set("name", e.target.value)} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="label-eyebrow text-[10px]">Start date</label>
+              <label className="label-eyebrow text-xs">Start date</label>
               <input type="date" className={base} value={row.startDate} onChange={(e) => set("startDate", e.target.value)} />
             </div>
             <div>
-              <label className="label-eyebrow text-[10px]">End date</label>
+              <label className="label-eyebrow text-xs">End date</label>
               <input type="date" className={base} value={row.endDate} onChange={(e) => set("endDate", e.target.value)} />
             </div>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="label-eyebrow text-[10px]">Year</label>
+              <label className="label-eyebrow text-xs">Year</label>
               <select className={base} value={row.year} onChange={(e) => set("year", Number(e.target.value))}>
                 {YEARS.map((y) => <option key={y} value={y}>Year {y}</option>)}
               </select>
             </div>
             <div>
-              <label className="label-eyebrow text-[10px]">Type</label>
+              <label className="label-eyebrow text-xs">Type</label>
               <select className={base} value={row.type} onChange={(e) => set("type", e.target.value as TournamentType)}>
                 {TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
             <div>
-              <label className="label-eyebrow text-[10px]">Region</label>
+              <label className="label-eyebrow text-xs">Region</label>
               <select className={base} value={row.region} onChange={(e) => set("region", e.target.value as TournamentRegion)}>
                 {REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}
               </select>
