@@ -444,65 +444,26 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
   );
 }
 
-/* ---------- CURRENT STATE block (bottom-left of map) ---------- */
-function CurrentState({
-  aliveTeams, totalTeams, totalKills, ringIndex, ringCount, time, duration,
-}: {
-  aliveTeams: number; totalTeams: number; totalKills: number;
-  ringIndex: number; ringCount: number; time: number; duration: number;
-}) {
-  // Resolve the active ring segment (CD vs Closing) for the phase headline.
+/* ---------- RING PHASE STATUS chip (sits next to Stat row) ---------- */
+function RingPhaseChip({ time }: { time: number }) {
   const seg = ringSegments.find(s => time >= s.startSec && time <= s.endSec)
     ?? ringSegments[ringSegments.length - 1];
-  const phaseN = seg.phaseIndex + 1;
   const isClosing = seg.kind === "Closing";
-  // Color the phase chip per the design language:
-  //   Closing = danger (red); CD = info (cyan).
-  const phaseColor = isClosing ? "text-destructive" : "text-cyan";
-  const phaseDot   = isClosing ? "bg-destructive" : "bg-cyan";
+  const remaining = Math.max(0, Math.round(seg.endSec - time));
+  const accent    = isClosing ? "text-destructive" : "text-cyan";
+  const dot       = isClosing ? "bg-destructive"   : "bg-cyan";
   return (
-    <div className="pointer-events-none absolute bottom-4 left-4">
-      <div className="hud-panel-strong min-w-[220px] px-4 py-3">
-        <div className="label-eyebrow mb-2 text-[9px]">Текущее состояние</div>
-        <div className="space-y-1.5">
-          <Row
-            label="Живы"
-            value={`${aliveTeams}/${totalTeams}`}
-            dotClass="bg-success"
-          />
-          <Row
-            label="Убийств"
-            value={totalKills.toString()}
-            dotClass="bg-destructive"
-          />
-          <Row
-            label="Кольцо"
-            value={`${Math.max(1, phaseN)}/${ringCount}`}
-            dotClass="bg-cyan"
-          />
-          <Row
-            label="Время"
-            value={`${formatTime(time)} / ${formatTime(duration)}`}
-            dotClass="bg-primary"
-          />
-        </div>
-        <div className="mt-2.5 flex items-center gap-2 border-t border-border pt-2">
-          <span className={`h-2 w-2 shrink-0 rounded-full ${phaseDot} ${isClosing ? "animate-pulse" : ""}`} />
-          <span className={`text-mono text-xs font-bold uppercase tracking-wider ${phaseColor}`}>
-            Round {phaseN} — {seg.kind}
-          </span>
+    <div className="hud-panel-strong flex items-center gap-2.5 px-3 py-1.5">
+      <span className={`h-2 w-2 shrink-0 rounded-full ${dot} ${isClosing ? "animate-pulse" : ""}`} />
+      <div className="leading-tight">
+        <div className="label-eyebrow text-[9px]">Phase</div>
+        <div className={`text-mono text-sm font-bold uppercase tracking-wider ${accent}`}>
+          R{seg.phaseIndex + 1} {seg.kind}
         </div>
       </div>
-    </div>
-  );
-}
-
-function Row({ label, value, dotClass }: { label: string; value: string; dotClass: string }) {
-  return (
-    <div className="flex items-center gap-2.5">
-      <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${dotClass}`} />
-      <span className="label-eyebrow w-16 text-[9px]">{label}</span>
-      <span className="text-mono ml-auto text-sm font-bold tabular-nums text-foreground">{value}</span>
+      <div className="text-mono ml-1 border-l border-border pl-2.5 text-[10px] tabular-nums text-muted-foreground">
+        {formatTime(remaining)}
+      </div>
     </div>
   );
 }
@@ -796,15 +757,12 @@ function MapCanvas({
         {(view.scale * 100).toFixed(0)}%
       </div>
 
-      <CurrentState
-        aliveTeams={aliveTeams}
-        totalTeams={teams.length}
-        totalKills={totalKills}
-        ringIndex={ringIndex}
-        ringCount={ringCount}
-        time={time}
-        duration={duration}
-      />
+      <div className="pointer-events-none absolute bottom-4 left-4 flex flex-wrap items-stretch gap-2">
+        <Stat label="Alive" value={`${aliveTeams}/${teams.length}`} accent />
+        <Stat label="Kills" value={totalKills.toString()} />
+        <Stat label="Ring"  value={`${ringIndex + 1 || ringCount}/${ringCount}`} />
+        <RingPhaseChip time={time} />
+      </div>
     </div>
   );
 }
