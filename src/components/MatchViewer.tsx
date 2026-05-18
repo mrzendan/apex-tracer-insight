@@ -254,7 +254,7 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
   // Scale team-row logo size with panel width.
   const teamCompact = leftWidth < 210;
   const teamLogoSize = teamCompact
-    ? Math.round(leftWidth * 1.4)
+    ? Math.max(24, leftWidth - 36)
     : Math.round(Math.max(18, Math.min(44, leftWidth / 11)));
 
   return (
