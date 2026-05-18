@@ -16,7 +16,7 @@ import { TeamLogo } from "@/components/admin/TeamLogo";
 import { getSlotColor } from "@/lib/team-colors";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { DensityToggle } from "@/components/DensityToggle";
-import { Users, Swords } from "lucide-react";
+import { Users, Swords, Crosshair, Skull, HeartCrack, ShieldAlert, Package, Circle } from "lucide-react";
 
 function formatTime(sec: number) {
   const m = Math.floor(sec / 60).toString().padStart(2, "0");
@@ -438,7 +438,16 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
                   className={`group flex w-full items-start gap-3 border-b border-border px-3 py-2.5 text-left transition-colors ${
                     active ? "bg-primary/10" : past ? "opacity-60 hover:bg-muted" : "hover:bg-muted"}`}>
                   <span className="text-mono mt-0.5 w-12 shrink-0 text-xs text-muted-foreground">{formatTime(e.t)}</span>
-                  <span className="mt-1 h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: eventColor(e.type) }} />
+                  <span
+                    className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-sm"
+                    style={{
+                      color: eventColor(e.type),
+                      backgroundColor: `${eventColor(e.type)}22`,
+                      boxShadow: `inset 0 0 0 1px ${eventColor(e.type)}66`,
+                    }}
+                  >
+                    <EventIcon type={e.type} />
+                  </span>
                   <span className="min-w-0 text-xs leading-snug">
                     <span className="label-eyebrow mr-1.5 text-[10px]">{e.type}</span>
                     <span className="text-foreground">{e.label}</span>
@@ -462,6 +471,18 @@ function eventColor(type: string) {
     case "ring":  return "#22c4f5"; // info
     case "care":  return "#34d399"; // success
     default:      return "#94a3b8"; // neutral
+  }
+}
+
+function EventIcon({ type }: { type: string }) {
+  const cls = "h-3 w-3";
+  switch (type) {
+    case "kill":  return <Crosshair className={cls} strokeWidth={2.5} />;
+    case "wipe":  return <Skull className={cls} strokeWidth={2.5} />;
+    case "knock": return <HeartCrack className={cls} strokeWidth={2.5} />;
+    case "ring":  return <ShieldAlert className={cls} strokeWidth={2.5} />;
+    case "care":  return <Package className={cls} strokeWidth={2.5} />;
+    default:      return <Circle className={cls} strokeWidth={2.5} />;
   }
 }
 
