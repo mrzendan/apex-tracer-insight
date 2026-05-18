@@ -2,7 +2,6 @@ import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tan
 import { useState } from "react";
 import { maps as seed, type ApexMap, getGames } from "@/lib/mock-match";
 import { useAdminStore } from "@/lib/admin-store";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { BrandMark } from "@/components/BrandMark";
 
 export const Route = createFileRoute("/maps")({
@@ -40,7 +39,6 @@ function MapsGrid() {
           className="ml-4 w-64 rounded-sm border border-border bg-background px-2 py-1.5 text-xs"
         />
         <div className="ml-auto flex items-center gap-2">
-          <ThemeToggle compact />
         </div>
       </header>
 

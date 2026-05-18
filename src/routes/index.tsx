@@ -3,9 +3,6 @@ import { useMemo } from "react";
 import { tournaments, matches, maps, teams, matchSeedExtras, getGames, type Match } from "@/lib/mock-match";
 import { TeamLogo } from "@/components/admin/TeamLogo";
 import { RouteGuard } from "@/components/auth/RouteGuard";
-import { useAuth } from "@/lib/auth";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { DensityToggle } from "@/components/DensityToggle";
 import { BrandMark } from "@/components/BrandMark";
 import {
   Trophy, Swords, MapIcon as MapMarker, Users, ArrowRight, Activity,
@@ -99,7 +96,6 @@ function OverallBadge({ state }: { state: PipelineState }) {
 /* ---------------------------------- page ---------------------------------- */
 
 function Hub() {
-  const { role, user, signOut } = useAuth();
 
   const stats = useMemo(() => ({
     tournaments: tournaments.length,
@@ -176,21 +172,6 @@ function Hub() {
 
       <header className="sticky top-0 z-20 flex h-14 items-center gap-4 border-b border-border bg-surface/80 px-4 backdrop-blur">
         <BrandMark subtitle="VOD analytics" />
-        <div className="ml-auto flex items-center gap-2">
-          <ThemeToggle compact />
-          <DensityToggle compact />
-          <span className="text-mono hidden text-xs text-muted-foreground sm:inline">
-            {user?.email} · {role}
-          </span>
-          {(role === "operator" || role === "administrator") && (
-            <Link to="/admin" className="rounded-sm border border-border-strong bg-surface-2 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider transition-colors hover:bg-muted">
-              Admin
-            </Link>
-          )}
-          <button onClick={() => signOut()} className="rounded-sm border border-border-strong bg-surface-2 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider transition-colors hover:bg-muted">
-            Sign out
-          </button>
-        </div>
       </header>
 
       <div className="mx-auto max-w-7xl px-6 pb-16 pt-8">

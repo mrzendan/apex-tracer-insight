@@ -1,6 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { matches, tournaments, maps, matchSeedExtras, getGames, matchDurationSec } from "@/lib/mock-match";
-import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const Route = createFileRoute("/matches/$matchId")({
   component: MatchDetailPage,
@@ -31,7 +30,6 @@ function MatchDetailPage() {
       <header className="sticky top-0 z-20 flex h-14 items-center gap-4 border-b border-border bg-surface/80 px-4 backdrop-blur">
         <Link to="/" className="text-sm font-bold tracking-tight">APEX STATS</Link>
         <span className="text-mono text-xs text-muted-foreground">/ <Link to="/matches" className="hover:text-foreground">Матчи</Link> / {match.name}</span>
-        <div className="ml-auto"><ThemeToggle compact /></div>
       </header>
       <div className="mx-auto max-w-5xl p-6">
         <div className="mb-4 flex items-center gap-3">
