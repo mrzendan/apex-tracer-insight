@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { matches, teams, tournaments, maps } from "@/lib/mock-match";
 import { Activity, CheckCircle2, XCircle, Loader2, RotateCw, Bug, ExternalLink, History, AlertTriangle, Palette, Shapes, Video } from "lucide-react";
 
 export const Route = createFileRoute("/admin/")({ component: AdminDashboard });
