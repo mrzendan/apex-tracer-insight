@@ -3,6 +3,7 @@ import { useState } from "react";
 import { maps as seed, type ApexMap, getGames } from "@/lib/mock-match";
 import { useAdminStore } from "@/lib/admin-store";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { BrandMark } from "@/components/BrandMark";
 
 export const Route = createFileRoute("/maps")({
   component: MapsPage,
@@ -31,17 +32,7 @@ function MapsGrid() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-20 flex h-14 items-center gap-4 border-b border-border bg-surface/80 px-4 backdrop-blur">
-        <Link to="/" className="flex items-center gap-2.5">
-          <div className="flex h-7 w-7 items-center justify-center rounded-sm bg-primary text-primary-foreground">
-            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.5}>
-              <path d="M12 3 L21 20 H3 Z" />
-            </svg>
-          </div>
-          <div className="leading-tight">
-            <div className="text-sm font-bold tracking-tight">APEX STATS</div>
-            <div className="label-eyebrow text-[9px]">Карты</div>
-          </div>
-        </Link>
+        <BrandMark subtitle="Карты" />
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
