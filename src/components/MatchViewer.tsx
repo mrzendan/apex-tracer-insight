@@ -21,17 +21,7 @@ function formatTime(sec: number) {
   return `${m}:${s}`;
 }
 
-type ViewMode = "overview" | "selected" | "live" | "trails" | "rings" | "events";
 type EventFilter = "all" | "fights" | "rings" | "eliminations" | "rotations" | "errors";
-
-const VIEW_MODES: { id: ViewMode; label: string }[] = [
-  { id: "overview", label: "Обзор" },
-  { id: "selected", label: "Выбранные" },
-  { id: "live",     label: "Живые" },
-  { id: "trails",   label: "Треки" },
-  { id: "rings",    label: "Кольца" },
-  { id: "events",   label: "События" },
-];
 
 const EVENT_FILTERS: { id: EventFilter; label: string }[] = [
   { id: "all",          label: "Все" },
@@ -51,6 +41,18 @@ function matchesFilter(e: GameEvent, f: EventFilter) {
   if (f === "errors")       return false;
   return true;
 }
+
+/** Split each ring phase into CD (waiting) and Closing windows. */
+const RING_CLOSE_FRACTION = 0.4;
+type RingSegment = { phaseIndex: number; kind: "CD" | "Closing"; startSec: number; endSec: number };
+const ringSegments: RingSegment[] = ringPhases.flatMap((p, i) => {
+  const dur = p.endSec - p.startSec;
+  const closeStart = p.startSec + dur * (1 - RING_CLOSE_FRACTION);
+  return [
+    { phaseIndex: i, kind: "CD",      startSec: p.startSec, endSec: closeStart } as RingSegment,
+    { phaseIndex: i, kind: "Closing", startSec: closeStart, endSec: p.endSec }    as RingSegment,
+  ];
+});
 
 export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
   const firstId = initialMatchId ?? matches[0].id;
