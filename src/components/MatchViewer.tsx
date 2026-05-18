@@ -861,16 +861,16 @@ function Timeline({
             const intensity = 0.04 + seg.phaseIndex * 0.025;
             return (
               <div key={i}
-                className={`absolute top-0 h-full ${isClosing ? "border-l border-r border-primary/40" : "border-r border-border/60"}`}
+                className={`absolute top-0 h-full ${isClosing ? "border-l border-r border-destructive/50" : "border-r border-border/60"}`}
                 style={{
                   left: `${(seg.startSec / duration) * 100}%`,
                   width: `${((seg.endSec - seg.startSec) / duration) * 100}%`,
                   background: isClosing
-                    ? `repeating-linear-gradient(45deg, rgba(255,91,18,${intensity + 0.12}) 0 4px, rgba(255,91,18,${intensity + 0.04}) 4px 8px)`
-                    : `rgba(255,91,18,${intensity})`,
+                    ? `repeating-linear-gradient(45deg, rgba(239,68,68,${intensity + 0.18}) 0 4px, rgba(239,68,68,${intensity + 0.05}) 4px 8px)`
+                    : `rgba(34,196,245,${intensity})`,
                 }}>
                 <div className={`text-mono absolute left-1 top-0.5 text-[9px] uppercase tracking-wider ${
-                  isClosing ? "text-primary font-bold" : "text-muted-foreground/80"}`}>
+                  isClosing ? "text-destructive font-bold" : "text-muted-foreground/80"}`}>
                   R{seg.phaseIndex + 1} {seg.kind}
                 </div>
               </div>
