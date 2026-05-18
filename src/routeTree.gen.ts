@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as Presentation2RouteImport } from './routes/presentation-2'
 import { Route as PresentationRouteImport } from './routes/presentation'
+import { Route as MapsRouteImport } from './routes/maps'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
@@ -43,6 +44,11 @@ const Presentation2Route = Presentation2RouteImport.update({
 const PresentationRoute = PresentationRouteImport.update({
   id: '/presentation',
   path: '/presentation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MapsRoute = MapsRouteImport.update({
+  id: '/maps',
+  path: '/maps',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -166,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/accept-invite': typeof AcceptInviteRoute
   '/admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
+  '/maps': typeof MapsRoute
   '/presentation': typeof PresentationRoute
   '/presentation-2': typeof Presentation2Route
   '/admin/camera': typeof AdminCameraRoute
@@ -192,6 +199,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
   '/login': typeof LoginRoute
+  '/maps': typeof MapsRoute
   '/presentation': typeof PresentationRoute
   '/presentation-2': typeof Presentation2Route
   '/admin/camera': typeof AdminCameraRoute
@@ -220,6 +228,7 @@ export interface FileRoutesById {
   '/accept-invite': typeof AcceptInviteRoute
   '/admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
+  '/maps': typeof MapsRoute
   '/presentation': typeof PresentationRoute
   '/presentation-2': typeof Presentation2Route
   '/admin/camera': typeof AdminCameraRoute
@@ -249,6 +258,7 @@ export interface FileRouteTypes {
     | '/accept-invite'
     | '/admin'
     | '/login'
+    | '/maps'
     | '/presentation'
     | '/presentation-2'
     | '/admin/camera'
@@ -275,6 +285,7 @@ export interface FileRouteTypes {
     | '/'
     | '/accept-invite'
     | '/login'
+    | '/maps'
     | '/presentation'
     | '/presentation-2'
     | '/admin/camera'
@@ -302,6 +313,7 @@ export interface FileRouteTypes {
     | '/accept-invite'
     | '/admin'
     | '/login'
+    | '/maps'
     | '/presentation'
     | '/presentation-2'
     | '/admin/camera'
@@ -330,6 +342,7 @@ export interface RootRouteChildren {
   AcceptInviteRoute: typeof AcceptInviteRoute
   AdminRoute: typeof AdminRouteWithChildren
   LoginRoute: typeof LoginRoute
+  MapsRoute: typeof MapsRoute
   PresentationRoute: typeof PresentationRoute
   Presentation2Route: typeof Presentation2Route
   MatchesMatchIdRoute: typeof MatchesMatchIdRoute
@@ -350,6 +363,13 @@ declare module '@tanstack/react-router' {
       path: '/presentation'
       fullPath: '/presentation'
       preLoaderRoute: typeof PresentationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/maps': {
+      id: '/maps'
+      path: '/maps'
+      fullPath: '/maps'
+      preLoaderRoute: typeof MapsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -593,6 +613,7 @@ const rootRouteChildren: RootRouteChildren = {
   AcceptInviteRoute: AcceptInviteRoute,
   AdminRoute: AdminRouteWithChildren,
   LoginRoute: LoginRoute,
+  MapsRoute: MapsRoute,
   PresentationRoute: PresentationRoute,
   Presentation2Route: Presentation2Route,
   MatchesMatchIdRoute: MatchesMatchIdRoute,
@@ -601,3 +622,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
