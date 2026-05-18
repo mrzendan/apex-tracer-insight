@@ -64,12 +64,6 @@ function AdminDashboard() {
         <div className="ml-auto label-eyebrow text-[10px]">Mock data · frontend only</div>
       </header>
 
-      <div className="grid grid-cols-2 gap-3 border-b border-border bg-background px-6 py-4 lg:grid-cols-4">
-        <Stat to="/admin/tournaments" label="Tournaments" value={tournaments.length} />
-        <Stat to="/admin/matches"     label="Matches"     value={matches.length} />
-        <Stat to="/admin/maps"        label="Maps"        value={maps.length} />
-        <Stat to="/admin/teams"       label="Teams"       value={teams.length} />
-      </div>
 
       <div className="flex-1 overflow-auto p-6 space-y-8">
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
