@@ -191,9 +191,6 @@ function Hub() {
           <span className="text-mono hidden text-[10px] text-muted-foreground sm:inline">
             {user?.email} · {role}
           </span>
-          <Link to="/maps" className="rounded-sm border border-border-strong bg-surface-2 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider transition-colors hover:bg-muted">
-            Карты
-          </Link>
           {(role === "operator" || role === "administrator") && (
             <Link to="/admin" className="rounded-sm border border-border-strong bg-surface-2 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider transition-colors hover:bg-muted">
               Admin
@@ -214,10 +211,10 @@ function Hub() {
           </h1>
 
           <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-            <StatPill label="Турниры"   value={stats.tournaments} Icon={Trophy} />
-            <StatPill label="Матчи"     value={stats.matches}     Icon={Swords} />
-            <StatPill label="Карты"     value={stats.maps}        Icon={MapMarker} />
-            <StatPill label="Команды"   value={stats.teams}       Icon={Users} />
+            <StatPill label="Турниры"   value={stats.tournaments} Icon={Trophy}     to="/tournaments" />
+            <StatPill label="Матчи"     value={stats.matches}     Icon={Swords}     to="/matches" />
+            <StatPill label="Карты"     value={stats.maps}        Icon={MapMarker}  to="/maps" />
+            <StatPill label="Команды"   value={stats.teams}       Icon={Users}      to="/teams" />
           </div>
         </section>
 
@@ -444,17 +441,17 @@ function MiniStat({ label, value, mono = true }: { label: string; value: number 
   );
 }
 
-function StatPill({ label, value, Icon }: { label: string; value: number; Icon: typeof Trophy }) {
+function StatPill({ label, value, Icon, to }: { label: string; value: number; Icon: typeof Trophy; to: "/tournaments" | "/matches" | "/maps" | "/teams" }) {
   return (
-    <div className="hud-panel-strong hover-lift flex items-center gap-3 px-4 py-3">
+    <Link to={to} className="hud-panel-strong hover-lift group flex items-center gap-3 px-4 py-3 transition-colors hover:border-primary/40">
       <div className="flex h-9 w-9 items-center justify-center rounded-sm bg-primary/15 text-primary">
         <Icon className="h-4 w-4" strokeWidth={2} />
       </div>
       <div>
-        <div className="label-eyebrow text-[9px]">{label}</div>
+        <div className="label-eyebrow text-[9px] group-hover:text-primary">{label}</div>
         <div className="text-mono mt-0.5 text-xl font-bold tabular-nums">{value}</div>
       </div>
-    </div>
+    </Link>
   );
 }
 
