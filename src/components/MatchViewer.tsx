@@ -17,6 +17,7 @@ import { getSlotColor } from "@/lib/team-colors";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { DensityToggle } from "@/components/DensityToggle";
 import { Users, Swords, Crosshair, Skull, HeartCrack, ShieldAlert, Package, Circle } from "lucide-react";
+import damageIcon from "@/assets/icons/damage.svg";
 
 function formatTime(sec: number) {
   const m = Math.floor(sec / 60).toString().padStart(2, "0");
@@ -439,12 +440,8 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
                     active ? "bg-primary/10" : past ? "opacity-60 hover:bg-muted" : "hover:bg-muted"}`}>
                   <span className="text-mono mt-0.5 w-12 shrink-0 text-xs text-muted-foreground">{formatTime(e.t)}</span>
                   <span
-                    className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-sm"
-                    style={{
-                      color: eventColor(e.type),
-                      backgroundColor: `${eventColor(e.type)}22`,
-                      boxShadow: `inset 0 0 0 1px ${eventColor(e.type)}66`,
-                    }}
+                    className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center"
+                    style={{ color: eventColor(e.type) }}
                   >
                     <EventIcon type={e.type} />
                   </span>
@@ -475,11 +472,20 @@ function eventColor(type: string) {
 }
 
 function EventIcon({ type }: { type: string }) {
-  const cls = "h-3 w-3";
+  const cls = "h-5 w-5";
   switch (type) {
     case "kill":  return <Crosshair className={cls} strokeWidth={2.5} />;
     case "wipe":  return <Skull className={cls} strokeWidth={2.5} />;
-    case "knock": return <HeartCrack className={cls} strokeWidth={2.5} />;
+    case "knock": return (
+      <img
+        src={damageIcon}
+        alt="knock"
+        className={cls}
+        style={{
+          filter: "brightness(0) saturate(100%) invert(72%) sepia(57%) saturate(728%) hue-rotate(359deg) brightness(101%) contrast(98%)",
+        }}
+      />
+    );
     case "ring":  return <ShieldAlert className={cls} strokeWidth={2.5} />;
     case "care":  return <Package className={cls} strokeWidth={2.5} />;
     default:      return <Circle className={cls} strokeWidth={2.5} />;
