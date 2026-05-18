@@ -491,7 +491,7 @@ function Select({ label, value, onChange, options }: {
   );
 }
 
-function PanelHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+function PanelHeader({ title, subtitle }: { title: string; subtitle?: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between border-b border-border px-3 py-2.5">
       <h2 className="text-xs font-bold uppercase tracking-wider">{title}</h2>
