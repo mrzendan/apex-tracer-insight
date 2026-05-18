@@ -12,6 +12,7 @@ import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth";
 import { ThemeProvider } from "@/lib/theme";
 import { DensityProvider } from "@/lib/density";
+import { UserBar } from "@/components/UserBar";
 
 function NotFoundComponent() {
   return (
@@ -124,6 +125,7 @@ function RootComponent() {
         <DensityProvider>
           <AuthProvider>
             <Outlet />
+            <UserBar />
           </AuthProvider>
         </DensityProvider>
       </ThemeProvider>
