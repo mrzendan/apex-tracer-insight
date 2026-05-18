@@ -500,11 +500,11 @@ function TeamRow({ team, active, hovered, onToggle, onHover, logoSize = 20, comp
     return (
       <div onMouseEnter={() => onHover(true)} onMouseLeave={() => onHover(false)}
         onClick={onToggle}
-        className={`group relative mb-1 flex h-12 cursor-pointer items-center overflow-hidden rounded-sm border transition-colors ${
+        className={`group relative mb-1 flex h-12 cursor-pointer items-center rounded-sm border px-4 transition-colors ${
           active ? "border-border-strong bg-surface-2" : "border-transparent bg-transparent opacity-50"
         } ${hovered ? "ring-1 ring-primary/40" : ""}`}>
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <TeamLogo team={team} size={logoSize} className="!rounded-none !border-0 !bg-transparent" />
+        <div className="pointer-events-none flex h-full w-full items-center justify-center">
+          <TeamLogo team={team} size={logoSize} className="!rounded-none !border-0 !bg-transparent max-h-full w-auto object-contain" />
         </div>
         <span className="absolute left-1.5 top-1.5 h-2.5 w-2.5 rounded-sm"
           style={{ backgroundColor: slotColor }} />
