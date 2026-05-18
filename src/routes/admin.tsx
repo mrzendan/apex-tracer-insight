@@ -2,8 +2,6 @@ import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-r
 import { useState } from "react";
 import { RouteGuard } from "@/components/auth/RouteGuard";
 import { useAuth } from "@/lib/auth";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { DensityToggle } from "@/components/DensityToggle";
 
 export const Route = createFileRoute("/admin")({
   component: () => (
@@ -40,7 +38,7 @@ const systemItems: NavItem[] = [
 ];
 
 function AdminLayout() {
-  const { role, user, signOut } = useAuth();
+  const { role } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const dataActive = dataItems.some((i) => pathname.startsWith(i.to));
   const calibActive = calibrationItems.some((i) => pathname.startsWith(i.to));
@@ -127,24 +125,6 @@ function AdminLayout() {
       </aside>
 
       <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
-        <div className="pointer-events-none absolute right-4 top-0 z-20 flex h-14 items-center gap-2">
-          <div className="pointer-events-auto flex items-center gap-2">
-            <div className="text-mono truncate text-xs text-muted-foreground max-w-[220px]" title={user?.email ?? ""}>
-              {user?.email} · {role}
-            </div>
-            <ThemeToggle compact />
-            <DensityToggle compact />
-            <button
-              onClick={() => signOut()}
-              className="text-mono rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs uppercase tracking-wider hover:bg-muted"
-            >
-              Sign out
-            </button>
-            <Link to="/" className="text-mono rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs uppercase tracking-wider hover:bg-muted">
-              ← Match Viewer
-            </Link>
-          </div>
-        </div>
         <Outlet />
       </main>
     </div>
