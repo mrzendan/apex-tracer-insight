@@ -97,7 +97,6 @@ function OverallBadge({ state }: { state: PipelineState }) {
 /* ---------------------------------- page ---------------------------------- */
 
 function Hub() {
-  const { role, user, signOut } = useAuth();
 
   const stats = useMemo(() => ({
     tournaments: tournaments.length,
