@@ -10,6 +10,7 @@ import {
   events,
   type Team,
   type RingPhase,
+  type GameEvent,
 } from "@/lib/mock-match";
 import { TeamLogo } from "@/components/admin/TeamLogo";
 import { getSlotColor } from "@/lib/team-colors";
@@ -18,6 +19,37 @@ function formatTime(sec: number) {
   const m = Math.floor(sec / 60).toString().padStart(2, "0");
   const s = Math.floor(sec % 60).toString().padStart(2, "0");
   return `${m}:${s}`;
+}
+
+type ViewMode = "overview" | "selected" | "live" | "trails" | "rings" | "events";
+type EventFilter = "all" | "fights" | "rings" | "eliminations" | "rotations" | "errors";
+
+const VIEW_MODES: { id: ViewMode; label: string }[] = [
+  { id: "overview", label: "Обзор" },
+  { id: "selected", label: "Выбранные" },
+  { id: "live",     label: "Живые" },
+  { id: "trails",   label: "Треки" },
+  { id: "rings",    label: "Кольца" },
+  { id: "events",   label: "События" },
+];
+
+const EVENT_FILTERS: { id: EventFilter; label: string }[] = [
+  { id: "all",          label: "Все" },
+  { id: "fights",       label: "Бои" },
+  { id: "rings",        label: "Кольца" },
+  { id: "eliminations", label: "Выбывания" },
+  { id: "rotations",    label: "Ротации" },
+  { id: "errors",       label: "Спорные" },
+];
+
+function matchesFilter(e: GameEvent, f: EventFilter) {
+  if (f === "all") return true;
+  if (f === "fights")       return e.type === "kill" || e.type === "knock";
+  if (f === "rings")        return e.type === "ring";
+  if (f === "eliminations") return e.type === "wipe";
+  if (f === "rotations")    return e.type === "care";
+  if (f === "errors")       return false;
+  return true;
 }
 
 export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
@@ -39,6 +71,9 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
   const [showRing, setShowRing] = useState(true);
   const [showLabels, setShowLabels] = useState(true);
   const [showConfig, setShowConfig] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("overview");
+  const [eventFilter, setEventFilter] = useState<EventFilter>("all");
+  const [focusRequest, setFocusRequest] = useState<{ x: number; y: number; token: number } | null>(null);
   const [cfg, setCfg] = useState({
     trailWidth: 2,
     labelSize: 22,
@@ -127,6 +162,57 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
   const aliveTeams = teams.filter((t) => t.alive).length;
   const totalKills = teams.reduce((acc, t) => acc + t.kills, 0);
 
+  // ----- View-mode preset → effective layer flags -----
+  const effective = useMemo(() => {
+    switch (viewMode) {
+      case "overview":
+        return { trails: false, labels: false, ring: true,  dwells: false, teamsVisible: new Set(teams.map(t => t.id)), showEvents: false };
+      case "selected":
+        return { trails: showTrails, labels: showLabels, ring: showRing, dwells: true, teamsVisible: selectedTeams, showEvents: false };
+      case "live":
+        return { trails: false, labels: true, ring: true, dwells: false, teamsVisible: new Set(teams.filter(t => t.alive).map(t => t.id)), showEvents: false };
+      case "trails":
+        return { trails: true, labels: false, ring: false, dwells: false, teamsVisible: selectedTeams, showEvents: false };
+      case "rings":
+        return { trails: false, labels: false, ring: true, dwells: false, teamsVisible: new Set<string>(), showEvents: false };
+      case "events":
+        return { trails: false, labels: false, ring: false, dwells: false, teamsVisible: new Set<string>(), showEvents: true };
+    }
+  }, [viewMode, selectedTeams, showTrails, showRing, showLabels]);
+
+  const teamByTag = useMemo(() => new Map(teams.map(t => [t.tag, t])), []);
+
+  /** Resolve an event's spatial position so we can plot it / focus the map. */
+  const eventPoint = useCallback((e: GameEvent): { x: number; y: number } | null => {
+    if (e.type === "ring") {
+      const phase = ringPhases.find(p => e.t >= p.startSec && e.t <= p.endSec) ?? ringPhases[0];
+      return { x: phase.cx, y: phase.cy };
+    }
+    if (e.team) {
+      const team = teamByTag.get(e.team);
+      if (!team) return null;
+      const traj = trajectories[team.id];
+      if (!traj || traj.length === 0) return null;
+      let p = traj[0];
+      for (const q of traj) { if (q.t <= e.t) p = q; else break; }
+      return { x: p.x, y: p.y };
+    }
+    return null;
+  }, [teamByTag, trajectories]);
+
+  const filteredEvents = useMemo(() => events.filter(e => matchesFilter(e, eventFilter)), [eventFilter]);
+
+  const eventMarkers = useMemo(() => {
+    return events.map(e => ({ e, p: eventPoint(e) })).filter(x => x.p) as { e: GameEvent; p: { x: number; y: number } }[];
+  }, [eventPoint]);
+
+  const handleEventClick = useCallback((e: GameEvent) => {
+    setTime(e.t);
+    setPlaying(false);
+    const p = eventPoint(e);
+    if (p) setFocusRequest({ x: p.x, y: p.y, token: Date.now() });
+  }, [eventPoint]);
+
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-background text-foreground">
       <TopBar
@@ -145,7 +231,8 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
           <div className="min-h-0 flex-1 overflow-y-auto p-2">
             {[...teams].sort((a, b) => a.placement - b.placement).map((t) => (
               <TeamRow key={t.id} team={t} active={selectedTeams.has(t.id)} hovered={hoverTeam === t.id}
-                onToggle={() => toggleTeam(t.id)} onHover={(v) => setHoverTeam(v ? t.id : null)} />
+                onToggle={() => { toggleTeam(t.id); if (viewMode !== "selected") setViewMode("selected"); }}
+                onHover={(v) => setHoverTeam(v ? t.id : null)} />
             ))}
           </div>
           <div className="border-t border-border p-3">
@@ -161,17 +248,17 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
         <main className="flex min-w-0 flex-1 flex-col">
           <MapCanvas
             time={time}
-            ring={showRing ? ring : null}
+            ring={effective.ring ? ring : null}
             trajectories={trajectories}
-            dwellsByTeam={dwellsByTeam}
+            dwellsByTeam={effective.dwells ? dwellsByTeam : {}}
             cfg={cfg}
             onCfg={setCfg}
             showConfig={showConfig}
             setShowConfig={setShowConfig}
-            selectedTeams={selectedTeams}
+            selectedTeams={effective.teamsVisible}
             hoverTeam={hoverTeam}
-            showTrails={showTrails}
-            showLabels={showLabels}
+            showTrails={effective.trails}
+            showLabels={effective.labels}
             mapImage={apexMap.image}
             mapName={apexMap.name}
             aliveTeams={aliveTeams}
@@ -179,6 +266,11 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
             ringIndex={ringPhases.findIndex((p) => time >= p.startSec && time <= p.endSec)}
             ringCount={ringPhases.length}
             controls={{ showTrails, setShowTrails, showRing, setShowRing, showLabels, setShowLabels }}
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+            eventMarkers={effective.showEvents ? eventMarkers : []}
+            focusRequest={focusRequest}
+            onEventClick={handleEventClick}
           />
 
           <Timeline time={time} duration={match.durationSec} playing={playing} speed={speed}
@@ -186,13 +278,34 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
         </main>
 
         <aside className="hidden w-[300px] shrink-0 flex-col border-l border-border bg-surface xl:flex">
-          <PanelHeader title="Match feed" subtitle={`${events.length} events`} />
+          <PanelHeader title="Match feed" subtitle={`${filteredEvents.length}/${events.length}`} />
+          <div className="flex flex-wrap gap-1 border-b border-border px-2 py-2">
+            {EVENT_FILTERS.map(f => {
+              const count = f.id === "all" ? events.length : events.filter(e => matchesFilter(e, f.id)).length;
+              const active = eventFilter === f.id;
+              return (
+                <button key={f.id} onClick={() => setEventFilter(f.id)}
+                  className={`text-mono rounded-sm border px-1.5 py-0.5 text-[10px] uppercase tracking-wider transition-colors ${
+                    active
+                      ? "border-primary bg-primary/15 text-primary"
+                      : "border-border bg-surface-2 text-muted-foreground hover:text-foreground"
+                  } ${count === 0 ? "opacity-40" : ""}`}>
+                  {f.label} <span className="ml-0.5 opacity-70">{count}</span>
+                </button>
+              );
+            })}
+          </div>
           <div className="min-h-0 flex-1 overflow-y-auto">
-            {events.map((e, i) => {
+            {filteredEvents.length === 0 && (
+              <div className="px-3 py-6 text-center text-[11px] text-muted-foreground">
+                Нет событий в этой категории
+              </div>
+            )}
+            {filteredEvents.map((e, i) => {
               const active = time >= e.t - 4 && time <= e.t + 4;
               const past = time > e.t + 4;
               return (
-                <button key={i} onClick={() => setTime(e.t)}
+                <button key={i} onClick={() => handleEventClick(e)}
                   className={`group flex w-full items-start gap-3 border-b border-border px-3 py-2.5 text-left transition-colors ${
                     active ? "bg-primary/10" : past ? "opacity-60 hover:bg-muted" : "hover:bg-muted"}`}>
                   <span className="text-mono mt-0.5 w-12 shrink-0 text-xs text-muted-foreground">{formatTime(e.t)}</span>
@@ -362,6 +475,7 @@ function MapCanvas({
   time, ring, trajectories, dwellsByTeam, cfg, onCfg, showConfig, setShowConfig,
   selectedTeams, hoverTeam, showTrails, showLabels,
   mapImage, mapName, aliveTeams, totalKills, ringIndex, ringCount, controls,
+  viewMode, setViewMode, eventMarkers, focusRequest, onEventClick,
 }: {
   time: number; ring: RingPhase | null;
   trajectories: Record<string, { t: number; x: number; y: number }[]>;
@@ -380,6 +494,11 @@ function MapCanvas({
     showRing: boolean; setShowRing: (v: boolean) => void;
     showLabels: boolean; setShowLabels: (v: boolean) => void;
   };
+  viewMode: ViewMode;
+  setViewMode: (m: ViewMode) => void;
+  eventMarkers: { e: GameEvent; p: { x: number; y: number } }[];
+  focusRequest: { x: number; y: number; token: number } | null;
+  onEventClick: (e: GameEvent) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [view, setView] = useState({ scale: 1, tx: 0, ty: 0 });
@@ -431,6 +550,22 @@ function MapCanvas({
     });
   };
   const resetView = () => setView({ scale: 1, tx: 0, ty: 0 });
+
+  // Center the map on an external focus request (event click in feed).
+  useEffect(() => {
+    if (!focusRequest || !containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const size = Math.min(rect.width, rect.height);
+    const offsetX = (rect.width - size) / 2;
+    const offsetY = (rect.height - size) / 2;
+    const targetScale = 2.5;
+    const px = offsetX + focusRequest.x * size;
+    const py = offsetY + focusRequest.y * size;
+    const tx = rect.width / 2 - targetScale * px;
+    const ty = rect.height / 2 - targetScale * py;
+    setView(clampPan({ scale: targetScale, tx, ty }, rect.width, rect.height));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusRequest?.token]);
 
   return (
     <div
@@ -559,6 +694,28 @@ function MapCanvas({
                 </g>
               );
             })}
+
+            {eventMarkers.map(({ e, p }, i) => {
+              const c = eventColor(e.type);
+              return (
+                <g key={`evm-${i}`} transform={`translate(${p.x * 1000} ${p.y * 1000})`}>
+                  <circle r={14 / view.scale} fill={c} fillOpacity={0.15}
+                    stroke={c} strokeWidth={1.5 / view.scale} />
+                  <circle r={4 / view.scale} fill={c} stroke="#000" strokeWidth={0.6 / view.scale} />
+                  <g transform={`translate(0 ${22 / view.scale})`}>
+                    <rect x={-30 / view.scale} y={-9 / view.scale}
+                      width={60 / view.scale} height={18 / view.scale}
+                      rx={2 / view.scale} ry={2 / view.scale}
+                      fill="rgba(0,0,0,0.75)" stroke={c} strokeWidth={1 / view.scale} />
+                    <text x={0} y={4 / view.scale} textAnchor="middle"
+                      fontSize={11 / view.scale} fontWeight={700} fill="#fff"
+                      fontFamily="Manrope, sans-serif">
+                      {formatTime(e.t)}
+                    </text>
+                  </g>
+                </g>
+              );
+            })}
           </svg>
         </div>
       </div>
@@ -568,6 +725,21 @@ function MapCanvas({
         <div className="hud-panel-strong pointer-events-auto flex items-center gap-3 px-3 py-2 text-xs">
           <span className="label-eyebrow">Map</span>
           <span className="text-mono font-semibold tracking-wider">{mapName.toUpperCase()}</span>
+        </div>
+        <div className="hud-panel-strong pointer-events-auto flex flex-wrap gap-1 p-1.5">
+          {VIEW_MODES.map(m => {
+            const active = viewMode === m.id;
+            return (
+              <button key={m.id} onClick={() => setViewMode(m.id)}
+                className={`text-mono rounded-sm border px-2 py-1 text-[10px] uppercase tracking-wider transition-colors ${
+                  active
+                    ? "border-primary bg-primary/15 text-primary"
+                    : "border-border bg-surface-2 text-muted-foreground hover:text-foreground"
+                }`}>
+                {m.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
