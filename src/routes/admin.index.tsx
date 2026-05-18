@@ -60,7 +60,6 @@ function AdminDashboard() {
     <div className="flex h-full flex-col overflow-auto">
       <header className="flex h-14 shrink-0 items-center border-b border-border bg-surface px-6">
         <h1 className="text-sm font-bold uppercase tracking-wider">Dashboard</h1>
-        <div className="ml-auto label-eyebrow text-xs">Mock data · frontend only</div>
       </header>
 
 
