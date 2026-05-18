@@ -148,12 +148,25 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
     return () => cancelAnimationFrame(raf);
   }, [playing, speed, match.durationSec]);
 
+  /**
+   * The currently-visible safe area.
+   * - CD phase  : equal to ring[phaseIndex] (the zone doesn't move).
+   * - Closing   : interpolates from ring[phaseIndex] down to ring[phaseIndex+1]
+   *               over the closing window (red zone is shrinking toward next ring).
+   */
   const ring = useMemo<RingPhase>(() => {
-    const cur = ringPhases.find((p) => time >= p.startSec && time <= p.endSec) ?? ringPhases[ringPhases.length - 1];
-    const next = ringPhases[ringPhases.indexOf(cur) + 1];
-    if (!next) return cur;
-    const k = Math.max(0, Math.min(1, (time - cur.startSec) / (cur.endSec - cur.startSec)));
-    return { ...cur, cx: cur.cx + (next.cx - cur.cx) * k, cy: cur.cy + (next.cy - cur.cy) * k, r: cur.r + (next.r - cur.r) * k };
+    const seg = ringSegments.find(s => time >= s.startSec && time <= s.endSec)
+      ?? ringSegments[ringSegments.length - 1];
+    const cur  = ringPhases[seg.phaseIndex];
+    const next = ringPhases[seg.phaseIndex + 1];
+    if (seg.kind === "CD" || !next) return cur;
+    const k = Math.max(0, Math.min(1, (time - seg.startSec) / (seg.endSec - seg.startSec)));
+    return {
+      ...cur,
+      cx: cur.cx + (next.cx - cur.cx) * k,
+      cy: cur.cy + (next.cy - cur.cy) * k,
+      r:  cur.r  + (next.r  - cur.r ) * k,
+    };
   }, [time]);
 
   const toggleTeam = (id: string) => {
@@ -594,6 +607,15 @@ function MapCanvas({
 
             {ring && (
               <>
+                {/* Red DANGER ZONE — everything outside the active safe area.
+                    Rendered as a single path: full map rectangle minus a circle
+                    at the safe area, using even-odd fill-rule. */}
+                <path
+                  d={`M0,0 H1000 V1000 H0 Z M ${ring.cx * 1000},${(ring.cy * 1000) - ring.r * 1000} a ${ring.r * 1000},${ring.r * 1000} 0 1,0 0,${ring.r * 2000} a ${ring.r * 1000},${ring.r * 1000} 0 1,0 0,${-ring.r * 2000} Z`}
+                  fillRule="evenodd"
+                  fill="rgba(239,68,68,0.28)"
+                  stroke="none"
+                />
                 {/* Static preview of all 6 ring phases */}
                 {ringPhases.map((p, i) => (
                   <circle key={`prev-${i}`} cx={p.cx * 1000} cy={p.cy * 1000} r={p.r * 1000}
