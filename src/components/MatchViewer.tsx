@@ -149,23 +149,27 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
   }, [playing, speed, match.durationSec]);
 
   /**
-   * The currently-visible safe area.
-   * - CD phase  : equal to ring[phaseIndex] (the zone doesn't move).
-   * - Closing   : interpolates from ring[phaseIndex] down to ring[phaseIndex+1]
-   *               over the closing window (red zone is shrinking toward next ring).
+   * The currently-visible safe area (the cyan boundary; everything outside is red).
+   * Semantics, phase by phase:
+   *  - R{N} CD       — zone is parked at the PREVIOUS ring (or the whole map for R1 CD).
+   *  - R{N} Closing  — zone shrinks from the previous ring (or whole map) down to ring N.
+   * A synthetic "whole map" ring uses r ≈ 1.5 so the danger overlay is empty
+   * and the cyan boundary falls outside the canvas.
    */
   const ring = useMemo<RingPhase>(() => {
     const seg = ringSegments.find(s => time >= s.startSec && time <= s.endSec)
       ?? ringSegments[ringSegments.length - 1];
-    const cur  = ringPhases[seg.phaseIndex];
-    const next = ringPhases[seg.phaseIndex + 1];
-    if (seg.kind === "CD" || !next) return cur;
+    const target = ringPhases[seg.phaseIndex];
+    const prev: RingPhase = seg.phaseIndex === 0
+      ? { startSec: 0, endSec: 0, cx: 0.5, cy: 0.5, r: 1.5 }
+      : ringPhases[seg.phaseIndex - 1];
+    if (seg.kind === "CD") return prev;
     const k = Math.max(0, Math.min(1, (time - seg.startSec) / (seg.endSec - seg.startSec)));
     return {
-      ...cur,
-      cx: cur.cx + (next.cx - cur.cx) * k,
-      cy: cur.cy + (next.cy - cur.cy) * k,
-      r:  cur.r  + (next.r  - cur.r ) * k,
+      ...target,
+      cx: prev.cx + (target.cx - prev.cx) * k,
+      cy: prev.cy + (target.cy - prev.cy) * k,
+      r:  prev.r  + (target.r  - prev.r ) * k,
     };
   }, [time]);
 
