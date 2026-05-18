@@ -449,9 +449,6 @@ function TopBar({
       </div>
 
       <div className="ml-auto flex items-center gap-2">
-        <span className="text-mono hidden text-xs text-muted-foreground sm:inline">
-          {aliveTeams} alive · {totalKills} kills
-        </span>
         <span className="flex items-center gap-1.5 rounded-sm border border-border bg-surface-2 px-2.5 py-1 text-xs">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-success" />
           <span className="label-eyebrow text-[10px]">Live</span>
