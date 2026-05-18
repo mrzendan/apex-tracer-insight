@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { matches, teams, tournaments, maps } from "@/lib/mock-match";
 import { Activity, CheckCircle2, XCircle, Loader2, RotateCw, Bug, ExternalLink, History, AlertTriangle, Palette, Shapes, Video } from "lucide-react";
 
 export const Route = createFileRoute("/admin/")({ component: AdminDashboard });
@@ -64,12 +63,6 @@ function AdminDashboard() {
         <div className="ml-auto label-eyebrow text-[10px]">Mock data · frontend only</div>
       </header>
 
-      <div className="grid grid-cols-2 gap-3 border-b border-border bg-background px-6 py-4 lg:grid-cols-4">
-        <Stat to="/admin/tournaments" label="Tournaments" value={tournaments.length} />
-        <Stat to="/admin/matches"     label="Matches"     value={matches.length} />
-        <Stat to="/admin/maps"        label="Maps"        value={maps.length} />
-        <Stat to="/admin/teams"       label="Teams"       value={teams.length} />
-      </div>
 
       <div className="flex-1 overflow-auto p-6 space-y-8">
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
@@ -110,17 +103,6 @@ function AdminDashboard() {
   );
 }
 
-function Stat({ to, label, value }: { to: "/admin/tournaments" | "/admin/matches" | "/admin/maps" | "/admin/teams"; label: string; value: number }) {
-  return (
-    <Link to={to} className="hud-panel-strong group block cursor-pointer px-4 py-3 transition-colors hover:border-primary/40 hover:bg-surface-2">
-      <div className="label-eyebrow text-[9px] flex items-center justify-between">
-        <span>{label}</span>
-        <span className="text-primary opacity-0 transition-opacity group-hover:opacity-100">→</span>
-      </div>
-      <div className="text-mono mt-1 text-2xl font-bold tabular-nums">{value}</div>
-    </Link>
-  );
-}
 
 function SectionHead({ icon: Icon, title, hint }: { icon: typeof Activity; title: string; hint?: string }) {
   return (
