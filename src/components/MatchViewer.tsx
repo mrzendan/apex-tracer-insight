@@ -803,10 +803,13 @@ function MapCanvas({
                 <feGaussianBlur stdDeviation="2.5" result="b" />
                 <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
               </filter>
+              <clipPath id="mapBounds">
+                <rect x="0" y="0" width="1000" height="1000" />
+              </clipPath>
             </defs>
 
             {ring && (
-              <>
+              <g clipPath="url(#mapBounds)">
                 {/* Red DANGER ZONE — everything outside the active safe area.
                     Rendered as a single path: full map rectangle minus a circle
                     at the safe area, using even-odd fill-rule. */}
@@ -826,7 +829,7 @@ function MapCanvas({
                 <circle cx={ring.cx * 1000} cy={ring.cy * 1000} r={ring.r * 1000}
                   fill="rgba(34,196,245,0.08)" stroke="#22c4f5" strokeWidth={3.5 / view.scale} strokeDasharray={`${10 / view.scale} ${5 / view.scale}`} />
                 <circle cx={ring.cx * 1000} cy={ring.cy * 1000} r={3 / view.scale} fill="#22c4f5" />
-              </>
+              </g>
             )}
 
             {teams.map((t, slotIdx) => {
