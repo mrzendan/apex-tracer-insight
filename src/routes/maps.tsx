@@ -50,14 +50,14 @@ function MapsGrid() {
         />
         <div className="ml-auto flex items-center gap-2">
           <ThemeToggle compact />
-          <Link to="/" className="rounded-sm border border-border-strong bg-surface-2 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider hover:bg-muted">
-            ← На главную
-          </Link>
         </div>
       </header>
 
       <div className="mx-auto max-w-7xl p-6">
-        <h1 className="mb-4 text-xl font-bold">Карты</h1>
+        <div className="mb-4 flex items-center gap-3">
+          <Link to="/" aria-label="Назад" className="flex h-8 w-8 items-center justify-center rounded-sm border border-border-strong bg-surface-2 text-sm hover:bg-muted">←</Link>
+          <h1 className="text-xl font-bold">Карты</h1>
+        </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filtered.map((mp) => {
             const playedIn = matches.filter((m) => (m.mapIds ?? [m.mapId]).includes(mp.id)).length;
