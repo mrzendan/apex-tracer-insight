@@ -273,16 +273,19 @@ function TeamDetail() {
                             to={"/admin/maps/$mapId" as "/admin/maps"}
                             params={{ mapId: s.id } as never}
                             search={{ team: team.id } as never}
-                            className="flex w-[220px] items-center gap-3 rounded-sm border border-border bg-background p-2 hover:bg-muted"
+                            className="flex w-[260px] items-center gap-3 rounded-sm border border-border bg-background p-2 hover:bg-muted"
                           >
                             {map && <img src={map.image} alt={map.name} className="h-16 w-24 rounded-sm object-cover" />}
-                            <div className="min-w-0">
-                              <div className="truncate text-sm font-semibold">{map?.name ?? s.id}</div>
-                              <div className="text-mono text-xs text-muted-foreground">{s.count} games</div>
-                              <div className="text-mono mt-1 text-xs">
-                                <span className="text-foreground">avg #{s.avg.toFixed(1)}</span>
-                                <span className="ml-2 text-destructive">T1×{s.top1}</span>
-                                <span className="ml-2 text-primary">T5×{s.top5}</span>
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-base font-semibold">{map?.name ?? s.id}</div>
+                              <div className="text-mono text-xs text-muted-foreground">{s.count} games · avg <span className="text-foreground font-semibold">#{s.avg.toFixed(1)}</span></div>
+                              <div className="mt-1.5 flex items-center gap-1.5 text-xs">
+                                <span className="inline-flex items-center gap-1 rounded-sm border border-warning/40 bg-warning/10 px-1.5 py-0.5 font-semibold text-warning" title="Победы">
+                                  🥇 {s.top1}
+                                </span>
+                                <span className="inline-flex items-center gap-1 rounded-sm border border-primary/40 bg-primary/10 px-1.5 py-0.5 font-semibold text-primary" title="Топ-5 финиши">
+                                  TOP 5 · {s.top5}
+                                </span>
                               </div>
                             </div>
                           </Link>
