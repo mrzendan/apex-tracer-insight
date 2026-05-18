@@ -73,7 +73,6 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
   const [showRing, setShowRing] = useState(true);
   const [showLabels, setShowLabels] = useState(true);
   const [showConfig, setShowConfig] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>("overview");
   const [eventFilter, setEventFilter] = useState<EventFilter>("all");
   const [focusRequest, setFocusRequest] = useState<{ x: number; y: number; token: number } | null>(null);
   const [cfg, setCfg] = useState({
@@ -164,24 +163,6 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
   const aliveTeams = teams.filter((t) => t.alive).length;
   const totalKills = teams.reduce((acc, t) => acc + t.kills, 0);
 
-  // ----- View-mode preset → effective layer flags -----
-  const effective = useMemo(() => {
-    switch (viewMode) {
-      case "overview":
-        return { trails: false, labels: false, ring: true,  dwells: false, teamsVisible: new Set(teams.map(t => t.id)), showEvents: false };
-      case "selected":
-        return { trails: showTrails, labels: showLabels, ring: showRing, dwells: true, teamsVisible: selectedTeams, showEvents: false };
-      case "live":
-        return { trails: false, labels: true, ring: true, dwells: false, teamsVisible: new Set(teams.filter(t => t.alive).map(t => t.id)), showEvents: false };
-      case "trails":
-        return { trails: true, labels: false, ring: false, dwells: false, teamsVisible: selectedTeams, showEvents: false };
-      case "rings":
-        return { trails: false, labels: false, ring: true, dwells: false, teamsVisible: new Set<string>(), showEvents: false };
-      case "events":
-        return { trails: false, labels: false, ring: false, dwells: false, teamsVisible: new Set<string>(), showEvents: true };
-    }
-  }, [viewMode, selectedTeams, showTrails, showRing, showLabels]);
-
   const teamByTag = useMemo(() => new Map(teams.map(t => [t.tag, t])), []);
 
   /** Resolve an event's spatial position so we can plot it / focus the map. */
@@ -203,10 +184,6 @@ export function MatchViewer({ initialMatchId }: { initialMatchId?: string }) {
   }, [teamByTag, trajectories]);
 
   const filteredEvents = useMemo(() => events.filter(e => matchesFilter(e, eventFilter)), [eventFilter]);
-
-  const eventMarkers = useMemo(() => {
-    return events.map(e => ({ e, p: eventPoint(e) })).filter(x => x.p) as { e: GameEvent; p: { x: number; y: number } }[];
-  }, [eventPoint]);
 
   const handleEventClick = useCallback((e: GameEvent) => {
     setTime(e.t);
