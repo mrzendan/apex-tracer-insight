@@ -6,7 +6,6 @@ import { RouteGuard } from "@/components/auth/RouteGuard";
 import { useAuth } from "@/lib/auth";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { DensityToggle } from "@/components/DensityToggle";
-import { HubClassic } from "@/components/hub/HubClassic";
 import { BrandMark } from "@/components/BrandMark";
 import {
   Trophy, Swords, MapIcon as MapMarker, Users, ArrowRight, Activity,
@@ -16,7 +15,7 @@ import {
 export const Route = createFileRoute("/")({
   component: () => (
     <RouteGuard min="user">
-      <HubRouter />
+      <Hub />
     </RouteGuard>
   ),
   head: () => ({
@@ -26,11 +25,6 @@ export const Route = createFileRoute("/")({
     ],
   }),
 });
-
-function HubRouter() {
-  const classic = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("classic") === "1";
-  return classic ? <HubClassic /> : <Hub />;
-}
 
 /* ----------------------------- processing model ---------------------------- */
 
@@ -423,11 +417,6 @@ function Hub() {
                 )}
               </Link>
             ))}
-          </div>
-          <div className="mt-3 text-right">
-            <a href="/?classic=1" className="text-mono text-[10px] uppercase tracking-wider text-muted-foreground hover:text-primary">
-              Classic view →
-            </a>
           </div>
         </section>
       </div>
