@@ -3,6 +3,7 @@ import { useState } from "react";
 import { RouteGuard } from "@/components/auth/RouteGuard";
 import { useAuth } from "@/lib/auth";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { DensityToggle } from "@/components/DensityToggle";
 
 export const Route = createFileRoute("/admin")({
   component: () => (
@@ -103,6 +104,7 @@ function AdminLayout() {
           </div>
           <div className="flex justify-center">
             <ThemeToggle compact />
+            <DensityToggle compact />
           </div>
           <button
             onClick={() => signOut()}
