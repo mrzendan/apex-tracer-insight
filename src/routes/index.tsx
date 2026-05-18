@@ -48,9 +48,10 @@ function Hub() {
       tournaments.filter((t) => t.startDate <= today && today <= t.endDate).map((t) => t.id),
     );
     const ids = new Set<string>();
-    for (const m of matches) {
+    for (const m of matches as Array<{ tournamentId: string; teamIds?: string[] }>) {
       if (!liveTournamentIds.has(m.tournamentId)) continue;
-      for (const id of m.teamIds ?? []) ids.add(id);
+      const tids = m.teamIds ?? teams.map((t) => t.id);
+      for (const id of tids) ids.add(id);
     }
     return ids;
   }, []);
