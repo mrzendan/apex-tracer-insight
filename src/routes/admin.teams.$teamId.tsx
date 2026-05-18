@@ -119,7 +119,7 @@ function TeamDetail() {
   const tierColor = (t: string) =>
     t === "S" ? "bg-destructive/20 text-destructive border-destructive/40"
     : t === "A" ? "bg-primary/20 text-primary border-primary/40"
-    : t === "B" ? "bg-accent/20 text-accent border-accent/40"
+    : t === "B" ? "bg-emerald-500/25 text-emerald-300 border-emerald-500/50"
     : t === "C" ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
     : t === "D" ? "bg-muted text-foreground/80 border-border"
     : "bg-surface-2 text-muted-foreground border-border";
@@ -273,18 +273,18 @@ function TeamDetail() {
                             to={"/admin/maps/$mapId" as "/admin/maps"}
                             params={{ mapId: s.id } as never}
                             search={{ team: team.id } as never}
-                            className="flex w-[260px] items-center gap-3 rounded-sm border border-border bg-background p-2 hover:bg-muted"
+                            className="flex w-[320px] items-center gap-3 rounded-sm border border-border bg-background p-2 hover:bg-muted"
                           >
-                            {map && <img src={map.image} alt={map.name} className="h-16 w-24 rounded-sm object-cover" />}
+                            {map && <img src={map.image} alt={map.name} className="h-20 w-32 rounded-sm object-cover" />}
                             <div className="min-w-0 flex-1">
                               <div className="truncate text-base font-semibold">{map?.name ?? s.id}</div>
                               <div className="text-mono text-xs text-muted-foreground">{s.count} games · avg <span className="text-foreground font-semibold">#{s.avg.toFixed(1)}</span></div>
                               <div className="mt-1.5 flex items-center gap-1.5 text-xs">
                                 <span className="inline-flex items-center gap-1 rounded-sm border border-warning/40 bg-warning/10 px-1.5 py-0.5 font-semibold text-warning" title="Победы">
-                                  🥇 {s.top1}
+                                  TOP 1 · {s.top1}
                                 </span>
                                 <span className="inline-flex items-center gap-1 rounded-sm border border-primary/40 bg-primary/10 px-1.5 py-0.5 font-semibold text-primary" title="Топ-5 финиши">
-                                  TOP 5 · {s.top5}
+                                  TOP 5 {s.top5}
                                 </span>
                               </div>
                             </div>
