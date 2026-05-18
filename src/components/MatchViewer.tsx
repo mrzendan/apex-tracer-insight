@@ -788,16 +788,26 @@ function Timeline({
 
       <div className="px-4 pb-3">
         <div ref={trackRef} onClick={onTrack} className="relative h-9 cursor-pointer rounded-sm border border-border bg-background">
-          {ringPhases.map((p, i) => (
-            <div key={i} className="absolute top-0 h-full border-r border-border/60"
-              style={{
-                left: `${(p.startSec / duration) * 100}%`,
-                width: `${((p.endSec - p.startSec) / duration) * 100}%`,
-                background: `rgba(255,91,18,${0.04 + i * 0.025})`,
-              }}>
-              <div className="text-mono absolute left-1 top-0.5 text-[9px] uppercase text-muted-foreground/80">R{i + 1}</div>
-            </div>
-          ))}
+          {ringSegments.map((seg, i) => {
+            const isClosing = seg.kind === "Closing";
+            const intensity = 0.04 + seg.phaseIndex * 0.025;
+            return (
+              <div key={i}
+                className={`absolute top-0 h-full ${isClosing ? "border-l border-r border-primary/40" : "border-r border-border/60"}`}
+                style={{
+                  left: `${(seg.startSec / duration) * 100}%`,
+                  width: `${((seg.endSec - seg.startSec) / duration) * 100}%`,
+                  background: isClosing
+                    ? `repeating-linear-gradient(45deg, rgba(255,91,18,${intensity + 0.12}) 0 4px, rgba(255,91,18,${intensity + 0.04}) 4px 8px)`
+                    : `rgba(255,91,18,${intensity})`,
+                }}>
+                <div className={`text-mono absolute left-1 top-0.5 text-[9px] uppercase tracking-wider ${
+                  isClosing ? "text-primary font-bold" : "text-muted-foreground/80"}`}>
+                  R{seg.phaseIndex + 1} {seg.kind}
+                </div>
+              </div>
+            );
+          })}
           {events.map((e, i) => (
             <div key={i} className="absolute top-0 h-full w-px"
               style={{ left: `${(e.t / duration) * 100}%`, backgroundColor: eventColor(e.type), opacity: 0.7 }}
