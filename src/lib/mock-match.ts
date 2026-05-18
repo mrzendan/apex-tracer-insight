@@ -7,6 +7,10 @@ import stormPointImg from "@/assets/maps/storm-point.png";
 import brokenMoonImg from "@/assets/maps/broken-moon.png";
 import olympusImg from "@/assets/maps/olympus.png";
 import eDistrictImg from "@/assets/maps/e-district.png";
+import liquidLogo from "@/assets/teams/liquid.png";
+import fazeLogo from "@/assets/teams/faze.png";
+import luminosityLogo from "@/assets/teams/luminosity.png";
+import darkzeroLogo from "@/assets/teams/darkzero.png";
 
 export type TournamentType = "LAN" | "Online" | "Qualifier";
 export type TournamentRegion = "EMEA" | "APAC" | "North America" | "South America";
@@ -73,16 +77,16 @@ export type Team = {
 
 export const teams: Team[] = [
   { id: "t-tsm",  tag: "TSM",  name: "TSM",            color: "#ff5b12", players: ["ImperialHal", "Verhulst", "Reps"],     placement: 1,  kills: 11, alive: true  },
-  { id: "t-drg",  tag: "DZ",   name: "DarkZero",       color: "#22c4f5", players: ["Zer0", "Gild", "Sharky"],              placement: 2,  kills: 9,  alive: true  },
+  { id: "t-drg",  tag: "DZ",   name: "DarkZero",       color: "#22c4f5", logo: darkzeroLogo, players: ["Zer0", "Gild", "Sharky"],              placement: 2,  kills: 9,  alive: true  },
   { id: "t-nrg",  tag: "NRG",  name: "NRG",            color: "#ffd23f", players: ["Sweet", "Gent", "nafen"],              placement: 3,  kills: 7,  alive: true  },
   { id: "t-sen",  tag: "SEN",  name: "Sentinels",      color: "#e879f9", players: ["Naghz", "Zenoo", "Ojrein"],            placement: 4,  kills: 8,  alive: true  },
   { id: "t-c9",   tag: "C9",   name: "Cloud9",         color: "#a78bfa", players: ["Wxltzy", "Genburten", "Mande"],        placement: 5,  kills: 6,  alive: true  },
-  { id: "t-faze", tag: "FAZE", name: "FaZe Clan",      color: "#fb923c", players: ["Sikezz", "rpr", "Snip3down"],          placement: 6,  kills: 3,  alive: true  },
-  { id: "t-tl",   tag: "TL",   name: "Team Liquid",    color: "#60a5fa", players: ["Hakis", "Yuki", "Keon"],               placement: 7,  kills: 5,  alive: true  },
+  { id: "t-faze", tag: "FAZE", name: "FaZe Clan",      color: "#fb923c", logo: fazeLogo, players: ["Sikezz", "rpr", "Snip3down"],          placement: 6,  kills: 3,  alive: true  },
+  { id: "t-tl",   tag: "TL",   name: "Team Liquid",    color: "#60a5fa", logo: liquidLogo, players: ["Hakis", "Yuki", "Keon"],               placement: 7,  kills: 5,  alive: true  },
   { id: "t-fa",   tag: "FA",   name: "Furia",          color: "#f87171", players: ["Pandxrz", "Albralelie", "Rambeau"],    placement: 8,  kills: 4,  alive: true  },
   { id: "t-mv",   tag: "MV",   name: "Moist Esports",  color: "#86efac", players: ["Xeratricky", "Frexs", "Effect"],       placement: 9,  kills: 3,  alive: true  },
   { id: "t-aw",   tag: "AW",   name: "Alliance",       color: "#38bdf8", players: ["Vaifs", "Reptar", "Yuki"],             placement: 10, kills: 4,  alive: true  },
-  { id: "t-lg",   tag: "LG",   name: "Luminosity",     color: "#34d399", players: ["Knoqd", "Monsoon", "Lou"],             placement: 11, kills: 5,  alive: false },
+  { id: "t-lg",   tag: "LG",   name: "Luminosity",     color: "#34d399", logo: luminosityLogo, players: ["Knoqd", "Monsoon", "Lou"],             placement: 11, kills: 5,  alive: false },
   { id: "t-vk",   tag: "VK",   name: "Vexed Gaming",   color: "#facc15", players: ["Taisheen", "rynnv", "Bjornfot"],       placement: 12, kills: 4,  alive: false },
   { id: "t-ofg",  tag: "OXG",  name: "Oxygen",         color: "#fca5a5", players: ["Sweetdreams", "Reptar", "rkn"],        placement: 13, kills: 1,  alive: false },
   { id: "t-100t", tag: "100T", name: "100 Thieves",    color: "#fde68a", players: ["Pandxrz", "Senoxe", "Keon"],           placement: 14, kills: 2,  alive: false },
