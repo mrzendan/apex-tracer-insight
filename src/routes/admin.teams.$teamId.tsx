@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { useAdminStore } from "@/lib/admin-store";
+import { useMemo, useRef, useState } from "react";
+import { useAdminStore, updateTeam, updateMatch } from "@/lib/admin-store";
 import { maps as allMaps, type MatchFull } from "@/lib/mock-match";
+import type { Team } from "@/lib/mock-match";
 import { TeamLogo } from "@/components/admin/TeamLogo";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 
@@ -33,6 +34,7 @@ function TeamDetail() {
   const { teams, matches, tournaments } = useAdminStore();
   const navigate = useNavigate();
   const team = teams.find((t) => t.id === teamId);
+  const [editing, setEditing] = useState<Team | null>(null);
   if (!team) {
     return (
       <div className="p-6 text-sm">
@@ -86,6 +88,13 @@ function TeamDetail() {
     for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
     return 1 + (h % 20);
   }
+  function pseudoKills(matchId: string): number {
+    let h = (team!.kills + 3) * 17;
+    const s = matchId + team!.id + "k";
+    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    // 0..24 kills per match
+    return h % 25;
+  }
 
   // Per-map stats over filtered window
   type MapStat = { id: string; count: number; avg: number; top1: number; top5: number };
@@ -133,6 +142,57 @@ function TeamDetail() {
     return { label: "LIVE", cls: "bg-destructive/20 text-destructive border-destructive/40 animate-pulse" };
   };
 
+  // ---- Form dynamics: per-match placement / kills / top5 over time --------
+  type FormPoint = { matchId: string; name: string; date: Date | null; placement: number; kills: number; top5: number };
+  const formPoints: FormPoint[] = useMemo(() => {
+    return filteredRows
+      .filter((r) => r.date)
+      .sort((a, b) => a.date!.getTime() - b.date!.getTime())
+      .slice(-20)
+      .map((r) => {
+        const ids = r.match.mapIds ?? [r.match.mapId];
+        const placements = ids.map((id) => pseudoPlacement(id, r.match.id));
+        const avgPlace = placements.reduce((s, v) => s + v, 0) / placements.length;
+        const kills = pseudoKills(r.match.id);
+        const top5 = avgPlace <= 5 ? 1 : 0;
+        return { matchId: r.match.id, name: r.match.name, date: r.date, placement: avgPlace, kills, top5 };
+      });
+  }, [filteredRows]);
+
+  // Rolling top-5 rate over last 5 games for a smoother series.
+  const top5Rate = useMemo(() => {
+    const win = 5;
+    return formPoints.map((_, i) => {
+      const slice = formPoints.slice(Math.max(0, i - win + 1), i + 1);
+      const hits = slice.reduce((s, p) => s + p.top5, 0);
+      return (hits / slice.length) * 100;
+    });
+  }, [formPoints]);
+
+  // ---- Latest match for "Open in Match Viewer" ----------------------------
+  const latestMatch = useMemo(() => {
+    const past = teamRows
+      .filter((r) => r.date && r.date.getTime() <= today)
+      .sort((a, b) => b.date!.getTime() - a.date!.getTime())[0];
+    return past?.match ?? teamRows[0]?.match;
+  }, [teamRows]);
+
+  // ---- Tournaments the team is NOT in (Add to tournament action) ----------
+  const missingTournaments = useMemo(() => {
+    const inIds = new Set(teamTournaments.map((t) => t.id));
+    return tournaments.filter((t) => !inIds.has(t.id));
+  }, [tournaments, teamTournaments]);
+
+  function addToTournament(tournamentId: string) {
+    matches
+      .filter((m) => m.tournamentId === tournamentId)
+      .forEach((m) => {
+        if (!m.teamIds?.includes(team!.id)) {
+          updateMatch(m.id, { teamIds: [...(m.teamIds ?? []), team!.id] });
+        }
+      });
+  }
+
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-surface px-6">
@@ -151,6 +211,48 @@ function TeamDetail() {
         >
           Liquipedia ↗{!team.liquipediaUrl && <span className="ml-1 opacity-60">(search)</span>}
         </a>
+        {/* ---- Admin actions ---- */}
+        <div className="ml-auto flex items-center gap-1.5">
+          <button
+            onClick={() => setEditing({ ...team })}
+            className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted"
+          >
+            Edit team
+          </button>
+          <ColorSwatch team={team} />
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted">
+                Add to tournament ▾
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="max-h-80 w-72 overflow-auto p-1">
+              {missingTournaments.length === 0 ? (
+                <div className="px-2 py-3 text-center text-xs text-muted-foreground">In every tournament</div>
+              ) : (
+                missingTournaments.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => addToTournament(t.id)}
+                    className="block w-full rounded-sm px-2 py-1.5 text-left text-xs hover:bg-muted"
+                  >
+                    <div className="truncate font-semibold">{t.name}</div>
+                    <div className="text-mono text-xs text-muted-foreground">{t.startDate} → {t.endDate}</div>
+                  </button>
+                ))
+              )}
+            </PopoverContent>
+          </Popover>
+          {latestMatch && (
+            <Link
+              to={"/admin/matches/$matchId" as "/admin/matches"}
+              params={{ matchId: latestMatch.id } as never}
+              className="rounded-sm border border-primary/40 bg-primary/10 px-2 py-1 text-xs uppercase tracking-wider text-primary hover:bg-primary/20"
+            >
+              Open in Match Viewer ↗
+            </Link>
+          )}
+        </div>
       </header>
       <div className="flex-1 overflow-auto p-6">
         <div className="hud-panel mb-4 p-3">
@@ -297,6 +399,37 @@ function TeamDetail() {
           </Panel>
         </div>
 
+        {/* ---- Form dynamics ---- */}
+        <div className="hud-panel mt-4 grid gap-3 p-3 md:grid-cols-3">
+          <Sparkline
+            title="Placement over time"
+            subtitle="lower is better · inverted"
+            values={formPoints.map((p) => p.placement)}
+            invert
+            min={1}
+            max={20}
+            color="hsl(var(--primary))"
+            formatVal={(v) => `#${v.toFixed(1)}`}
+          />
+          <Sparkline
+            title="Kills over time"
+            subtitle="per match"
+            values={formPoints.map((p) => p.kills)}
+            min={0}
+            color="rgb(245 158 11)"
+            formatVal={(v) => `${v.toFixed(0)}`}
+          />
+          <Sparkline
+            title="Top 5 rate"
+            subtitle="rolling 5-game window · %"
+            values={top5Rate}
+            min={0}
+            max={100}
+            color="rgb(16 185 129)"
+            formatVal={(v) => `${v.toFixed(0)}%`}
+          />
+        </div>
+
         <div className="hud-panel mt-4 p-3">
           <div className="label-eyebrow mb-3 text-xs">Map tier list · avg placement, top 1 & top 5</div>
           {mapStats.length === 0 ? <Empty /> : (
@@ -342,6 +475,14 @@ function TeamDetail() {
           )}
         </div>
       </div>
+      {editing && (
+        <EditTeamModal
+          row={editing}
+          onChange={setEditing}
+          onCancel={() => setEditing(null)}
+          onSave={() => { updateTeam(editing.id, editing); setEditing(null); }}
+        />
+      )}
     </div>
   );
 }
@@ -359,4 +500,230 @@ function ScrollList({ children }: { children: React.ReactNode }) {
 }
 function Empty() {
   return <div className="rounded-sm border border-dashed border-border px-2 py-4 text-center text-xs text-muted-foreground">No data</div>;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Sparkline — minimal inline SVG line chart                                  */
+/* -------------------------------------------------------------------------- */
+function Sparkline({
+  title,
+  subtitle,
+  values,
+  min,
+  max,
+  invert,
+  color,
+  formatVal,
+}: {
+  title: string;
+  subtitle?: string;
+  values: number[];
+  min?: number;
+  max?: number;
+  invert?: boolean;
+  color: string;
+  formatVal: (v: number) => string;
+}) {
+  const w = 320;
+  const h = 80;
+  const pad = 6;
+  const lo = min ?? Math.min(...values, 0);
+  const hi = max ?? Math.max(...values, 1);
+  const span = Math.max(1e-6, hi - lo);
+  const last = values[values.length - 1];
+  const first = values[0];
+  const delta = values.length >= 2 ? last - first : 0;
+  // For inverted metrics (placement), a negative delta is good.
+  const goodDir = invert ? delta < 0 : delta > 0;
+  const points = values.map((v, i) => {
+    const x = pad + (i / Math.max(1, values.length - 1)) * (w - pad * 2);
+    const norm = (v - lo) / span;
+    const y = invert ? pad + norm * (h - pad * 2) : h - pad - norm * (h - pad * 2);
+    return [x, y] as const;
+  });
+  const path = points.length
+    ? points.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`).join(" ")
+    : "";
+  return (
+    <div className="rounded-sm border border-border bg-surface-2/40 p-3">
+      <div className="flex items-baseline justify-between gap-2">
+        <div>
+          <div className="label-eyebrow text-xs">{title}</div>
+          {subtitle && <div className="text-xs text-muted-foreground">{subtitle}</div>}
+        </div>
+        {values.length > 0 && (
+          <div className="text-right">
+            <div className="text-mono text-base font-bold">{formatVal(last)}</div>
+            {values.length >= 2 && (
+              <div className={`text-mono text-xs ${goodDir ? "text-emerald-400" : "text-destructive"}`}>
+                {invert ? (delta <= 0 ? "▲" : "▼") : delta >= 0 ? "▲" : "▼"} {Math.abs(delta).toFixed(1)}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      <div className="mt-2">
+        {values.length === 0 ? (
+          <div className="rounded-sm border border-dashed border-border px-2 py-4 text-center text-xs text-muted-foreground">No data</div>
+        ) : (
+          <svg viewBox={`0 0 ${w} ${h}`} className="h-20 w-full">
+            <path d={path} fill="none" stroke={color} strokeWidth="1.5" />
+            {points.map(([x, y], i) => (
+              <circle key={i} cx={x} cy={y} r={i === points.length - 1 ? 2.5 : 1.5} fill={color} />
+            ))}
+          </svg>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Inline team color swatch (Assign color)                                    */
+/* -------------------------------------------------------------------------- */
+function ColorSwatch({ team }: { team: Team }) {
+  const ref = useRef<HTMLInputElement>(null);
+  return (
+    <div className="relative flex items-center">
+      <button
+        onClick={() => ref.current?.click()}
+        title="Assign team color"
+        className="flex items-center gap-1.5 rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted"
+      >
+        <span className="inline-block h-3.5 w-3.5 rounded-sm border border-border" style={{ background: team.color }} />
+        Color
+      </button>
+      <input
+        ref={ref}
+        type="color"
+        value={team.color}
+        onChange={(e) => updateTeam(team.id, { color: e.target.value })}
+        className="absolute inset-0 h-0 w-0 opacity-0"
+      />
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Compact Edit Team modal — Tag / Name / Color / Status / Logo / Liquipedia  */
+/* -------------------------------------------------------------------------- */
+function EditTeamModal({
+  row, onChange, onCancel, onSave,
+}: {
+  row: Team;
+  onChange: (r: Team) => void;
+  onCancel: () => void;
+  onSave: () => void;
+}) {
+  const set = <K extends keyof Team>(k: K, v: Team[K]) => onChange({ ...row, [k]: v });
+  const base = "mt-1 w-full rounded-sm border border-border bg-background px-2 py-1.5 text-sm";
+  const status = row.status ?? "active";
+  const logoInput = useRef<HTMLInputElement>(null);
+  const onLogoFile = (file?: File) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => set("logo", String(reader.result));
+    reader.readAsDataURL(file);
+  };
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onCancel}>
+      <div className="hud-panel w-full max-w-lg bg-surface" onClick={(e) => e.stopPropagation()}>
+        <div className="border-b border-border px-4 py-3">
+          <h2 className="text-sm font-bold uppercase tracking-wider">Edit team</h2>
+        </div>
+        <div className="max-h-[70vh] space-y-4 overflow-y-auto p-4">
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="label-eyebrow text-xs">Tag</label>
+              <input className={base} value={row.tag} onChange={(e) => set("tag", e.target.value.toUpperCase())} />
+            </div>
+            <div className="col-span-2">
+              <label className="label-eyebrow text-xs">Name</label>
+              <input className={base} value={row.name} onChange={(e) => set("name", e.target.value)} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label-eyebrow text-xs">Color</label>
+              <div className="mt-1 flex items-center gap-2">
+                <input
+                  type="color"
+                  value={row.color}
+                  onChange={(e) => set("color", e.target.value)}
+                  className="h-8 w-12 cursor-pointer rounded-sm border border-border bg-background"
+                />
+                <input className={base + " text-mono"} value={row.color} onChange={(e) => set("color", e.target.value)} />
+              </div>
+            </div>
+            <div>
+              <label className="label-eyebrow text-xs">Status</label>
+              <div className="mt-1 flex items-center gap-1 rounded-sm border border-border bg-background p-0.5 w-fit">
+                {(["active", "archived"] as const).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => set("status", s)}
+                    className={
+                      "rounded-sm px-3 py-1 text-xs font-semibold uppercase tracking-wider " +
+                      (status === s
+                        ? s === "active"
+                          ? "bg-primary/15 text-primary"
+                          : "border border-border bg-muted text-foreground"
+                        : "bg-surface text-muted-foreground hover:text-foreground")
+                    }
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div>
+            <label className="label-eyebrow text-xs">Default logo</label>
+            <div className="mt-1 flex items-center gap-3 rounded-sm border border-border bg-surface-2/40 p-3">
+              <TeamLogo team={row} size={48} />
+              <div className="flex-1">
+                <button
+                  type="button"
+                  onClick={() => logoInput.current?.click()}
+                  className="rounded-sm border border-border bg-surface px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted"
+                >
+                  Upload logo
+                </button>
+                <input
+                  ref={logoInput}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => onLogoFile(e.target.files?.[0])}
+                />
+                {row.logo && (
+                  <button
+                    type="button"
+                    onClick={() => set("logo", "")}
+                    className="ml-2 text-xs text-muted-foreground hover:text-destructive"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+          <div>
+            <label className="label-eyebrow text-xs">Liquipedia page</label>
+            <input
+              className={base + " text-mono text-xs"}
+              placeholder="https://liquipedia.net/apexlegends/Team_Name"
+              value={row.liquipediaUrl ?? ""}
+              onChange={(e) => set("liquipediaUrl", e.target.value || undefined)}
+            />
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 border-t border-border bg-surface-2 px-4 py-3">
+          <button onClick={onCancel} className="rounded-sm border border-border bg-surface px-3 py-1.5 text-xs uppercase tracking-wider hover:bg-muted">Cancel</button>
+          <button onClick={onSave} className="rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">Save</button>
+        </div>
+      </div>
+    </div>
+  );
 }
