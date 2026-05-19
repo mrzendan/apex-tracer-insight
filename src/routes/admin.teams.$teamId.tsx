@@ -288,7 +288,49 @@ function TeamDetail() {
                 )}
               </PopoverContent>
             </Popover>
-            <span className="ml-auto text-xs text-muted-foreground">{filteredRows.length} matches in period</span>
+            <div className="flex items-center gap-1 border-l border-border pl-3 ml-1">
+              {(Object.keys(RANGE_LABEL) as RangeKey[]).map((k) => (
+                <button
+                  key={k}
+                  onClick={() => { setMode("range"); setRange(k); }}
+                  className={`rounded-sm border px-2 py-1 text-xs uppercase tracking-wider ${mode === "range" && range === k ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface hover:bg-muted"}`}
+                >
+                  {RANGE_LABEL[k]}
+                </button>
+              ))}
+            </div>
+            <span className="text-xs text-muted-foreground">{filteredRows.length} matches</span>
+            <div className="ml-auto flex items-center gap-1.5">
+              <button
+                onClick={() => setEditing({ ...team })}
+                className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted"
+              >
+                Edit team
+              </button>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted">
+                    Add to tournament ▾
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="max-h-80 w-72 overflow-auto p-1">
+                  {missingTournaments.length === 0 ? (
+                    <div className="px-2 py-3 text-center text-xs text-muted-foreground">In every tournament</div>
+                  ) : (
+                    missingTournaments.map((t) => (
+                      <button
+                        key={t.id}
+                        onClick={() => addToTournament(t.id)}
+                        className="block w-full rounded-sm px-2 py-1.5 text-left text-xs hover:bg-muted"
+                      >
+                        <div className="truncate font-semibold">{t.name}</div>
+                        <div className="text-mono text-xs text-muted-foreground">{t.startDate} → {t.endDate}</div>
+                      </button>
+                    ))
+                  )}
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
         </div>
 
