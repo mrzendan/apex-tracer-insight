@@ -14,7 +14,7 @@ export const Route = createFileRoute("/accept-invite")({
 
 type Status =
   | { kind: "loading" }
-  | { kind: "ok"; email: string; role: string }
+  | { kind: "ok"; email: string | null; role: string; remaining?: number }
   | { kind: "used" | "expired" | "invalid" | "no-token" }
   | { kind: "error"; message: string };
 
@@ -26,6 +26,7 @@ function AcceptInvitePage() {
   const accept = useServerFn(acceptInvite);
 
   const [status, setStatus] = useState<Status>({ kind: "loading" });
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [busy, setBusy] = useState(false);
@@ -38,7 +39,10 @@ function AcceptInvitePage() {
     }
     lookup({ data: { token } })
       .then((r) => {
-        if (r.status === "ok") setStatus({ kind: "ok", email: r.email, role: r.role });
+        if (r.status === "ok") {
+          setStatus({ kind: "ok", email: r.email, role: r.role, remaining: r.remaining });
+          if (r.email) setEmail(r.email);
+        }
         else setStatus({ kind: r.status });
       })
       .catch((e) => setStatus({ kind: "error", message: e instanceof Error ? e.message : "Failed" }));
@@ -50,8 +54,9 @@ function AcceptInvitePage() {
     setBusy(true);
     setError(null);
     try {
-      await accept({ data: { token, password, display_name: displayName || undefined } });
-      await signIn(status.email, password);
+      const acceptEmail = status.email ?? email;
+      await accept({ data: { token, email: acceptEmail, password, display_name: displayName || undefined } });
+      await signIn(acceptEmail, password);
       navigate({ to: "/" });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed");
@@ -89,9 +94,22 @@ function AcceptInvitePage() {
         {status.kind === "ok" && (
           <form onSubmit={onSubmit} className="space-y-3">
             <div className="rounded-sm border border-border bg-surface-2 p-3 text-xs">
-              <div className="label-eyebrow text-xs">Invited as</div>
-              <div className="mt-1 font-mono">{status.email}</div>
+              <div className="label-eyebrow text-xs">Invite</div>
               <div className="mt-1 text-muted-foreground">role: {status.role}</div>
+              {typeof status.remaining === "number" && (
+                <div className="text-muted-foreground">uses remaining: {status.remaining}</div>
+              )}
+            </div>
+            <div className="space-y-1">
+              <label className="label-eyebrow text-xs">Email</label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={!!status.email}
+                className="h-9 w-full rounded-sm border border-border bg-surface-2 px-2 text-xs outline-none focus:border-primary disabled:opacity-60"
+              />
             </div>
             <div className="space-y-1">
               <label className="label-eyebrow text-xs">Display name (optional)</label>
