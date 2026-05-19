@@ -27,12 +27,38 @@ from track_teams import load_canonical_map, load_config, FrameRegistrar
 
 
 def grab_frames(video: Path, n: int):
-    cap = cv2.VideoCapture(str(video))
+    video = video.resolve()
+    if not video.exists():
+        raise RuntimeError(f"файл не найден: {video}")
+    # пробуем несколько бэкендов: FFMPEG (по умолчанию), затем MSMF (Windows)
+    cap = cv2.VideoCapture(str(video), cv2.CAP_FFMPEG)
     if not cap.isOpened():
-        raise RuntimeError(f"не открыл {video}")
+        cap = cv2.VideoCapture(str(video), cv2.CAP_MSMF)
+    if not cap.isOpened():
+        cap = cv2.VideoCapture(str(video))
+    if not cap.isOpened():
+        raise RuntimeError(
+            f"OpenCV не смог открыть {video}.\n"
+            "Скорее всего нет FFmpeg-бэкенда. Попробуй:\n"
+            "  1) pip uninstall opencv-python-headless opencv-python -y && pip install opencv-python\n"
+            "  2) поставить ffmpeg в PATH (winget install Gyan.FFmpeg)\n"
+            "  3) перекодировать видео: ffmpeg -i in.mp4 -c:v libx264 -an out.mp4"
+        )
     total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
     if total <= 0:
-        raise RuntimeError("у видео 0 кадров")
+        # некоторые контейнеры не отдают frame_count — читаем подряд
+        cap.release()
+        cap = cv2.VideoCapture(str(video))
+        frames = []
+        while True:
+            ok, fr = cap.read()
+            if not ok: break
+            frames.append(fr)
+        cap.release()
+        if not frames:
+            raise RuntimeError("у видео 0 кадров (контейнер пустой или кодек не поддерживается)")
+        step = max(1, len(frames) // (n + 1))
+        return [(i * step, frames[i * step]) for i in range(1, n + 1) if i * step < len(frames)]
     idxs = [int(total * (i + 1) / (n + 1)) for i in range(n)]
     out = []
     for idx in idxs:
