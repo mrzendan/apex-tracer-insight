@@ -498,6 +498,46 @@ function HsvAdmin() {
                 className="rounded-sm border border-border bg-surface-2 px-3 py-2 text-xs font-semibold uppercase tracking-wider hover:bg-muted">
                 Download hsv_presets.json
               </button>
+              <button
+                onClick={() => importInputRef.current?.click()}
+                className="rounded-sm border border-border bg-surface-2 px-3 py-2 text-xs font-semibold uppercase tracking-wider hover:bg-muted">
+                Import hsv_presets.json
+              </button>
+              <input
+                ref={importInputRef}
+                type="file"
+                accept="application/json,.json"
+                hidden
+                onChange={async (e) => {
+                  const f = e.target.files?.[0];
+                  e.target.value = "";
+                  if (!f) return;
+                  try {
+                    const data = JSON.parse(await f.text());
+                    const targetFrame: string = data.frame ?? frame.id;
+                    const arr: Array<{ id?: string; slot?: number; hex?: string; h?: Range3; s?: Range3; v?: Range3 }> =
+                      Array.isArray(data) ? data : data.teams ?? [];
+                    const nextPresets: Record<string, Preset> = { ...presets };
+                    const nextColors: Record<string, string> = { ...savedColors };
+                    let n = 0;
+                    arr.forEach((row, i) => {
+                      const tid = row.id ?? teamList[(row.slot ?? i + 1) - 1]?.id;
+                      if (!tid) return;
+                      if (row.h && row.s && row.v) {
+                        nextPresets[presetKey(tid, targetFrame)] = { h: row.h, s: row.s, v: row.v };
+                      }
+                      if (row.hex) nextColors[presetKey(tid, targetFrame)] = row.hex;
+                      n++;
+                    });
+                    setPresets(nextPresets);
+                    setSavedColors(nextColors);
+                    if (frames.some((fr) => fr.id === targetFrame)) setFrameId(targetFrame);
+                    alert(`Imported ${n} team preset${n === 1 ? "" : "s"} for frame "${targetFrame}"`);
+                  } catch (err) {
+                    alert(`Import failed: ${(err as Error).message}`);
+                  }
+                }}
+              />
             </div>
           </div>
 
