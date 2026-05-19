@@ -104,6 +104,11 @@ def load_canonical_map(name: str, base_dir: Path) -> CanonicalMap:
         img = cv2.imread(str(img_path), cv2.IMREAD_GRAYSCALE)
         if img is None:
             raise RuntimeError(f"Не смог прочитать {img_path}")
+        real_h, real_w = img.shape[:2]
+        meta_size = tuple(meta.get("canonical_size", [real_w, real_h]))
+        if meta_size != (real_w, real_h):
+            print(f"[info] canonical_size в JSON {meta_size} не совпадает с реальным {(real_w, real_h)} — использую реальный.")
+            meta["canonical_size"] = [real_w, real_h]
     return CanonicalMap(
         name=name,
         image=img,
@@ -129,12 +134,17 @@ class FrameRegistrar:
         else:
             self.detector = cv2.ORB_create(nfeatures=n, fastThreshold=7)
             self.norm = cv2.NORM_HAMMING
+        self.use_clahe = bool(reg_cfg.get("clahe", True))
+        self.clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8)) if self.use_clahe else None
         # Прекомпьют фич канонической карты (downscale для скорости)
-        target_w = 1600
+        target_w = int(reg_cfg.get("canonical_target_w", 1600))
         H, W = cmap.image.shape[:2]
         self.scale = min(1.0, target_w / W)
         small = cv2.resize(cmap.image, (int(W * self.scale), int(H * self.scale))) if self.scale < 1 else cmap.image
-        self.kp_map, self.des_map = self.detector.detectAndCompute(small, None)
+        small_eq = self.clahe.apply(small) if self.clahe is not None else small
+        self.map_small = small_eq
+        self.kp_map, self.des_map = self.detector.detectAndCompute(small_eq, None)
+        print(f"[info] canonical features: {0 if self.des_map is None else len(self.des_map)} (detector={detector}, clahe={self.use_clahe})")
         self.bf = cv2.BFMatcher(self.norm, crossCheck=False)
         self.ratio = float(reg_cfg.get("match_ratio", 0.75))
         self.reproj = float(reg_cfg.get("ransac_reproj_px", 5.0))
@@ -151,6 +161,8 @@ class FrameRegistrar:
     def register(self, frame_bgr: np.ndarray):
         gray = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2GRAY)
         roi_img, (ox, oy) = self._crop_roi(gray)
+        if self.clahe is not None:
+            roi_img = self.clahe.apply(roi_img)
         kp_f, des_f = self.detector.detectAndCompute(roi_img, None)
         if des_f is None or self.des_map is None or len(kp_f) < 8:
             return None, 0
