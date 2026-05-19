@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useRef, useState } from "react";
-import { Eye, EyeOff, Lock, Unlock, Pencil, Copy, RotateCcw, AlignCenter, Files, Plus, Trash2, Check, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Eye, EyeOff, Lock, Unlock, Pencil, Copy, RotateCcw, AlignCenter, Files, Plus, Trash2, Check, X, ZoomIn, ZoomOut, Maximize2, Hand } from "lucide-react";
 import vodBg from "@/assets/hsv-samples/worlds-edge.png";
 import cameraBg from "@/assets/zones-samples/camera.png";
 import { useAdminStore, setZones as setZonesStore, type Zone, type ZoneMode } from "@/lib/admin-store";
@@ -57,6 +57,12 @@ function ZonesAdmin() {
   const [gridSize, setGridSize] = useState<10 | 20>(20);
   const [showGrid, setShowGrid] = useState(true);
   const [showSafe, setShowSafe] = useState(false);
+  // Zoom & pan inside the stage
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [spaceDown, setSpaceDown] = useState(false);
+  const stageRef = useRef<HTMLDivElement | null>(null);
+  const panRef = useRef<null | { startX: number; startY: number; orig: { x: number; y: number } }>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const dragRef = useRef<
     | null
@@ -197,6 +203,49 @@ function ZonesAdmin() {
   };
   const onPointerUp = () => { dragRef.current = null; };
 
+  // ── Zoom & pan handlers ─────────────────────────────────────────────
+  const clampZoom = (z: number) => Math.max(0.5, Math.min(8, z));
+  const resetView = () => { setZoom(1); setPan({ x: 0, y: 0 }); };
+  const zoomAt = (factor: number, cx?: number, cy?: number) => {
+    const stage = stageRef.current;
+    if (!stage) { setZoom((z) => clampZoom(z * factor)); return; }
+    const rect = stage.getBoundingClientRect();
+    const px = cx ?? rect.width / 2;
+    const py = cy ?? rect.height / 2;
+    setZoom((z) => {
+      const nz = clampZoom(z * factor);
+      const k = nz / z;
+      setPan((p) => ({ x: px - (px - p.x) * k, y: py - (py - p.y) * k }));
+      return nz;
+    });
+  };
+  const onWheel = (e: React.WheelEvent) => {
+    if (!(e.ctrlKey || e.metaKey)) return; // require modifier so page scroll still works
+    e.preventDefault();
+    const rect = stageRef.current!.getBoundingClientRect();
+    zoomAt(e.deltaY < 0 ? 1.15 : 1 / 1.15, e.clientX - rect.left, e.clientY - rect.top);
+  };
+  const onStagePointerDown = (e: React.PointerEvent) => {
+    if (e.button !== 1 && !spaceDown) return; // middle-click or space-drag
+    e.preventDefault();
+    (e.target as Element).setPointerCapture?.(e.pointerId);
+    panRef.current = { startX: e.clientX, startY: e.clientY, orig: { ...pan } };
+  };
+  const onStagePointerMove = (e: React.PointerEvent) => {
+    const pr = panRef.current;
+    if (!pr) return;
+    setPan({ x: pr.orig.x + (e.clientX - pr.startX), y: pr.orig.y + (e.clientY - pr.startY) });
+  };
+  const onStagePointerUp = () => { panRef.current = null; };
+
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => { if (e.code === "Space") setSpaceDown(true); };
+    const up = (e: KeyboardEvent) => { if (e.code === "Space") setSpaceDown(false); };
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    return () => { window.removeEventListener("keydown", down); window.removeEventListener("keyup", up); };
+  }, []);
+
   const gridLines = useMemo(() => {
     if (!showGrid) return null;
     const step = gridSize === 10 ? 80 : 160;
@@ -307,15 +356,31 @@ function ZonesAdmin() {
 
       <div className="flex min-h-0 flex-1">
         {/* Stage — fills available space, keeps aspect ratio without clipping */}
-        <div className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center bg-background p-4"
-          style={{ containerType: "size" } as React.CSSProperties}>
+        <div
+          ref={stageRef}
+          className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center overflow-hidden bg-background p-4"
+          style={{ containerType: "size", cursor: panRef.current ? "grabbing" : spaceDown ? "grab" : "default" } as React.CSSProperties}
+          onWheel={onWheel}
+          onPointerDown={onStagePointerDown}
+          onPointerMove={onStagePointerMove}
+          onPointerUp={onStagePointerUp}
+          onPointerLeave={onStagePointerUp}
+        >
           <div
-            className="hud-panel-strong relative overflow-hidden"
             style={{
-              aspectRatio: `${W}/${H}`,
+              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+              transformOrigin: "0 0",
+              position: "absolute",
+              left: "50%",
+              top: "50%",
+              translate: "-50% -50%",
               width: `min(100cqw, calc(100cqh * ${W} / ${H}))`,
               height: `min(100cqh, calc(100cqw * ${H} / ${W}))`,
             }}
+          >
+          <div
+            className="hud-panel-strong relative overflow-hidden"
+            style={{ width: "100%", height: "100%", aspectRatio: `${W}/${H}` }}
           >
             <img src={bg} alt="" className="absolute inset-0 h-full w-full object-cover opacity-90" draggable={false} />
             <div className="absolute inset-0 bg-background/10" />
@@ -331,7 +396,7 @@ function ZonesAdmin() {
                 const active = z.id === sel;
                 const locked = getMeta(z.id).locked;
                 const c = tagColor(z.tag);
-                const handle = 22;
+                 const handle = 12 / zoom;
                 const handles: { m: "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw"; cx: number; cy: number; cur: string }[] = [
                   { m: "nw", cx: z.x,         cy: z.y,         cur: "nwse-resize" },
                   { m: "ne", cx: z.x + z.w,   cy: z.y,         cur: "nesw-resize" },
@@ -346,22 +411,22 @@ function ZonesAdmin() {
                 const strokeOpacity = active ? 1 : 0.45;
                 return (
                   <g key={z.id} opacity={active ? 1 : 0.75}>
-                    <rect x={z.x} y={z.y} width={z.w} height={z.h}
+                     <rect x={z.x} y={z.y} width={z.w} height={z.h}
                       fill={`${c}${fillOpacity}`} stroke={c} strokeOpacity={strokeOpacity}
-                      strokeWidth={active ? 4 : 2} strokeDasharray={locked ? "8 6" : undefined}
+                      strokeWidth={(active ? 3 : 1.5) / zoom} strokeDasharray={locked ? `${8/zoom} ${6/zoom}` : undefined}
                       style={{ cursor: locked ? "not-allowed" : "move" }}
                       onPointerDown={(e) => onPointerDown(e, z, "move")} />
                     {active && (
                       <>
-                        <rect x={z.x} y={z.y - 32} width={Math.max(160, z.name.length * 11 + 90)} height={28} fill={c}
+                        <rect x={z.x} y={z.y - 28/zoom} width={Math.max(160, z.name.length * 11 + 90) / zoom} height={24/zoom} fill={c}
                           style={{ cursor: locked ? "not-allowed" : "move" }}
                           onPointerDown={(e) => onPointerDown(e, z, "move")} />
-                        <text x={z.x + 8} y={z.y - 11} fontSize={16} fontWeight={800} fill="#0a0a0a" fontFamily="Manrope, sans-serif" pointerEvents="none">
+                        <text x={z.x + 8/zoom} y={z.y - 10/zoom} fontSize={14/zoom} fontWeight={800} fill="#0a0a0a" fontFamily="Manrope, sans-serif" pointerEvents="none">
                           {z.name} · {z.tag}{locked ? " · locked" : ""}
                         </text>
                         {!locked && handles.map((h) => (
                           <rect key={h.m} x={h.cx - handle/2} y={h.cy - handle/2} width={handle} height={handle}
-                            fill="#0a0a0a" stroke={c} strokeWidth={3} style={{ cursor: h.cur }}
+                            fill="#0a0a0a" stroke={c} strokeWidth={1.5/zoom} style={{ cursor: h.cur }}
                             onPointerDown={(e) => onPointerDown(e, z, h.m)} />
                         ))}
                       </>
@@ -370,6 +435,27 @@ function ZonesAdmin() {
                 );
               })}
             </svg>
+          </div>
+          </div>
+
+          {/* Zoom controls */}
+          <div className="absolute bottom-3 left-3 z-10 flex items-center gap-1 rounded-sm border border-border bg-surface/95 p-1 backdrop-blur">
+            <button onClick={() => zoomAt(1 / 1.25)} title="Zoom out" className="grid h-7 w-7 place-items-center rounded-sm text-muted-foreground hover:bg-muted hover:text-foreground">
+              <ZoomOut className="h-3.5 w-3.5" />
+            </button>
+            <button onClick={resetView} className="text-mono px-2 py-1 text-xs font-semibold text-muted-foreground hover:text-foreground" title="Reset view (100%)">
+              {Math.round(zoom * 100)}%
+            </button>
+            <button onClick={() => zoomAt(1.25)} title="Zoom in" className="grid h-7 w-7 place-items-center rounded-sm text-muted-foreground hover:bg-muted hover:text-foreground">
+              <ZoomIn className="h-3.5 w-3.5" />
+            </button>
+            <div className="mx-1 h-5 w-px bg-border" />
+            <button onClick={resetView} title="Fit" className="grid h-7 w-7 place-items-center rounded-sm text-muted-foreground hover:bg-muted hover:text-foreground">
+              <Maximize2 className="h-3.5 w-3.5" />
+            </button>
+            <div className={`flex items-center gap-1 rounded-sm px-2 py-1 text-xs uppercase tracking-wider ${spaceDown ? "bg-primary/20 text-primary" : "text-muted-foreground"}`} title="Hold Space or middle-click to pan">
+              <Hand className="h-3 w-3" /> Pan
+            </div>
           </div>
 
           {/* Tag manager popover */}
