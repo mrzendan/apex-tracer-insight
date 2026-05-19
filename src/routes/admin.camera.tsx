@@ -1635,26 +1635,30 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   return <div><div className="label-eyebrow mb-1 text-xs">{label}</div>{children}</div>;
 }
 
-function SliderField({ label, value, min, max, step, onChange }: { label: string; value: number; min: number; max: number; step: number; onChange: (v: number) => void }) {
+function SliderField({ label, value, min, max, step, onChange, hint, warn }: { label: string; value: number; min: number; max: number; step: number; onChange: (v: number) => void; hint?: string; warn?: string | null }) {
   return (
     <div>
       <div className="mb-1 flex items-baseline justify-between text-xs">
-        <span className="uppercase tracking-wider text-muted-foreground">{label}</span>
+        <span className="uppercase tracking-wider text-muted-foreground" title={hint}>{label}{hint && <span className="ml-1 text-muted-foreground/50">ⓘ</span>}</span>
         <span className="text-mono">{value.toFixed(2)}</span>
       </div>
       <input type="range" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(Number(e.target.value))} className="w-full accent-primary" />
+      {hint && <div className="mt-0.5 text-[10px] leading-tight text-muted-foreground/70">{hint}</div>}
+      {warn && <div className="mt-1 rounded-sm border border-amber-400/40 bg-amber-400/10 px-1.5 py-0.5 text-[10px] text-amber-300">⚠ {warn}</div>}
     </div>
   );
 }
 
-function NumField({ label, value, min, max, step, onChange }: { label: string; value: number; min: number; max: number; step: number; onChange: (v: number) => void }) {
+function NumField({ label, value, min, max, step, onChange, hint, warn }: { label: string; value: number; min: number; max: number; step: number; onChange: (v: number) => void; hint?: string; warn?: string | null }) {
   return (
     <div>
-      <div className="label-eyebrow mb-1 text-xs">{label}</div>
+      <div className="label-eyebrow mb-1 text-xs" title={hint}>{label}{hint && <span className="ml-1 text-muted-foreground/50">ⓘ</span>}</div>
       <input type="number" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(Number(e.target.value))}
         className="text-mono w-full rounded-sm border border-border bg-background px-2 py-1 text-xs" />
+      {hint && <div className="mt-0.5 text-[10px] leading-tight text-muted-foreground/70">{hint}</div>}
+      {warn && <div className="mt-1 rounded-sm border border-amber-400/40 bg-amber-400/10 px-1.5 py-0.5 text-[10px] text-amber-300">⚠ {warn}</div>}
     </div>
   );
 }
