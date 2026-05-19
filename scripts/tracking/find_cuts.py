@@ -125,18 +125,18 @@ def main():
                         prev_inl = curr_inl
                         curr_idx += args.coarse
                         continue
-                    cut_frame, from_pan, to_pan, jump_delta = pinned
+                    cut_frame, from_pan, to_pan, pixel_diff = pinned
                     ev = {
                         "frame": int(cut_frame),
                         "t": round(cut_frame / fps, 3),
                         "from_pan": [round(from_pan[0], 1), round(from_pan[1], 1)],
                         "to_pan": [round(to_pan[0], 1), round(to_pan[1], 1)],
                         "delta": round(dist(from_pan, to_pan), 1),
-                        "jump_delta": round(jump_delta, 1),
+                        "pixel_diff": round(pixel_diff, 2),
                     }
                     events.append(ev)
                     print(f"    -> cut at frame {cut_frame} (t={ev['t']}s, "
-                          f"Δ={ev['delta']}px, jump={ev['jump_delta']}px между соседними)")
+                          f"Δpan={ev['delta']}px, pixel_diff={ev['pixel_diff']})")
                     # рисуем overlay со стрелкой
                     draw_cut_overlay(overlay_base.copy(), from_pan, to_pan, reg.scale,
                                      args.out / f"overlay_cut_{cut_frame}.png", ev)
@@ -234,33 +234,58 @@ def draw_cut_overlay(canvas, from_pan, to_pan, scale, out_path: Path, ev: dict):
 def pinpoint_cut(cap, reg, approx_cut_frame: int, window: int, threshold: float):
     """
     Шаг 1 в окне [approx_cut_frame - window, approx_cut_frame + window].
-    Регистрируем каждый кадр, ищем пару соседей (i, i+1) с max Δpan.
-    Если max Δ > threshold/2 -> настоящий cut at i+1, иначе None.
+    Камера физически не может телепортироваться, поэтому решение принимает
+    ПОПИКСЕЛЬНАЯ разница между соседними кадрами в ROI карты, а не Δpan
+    (Δpan может скакать из-за нестабильности SIFT на UI-кадрах).
+
+    Cut = пара (i, i+1) с max mean-abs-diff в ROI, если diff > PIXEL_DIFF_THR.
+    Иначе None.
     """
+    PIXEL_DIFF_THR = 15.0   # mean abs diff (grayscale 0..255) для настоящего cut'а
     start = max(0, approx_cut_frame - window)
     end = approx_cut_frame + window
-    pans: dict[int, tuple] = {}
+
+    # читаем подряд кадры [start..end], считаем ROI mean-abs-diff между соседями
+    roi = reg.roi  # (x0, y0, x1, y1) нормализованный
+    frames_gray: dict[int, np.ndarray] = {}
+    cap.set(cv2.CAP_PROP_POS_FRAMES, start)
     for idx in range(start, end + 1):
-        pan, inl, _ = register_frame(cap, reg, idx)
-        if pan is not None:
-            pans[idx] = pan
-    best_jump = 0.0
+        ok, frame = cap.read()
+        if not ok:
+            break
+        h, w = frame.shape[:2]
+        x0, y0, x1, y1 = int(roi[0] * w), int(roi[1] * h), int(roi[2] * w), int(roi[3] * h)
+        gray = cv2.cvtColor(frame[y0:y1, x0:x1], cv2.COLOR_BGR2GRAY)
+        # уменьшаем для скорости и шумоподавления
+        gray = cv2.resize(gray, (256, 256))
+        frames_gray[idx] = gray
+
+    best_diff = 0.0
     best_i = None
-    for idx in sorted(pans.keys()):
+    for idx in sorted(frames_gray.keys()):
         nxt = idx + 1
-        if nxt not in pans:
+        if nxt not in frames_gray:
             continue
-        d = dist(pans[idx], pans[nxt])
-        if d > best_jump:
-            best_jump = d
+        diff = float(np.mean(cv2.absdiff(frames_gray[idx], frames_gray[nxt])))
+        if diff > best_diff:
+            best_diff = diff
             best_i = idx
     if best_i is None:
         return None
-    print(f"    [pin]    best adjacent jump: f{best_i}->f{best_i+1}, Δ={best_jump:.1f}px")
-    if best_jump < threshold / 2:
+    print(f"    [pin]    max pixel-diff: f{best_i}->f{best_i+1}, diff={best_diff:.2f} "
+          f"(thr={PIXEL_DIFF_THR})")
+    if best_diff < PIXEL_DIFF_THR:
         return None
+
+    # для overlay нужны pan'ы; регистрируем только эти два кадра
     cut_frame = best_i + 1
-    return cut_frame, pans[best_i], pans[best_i + 1], best_jump
+    pan_from, _, _ = register_frame(cap, reg, best_i)
+    pan_to, _, _ = register_frame(cap, reg, cut_frame)
+    if pan_from is None or pan_to is None:
+        # регистрация фейлится, но cut точно был (diff большой) — пишем без pan'ов
+        pan_from = pan_from or (0.0, 0.0)
+        pan_to = pan_to or (0.0, 0.0)
+    return cut_frame, pan_from, pan_to, best_diff
 
 
 def dump_context_frames(cap, cut_frame: int, out_dir: Path):
