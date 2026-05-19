@@ -524,6 +524,7 @@ function Sparkline({
   title,
   subtitle,
   values,
+  dates,
   min,
   max,
   invert,
@@ -533,6 +534,7 @@ function Sparkline({
   title: string;
   subtitle?: string;
   values: number[];
+  dates?: (Date | null)[];
   min?: number;
   max?: number;
   invert?: boolean;
@@ -540,8 +542,9 @@ function Sparkline({
   formatVal: (v: number) => string;
 }) {
   const w = 320;
-  const h = 80;
-  const pad = 6;
+  const h = 110;
+  const pad = 8;
+  const padBottom = 18;
   const lo = min ?? Math.min(...values, 0);
   const hi = max ?? Math.max(...values, 1);
   const span = Math.max(1e-6, hi - lo);
@@ -553,12 +556,26 @@ function Sparkline({
   const points = values.map((v, i) => {
     const x = pad + (i / Math.max(1, values.length - 1)) * (w - pad * 2);
     const norm = (v - lo) / span;
-    const y = invert ? pad + norm * (h - pad * 2) : h - pad - norm * (h - pad * 2);
+    const inner = h - pad - padBottom;
+    const y = invert ? pad + norm * (inner - pad) : pad + inner - norm * (inner - pad);
     return [x, y] as const;
   });
   const path = points.length
     ? points.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`).join(" ")
     : "";
+  // Peak index — for inverted metrics, peak = smallest value (best); else largest.
+  let peakIdx = -1;
+  if (values.length >= 2) {
+    let best = values[0];
+    peakIdx = 0;
+    for (let i = 1; i < values.length; i++) {
+      if (invert ? values[i] < best : values[i] > best) { best = values[i]; peakIdx = i; }
+    }
+  }
+  const fmtShort = (d: Date | null | undefined) =>
+    d ? d.toLocaleDateString(undefined, { day: "2-digit", month: "short" }) : "";
+  const firstDate = dates?.[0];
+  const lastDate = dates?.[dates.length - 1];
   return (
     <div className="rounded-sm border border-border bg-surface-2/40 p-3">
       <div className="flex items-baseline justify-between gap-2">
@@ -581,11 +598,36 @@ function Sparkline({
         {values.length === 0 ? (
           <div className="rounded-sm border border-dashed border-border px-2 py-4 text-center text-xs text-muted-foreground">No data</div>
         ) : (
-          <svg viewBox={`0 0 ${w} ${h}`} className="h-20 w-full">
+          <svg viewBox={`0 0 ${w} ${h}`} className="h-28 w-full overflow-visible">
             <path d={path} fill="none" stroke={color} strokeWidth="1.5" />
             {points.map(([x, y], i) => (
               <circle key={i} cx={x} cy={y} r={i === points.length - 1 ? 2.5 : 1.5} fill={color} />
             ))}
+            {peakIdx >= 0 && points[peakIdx] && (
+              <g>
+                <circle cx={points[peakIdx][0]} cy={points[peakIdx][1]} r={3.5} fill="none" stroke={color} strokeWidth="1.2" />
+                <text
+                  x={points[peakIdx][0]}
+                  y={Math.max(10, points[peakIdx][1] - 6)}
+                  textAnchor="middle"
+                  fontSize="9"
+                  fill="currentColor"
+                  className="text-foreground"
+                >
+                  {formatVal(values[peakIdx])}{dates?.[peakIdx] ? ` · ${fmtShort(dates[peakIdx])}` : ""}
+                </text>
+              </g>
+            )}
+            {dates && firstDate && (
+              <text x={pad} y={h - 4} fontSize="9" fill="currentColor" className="text-muted-foreground">
+                {fmtShort(firstDate)}
+              </text>
+            )}
+            {dates && lastDate && (
+              <text x={w - pad} y={h - 4} fontSize="9" textAnchor="end" fill="currentColor" className="text-muted-foreground">
+                {fmtShort(lastDate)}
+              </text>
+            )}
           </svg>
         )}
       </div>
