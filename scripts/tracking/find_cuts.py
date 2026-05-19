@@ -62,7 +62,7 @@ def main():
     ap.add_argument("--out", required=True, type=Path)
     ap.add_argument("--coarse", type=int, default=600, help="грубый шаг (кадров)")
     ap.add_argument("--fine", type=int, default=10, help="шаг отката для уточнения")
-    ap.add_argument("--threshold", type=float, default=150.0,
+    ap.add_argument("--threshold", type=float, default=90.0,
                     help="Δpan на канонической карте, выше которого считаем cut'ом (px)")
     ap.add_argument("--start", type=float, default=0.0, help="старт в секундах")
     ap.add_argument("--end", type=float, default=-1.0, help="конец в секундах (-1 = до конца)")
