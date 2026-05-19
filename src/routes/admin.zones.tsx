@@ -356,15 +356,31 @@ function ZonesAdmin() {
 
       <div className="flex min-h-0 flex-1">
         {/* Stage — fills available space, keeps aspect ratio without clipping */}
-        <div className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center bg-background p-4"
-          style={{ containerType: "size" } as React.CSSProperties}>
+        <div
+          ref={stageRef}
+          className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center overflow-hidden bg-background p-4"
+          style={{ containerType: "size", cursor: panRef.current ? "grabbing" : spaceDown ? "grab" : "default" } as React.CSSProperties}
+          onWheel={onWheel}
+          onPointerDown={onStagePointerDown}
+          onPointerMove={onStagePointerMove}
+          onPointerUp={onStagePointerUp}
+          onPointerLeave={onStagePointerUp}
+        >
           <div
-            className="hud-panel-strong relative overflow-hidden"
             style={{
-              aspectRatio: `${W}/${H}`,
+              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+              transformOrigin: "0 0",
+              position: "absolute",
+              left: "50%",
+              top: "50%",
+              translate: "-50% -50%",
               width: `min(100cqw, calc(100cqh * ${W} / ${H}))`,
               height: `min(100cqh, calc(100cqw * ${H} / ${W}))`,
             }}
+          >
+          <div
+            className="hud-panel-strong relative overflow-hidden"
+            style={{ width: "100%", height: "100%", aspectRatio: `${W}/${H}` }}
           >
             <img src={bg} alt="" className="absolute inset-0 h-full w-full object-cover opacity-90" draggable={false} />
             <div className="absolute inset-0 bg-background/10" />
