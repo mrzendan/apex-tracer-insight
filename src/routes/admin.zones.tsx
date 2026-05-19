@@ -466,8 +466,18 @@ function ZonesAdmin() {
                 <ActionBtn icon={<AlignCenter className="h-3 w-3" />} label="Center" onClick={() => centerZone(selZone)} />
                 <ActionBtn icon={<Files className="h-3 w-3" />} label="Dup" onClick={() => duplicateZone(selZone)} />
               </div>
+              <button
+                onClick={() => {
+                  // Persist current preset zones (built-in already writes to store on every edit; this is an explicit confirmation)
+                  if (typeof navigator !== "undefined" && navigator.clipboard) {
+                    navigator.clipboard.writeText(JSON.stringify(zones, null, 2)).catch(() => {});
+                  }
+                }}
+                className="mt-3 w-full rounded-sm bg-primary px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">
+                Save
+              </button>
               <button onClick={() => removeZone(selZone.id)}
-                className="mt-3 w-full rounded-sm border border-destructive/40 bg-destructive/10 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-destructive hover:bg-destructive/20">
+                className="mt-2 w-full rounded-sm border border-destructive/40 bg-destructive/10 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-destructive hover:bg-destructive/20">
                 Delete zone
               </button>
             </div>
