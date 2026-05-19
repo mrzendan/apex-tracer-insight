@@ -36,6 +36,8 @@ export type MatchExtras = {
   teamVods?: Record<string, string>;
   /** Per-map (per-game) VOD links, indexed by game index. */
   mapVods?: Record<number, string>;
+  /** Common Map VOD link applied across all maps. */
+  mapVodCommon?: string;
   /** Teams that participated. */
   teamIds?: string[];
 };
