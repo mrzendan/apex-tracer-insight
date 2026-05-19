@@ -249,7 +249,7 @@ function TournamentsAdmin() {
                         <td colSpan={9} className="p-0">
                           <div className="p-5" onClick={(e) => e.stopPropagation()}>
                             <div className="mb-3 flex flex-wrap gap-1 border-b border-border pb-2">
-                              {(["overview","matches","teams","maps","settings"] as TabKey[]).map((k) => (
+                              {(["overview","matches","teams","maps"] as TabKey[]).map((k) => (
                                 <button
                                   key={k}
                                   onClick={() => setTab(k)}
