@@ -114,42 +114,7 @@ function PolygonsAdmin() {
             {mapPolys.length} polygon{mapPolys.length === 1 ? "" : "s"}
           </span>
         </div>
-        <div className="flex items-center gap-2">
-          {mode === "draw" ? (
-            <>
-              <span className="text-mono text-xs text-muted-foreground">
-                {draft.length} pts · click map to add · need ≥3
-              </span>
-              <button
-                onClick={() => finishDraft("forbidden")}
-                disabled={draft.length < 3}
-                className="rounded-sm border border-destructive/40 bg-destructive/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-destructive hover:bg-destructive/20 disabled:opacity-40"
-              >
-                Save Forbidden
-              </button>
-              <button
-                onClick={() => finishDraft("safe")}
-                disabled={draft.length < 3}
-                className="rounded-sm border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-400 hover:bg-emerald-500/20 disabled:opacity-40"
-              >
-                Save Safe
-              </button>
-              <button
-                onClick={() => { setDraft([]); setMode("idle"); }}
-                className="rounded-sm border border-border bg-surface px-3 py-1.5 text-xs uppercase tracking-wider hover:bg-muted"
-              >
-                Cancel
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={() => { setMode("draw"); setDraft([]); setSelectedId(null); }}
-              className="rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110"
-            >
-              + Draw polygon
-            </button>
-          )}
-        </div>
+        <div />
       </header>
 
       <div className="flex flex-1 overflow-hidden">
@@ -273,6 +238,42 @@ function PolygonsAdmin() {
         <aside className="w-80 shrink-0 overflow-auto border-l border-border bg-surface">
           <div className="border-b border-border px-4 py-3">
             <div className="label-eyebrow text-xs">Polygons on {map?.name}</div>
+          </div>
+          <div className="flex flex-col gap-2 border-b border-border px-4 py-3">
+            {mode === "draw" ? (
+              <>
+                <span className="text-mono text-xs text-muted-foreground">
+                  {draft.length} pts · click map to add · need ≥3
+                </span>
+                <button
+                  onClick={() => finishDraft("forbidden")}
+                  disabled={draft.length < 3}
+                  className="rounded-sm border border-destructive/40 bg-destructive/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-destructive hover:bg-destructive/20 disabled:opacity-40"
+                >
+                  Save Forbidden
+                </button>
+                <button
+                  onClick={() => finishDraft("safe")}
+                  disabled={draft.length < 3}
+                  className="rounded-sm border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-400 hover:bg-emerald-500/20 disabled:opacity-40"
+                >
+                  Save Safe
+                </button>
+                <button
+                  onClick={() => { setDraft([]); setMode("idle"); }}
+                  className="rounded-sm border border-border bg-surface px-3 py-1.5 text-xs uppercase tracking-wider hover:bg-muted"
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => { setMode("draw"); setDraft([]); setSelectedId(null); }}
+                className="rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110"
+              >
+                + Draw polygon
+              </button>
+            )}
           </div>
           {mapPolys.length === 0 && (
             <div className="px-4 py-6 text-center text-xs text-muted-foreground">
