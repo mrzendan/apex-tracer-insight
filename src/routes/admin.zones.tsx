@@ -471,7 +471,6 @@ function ZonesAdmin() {
                 <input defaultValue={t.id} onBlur={(e) => renameTag(t.id, e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
                   className="text-mono flex-1 rounded-sm bg-background px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-primary/40" />
-                <span className="w-[26px] shrink-0" aria-hidden />
                 <button onClick={() => deleteTag(t.id)} disabled={tags.length <= 1} title="Delete tag"
                   className="grid h-6 w-6 place-items-center rounded-sm text-muted-foreground hover:bg-destructive/20 hover:text-destructive disabled:opacity-30">
                   <Trash2 className="h-3.5 w-3.5" />
@@ -580,18 +579,6 @@ function ZonesAdmin() {
         </aside>
       </div>
 
-      <div className="flex h-8 shrink-0 items-center justify-between border-t border-border bg-surface-2 px-6 text-xs text-muted-foreground">
-        <div className="text-mono uppercase tracking-wider">
-          {selZone ? (
-            <>
-              <span className="text-foreground font-semibold">Selected:</span> {selZone.name} · {selZone.w}×{selZone.h} · tag: <span style={{ color: tagColor(selZone.tag) }}>{selZone.tag}</span> · x:{selZone.x} y:{selZone.y}
-            </>
-          ) : "No zone selected"}
-        </div>
-        <div className="text-mono uppercase tracking-wider">
-          Preset: {builtin?.label ?? custom?.label ?? "—"} · Snap {snap ? `${gridSize}px` : "off"}
-        </div>
-      </div>
       {hover && typeof document !== "undefined" && createPortal(
         (() => {
           const z = hover.z;
