@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useAdminStore, setTeams } from "@/lib/admin-store";
 import type { Team } from "@/lib/mock-match";
 import { TeamLogo } from "@/components/admin/TeamLogo";
@@ -11,6 +11,7 @@ function TeamsAdmin() {
   const navigate = useNavigate();
   const [editing, setEditing] = useState<Team | null>(null);
   const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "archived">("all");
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   if (pathname !== "/admin/teams" && pathname !== "/admin/teams/") {
     return <Outlet />;
@@ -37,11 +38,12 @@ function TeamsAdmin() {
   }
 
   const q = query.trim().toLowerCase();
-  const filtered = q
-    ? teams.filter((t) =>
-        [t.tag, t.name, ...(t.players ?? [])].some((v) => String(v).toLowerCase().includes(q)),
-      )
-    : teams;
+  const filtered = teams.filter((t) => {
+    const st = t.status ?? "active";
+    if (statusFilter !== "all" && st !== statusFilter) return false;
+    if (!q) return true;
+    return [t.tag, t.name, ...(t.players ?? [])].some((v) => String(v).toLowerCase().includes(q));
+  });
 
   const startCreate = () =>
     setEditing({
@@ -54,6 +56,7 @@ function TeamsAdmin() {
       placement: teams.length + 1,
       kills: 0,
       alive: true,
+      status: "active",
     });
   const startEdit = (e: React.MouseEvent, t: Team) => {
     e.stopPropagation();
@@ -82,6 +85,22 @@ function TeamsAdmin() {
             placeholder="Search teams or players…"
             className="w-64 rounded-sm border border-border bg-background px-2 py-1.5 text-xs"
           />
+          <div className="flex items-center gap-1 rounded-sm border border-border bg-background p-0.5">
+            {(["all", "active", "archived"] as const).map((s) => (
+              <button
+                key={s}
+                onClick={() => setStatusFilter(s)}
+                className={
+                  "rounded-sm px-2 py-1 text-xs font-semibold uppercase tracking-wider " +
+                  (statusFilter === s
+                    ? "border border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
+                    : "bg-surface text-muted-foreground hover:text-foreground")
+                }
+              >
+                {s}
+              </button>
+            ))}
+          </div>
         </div>
       </header>
       <div className="flex-1 overflow-auto p-6">
@@ -92,6 +111,7 @@ function TeamsAdmin() {
                 <th className="px-3 py-2 w-[64px]">Logo</th>
                 <th className="px-3 py-2 w-[100px]">Tag</th>
                 <th className="px-3 py-2">Name</th>
+                <th className="px-3 py-2 w-[110px]">Status</th>
                 <th className="px-3 py-2 w-[260px]">Last match</th>
                 <th className="px-3 py-2 w-[260px]">Next match</th>
                 <th className="px-3 py-2 w-[200px] text-right">
@@ -107,6 +127,7 @@ function TeamsAdmin() {
             <tbody>
               {filtered.map((t) => {
                 const sched = teamSchedule(t.id);
+                const st = t.status ?? "active";
                 return (
                   <tr
                     key={t.id}
@@ -116,6 +137,19 @@ function TeamsAdmin() {
                     <td className="px-3 py-2"><TeamLogo team={t} size={32} /></td>
                     <td className="px-3 py-2 text-xs text-mono font-bold">{t.tag}</td>
                     <td className="px-3 py-2 text-xs">{t.name}</td>
+                    <td className="px-3 py-2 text-xs">
+                      <span
+                        className={
+                          "inline-flex items-center gap-1.5 rounded-sm border px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wider " +
+                          (st === "active"
+                            ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
+                            : "border-border bg-surface text-muted-foreground")
+                        }
+                      >
+                        <span className={"inline-block h-1.5 w-1.5 rounded-full " + (st === "active" ? "bg-emerald-400" : "bg-muted-foreground")} />
+                        {st}
+                      </span>
+                    </td>
                     <td className="px-3 py-2 text-xs">
                       {sched.last ? (
                         <div>
@@ -148,7 +182,7 @@ function TeamsAdmin() {
                 );
               })}
               {filtered.length === 0 && (
-                <tr><td colSpan={6} className="px-3 py-6 text-center text-xs text-muted-foreground">No teams</td></tr>
+                <tr><td colSpan={7} className="px-3 py-6 text-center text-xs text-muted-foreground">No teams</td></tr>
               )}
             </tbody>
           </table>
