@@ -115,12 +115,6 @@ function MapsAdmin() {
               </button>
             ))}
           </div>
-          <button
-            onClick={startCreate}
-            className="rounded-sm bg-primary px-2.5 py-1 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110"
-          >
-            + Add map
-          </button>
         </div>
       </header>
 
@@ -168,6 +162,13 @@ function MapsAdmin() {
                 </div>
               );
             })}
+            <button
+              onClick={startCreate}
+              className="hud-panel group flex min-h-[260px] flex-col items-center justify-center gap-2 border-2 border-dashed border-primary/60 bg-primary/10 text-primary transition hover:border-primary hover:bg-primary/20"
+            >
+              <span className="text-5xl font-light leading-none">+</span>
+              <span className="text-xs font-semibold uppercase tracking-wider">Add map</span>
+            </button>
           </div>
         ) : (
           <div className="hud-panel overflow-hidden">
@@ -180,6 +181,14 @@ function MapsAdmin() {
                   <th className="px-3 py-2 w-[120px]">Used in</th>
                   <th className="px-3 py-2">Config</th>
                   <th className="px-3 py-2 w-[280px] text-right">Actions</th>
+                  <th className="px-3 py-2 w-[110px] text-right">
+                    <button
+                      onClick={startCreate}
+                      className="inline-flex items-center gap-1 rounded-sm bg-primary px-2 py-1 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110"
+                    >
+                      <span className="text-sm leading-none">+</span> Add
+                    </button>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -213,11 +222,12 @@ function MapsAdmin() {
                           <button onClick={() => remove(mp.id)} className="rounded-sm border border-destructive/40 bg-surface px-2 py-1 text-destructive hover:bg-destructive/10">Delete</button>
                         </div>
                       </td>
+                      <td className="px-3 py-2" />
                     </tr>
                   );
                 })}
                 {filtered.length === 0 && (
-                  <tr><td colSpan={6} className="px-3 py-6 text-center text-xs text-muted-foreground">No maps</td></tr>
+                  <tr><td colSpan={7} className="px-3 py-6 text-center text-xs text-muted-foreground">No maps</td></tr>
                 )}
               </tbody>
             </table>
