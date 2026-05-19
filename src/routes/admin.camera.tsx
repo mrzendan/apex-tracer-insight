@@ -634,7 +634,7 @@ function HeaderStrip(props: {
   );
 }
 
-function QualityBar({ quality, preset, isDirty }: {
+function QualityBar({ quality, preset, isDirty, prevQuality }: {
   quality: { trackingQ: number; jumpEvents: number; lostFrames: number; avgConfidence: number };
   prevQuality?: QualityMetrics | null;
   preset: string; isDirty: boolean;
@@ -650,7 +650,7 @@ function QualityBar({ quality, preset, isDirty }: {
     const val = decimals ? d.toFixed(decimals) : Math.round(d).toString();
     return <span className={`ml-1 text-mono text-[10px] ${cls}`}>{sign}{val}{isPct ? "%" : ""}</span>;
   };
-  const prev = arguments[0].prevQuality as QualityMetrics | null | undefined;
+  const prev = prevQuality;
   return (
     <div className="flex shrink-0 items-center gap-6 border-b border-border bg-surface-2 px-6 py-2">
       <Stat label="Tracking quality" value={`${quality.trackingQ}%`} valueClass={tone} after={delta(quality.trackingQ, prev?.trackingQ, true)} />
