@@ -470,7 +470,7 @@ function ZonesAdmin() {
                 </label>
                 <input defaultValue={t.id} onBlur={(e) => renameTag(t.id, e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-                  className="text-mono flex-1 rounded-sm bg-background px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-primary/40" />
+                  className="text-mono min-w-0 flex-1 rounded-sm bg-background px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-primary/40" />
                 <button onClick={() => deleteTag(t.id)} disabled={tags.length <= 1} title="Delete tag"
                   className="grid h-6 w-6 place-items-center rounded-sm text-muted-foreground hover:bg-destructive/20 hover:text-destructive disabled:opacity-30">
                   <Trash2 className="h-3.5 w-3.5" />
