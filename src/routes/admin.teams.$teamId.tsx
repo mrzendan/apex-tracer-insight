@@ -417,6 +417,7 @@ function TeamDetail() {
             title="Placement over time"
             subtitle="lower is better · inverted"
             values={formPoints.map((p) => p.placement)}
+            dates={formPoints.map((p) => p.date)}
             invert
             min={1}
             max={20}
@@ -427,6 +428,7 @@ function TeamDetail() {
             title="Kills over time"
             subtitle="per match"
             values={formPoints.map((p) => p.kills)}
+            dates={formPoints.map((p) => p.date)}
             min={0}
             color="rgb(245 158 11)"
             formatVal={(v) => `${v.toFixed(0)}`}
@@ -435,6 +437,7 @@ function TeamDetail() {
             title="Top 5 rate"
             subtitle="rolling 5-game window · %"
             values={top5Rate}
+            dates={formPoints.map((p) => p.date)}
             min={0}
             max={100}
             color="rgb(16 185 129)"
