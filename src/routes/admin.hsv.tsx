@@ -20,10 +20,10 @@ type PickedColor = { r: number; g: number; b: number; h: number; s: number; v: n
 type Frame = { id: string; name: string; image: string };
 
 const DEFAULT_FRAMES: Frame[] = [
-  { id: "frame-1", name: "Frame 1", image: worldsEdgeSample },
-  { id: "frame-2", name: "Frame 2", image: stormPointSample },
-  { id: "frame-3", name: "Frame 3", image: eDistrictSample },
-  { id: "frame-4", name: "Frame 4", image: olympusSample },
+  { id: "worlds-edge", name: "World's Edge", image: worldsEdgeSample },
+  { id: "storm-point", name: "Storm Point", image: stormPointSample },
+  { id: "e-district",  name: "E-District",  image: eDistrictSample },
+  { id: "olympus",     name: "Olympus",     image: olympusSample },
 ];
 
 function rgbToHsvCv(r: number, g: number, b: number): [number, number, number] {
@@ -112,15 +112,16 @@ function HsvAdmin() {
     [],
   );
 
+  // Presets are stored per (team, frame) so each map keeps its own calibration.
+  const presetKey = (tid: string, fid: string) => `${tid}|${fid}`;
   const [presets, setPresets] = useState<Record<string, Preset>>(() => {
     const init: Record<string, Preset> = {};
-    for (const t of teams) init[t.id] = presetFromColor(t.color);
+    for (const t of teams) for (const f of DEFAULT_FRAMES) init[presetKey(t.id, f.id)] = presetFromColor(t.color);
     return init;
   });
-  // Color saved with the preset — drives the swatches in the sidebar and header.
   const [savedColors, setSavedColors] = useState<Record<string, string>>(() => {
     const init: Record<string, string> = {};
-    for (const t of teams) init[t.id] = t.color;
+    for (const t of teams) for (const f of DEFAULT_FRAMES) init[presetKey(t.id, f.id)] = t.color;
     return init;
   });
 
@@ -137,20 +138,22 @@ function HsvAdmin() {
 
   const team = teamList.find((t) => t.id === teamId)!;
   const frame = frames.find((f) => f.id === frameId) ?? frames[0];
-  const preset = presets[teamId];
-  const teamSwatch = (id: string) => savedColors[id] ?? teamList.find((t) => t.id === id)!.color;
+  const k = presetKey(teamId, frame.id);
+  const preset = presets[k] ?? presetFromColor(team.color);
+  const teamSwatch = (id: string) =>
+    savedColors[presetKey(id, frame.id)] ?? teamList.find((t) => t.id === id)!.color;
 
   const setPreset = (p: Partial<Preset>) =>
-    setPresets((prev) => ({ ...prev, [teamId]: { ...prev[teamId], ...p } }));
+    setPresets((prev) => ({ ...prev, [k]: { ...(prev[k] ?? preset), ...p } }));
 
   // Compute conflicts vs other teams.
   const conflicts = useMemo(() => {
     return teamList
       .filter((t) => t.id !== teamId)
-      .map((t) => ({ team: t, pct: presetOverlap(preset, presets[t.id]) }))
+      .map((t) => ({ team: t, pct: presetOverlap(preset, presets[presetKey(t.id, frame.id)] ?? presetFromColor(t.color)) }))
       .filter((c) => c.pct >= 5)
       .sort((a, b) => b.pct - a.pct);
-  }, [presets, preset, teamList, teamId]);
+  }, [presets, preset, teamList, teamId, frame.id]);
 
   // Sample canvas (full resolution offscreen) for eyedropper sampling
   const sampleCanvasRef = useRef<HTMLCanvasElement | null>(null);
