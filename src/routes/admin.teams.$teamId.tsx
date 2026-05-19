@@ -592,8 +592,8 @@ function Sparkline({
   const labelStep = Math.max(1, Math.ceil(values.length / 8));
 
   return (
-    <div className="flex h-[260px] flex-col overflow-hidden rounded-sm border border-border bg-surface-2/40">
-      <div className="flex items-start justify-between gap-2 p-3 pb-2">
+    <div className="flex h-[260px] flex-col rounded-sm border border-border bg-surface-2/40">
+      <div className="flex shrink-0 items-start justify-between gap-2 p-3 pb-2">
         <div>
           <div className="label-eyebrow text-[10px] tracking-wider">{title}</div>
           {values.length > 0 && (
@@ -614,7 +614,7 @@ function Sparkline({
         )}
       </div>
 
-      <div className="relative flex-1 px-4">
+      <div className="relative min-h-0 flex-1 px-4">
         {values.length === 0 ? (
           <div className="flex h-full items-center justify-center text-xs text-muted-foreground">No data</div>
         ) : (
