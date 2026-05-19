@@ -6,7 +6,8 @@ import { useAdminStore } from "@/lib/admin-store";
 export const Route = createFileRoute("/admin/maps")({ component: MapsAdmin });
 
 type ViewMode = "grid" | "table";
-const CONFIG_KEYS: MapConfigKey[] = ["image", "zones", "polygons", "hsv", "camera", "minimap"];
+const CONFIG_KEYS: MapConfigKey[] = ["image", "polygons", "hsv"];
+const ALL_CONFIG_KEYS: MapConfigKey[] = ["image", "zones", "polygons", "hsv", "camera", "minimap"];
 const CONFIG_LABEL: Record<MapConfigKey, string> = {
   image: "Image",
   zones: "Zones",
@@ -317,7 +318,7 @@ function EditDialog({ row, isNew, onChange, onCancel, onSave }: {
           <section>
             <div className="label-eyebrow mb-2 text-xs text-muted-foreground">Configuration status</div>
             <div className="grid grid-cols-2 gap-1 sm:grid-cols-3">
-              {CONFIG_KEYS.map((k) => {
+              {ALL_CONFIG_KEYS.map((k) => {
                 const on = Boolean(row.config?.[k]);
                 return (
                   <button
