@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { maps as allMaps, teams as seedTeams } from "@/lib/mock-match";
 import { useAdminStore } from "@/lib/admin-store";
+import { getSlotColor } from "@/lib/team-colors";
 
 export const Route = createFileRoute("/admin/camera")({ component: CameraAdmin });
 
@@ -288,6 +289,49 @@ function CameraAdmin() {
       window.removeEventListener("mouseup", onUp);
     };
   }, [vpDrag]);
+
+  // Pan/zoom (matches game analytics MapCanvas)
+  const mapWrapRef = useRef<HTMLDivElement | null>(null);
+  const [mapView, setMapView] = useState({ scale: 1, tx: 0, ty: 0 });
+  const mapPan = useRef<{ x: number; y: number; tx: number; ty: number } | null>(null);
+  const clampScale = (s: number) => Math.max(1, Math.min(6, s));
+  const clampPan = (v: { scale: number; tx: number; ty: number }, w: number, h: number) => {
+    const minX = w - w * v.scale;
+    const minY = h - h * v.scale;
+    return { scale: v.scale, tx: Math.min(0, Math.max(minX, v.tx)), ty: Math.min(0, Math.max(minY, v.ty)) };
+  };
+  const onMapWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const rect = mapWrapRef.current!.getBoundingClientRect();
+    const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
+    setMapView((v) => {
+      const ns = clampScale(v.scale * Math.exp(-e.deltaY * 0.0015));
+      const k = ns / v.scale;
+      return clampPan({ scale: ns, tx: cx - k * (cx - v.tx), ty: cy - k * (cy - v.ty) }, rect.width, rect.height);
+    });
+  };
+  const onMapMouseDown = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest("[data-vp-handle]")) return;
+    mapPan.current = { x: e.clientX, y: e.clientY, tx: mapView.tx, ty: mapView.ty };
+  };
+  const onMapMouseMove = (e: React.MouseEvent) => {
+    if (!mapPan.current) return;
+    const rect = mapWrapRef.current!.getBoundingClientRect();
+    const nx = mapPan.current.tx + (e.clientX - mapPan.current.x);
+    const ny = mapPan.current.ty + (e.clientY - mapPan.current.y);
+    setMapView((v) => clampPan({ scale: v.scale, tx: nx, ty: ny }, rect.width, rect.height));
+  };
+  const onMapMouseUp = () => { mapPan.current = null; };
+  const zoomMapBy = (factor: number) => {
+    const rect = mapWrapRef.current!.getBoundingClientRect();
+    const cx = rect.width / 2, cy = rect.height / 2;
+    setMapView((v) => {
+      const ns = clampScale(v.scale * factor);
+      const k = ns / v.scale;
+      return clampPan({ scale: ns, tx: cx - k * (cx - v.tx), ty: cy - k * (cy - v.ty) }, rect.width, rect.height);
+    });
+  };
+  const resetMapView = () => setMapView({ scale: 1, tx: 0, ty: 0 });
 
   const visibleW = Math.max(1, SRC_W - cropLeft - cropRight);
   const visibleAspect = visibleW / SRC_H;
