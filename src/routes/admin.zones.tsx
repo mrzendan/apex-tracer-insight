@@ -68,6 +68,7 @@ function ZonesAdmin() {
   const stageRef = useRef<HTMLDivElement | null>(null);
   const panRef = useRef<null | { startX: number; startY: number; orig: { x: number; y: number } }>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const importInputRef = useRef<HTMLInputElement | null>(null);
   const dragRef = useRef<
     | null
     | { id: string; mode: "move" | "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw"; startX: number; startY: number; orig: Zone }
