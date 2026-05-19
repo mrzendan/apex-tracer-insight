@@ -31,6 +31,8 @@ function PolygonsAdmin() {
   const [draft, setDraft] = useState<{ x: number; y: number }[]>([]);
   const [drag, setDrag] = useState<{ polyId: string; pointIdx: number } | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [copyOpen, setCopyOpen] = useState(false);
 
   const map = allMaps.find((m) => m.id === mapId);
   const mapPolys = useMemo(() => polygons.filter((p) => p.mapId === mapId), [polygons, mapId]);
@@ -94,6 +96,62 @@ function PolygonsAdmin() {
       : active ? "rgba(34,197,94,0.42)" : "rgba(34,197,94,0.22)";
   const strokeFor = (tag: PolygonTag) =>
     tag === "forbidden" ? "#ef4444" : "#22c55e";
+
+  const exportJson = () => {
+    const payload = {
+      mapId,
+      mapName: map?.name,
+      exportedAt: new Date().toISOString(),
+      polygons: mapPolys.map((p) => ({ name: p.name, tag: p.tag, points: p.points })),
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `polygons-${map?.name ?? mapId}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const importJson = async (file: File) => {
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      const arr: Array<{ name?: string; tag?: PolygonTag; points?: { x: number; y: number }[] }> =
+        Array.isArray(data) ? data : data.polygons ?? [];
+      let added = 0;
+      arr.forEach((p, i) => {
+        if (!p.points || p.points.length < 3) return;
+        const tag: PolygonTag = p.tag === "safe" ? "safe" : "forbidden";
+        addPolygon({
+          id: `pg-${Date.now()}-${i}`,
+          mapId,
+          name: p.name || `${tag === "forbidden" ? "Forbidden" : "Safe"} ${mapPolys.length + i + 1}`,
+          tag,
+          points: p.points,
+        });
+        added++;
+      });
+      alert(`Imported ${added} polygon${added === 1 ? "" : "s"}`);
+    } catch (err) {
+      alert(`Import failed: ${(err as Error).message}`);
+    }
+  };
+
+  const copyToMap = (targetMapId: string) => {
+    if (targetMapId === mapId) { setCopyOpen(false); return; }
+    mapPolys.forEach((p, i) => {
+      addPolygon({
+        id: `pg-${Date.now()}-${i}`,
+        mapId: targetMapId,
+        name: p.name,
+        tag: p.tag,
+        points: p.points,
+      });
+    });
+    setCopyOpen(false);
+    alert(`Copied ${mapPolys.length} polygon${mapPolys.length === 1 ? "" : "s"} to ${allMaps.find((m) => m.id === targetMapId)?.name}`);
+  };
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
@@ -240,6 +298,55 @@ function PolygonsAdmin() {
             <div className="label-eyebrow text-xs">Polygons on {map?.name}</div>
           </div>
           <div className="flex flex-col gap-2 border-b border-border px-4 py-3">
+            <div className="label-eyebrow text-[10px] text-muted-foreground">Import / Export</div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={exportJson}
+                disabled={mapPolys.length === 0}
+                className="rounded-sm border border-border bg-surface px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted disabled:opacity-40"
+              >
+                Export JSON
+              </button>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="rounded-sm border border-border bg-surface px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted"
+              >
+                Import JSON
+              </button>
+              <button
+                onClick={() => setCopyOpen((v) => !v)}
+                disabled={mapPolys.length === 0}
+                className="rounded-sm border border-border bg-surface px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted disabled:opacity-40"
+              >
+                Copy to map
+              </button>
+            </div>
+            {copyOpen && (
+              <select
+                autoFocus
+                defaultValue=""
+                onChange={(e) => { if (e.target.value) copyToMap(e.target.value); }}
+                className="rounded-sm border border-border bg-background px-2 py-1 text-xs"
+              >
+                <option value="" disabled>Select target map…</option>
+                {allMaps.filter((m) => m.id !== mapId).map((m) => (
+                  <option key={m.id} value={m.id}>{m.name}</option>
+                ))}
+              </select>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) importJson(f);
+                e.target.value = "";
+              }}
+            />
+          </div>
+          <div className="flex flex-col gap-2 border-b border-border px-4 py-3">
             {mode === "draw" ? (
               <>
                 <span className="text-mono text-xs text-muted-foreground">
@@ -334,7 +441,13 @@ function PolygonRow({ poly, selected, onSelect, onDelete }: {
             className="flex-1 rounded-sm border border-border bg-background px-2 py-1 text-xs"
           />
         ) : (
-          <div className="flex-1 truncate text-sm font-semibold">{poly.name}</div>
+          <div
+            className="flex-1 truncate text-sm font-semibold cursor-text"
+            onDoubleClick={(e) => { e.stopPropagation(); setEditingName(true); }}
+            title="Double-click to rename"
+          >
+            {poly.name}
+          </div>
         )}
         <span className={`rounded-sm border px-1.5 py-0.5 text-xs uppercase tracking-wider ${tagColor}`}>
           {poly.tag}
