@@ -99,6 +99,7 @@ def main():
     print(f"[info] видео: {total} кадров, {fps:.2f} fps. Сканируем [{start_frame}, {end_frame}) шагом {args.coarse}.")
 
     events: list[dict] = []
+    gray_zone: list[dict] = []
     overlay_base = cv2.cvtColor(reg.map_small, cv2.COLOR_GRAY2BGR)
 
     prev_idx = start_frame
@@ -139,9 +140,9 @@ def main():
             # второй проход: шаг 1 в окне ±fine, ищем настоящий межкадровый скачок (по pixel-diff)
             pinned = pinpoint_cut(cap, reg, approx_cut, args.fine, args.threshold)
             if pinned is None:
-                print(f"    -> отброшено: в окне ±{args.fine} нет межкадрового pixel-diff > порога")
+                print(f"    -> отброшено: pixel-diff < 5 (шум регистрации)")
             else:
-                cut_frame, from_pan, to_pan, pixel_diff = pinned
+                cut_frame, from_pan, to_pan, pixel_diff, status = pinned
                 ev = {
                     "frame": int(cut_frame),
                     "t": round(cut_frame / fps, 3),
@@ -149,13 +150,20 @@ def main():
                     "to_pan": [round(to_pan[0], 1), round(to_pan[1], 1)],
                     "delta": round(dist(from_pan, to_pan), 1),
                     "pixel_diff": round(pixel_diff, 2),
+                    "status": status,
                 }
-                events.append(ev)
-                print(f"    -> cut at frame {cut_frame} (t={ev['t']}s, "
-                      f"Δpan={ev['delta']}px, pixel_diff={ev['pixel_diff']})")
-                draw_cut_overlay(overlay_base.copy(), from_pan, to_pan, reg.scale,
-                                 args.out / f"overlay_cut_{cut_frame}.png", ev)
-                dump_context_frames(cap, cut_frame, args.out)
+                if status == "accepted":
+                    events.append(ev)
+                    print(f"    -> CUT at frame {cut_frame} (t={ev['t']}s, "
+                          f"Δpan={ev['delta']}px, pixel_diff={ev['pixel_diff']})")
+                    draw_cut_overlay(overlay_base.copy(), from_pan, to_pan, reg.scale,
+                                     args.out / f"overlay_cut_{cut_frame}.png", ev)
+                    dump_context_frames(cap, cut_frame, args.out)
+                else:
+                    gray_zone.append(ev)
+                    print(f"    -> GRAY at frame {cut_frame} (pixel_diff={ev['pixel_diff']}) — "
+                          f"под подозрением, см. gray_zone в cuts.json")
+                    dump_context_frames(cap, cut_frame, args.out)
 
         prev_idx = curr_idx
         prev_pan = curr_pan
@@ -174,12 +182,18 @@ def main():
         "fine": args.fine,
         "threshold": args.threshold,
         "events": events,
+        "gray_zone": gray_zone,
     }, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    lines = [f"[ok] найдено cut'ов: {len(events)}  (за {time.time() - t0:.1f}s)"]
+    lines = [f"[ok] найдено cut'ов: {len(events)}, серая зона: {len(gray_zone)}  (за {time.time() - t0:.1f}s)"]
     for ev in events:
         lines.append(f"  frame {ev['frame']:>7} t={ev['t']:>7.2f}s  Δ={ev['delta']:>6.1f}px  "
                      f"{ev['from_pan']} -> {ev['to_pan']}")
+    if gray_zone:
+        lines.append("")
+        lines.append(f"[gray] подозрительные (5 <= diff < 10), глянь видеокадры:")
+        for ev in gray_zone:
+            lines.append(f"  frame {ev['frame']:>7} t={ev['t']:>7.2f}s  diff={ev['pixel_diff']:>5.2f}")
     summary = "\n".join(lines)
     (args.out / "cuts.txt").write_text(summary, encoding="utf-8")
     print("\n" + summary)
@@ -251,10 +265,13 @@ def pinpoint_cut(cap, reg, approx_cut_frame: int, window: int, threshold: float)
     ПОПИКСЕЛЬНАЯ разница между соседними кадрами в ROI карты, а не Δpan
     (Δpan может скакать из-за нестабильности SIFT на UI-кадрах).
 
-    Cut = пара (i, i+1) с max mean-abs-diff в ROI, если diff > PIXEL_DIFF_THR.
-    Иначе None.
+    Возвращает (cut_frame, pan_from, pan_to, best_diff, status):
+      status="accepted"  если best_diff >= PIXEL_DIFF_THR
+      status="gray"      если GRAY_LO <= best_diff < PIXEL_DIFF_THR  (для ручной верификации)
+      status="rejected"  если best_diff < GRAY_LO
     """
-    PIXEL_DIFF_THR = 15.0   # mean abs diff (grayscale 0..255) для настоящего cut'а
+    PIXEL_DIFF_THR = 10.0   # mean abs diff (grayscale 0..255) — настоящий cut
+    GRAY_LO = 5.0           # серая зона: подозрительные кандидаты для ручной проверки
     start = max(0, approx_cut_frame - window)
     end = approx_cut_frame + window
 
@@ -287,8 +304,9 @@ def pinpoint_cut(cap, reg, approx_cut_frame: int, window: int, threshold: float)
         return None
     print(f"    [pin]    max pixel-diff: f{best_i}->f{best_i+1}, diff={best_diff:.2f} "
           f"(thr={PIXEL_DIFF_THR})")
-    if best_diff < PIXEL_DIFF_THR:
+    if best_diff < GRAY_LO:
         return None
+    status = "accepted" if best_diff >= PIXEL_DIFF_THR else "gray"
 
     # для overlay нужны pan'ы; регистрируем только эти два кадра
     cut_frame = best_i + 1
@@ -298,7 +316,7 @@ def pinpoint_cut(cap, reg, approx_cut_frame: int, window: int, threshold: float)
         # регистрация фейлится, но cut точно был (diff большой) — пишем без pan'ов
         pan_from = pan_from or (0.0, 0.0)
         pan_to = pan_to or (0.0, 0.0)
-    return cut_frame, pan_from, pan_to, best_diff
+    return cut_frame, pan_from, pan_to, best_diff, status
 
 
 def dump_context_frames(cap, cut_frame: int, out_dir: Path):

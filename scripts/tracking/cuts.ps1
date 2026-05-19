@@ -35,12 +35,14 @@ if (-not $repo) { throw "Не вижу git-репозитория." }
 Set-Location $repo
 
 if (Test-Path $Out) { Remove-Item -Recurse -Force $Out }
+New-Item -ItemType Directory -Force -Path $Out | Out-Null
+$logPath = Join-Path $Out "run.log"
 
 Write-Host "[cuts] запускаю find_cuts.py (coarse=$Coarse, fine=$Fine, threshold=$Threshold)..." -ForegroundColor Cyan
 python scripts/tracking/find_cuts.py `
   --video $Video --config $Config --out $Out `
   --coarse $Coarse --fine $Fine --threshold $Threshold `
-  --start $Start --end $End
+  --start $Start --end $End 2>&1 | Tee-Object -FilePath $logPath
 if ($LASTEXITCODE -ne 0) { throw "find_cuts.py упал" }
 
 $size = (Get-ChildItem $Out -Recurse | Measure-Object Length -Sum).Sum / 1MB
