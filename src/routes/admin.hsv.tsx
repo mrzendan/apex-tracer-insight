@@ -20,10 +20,10 @@ type PickedColor = { r: number; g: number; b: number; h: number; s: number; v: n
 type Frame = { id: string; name: string; image: string };
 
 const DEFAULT_FRAMES: Frame[] = [
-  { id: "frame-1", name: "Frame 1", image: worldsEdgeSample },
-  { id: "frame-2", name: "Frame 2", image: stormPointSample },
-  { id: "frame-3", name: "Frame 3", image: eDistrictSample },
-  { id: "frame-4", name: "Frame 4", image: olympusSample },
+  { id: "worlds-edge", name: "World's Edge", image: worldsEdgeSample },
+  { id: "storm-point", name: "Storm Point", image: stormPointSample },
+  { id: "e-district",  name: "E-District",  image: eDistrictSample },
+  { id: "olympus",     name: "Olympus",     image: olympusSample },
 ];
 
 function rgbToHsvCv(r: number, g: number, b: number): [number, number, number] {
@@ -112,15 +112,16 @@ function HsvAdmin() {
     [],
   );
 
+  // Presets are stored per (team, frame) so each map keeps its own calibration.
+  const presetKey = (tid: string, fid: string) => `${tid}|${fid}`;
   const [presets, setPresets] = useState<Record<string, Preset>>(() => {
     const init: Record<string, Preset> = {};
-    for (const t of teams) init[t.id] = presetFromColor(t.color);
+    for (const t of teams) for (const f of DEFAULT_FRAMES) init[presetKey(t.id, f.id)] = presetFromColor(t.color);
     return init;
   });
-  // Color saved with the preset — drives the swatches in the sidebar and header.
   const [savedColors, setSavedColors] = useState<Record<string, string>>(() => {
     const init: Record<string, string> = {};
-    for (const t of teams) init[t.id] = t.color;
+    for (const t of teams) for (const f of DEFAULT_FRAMES) init[presetKey(t.id, f.id)] = t.color;
     return init;
   });
 
@@ -137,20 +138,22 @@ function HsvAdmin() {
 
   const team = teamList.find((t) => t.id === teamId)!;
   const frame = frames.find((f) => f.id === frameId) ?? frames[0];
-  const preset = presets[teamId];
-  const teamSwatch = (id: string) => savedColors[id] ?? teamList.find((t) => t.id === id)!.color;
+  const k = presetKey(teamId, frame.id);
+  const preset = presets[k] ?? presetFromColor(team.color);
+  const teamSwatch = (id: string) =>
+    savedColors[presetKey(id, frame.id)] ?? teamList.find((t) => t.id === id)!.color;
 
   const setPreset = (p: Partial<Preset>) =>
-    setPresets((prev) => ({ ...prev, [teamId]: { ...prev[teamId], ...p } }));
+    setPresets((prev) => ({ ...prev, [k]: { ...(prev[k] ?? preset), ...p } }));
 
   // Compute conflicts vs other teams.
   const conflicts = useMemo(() => {
     return teamList
       .filter((t) => t.id !== teamId)
-      .map((t) => ({ team: t, pct: presetOverlap(preset, presets[t.id]) }))
+      .map((t) => ({ team: t, pct: presetOverlap(preset, presets[presetKey(t.id, frame.id)] ?? presetFromColor(t.color)) }))
       .filter((c) => c.pct >= 5)
       .sort((a, b) => b.pct - a.pct);
-  }, [presets, preset, teamList, teamId]);
+  }, [presets, preset, teamList, teamId, frame.id]);
 
   // Sample canvas (full resolution offscreen) for eyedropper sampling
   const sampleCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -201,7 +204,9 @@ function HsvAdmin() {
 
     if (!compareAll) {
       const [hL, hU] = preset.h, [sL, sU] = preset.s, [vL, vU] = preset.v;
-      const others = teamList.filter((t) => t.id !== teamId).map((t) => ({ p: presets[t.id], c: t.color }));
+      const others = teamList
+        .filter((t) => t.id !== teamId)
+        .map((t) => ({ p: presets[presetKey(t.id, frame.id)] ?? presetFromColor(t.color), c: teamSwatch(t.id) }));
       for (let i = 0; i < src.data.length; i += 4) {
         const [h, s, v] = rgbToHsvCv(src.data[i], src.data[i + 1], src.data[i + 2]);
         const ok = h >= hL && h <= hU && s >= sL && s <= sU && v >= vL && v <= vU;
@@ -226,7 +231,11 @@ function HsvAdmin() {
       }
     } else {
       // colorize each pixel by first matching team
-      const all = teamList.map((t) => ({ id: t.id, p: presets[t.id], c: t.color }));
+      const all = teamList.map((t) => ({
+        id: t.id,
+        p: presets[presetKey(t.id, frame.id)] ?? presetFromColor(t.color),
+        c: teamSwatch(t.id),
+      }));
       const myIdx = all.findIndex((a) => a.id === teamId);
       for (let i = 0; i < src.data.length; i += 4) {
         const [h, s, v] = rgbToHsvCv(src.data[i], src.data[i + 1], src.data[i + 2]);
@@ -249,7 +258,7 @@ function HsvAdmin() {
     }
     mctx.putImageData(out, 0, 0);
     setMaskStats({ detected, total, overlapPct: detected > 0 ? Math.round((overlapPixels / detected) * 100) : 0 });
-  }, [preset, presets, imgReady, compareAll, teamId, teamList]);
+  }, [preset, presets, imgReady, compareAll, teamId, teamList, frame.id, savedColors]);
 
   const onPreviewClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const off = sampleCanvasRef.current;
@@ -273,6 +282,16 @@ function HsvAdmin() {
     const url = URL.createObjectURL(file);
     const id = `upload-${Date.now()}`;
     setFrames((prev) => [...prev, { id, name: `Upload · ${file.name.slice(0, 14)}`, image: url }]);
+    setPresets((prev) => {
+      const next = { ...prev };
+      for (const t of teams) next[presetKey(t.id, id)] = presetFromColor(t.color);
+      return next;
+    });
+    setSavedColors((prev) => {
+      const next = { ...prev };
+      for (const t of teams) next[presetKey(t.id, id)] = t.color;
+      return next;
+    });
     setFrameId(id);
     e.target.value = "";
   };
@@ -424,7 +443,7 @@ function HsvAdmin() {
               <div className="flex flex-wrap gap-2">
                 {conflicts.slice(0, 6).map((c) => (
                   <div key={c.team.id} className="inline-flex items-center gap-2 rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs">
-                    <span className="h-3 w-3 rounded-sm ring-1 ring-border" style={{ backgroundColor: c.team.color }} />
+                    <span className="h-3 w-3 rounded-sm ring-1 ring-border" style={{ backgroundColor: teamSwatch(c.team.id) }} />
                     <span className="font-semibold">{c.team.displayName}</span>
                     <span className={`text-mono tabular-nums ${c.pct >= 30 ? "text-destructive" : "text-warning"}`}>{c.pct}%</span>
                   </div>
@@ -442,7 +461,7 @@ function HsvAdmin() {
 
             <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
               <button
-                onClick={() => setPresets((p) => ({ ...p, [teamId]: presetFromColor(team.color) }))}
+                onClick={() => setPresets((p) => ({ ...p, [k]: presetFromColor(team.color) }))}
                 className="rounded-sm border border-border bg-surface-2 px-3 py-2 text-xs font-semibold hover:bg-muted">
                 Reset to team color
               </button>
@@ -450,7 +469,7 @@ function HsvAdmin() {
                 Save as new profile
               </button>
               <button
-                onClick={() => setSavedColors((s) => ({ ...s, [teamId]: presetCenterHex(preset) }))}
+                onClick={() => setSavedColors((s) => ({ ...s, [k]: presetCenterHex(preset) }))}
                 className="rounded-sm bg-primary px-5 py-2 text-sm font-bold uppercase tracking-wider text-primary-foreground shadow-md hover:brightness-110">
                 Save preset
               </button>
