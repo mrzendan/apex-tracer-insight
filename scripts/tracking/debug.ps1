@@ -21,6 +21,11 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+# UTF-8 вывод (иначе кириллица превращается в Р·Р°РїСѓСЃРєР°СЋ)
+chcp 65001 > $null
+$OutputEncoding = [System.Text.Encoding]::UTF8
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
 # 1. Найти корень репо (там, где .git)
 $repo = (git rev-parse --show-toplevel).Trim()
 if (-not $repo) { throw "Не вижу git-репозитория. Сначала подключи проект к GitHub в Lovable." }
