@@ -268,13 +268,30 @@ function TournamentsAdmin() {
                                     <dt className="text-muted-foreground">Status</dt><dd><StatusBadge s={status} /></dd>
                                     <dt className="text-muted-foreground">Type</dt><dd><TypeBadge type={row.type} /></dd>
                                     <dt className="text-muted-foreground">Region</dt><dd className="truncate">{row.region}</dd>
+                                    <dt className="text-muted-foreground">Year</dt><dd>Year {row.year}{row.split ? ` · Split ${row.split}` : ""}</dd>
+                                    {row.stage && (<><dt className="text-muted-foreground">Stage</dt><dd>{row.stage}</dd></>)}
                                     <dt className="text-muted-foreground">Dates</dt><dd className="text-mono tabular-nums">{fmtRange(row.startDate, row.endDate)}</dd>
                                     <dt className="text-muted-foreground">Matches</dt><dd className="text-mono tabular-nums">{readyMatches} / {tMatches.length}</dd>
                                     <dt className="text-muted-foreground">Teams</dt><dd className="text-mono tabular-nums">{tTeams.length}</dd>
                                     <dt className="text-muted-foreground">Maps</dt><dd className="text-mono tabular-nums">{tMaps.length}</dd>
                                     <dt className="text-muted-foreground">Active jobs</dt><dd className="text-mono tabular-nums">{activeJobs}{failedJobs > 0 && <span className="ml-2 text-destructive">{failedJobs} failed</span>}</dd>
                                     <dt className="text-muted-foreground">Last updated</dt><dd>{lastTs > 0 ? fmtRelative(lastTs) : "—"}</dd>
+                                    {row.liquipediaUrl && (
+                                      <>
+                                        <dt className="text-muted-foreground">Liquipedia</dt>
+                                        <dd className="truncate">
+                                          <a href={row.liquipediaUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                                            {row.liquipediaUrl.replace(/^https?:\/\//, "")}
+                                          </a>
+                                        </dd>
+                                      </>
+                                    )}
                                   </dl>
+                                  {row.description && (
+                                    <div className="mt-3 border-t border-border pt-2 text-xs text-muted-foreground whitespace-pre-wrap">
+                                      {row.description}
+                                    </div>
+                                  )}
                                 </div>
                                 <div className="hud-panel p-3">
                                   <div className="label-eyebrow mb-2 text-xs">Matches ({tMatches.length})</div>
