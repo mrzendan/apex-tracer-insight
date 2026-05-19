@@ -274,6 +274,7 @@ function EditDialog({ row, isNew, onChange, onCancel, onSave }: {
 
           <section>
             <div className="label-eyebrow mb-2 text-xs text-muted-foreground">Base image</div>
+            <p className="mb-2 text-xs text-muted-foreground">Используется только на аналитических страницах.</p>
             <input
               className={base}
               placeholder="https://… or imported asset URL"
@@ -283,6 +284,22 @@ function EditDialog({ row, isNew, onChange, onCancel, onSave }: {
             {row.image && (
               <div className="mt-2 aspect-video w-full overflow-hidden rounded-sm border border-border bg-surface-2">
                 <img src={row.image} alt="preview" className="h-full w-full object-cover" />
+              </div>
+            )}
+          </section>
+
+          <section>
+            <div className="label-eyebrow mb-2 text-xs text-muted-foreground">Preview image</div>
+            <p className="mb-2 text-xs text-muted-foreground">Обложка карты в списках и карточках.</p>
+            <input
+              className={base}
+              placeholder="https://… (необязательно, по умолчанию = base image)"
+              value={row.previewImage ?? ""}
+              onChange={(e) => set("previewImage", e.target.value || undefined)}
+            />
+            {(row.previewImage || row.image) && (
+              <div className="mt-2 aspect-video w-full overflow-hidden rounded-sm border border-border bg-surface-2">
+                <img src={row.previewImage || row.image} alt="cover preview" className="h-full w-full object-cover" />
               </div>
             )}
           </section>
