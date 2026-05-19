@@ -488,10 +488,15 @@ function ZonesAdmin() {
             const big = cropBoxBig(z.w, z.h);
             return (
               <div key={z.id}
-                className={`mb-1 flex items-center gap-2 rounded-sm border px-2 py-1.5 transition-colors ${
+                className={`mb-1 rounded-sm border px-2 py-1.5 transition-colors ${
                   z.id === sel ? "border-primary/40 bg-primary/10" : "border-transparent hover:bg-muted"} ${m.hidden ? "opacity-50" : ""}`}>
-                <button onClick={() => setSel(z.id)} className="flex flex-1 items-center gap-2 text-left min-w-0">
-                  <div className="group/preview relative shrink-0">
+                <button onClick={() => setSel(z.id)} className="mb-1 flex w-full items-center gap-1.5 text-left">
+                  <span className="inline-block h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: c }} />
+                  <span className="flex-1 truncate text-xs font-semibold">{z.name}</span>
+                  <span className="text-mono shrink-0 text-[10px] uppercase text-muted-foreground">{z.tag}</span>
+                </button>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setSel(z.id)} className="group/preview relative shrink-0">
                     <div className="relative overflow-hidden rounded-sm border border-border bg-background"
                       style={{ width: cb.w, height: cb.h }}>
                       <div className="absolute inset-0" style={{
@@ -518,16 +523,9 @@ function ZonesAdmin() {
                       </div>
                       <div className="text-mono mt-1 px-1 text-xs uppercase text-muted-foreground">{z.w}×{z.h}</div>
                     </div>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <span className="inline-block h-2 w-2 rounded-sm" style={{ backgroundColor: c }} />
-                      <span className="truncate text-xs font-semibold">{z.name}</span>
-                    </div>
-                    <span className="text-mono text-xs uppercase text-muted-foreground">{z.tag} · {z.w}×{z.h}</span>
-                  </div>
-                </button>
-                <div className="flex shrink-0 items-center gap-0.5">
+                  </button>
+                  <span className="text-mono flex-1 text-[10px] uppercase text-muted-foreground">{z.w}×{z.h}</span>
+                  <div className="flex shrink-0 items-center gap-0.5">
                   <button onClick={() => patchMeta(z.id, { hidden: !m.hidden })} title={m.hidden ? "Show" : "Hide"}
                     className="grid h-6 w-6 place-items-center rounded-sm text-muted-foreground hover:bg-muted hover:text-foreground">
                     {m.hidden ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
@@ -540,6 +538,7 @@ function ZonesAdmin() {
                     className="grid h-6 w-6 place-items-center rounded-sm text-muted-foreground hover:bg-muted hover:text-foreground"><Pencil className="h-3.5 w-3.5" /></button>
                   <button onClick={() => removeZone(z.id)} title="Delete"
                     className="grid h-6 w-6 place-items-center rounded-sm text-muted-foreground hover:bg-destructive/20 hover:text-destructive">×</button>
+                  </div>
                 </div>
               </div>
             );
