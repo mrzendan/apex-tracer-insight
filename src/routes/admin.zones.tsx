@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
-import { Eye, EyeOff, Lock, Unlock, Pencil, Copy, RotateCcw, AlignCenter, Files, Plus, Trash2, Check, X } from "lucide-react";
+import { Eye, EyeOff, Lock, Unlock, Pencil, Copy, RotateCcw, AlignCenter, Files, Plus, Trash2, Check, X, ZoomIn, ZoomOut, Maximize2, Hand } from "lucide-react";
 import vodBg from "@/assets/hsv-samples/worlds-edge.png";
 import cameraBg from "@/assets/zones-samples/camera.png";
 import { useAdminStore, setZones as setZonesStore, type Zone, type ZoneMode } from "@/lib/admin-store";
@@ -57,6 +57,12 @@ function ZonesAdmin() {
   const [gridSize, setGridSize] = useState<10 | 20>(20);
   const [showGrid, setShowGrid] = useState(true);
   const [showSafe, setShowSafe] = useState(false);
+  // Zoom & pan inside the stage
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [spaceDown, setSpaceDown] = useState(false);
+  const stageRef = useRef<HTMLDivElement | null>(null);
+  const panRef = useRef<null | { startX: number; startY: number; orig: { x: number; y: number } }>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const dragRef = useRef<
     | null
@@ -196,6 +202,49 @@ function ZonesAdmin() {
     update(d.id, { x: snapVal(x), y: snapVal(y), w: snapVal(w), h: snapVal(h) });
   };
   const onPointerUp = () => { dragRef.current = null; };
+
+  // ── Zoom & pan handlers ─────────────────────────────────────────────
+  const clampZoom = (z: number) => Math.max(0.5, Math.min(8, z));
+  const resetView = () => { setZoom(1); setPan({ x: 0, y: 0 }); };
+  const zoomAt = (factor: number, cx?: number, cy?: number) => {
+    const stage = stageRef.current;
+    if (!stage) { setZoom((z) => clampZoom(z * factor)); return; }
+    const rect = stage.getBoundingClientRect();
+    const px = cx ?? rect.width / 2;
+    const py = cy ?? rect.height / 2;
+    setZoom((z) => {
+      const nz = clampZoom(z * factor);
+      const k = nz / z;
+      setPan((p) => ({ x: px - (px - p.x) * k, y: py - (py - p.y) * k }));
+      return nz;
+    });
+  };
+  const onWheel = (e: React.WheelEvent) => {
+    if (!(e.ctrlKey || e.metaKey)) return; // require modifier so page scroll still works
+    e.preventDefault();
+    const rect = stageRef.current!.getBoundingClientRect();
+    zoomAt(e.deltaY < 0 ? 1.15 : 1 / 1.15, e.clientX - rect.left, e.clientY - rect.top);
+  };
+  const onStagePointerDown = (e: React.PointerEvent) => {
+    if (e.button !== 1 && !spaceDown) return; // middle-click or space-drag
+    e.preventDefault();
+    (e.target as Element).setPointerCapture?.(e.pointerId);
+    panRef.current = { startX: e.clientX, startY: e.clientY, orig: { ...pan } };
+  };
+  const onStagePointerMove = (e: React.PointerEvent) => {
+    const pr = panRef.current;
+    if (!pr) return;
+    setPan({ x: pr.orig.x + (e.clientX - pr.startX), y: pr.orig.y + (e.clientY - pr.startY) });
+  };
+  const onStagePointerUp = () => { panRef.current = null; };
+
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => { if (e.code === "Space") setSpaceDown(true); };
+    const up = (e: KeyboardEvent) => { if (e.code === "Space") setSpaceDown(false); };
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    return () => { window.removeEventListener("keydown", down); window.removeEventListener("keyup", up); };
+  }, []);
 
   const gridLines = useMemo(() => {
     if (!showGrid) return null;
