@@ -68,20 +68,14 @@ function TournamentsAdmin() {
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-surface px-6">
-        <h1 className="text-sm font-bold uppercase tracking-wider">Tournaments</h1>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
+          <h1 className="text-sm font-bold uppercase tracking-wider">Tournaments</h1>
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search tournaments…"
             className="w-64 rounded-sm border border-border bg-background px-2 py-1.5 text-xs"
           />
-          <button
-            onClick={startCreate}
-            className="rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110"
-          >
-            + New
-          </button>
         </div>
       </header>
 
@@ -96,7 +90,17 @@ function TournamentsAdmin() {
                 <th className="px-3 py-2 w-[80px]">Year</th>
                 <th className="px-3 py-2 w-[110px]">Type</th>
                 <th className="px-3 py-2 w-[170px]">Region</th>
-                <th className="px-3 py-2 w-[140px] text-right">Actions</th>
+                <th className="px-3 py-2 w-[180px] text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    <span>Actions</span>
+                    <button
+                      onClick={startCreate}
+                      className="rounded-sm bg-primary px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110"
+                    >
+                      + Add
+                    </button>
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody>
