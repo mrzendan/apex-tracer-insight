@@ -514,8 +514,8 @@ function CameraAdmin() {
                           <rect x="0" y="0" width="1000" height="1000" />
                         </clipPath>
                       </defs>
-                      {rings.length > 0 && (() => {
-                        const active = rings[rings.length - 1];
+                      {(() => {
+                        const active = ring;
                         return (
                           <g clipPath="url(#cam-map-bounds)">
                             {/* Red danger zone outside the active safe ring */}
@@ -526,7 +526,7 @@ function CameraAdmin() {
                               stroke="none"
                             />
                             {/* Static preview of all ring phases */}
-                            {rings.map((p, i) => (
+                            {ringPhases.map((p, i) => (
                               <circle key={`prev-${i}`} cx={p.cx * 1000} cy={p.cy * 1000} r={p.r * 1000}
                                 fill="none" stroke="rgba(255,255,255,0.85)"
                                 strokeWidth={1.6 / mapView.scale}
@@ -542,24 +542,38 @@ function CameraAdmin() {
                           </g>
                         );
                       })()}
-                      {teamPositions.map((t, i) => {
-                        const slot = getSlotColor(i);
+                      {teamPositions.map((t) => {
+                        const slot = getSlotColor(t.slotIdx);
                         const labelW = t.tag.length * 7 + 6;
                         const labelH = 14;
                         return (
-                          <g key={t.id} filter="url(#cam-glow)">
-                            <circle cx={t.x * 1000} cy={t.y * 1000} r={11 / mapView.scale}
-                              fill="none" stroke={slot} strokeWidth={1 / mapView.scale} opacity={0.5} />
-                            <circle cx={t.x * 1000} cy={t.y * 1000} r={6 / mapView.scale}
-                              fill={slot} stroke="rgba(0,0,0,0.8)" strokeWidth={1 / mapView.scale} />
+                          <g key={t.id} opacity={t.isDead ? 0.55 : 1}>
+                            {t.isDead ? (
+                              <g transform={`translate(${t.x * 1000} ${t.y * 1000})`}>
+                                <circle r={9 / mapView.scale} fill="none" stroke={slot} strokeWidth={2 / mapView.scale} opacity={0.9} />
+                                <circle r={5.5 / mapView.scale} fill="#6b7280" stroke="rgba(0,0,0,0.85)" strokeWidth={1 / mapView.scale} />
+                                <path d={`M${-3 / mapView.scale},${-3 / mapView.scale} L${3 / mapView.scale},${3 / mapView.scale} M${3 / mapView.scale},${-3 / mapView.scale} L${-3 / mapView.scale},${3 / mapView.scale}`}
+                                  stroke="#fff" strokeWidth={1.4 / mapView.scale} strokeLinecap="round" />
+                              </g>
+                            ) : (
+                              <g filter="url(#cam-glow)">
+                                <circle cx={t.x * 1000} cy={t.y * 1000} r={11 / mapView.scale}
+                                  fill="none" stroke={slot} strokeWidth={1 / mapView.scale} opacity={0.5} />
+                                <circle cx={t.x * 1000} cy={t.y * 1000} r={6 / mapView.scale}
+                                  fill={slot} stroke="rgba(0,0,0,0.8)" strokeWidth={1 / mapView.scale} />
+                              </g>
+                            )}
                             <g transform={`translate(${t.x * 1000 + 14 / mapView.scale} ${t.y * 1000 - (labelH / 2) / mapView.scale})`}>
                               <rect x={0} y={0}
                                 width={labelW / mapView.scale} height={labelH / mapView.scale}
                                 rx={3 / mapView.scale} ry={3 / mapView.scale}
-                                fill="rgba(0,0,0,0.7)" stroke={slot} strokeWidth={2 / mapView.scale} />
+                                fill="rgba(0,0,0,0.7)"
+                                stroke={t.isDead ? "#9ca3af" : slot}
+                                strokeWidth={2 / mapView.scale}
+                                strokeDasharray={t.isDead ? `${3 / mapView.scale} ${2 / mapView.scale}` : undefined} />
                               <text x={(labelW / 2) / mapView.scale} y={(labelH * 0.72) / mapView.scale}
                                 textAnchor="middle" fontSize={11 / mapView.scale} fontWeight={800}
-                                fill="#fff" fontFamily="Manrope, sans-serif">{t.tag}</text>
+                                fill={t.isDead ? "#d1d5db" : "#fff"} fontFamily="Manrope, sans-serif">{t.tag}</text>
                             </g>
                           </g>
                         );
