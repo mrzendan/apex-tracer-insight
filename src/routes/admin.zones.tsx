@@ -211,12 +211,13 @@ function ZonesAdmin() {
     const stage = stageRef.current;
     if (!stage) { setZoom((z) => clampZoom(z * factor)); return; }
     const rect = stage.getBoundingClientRect();
-    const px = cx ?? rect.width / 2;
-    const py = cy ?? rect.height / 2;
+    // Cursor relative to stage CENTER (element is centered, transformOrigin "center")
+    const dx = (cx ?? rect.width / 2) - rect.width / 2;
+    const dy = (cy ?? rect.height / 2) - rect.height / 2;
     setZoom((z) => {
       const nz = clampZoom(z * factor);
       const k = nz / z;
-      setPan((p) => ({ x: px - (px - p.x) * k, y: py - (py - p.y) * k }));
+      setPan((p) => ({ x: dx - (dx - p.x) * k, y: dy - (dy - p.y) * k }));
       return nz;
     });
   };
@@ -363,11 +364,7 @@ function ZonesAdmin() {
           <div
             style={{
               transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-              transformOrigin: "0 0",
-              position: "absolute",
-              left: "50%",
-              top: "50%",
-              translate: "-50% -50%",
+              transformOrigin: "center center",
               width: `min(100cqw, calc(100cqh * ${W} / ${H}))`,
               height: `min(100cqh, calc(100cqw * ${H} / ${W}))`,
             }}
