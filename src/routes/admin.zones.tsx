@@ -266,7 +266,6 @@ function ZonesAdmin() {
             </button>
           </div>
         </div>
-        <button className="shrink-0 rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">Save</button>
       </header>
 
       {/* Toolbar */}
