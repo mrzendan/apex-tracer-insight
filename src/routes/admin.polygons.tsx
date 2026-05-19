@@ -31,6 +31,8 @@ function PolygonsAdmin() {
   const [draft, setDraft] = useState<{ x: number; y: number }[]>([]);
   const [drag, setDrag] = useState<{ polyId: string; pointIdx: number } | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [copyOpen, setCopyOpen] = useState(false);
 
   const map = allMaps.find((m) => m.id === mapId);
   const mapPolys = useMemo(() => polygons.filter((p) => p.mapId === mapId), [polygons, mapId]);
@@ -94,6 +96,62 @@ function PolygonsAdmin() {
       : active ? "rgba(34,197,94,0.42)" : "rgba(34,197,94,0.22)";
   const strokeFor = (tag: PolygonTag) =>
     tag === "forbidden" ? "#ef4444" : "#22c55e";
+
+  const exportJson = () => {
+    const payload = {
+      mapId,
+      mapName: map?.name,
+      exportedAt: new Date().toISOString(),
+      polygons: mapPolys.map((p) => ({ name: p.name, tag: p.tag, points: p.points })),
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `polygons-${map?.name ?? mapId}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const importJson = async (file: File) => {
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      const arr: Array<{ name?: string; tag?: PolygonTag; points?: { x: number; y: number }[] }> =
+        Array.isArray(data) ? data : data.polygons ?? [];
+      let added = 0;
+      arr.forEach((p, i) => {
+        if (!p.points || p.points.length < 3) return;
+        const tag: PolygonTag = p.tag === "safe" ? "safe" : "forbidden";
+        addPolygon({
+          id: `pg-${Date.now()}-${i}`,
+          mapId,
+          name: p.name || `${tag === "forbidden" ? "Forbidden" : "Safe"} ${mapPolys.length + i + 1}`,
+          tag,
+          points: p.points,
+        });
+        added++;
+      });
+      alert(`Imported ${added} polygon${added === 1 ? "" : "s"}`);
+    } catch (err) {
+      alert(`Import failed: ${(err as Error).message}`);
+    }
+  };
+
+  const copyToMap = (targetMapId: string) => {
+    if (targetMapId === mapId) { setCopyOpen(false); return; }
+    mapPolys.forEach((p, i) => {
+      addPolygon({
+        id: `pg-${Date.now()}-${i}`,
+        mapId: targetMapId,
+        name: p.name,
+        tag: p.tag,
+        points: p.points,
+      });
+    });
+    setCopyOpen(false);
+    alert(`Copied ${mapPolys.length} polygon${mapPolys.length === 1 ? "" : "s"} to ${allMaps.find((m) => m.id === targetMapId)?.name}`);
+  };
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
