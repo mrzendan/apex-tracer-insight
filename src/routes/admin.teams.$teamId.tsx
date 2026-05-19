@@ -593,7 +593,7 @@ function Sparkline({
   const lastDate = dates?.[dates.length - 1];
 
   return (
-    <div className="flex h-[220px] flex-col overflow-hidden rounded-sm border border-border bg-surface-2/40">
+    <div className="flex h-[260px] flex-col overflow-hidden rounded-sm border border-border bg-surface-2/40">
       <div className="flex items-start justify-between gap-2 p-3 pb-2">
         <div>
           <div className="label-eyebrow text-[10px] tracking-wider">{title}</div>
