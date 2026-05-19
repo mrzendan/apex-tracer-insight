@@ -180,10 +180,10 @@ function PolygonsAdmin() {
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <header className="flex shrink-0 flex-wrap items-center gap-3 border-b border-border bg-surface px-6 py-2">
+      <header className="flex h-14 shrink-0 items-center gap-6 border-b border-border bg-surface px-6">
         <h1 className="text-sm font-bold uppercase tracking-wider">Polygons</h1>
-        <span className="text-xs text-muted-foreground">·</span>
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-1">
+          <span className="label-eyebrow mr-2 text-xs">Map</span>
           {allMapsCombined.map((m) => {
             const isCustom = customMaps.some((c) => c.id === m.id);
             const active = m.id === mapId;
@@ -191,10 +191,10 @@ function PolygonsAdmin() {
             return (
               <div
                 key={m.id}
-                className={`group flex items-center gap-1 rounded-sm border px-2 py-1 text-xs transition-colors ${
+                className={`group flex items-center gap-1 rounded-sm border px-2.5 py-1 text-xs font-semibold uppercase tracking-wider transition-colors ${
                   active
-                    ? "border-primary bg-primary/15 text-foreground"
-                    : "border-border bg-background hover:bg-muted"
+                    ? "border-primary/40 bg-primary/10 text-primary"
+                    : "border-border bg-surface-2 text-muted-foreground hover:bg-muted"
                 }`}
               >
                 {renaming ? (
@@ -207,7 +207,7 @@ function PolygonsAdmin() {
                       if (e.key === "Enter") commitRename();
                       if (e.key === "Escape") setRenamingMapId(null);
                     }}
-                    className="w-32 rounded-sm border border-border bg-background px-1 py-0.5 text-xs"
+                    className="w-32 rounded-sm border border-border bg-background px-1 py-0.5 text-xs normal-case tracking-normal"
                   />
                 ) : (
                   <button
@@ -217,7 +217,6 @@ function PolygonsAdmin() {
                       setRenamingMapId(m.id);
                       setRenameValue(m.name);
                     }}
-                    className="uppercase tracking-wider"
                     title={isCustom ? "Double-click to rename" : m.name}
                   >
                     {m.name}
@@ -230,7 +229,7 @@ function PolygonsAdmin() {
                       removeCustomMap(m.id);
                       if (mapId === m.id) setMapId(allMaps[0]?.id ?? "");
                     }}
-                    className="ml-0.5 rounded-sm px-1 text-muted-foreground opacity-0 transition hover:bg-destructive/20 hover:text-destructive group-hover:opacity-100"
+                    className="ml-0.5 rounded-sm px-1 opacity-0 transition hover:bg-destructive/20 hover:text-destructive group-hover:opacity-100"
                     title="Delete custom map"
                   >
                     ×
@@ -241,7 +240,7 @@ function PolygonsAdmin() {
           })}
           <button
             onClick={() => customUploadRef.current?.click()}
-            className="rounded-sm border border-dashed border-border bg-background px-2 py-1 text-xs uppercase tracking-wider text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="ml-1 rounded-sm border border-dashed border-border bg-surface-2 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:bg-muted"
             title="Upload a custom map image"
           >
             + Custom
@@ -250,7 +249,7 @@ function PolygonsAdmin() {
             ref={customUploadRef}
             type="file"
             accept="image/*"
-            className="hidden"
+            hidden
             onChange={(e) => {
               const f = e.target.files?.[0];
               if (f) onUploadCustomMap(f);
