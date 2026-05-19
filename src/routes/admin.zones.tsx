@@ -537,6 +537,39 @@ function ZonesAdmin() {
                 className="mt-2 w-full rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">
                 Download zones.json
               </button>
+              <button
+                onClick={() => importInputRef.current?.click()}
+                className="mt-2 w-full rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">
+                Import zones.json
+              </button>
+              <input
+                ref={importInputRef}
+                type="file"
+                accept="application/json,.json"
+                hidden
+                onChange={async (e) => {
+                  const f = e.target.files?.[0];
+                  e.target.value = "";
+                  if (!f) return;
+                  try {
+                    const data = JSON.parse(await f.text());
+                    const arr: Zone[] = Array.isArray(data) ? data : data.zones ?? [];
+                    const cleaned: Zone[] = arr
+                      .filter((z) => z && typeof z.x === "number" && typeof z.y === "number" && typeof z.w === "number" && typeof z.h === "number")
+                      .map((z, i) => ({
+                        id: z.id || newId(),
+                        name: z.name || `Zone ${i + 1}`,
+                        tag: (z.tag || tags[0]?.id || "team") as Zone["tag"],
+                        x: z.x, y: z.y, w: z.w, h: z.h,
+                      }));
+                    setZones(cleaned);
+                    setSel(cleaned[0]?.id ?? null);
+                    alert(`Imported ${cleaned.length} zone${cleaned.length === 1 ? "" : "s"}`);
+                  } catch (err) {
+                    alert(`Import failed: ${(err as Error).message}`);
+                  }
+                }}
+              />
               <button onClick={() => removeZone(selZone.id)}
                 className="mt-2 w-full rounded-sm border border-destructive/40 bg-destructive/10 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-destructive hover:bg-destructive/20">
                 Delete zone
