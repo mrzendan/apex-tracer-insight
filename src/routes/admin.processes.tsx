@@ -421,12 +421,6 @@ function ProcessesAdmin() {
           <h1 className="text-sm font-bold uppercase tracking-wider">Processes</h1>
           <span className="text-xs text-muted-foreground">· operator control center</span>
         </div>
-        <button
-          onClick={() => draft()}
-          className="rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110"
-        >
-          + New process
-        </button>
       </header>
 
       <div className="flex flex-1 overflow-hidden">
@@ -579,7 +573,7 @@ function ProcessesAdmin() {
         </div>
 
         {/* RIGHT DETAIL PANEL */}
-        {selected && (
+        {selected ? (
           <ProcessDetailPanel
             process={selected}
             match={matches.find((x) => x.id === selected.matchId)}
@@ -588,6 +582,28 @@ function ProcessesAdmin() {
             onClose={() => setSelectedId(null)}
             onAction={(a) => onAction(selected, a)}
           />
+        ) : (
+          <aside className="w-[360px] shrink-0 overflow-auto border-l border-border bg-surface">
+            <div className="sticky top-0 z-10 border-b border-border bg-surface px-4 py-3">
+              <div className="label-eyebrow text-xs">Create</div>
+              <div className="text-xs font-semibold">New process</div>
+            </div>
+            <div className="space-y-4 p-4">
+              <button
+                onClick={() => draft()}
+                className="w-full rounded-sm bg-primary px-3 py-2.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110"
+              >
+                + New process
+              </button>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                Configure a new analysis job — pick a process type, source VOD, map and preset, then start or queue it.
+              </p>
+              <div className="rounded-sm border border-border bg-surface-2 p-3 text-xs">
+                <div className="label-eyebrow mb-1">Tip</div>
+                <div className="text-muted-foreground">Click any row in the table to open its details here.</div>
+              </div>
+            </div>
+          </aside>
         )}
       </div>
 
