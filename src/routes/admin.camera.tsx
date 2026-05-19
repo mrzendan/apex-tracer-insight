@@ -7,25 +7,20 @@ export const Route = createFileRoute("/admin/camera")({ component: CameraAdmin }
 
 /** Camera tracking parameters — consumed by the backend tracker. */
 type TrackingSettings = {
-  // Smoothing / response
-  smoothing: number;          // 0..1 — EMA factor for camera position
-  deadzone: number;           // px in source video where camera doesn't move
-  responseSpeed: number;      // 0..1
-  maxSpeed: number;           // px / frame cap
-  // Zoom
-  zoomMin: number;            // multiplier
+  smoothing: number;
+  deadzone: number;
+  responseSpeed: number;
+  maxSpeed: number;
+  zoomMin: number;
   zoomMax: number;
-  zoomStep: number;           // step zoom granularity
-  zoomLerp: number;           // 0..1 zoom smoothing
-  // Ring / weights
-  ringWeight: number;         // 0..1 — bias toward ring center
-  ringNoise: number;          // 0..1 — tolerated ring jitter
-  teamWeight: number;         // 0..1 — bias toward alive teams centroid
-  // Jump / unlock
-  jumpThreshold: number;      // px movement that triggers re-lock
-  preJumpUnlock: number;      // seconds before predicted jump
-  // Misc
-  ema: number;                // exponential moving average window (frames)
+  zoomStep: number;
+  zoomLerp: number;
+  ringWeight: number;
+  ringNoise: number;
+  teamWeight: number;
+  jumpThreshold: number;
+  preJumpUnlock: number;
+  ema: number;
 };
 
 type Viewport = { x: number; y: number; size: number };
@@ -33,8 +28,8 @@ type Preset = {
   id: string;
   name: string;
   videoUrl: string;
-  cropLeft: number;   // source pixels
-  cropRight: number;  // source pixels
+  cropLeft: number;
+  cropRight: number;
   viewport: Viewport;
   settings: TrackingSettings;
 };
@@ -50,45 +45,86 @@ const baseSettings: TrackingSettings = {
   ema: 14,
 };
 
+const SAMPLE_VIDEO =
+  "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+
 const defaultPresets: Preset[] = [
   {
-    id: "p-step",
-    name: "Step zoom",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-    cropLeft: 420, cropRight: 420,
+    id: "p-step", name: "Step zoom",
+    videoUrl: SAMPLE_VIDEO, cropLeft: 420, cropRight: 420,
     viewport: { x: 0, y: 0, size: 1 },
     settings: { ...baseSettings, zoomLerp: 0.0, zoomStep: 0.25, smoothing: 0.7 },
   },
   {
-    id: "p-ringnoise",
-    name: "Шум кольца",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-    cropLeft: 420, cropRight: 420,
-    viewport: { x: 0.1, y: 0.1, size: 0.7 },
-    settings: { ...baseSettings, ringWeight: 0.85, ringNoise: 0.7, teamWeight: 0.3 },
-  },
-  {
-    id: "p-balance",
-    name: "Баланс",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-    cropLeft: 420, cropRight: 420,
+    id: "p-smooth", name: "Smooth observer",
+    videoUrl: SAMPLE_VIDEO, cropLeft: 420, cropRight: 420,
     viewport: { x: 0.2, y: 0.2, size: 0.6 },
-    settings: { ...baseSettings },
+    settings: { ...baseSettings, smoothing: 0.85, zoomLerp: 0.7, responseSpeed: 0.35, ema: 22 },
   },
   {
-    id: "p-max",
-    name: "Макс. чувств.",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-    cropLeft: 420, cropRight: 420,
+    id: "p-fast", name: "Fast camera",
+    videoUrl: SAMPLE_VIDEO, cropLeft: 420, cropRight: 420,
     viewport: { x: 0.3, y: 0.3, size: 0.4 },
     settings: { ...baseSettings, smoothing: 0.15, responseSpeed: 0.95, maxSpeed: 220, deadzone: 0, jumpThreshold: 60, ema: 3 },
   },
+  {
+    id: "p-lownoise", name: "Low noise",
+    videoUrl: SAMPLE_VIDEO, cropLeft: 420, cropRight: 420,
+    viewport: { x: 0.1, y: 0.1, size: 0.7 },
+    settings: { ...baseSettings, ringWeight: 0.85, ringNoise: 0.7, teamWeight: 0.3, smoothing: 0.75 },
+  },
+  {
+    id: "p-custom", name: "Custom",
+    videoUrl: SAMPLE_VIDEO, cropLeft: 420, cropRight: 420,
+    viewport: { x: 0.2, y: 0.2, size: 0.6 },
+    settings: { ...baseSettings },
+  },
 ];
+
+type ViewMode = "overview" | "graphs" | "settings" | "debug";
+type SplitOpts = {
+  syncMapVideo: boolean;
+  lockZoom: boolean;
+  showRingCenter: boolean;
+  showCameraBbox: boolean;
+};
+
+/** Synthetic event markers placed at fractions of duration for the timeline / charts. */
+type TrackEvent = { t: number; kind: "ring" | "jump" | "relock" | "lost" | "manual"; label: string };
+const eventColor: Record<TrackEvent["kind"], string> = {
+  ring: "#22d3ee",
+  jump: "#ef4444",
+  relock: "#22c55e",
+  lost: "#f59e0b",
+  manual: "#a855f7",
+};
+const eventLabel: Record<TrackEvent["kind"], string> = {
+  ring: "Ring closing",
+  jump: "Jump detected",
+  relock: "Relock",
+  lost: "Lost tracking",
+  manual: "Manual correction",
+};
+
+function buildEvents(duration: number): TrackEvent[] {
+  const frac: Array<[number, TrackEvent["kind"]]> = [
+    [0.15, "jump"], [0.16, "relock"],
+    [0.25, "ring"],
+    [0.35, "lost"],
+    [0.42, "jump"], [0.43, "relock"],
+    [0.50, "manual"],
+    [0.60, "ring"],
+    [0.70, "jump"], [0.71, "relock"],
+    [0.78, "lost"],
+    [0.85, "ring"],
+    [0.92, "jump"], [0.925, "relock"],
+  ];
+  return frac.map(([f, k]) => ({ t: f * duration, kind: k, label: eventLabel[k] }));
+}
 
 function CameraAdmin() {
   const { tournaments, matches } = useAdminStore();
 
-  // Tournament → Match → Map cascade
   const [tournamentId, setTournamentId] = useState(tournaments[0]?.id ?? "");
   const tournamentMatches = useMemo(
     () => matches.filter((m) => m.tournamentId === tournamentId),
@@ -102,7 +138,6 @@ function CameraAdmin() {
   useEffect(() => { setMapId(matchMapIds[0] ?? allMaps[0].id); }, [matchId]);
   const map = allMaps.find((m) => m.id === mapId) ?? allMaps[0];
 
-  // Presets / camera state
   const [presets, setPresets] = useState<Preset[]>(defaultPresets);
   const [activePresetId, setActivePresetId] = useState<string>(defaultPresets[0].id);
   const active = presets.find((p) => p.id === activePresetId) ?? presets[0];
@@ -116,8 +151,14 @@ function CameraAdmin() {
   const [time, setTime] = useState(0);
   const [duration, setDuration] = useState(60);
   const [playing, setPlaying] = useState(false);
-
   const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  // View mode + split overlay toggles
+  const [viewMode, setViewMode] = useState<ViewMode>("overview");
+  const [splitOpts, setSplitOpts] = useState<SplitOpts>({
+    syncMapVideo: true, lockZoom: false, showRingCenter: true, showCameraBbox: true,
+  });
+  const [showOriginal, setShowOriginal] = useState(true);
 
   const loadPreset = (id: string) => {
     const p = presets.find((x) => x.id === id);
@@ -148,7 +189,6 @@ function CameraAdmin() {
     setActivePresetId(next[0].id);
   };
 
-  // Video timing
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
@@ -179,7 +219,19 @@ function CameraAdmin() {
     setTime(t);
   };
 
-  // Synthetic team positions over time (orbit around center)
+  const events = useMemo(() => buildEvents(duration), [duration]);
+
+  // Quality metrics derived from current settings (so they react to tuning).
+  const quality = useMemo(() => {
+    const smoothness = settings.smoothing * 0.5 + (1 - settings.zoomLerp) * 0.1 + settings.ringWeight * 0.1;
+    const stability = Math.max(0, 1 - settings.responseSpeed * 0.4 - (settings.maxSpeed / 500) * 0.3);
+    const trackingQ = Math.round(Math.max(0, Math.min(1, 0.4 + smoothness * 0.4 + stability * 0.4)) * 100);
+    const jumpEvents = events.filter((e) => e.kind === "jump").length;
+    const lostFrames = Math.round(18 + settings.responseSpeed * 30 - settings.smoothing * 16);
+    const avgConfidence = Math.max(0, Math.min(1, 0.55 + settings.smoothing * 0.25 + settings.ringWeight * 0.1));
+    return { trackingQ, jumpEvents, lostFrames: Math.max(0, lostFrames), avgConfidence };
+  }, [settings, events]);
+
   const teamPositions = useMemo(() => {
     const t = time;
     return seedTeams.slice(0, 12).map((tm, i) => {
@@ -187,16 +239,13 @@ function CameraAdmin() {
       const r = 0.18 + ((i * 37) % 17) / 100 + Math.sin(t * 0.4 + i) * 0.04;
       return {
         id: tm.id, tag: tm.tag, color: tm.color,
-        x: 0.5 + Math.cos(a) * r,
-        y: 0.5 + Math.sin(a) * r,
+        x: 0.5 + Math.cos(a) * r, y: 0.5 + Math.sin(a) * r,
       };
     });
   }, [time]);
 
-  // Shrinking ring areas — concentric rings that close in over the match duration.
   const rings = useMemo(() => {
     const t = duration > 0 ? Math.max(0, Math.min(1, time / duration)) : 0;
-    // (start radius, end radius, color, label) — drift centers slightly with time.
     const drift = (k: number) => ({
       cx: 0.5 + Math.sin(t * 1.6 + k) * 0.08 * (1 - t),
       cy: 0.5 + Math.cos(t * 1.3 + k) * 0.08 * (1 - t),
@@ -209,7 +258,7 @@ function CameraAdmin() {
     ].filter((r) => r.r > 0.015);
   }, [time, duration]);
 
-  // Viewport drag/resize on map
+  // Viewport drag on map (disabled when locked)
   const mapRef = useRef<HTMLDivElement | null>(null);
   const [vpDrag, setVpDrag] = useState<null | { kind: "move" | "resize"; startX: number; startY: number; v: Viewport }>(null);
   useEffect(() => {
@@ -240,13 +289,18 @@ function CameraAdmin() {
     };
   }, [vpDrag]);
 
-  // Crop math: source is SRC_W x SRC_H, we display the center (SRC_W - cropL - cropR) x SRC_H,
-  // scaled to fill the container that has aspect-ratio = visible/SRC_H.
   const visibleW = Math.max(1, SRC_W - cropLeft - cropRight);
   const visibleAspect = visibleW / SRC_H;
 
+  const resetViewport = () => setViewport({ x: 0.2, y: 0.2, size: 0.6 });
+  const fitMap = () => setViewport({ x: 0, y: 0, size: 1 });
+
+  const showCharts = viewMode === "graphs" || viewMode === "debug";
+  const compactSplit = viewMode === "graphs"; // shrink video/map when full charts are on
+
   return (
     <div className="flex h-full flex-col overflow-hidden">
+      {/* Header */}
       <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-surface px-6">
         <div className="flex items-center gap-3">
           <h1 className="text-sm font-bold uppercase tracking-wider">Camera tracking</h1>
@@ -268,21 +322,34 @@ function CameraAdmin() {
             })}
           </select>
         </div>
-        <div className="flex items-center gap-2">
-          <select value={activePresetId} onChange={(e) => loadPreset(e.target.value)}
-            className="rounded-sm border border-border bg-background px-2 py-1 text-xs">
-            {presets.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
-          <button onClick={updateActivePreset} className="rounded-sm border border-border bg-surface px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted">Update</button>
-          <button onClick={saveCurrentAsPreset} className="rounded-sm border border-border bg-surface px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted">Save as…</button>
-          <button onClick={deleteActivePreset} className="rounded-sm border border-destructive/40 bg-surface px-2 py-1 text-xs uppercase tracking-wider text-destructive hover:bg-destructive/10">Delete</button>
+        {/* View mode tabs */}
+        <div className="flex items-center gap-1">
+          <span className="label-eyebrow mr-2 text-xs">View</span>
+          {(["overview", "graphs", "settings", "debug"] as ViewMode[]).map((m) => (
+            <button key={m} onClick={() => setViewMode(m)}
+              className={`rounded-sm border px-2.5 py-1 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                m === viewMode ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface-2 text-muted-foreground hover:bg-muted"
+              }`}>{m}</button>
+          ))}
         </div>
       </header>
 
+      {/* Quality status bar */}
+      <QualityBar quality={quality} preset={active.name} />
+
       <div className="flex flex-1 overflow-hidden">
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-          <div className="grid min-h-0 flex-1 grid-cols-2 gap-3 p-3">
-            {/* Video player — source 1920×1080, crop 420px each side by default */}
+          {/* Split view controls */}
+          <SplitControls
+            opts={splitOpts}
+            onChange={setSplitOpts}
+            onReset={resetViewport}
+            onFit={fitMap}
+          />
+
+          {/* Video + Map */}
+          <div className={`grid min-h-0 ${compactSplit ? "flex-[0_0_38%]" : "flex-1"} grid-cols-2 gap-3 p-3`}>
+            {/* Video */}
             <div className="hud-panel relative flex min-h-0 flex-col overflow-hidden bg-black">
               <div className="flex items-center justify-between border-b border-border bg-surface px-3 py-1.5">
                 <div className="label-eyebrow text-xs">Observer video · crop L{cropLeft} / R{cropRight} px</div>
@@ -302,10 +369,11 @@ function CameraAdmin() {
                       left: `${-(cropLeft / visibleW) * 100}%`,
                       maxWidth: "none",
                     }}
-                    playsInline
-                    preload="metadata"
-                    crossOrigin="anonymous"
+                    playsInline preload="metadata" crossOrigin="anonymous"
                   />
+                  {splitOpts.showCameraBbox && (
+                    <div className="pointer-events-none absolute inset-0 border-2 border-dashed border-emerald-400/70" />
+                  )}
                 </div>
               </div>
             </div>
@@ -322,172 +390,305 @@ function CameraAdmin() {
                   <svg viewBox="0 0 1000 1000" preserveAspectRatio="none" className="pointer-events-none absolute inset-0 h-full w-full">
                     {rings.map((r, i) => (
                       <g key={`ring-${i}`}>
-                        <circle
-                          cx={r.cx * 1000}
-                          cy={r.cy * 1000}
-                          r={r.r * 1000}
-                          fill="none"
-                          stroke={r.color}
-                          strokeWidth={2}
-                          strokeDasharray="6 4"
-                          opacity={0.85}
-                        />
-                        <circle
-                          cx={r.cx * 1000}
-                          cy={r.cy * 1000}
-                          r={r.r * 1000}
-                          fill={r.color}
-                          opacity={0.06}
-                        />
-                        <text
-                          x={r.cx * 1000}
-                          y={(r.cy - r.r) * 1000 - 6}
-                          textAnchor="middle"
-                          fontSize={11}
-                          fill={r.color}
-                          stroke="#000"
-                          strokeWidth={2}
-                          paintOrder="stroke"
-                          className="font-mono"
-                        >{r.label}</text>
+                        <circle cx={r.cx * 1000} cy={r.cy * 1000} r={r.r * 1000}
+                          fill="none" stroke={r.color} strokeWidth={2} strokeDasharray="6 4" opacity={0.85} />
+                        <circle cx={r.cx * 1000} cy={r.cy * 1000} r={r.r * 1000}
+                          fill={r.color} opacity={0.06} />
+                        {splitOpts.showRingCenter && (
+                          <g>
+                            <circle cx={r.cx * 1000} cy={r.cy * 1000} r={3} fill={r.color} />
+                            <line x1={r.cx * 1000 - 8} y1={r.cy * 1000} x2={r.cx * 1000 + 8} y2={r.cy * 1000} stroke={r.color} strokeWidth={1} />
+                            <line x1={r.cx * 1000} y1={r.cy * 1000 - 8} x2={r.cx * 1000} y2={r.cy * 1000 + 8} stroke={r.color} strokeWidth={1} />
+                          </g>
+                        )}
+                        <text x={r.cx * 1000} y={(r.cy - r.r) * 1000 - 6} textAnchor="middle"
+                          fontSize={11} fill={r.color} stroke="#000" strokeWidth={2}
+                          paintOrder="stroke" className="font-mono">{r.label}</text>
                       </g>
                     ))}
                     {teamPositions.map((t) => (
                       <g key={t.id}>
                         <circle cx={t.x * 1000} cy={t.y * 1000} r={10} fill={t.color} stroke="#000" strokeWidth={2} />
-                        <text x={t.x * 1000} y={t.y * 1000 - 14} textAnchor="middle" fontSize={11} fill="#fff" stroke="#000" strokeWidth={3} paintOrder="stroke" className="font-mono">{t.tag}</text>
+                        <text x={t.x * 1000} y={t.y * 1000 - 14} textAnchor="middle" fontSize={11} fill="#fff"
+                          stroke="#000" strokeWidth={3} paintOrder="stroke" className="font-mono">{t.tag}</text>
                       </g>
                     ))}
                   </svg>
                   <div
-                    className="absolute border-2 border-primary"
+                    className={`absolute border-2 border-primary ${splitOpts.lockZoom ? "" : "cursor-move"}`}
                     style={{
                       left: `${viewport.x * 100}%`, top: `${viewport.y * 100}%`,
                       width: `${viewport.size * 100}%`, height: `${viewport.size * 100}%`,
-                      boxShadow: "0 0 0 9999px rgba(0,0,0,0.35) inset", cursor: "move",
+                      boxShadow: "0 0 0 9999px rgba(0,0,0,0.35) inset",
                     }}
-                    onMouseDown={(e) => setVpDrag({ kind: "move", startX: e.clientX, startY: e.clientY, v: viewport })}
+                    onMouseDown={(e) => { if (!splitOpts.lockZoom) setVpDrag({ kind: "move", startX: e.clientX, startY: e.clientY, v: viewport }); }}
                   >
-                    <div className="absolute -bottom-1 -right-1 h-3 w-3 cursor-nwse-resize border border-primary bg-background"
-                      onMouseDown={(e) => { e.stopPropagation(); setVpDrag({ kind: "resize", startX: e.clientX, startY: e.clientY, v: viewport }); }}
-                    />
+                    {!splitOpts.lockZoom && (
+                      <div className="absolute -bottom-1 -right-1 h-3 w-3 cursor-nwse-resize border border-primary bg-background"
+                        onMouseDown={(e) => { e.stopPropagation(); setVpDrag({ kind: "resize", startX: e.clientX, startY: e.clientY, v: viewport }); }} />
+                    )}
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
+          {/* Transport */}
           <div className="shrink-0 border-t border-border bg-surface px-3 py-2">
             <div className="flex items-center gap-3">
               <button onClick={togglePlay} className="rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">
                 {playing ? "Pause" : "Play"}
               </button>
               <span className="text-mono text-xs text-muted-foreground">{fmt(time)}</span>
-              <input type="range" min={0} max={duration} step={0.05} value={time}
-                onChange={(e) => seek(Number(e.target.value))} className="flex-1 accent-primary" />
+              <div className="relative flex-1">
+                <input type="range" min={0} max={duration} step={0.05} value={time}
+                  onChange={(e) => seek(Number(e.target.value))} className="w-full accent-primary" />
+                {/* Event ticks on timeline */}
+                <div className="pointer-events-none absolute inset-x-0 -bottom-1 h-1">
+                  {events.map((ev, i) => (
+                    <span key={i}
+                      className="absolute top-0 h-1 w-0.5"
+                      style={{ left: `${(ev.t / Math.max(duration, 0.001)) * 100}%`, background: eventColor[ev.kind] }}
+                      title={`${ev.label} · ${fmt(ev.t)}`}
+                    />
+                  ))}
+                </div>
+              </div>
               <span className="text-mono text-xs text-muted-foreground">{fmt(duration)}</span>
             </div>
           </div>
 
-          <OscillationChart time={time} duration={duration} onSeek={seek} />
+          {/* Charts area (modes: graphs/debug) */}
+          {showCharts && (
+            <div className="min-h-0 flex-1 overflow-auto border-t border-border bg-background">
+              <ChartsPanel
+                time={time} duration={duration} onSeek={seek}
+                events={events} showOriginal={showOriginal}
+                onToggleOriginal={() => setShowOriginal((v) => !v)}
+              />
+              {viewMode === "debug" && <DebugPanel settings={settings} viewport={viewport} quality={quality} events={events} />}
+            </div>
+          )}
         </div>
 
-        {/* Tracking settings */}
-        <aside className="w-80 shrink-0 overflow-auto border-l border-border bg-surface">
-          <div className="border-b border-border px-4 py-3">
-            <div className="label-eyebrow text-xs">Camera tracking settings</div>
-            <div className="mt-0.5 text-xs text-muted-foreground">Sent to backend tracker · preset: <span className="text-foreground">{active.name}</span></div>
-          </div>
-          <div className="space-y-4 p-4">
-            <Field label="Video URL">
-              <input value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)}
-                className="w-full rounded-sm border border-border bg-background px-2 py-1.5 text-xs text-mono"
-                placeholder="https://…/observer.mp4" />
-            </Field>
-
-            <div className="grid grid-cols-2 gap-2">
-              <NumField label="Crop L (px)" value={cropLeft} min={0} max={900} step={10} onChange={setCropLeft} />
-              <NumField label="Crop R (px)" value={cropRight} min={0} max={900} step={10} onChange={setCropRight} />
-            </div>
-
-            <Section title="Smoothing / response">
-              <SliderField label="Smoothing" value={settings.smoothing} min={0} max={1} step={0.01}
-                onChange={(v) => setSettings({ ...settings, smoothing: v })} />
-              <SliderField label="Response speed" value={settings.responseSpeed} min={0} max={1} step={0.01}
-                onChange={(v) => setSettings({ ...settings, responseSpeed: v })} />
-              <NumField label="Deadzone (px)" value={settings.deadzone} min={0} max={200} step={1}
-                onChange={(v) => setSettings({ ...settings, deadzone: v })} />
-              <NumField label="Max speed (px/frame)" value={settings.maxSpeed} min={1} max={500} step={1}
-                onChange={(v) => setSettings({ ...settings, maxSpeed: v })} />
-              <NumField label="EMA window (frames)" value={settings.ema} min={1} max={60} step={1}
-                onChange={(v) => setSettings({ ...settings, ema: v })} />
-            </Section>
-
-            <Section title="Zoom">
-              <div className="grid grid-cols-2 gap-2">
-                <NumField label="Zoom min" value={settings.zoomMin} min={0.5} max={3} step={0.05}
-                  onChange={(v) => setSettings({ ...settings, zoomMin: v })} />
-                <NumField label="Zoom max" value={settings.zoomMax} min={1} max={5} step={0.05}
-                  onChange={(v) => setSettings({ ...settings, zoomMax: v })} />
-              </div>
-              <NumField label="Zoom step" value={settings.zoomStep} min={0} max={1} step={0.01}
-                onChange={(v) => setSettings({ ...settings, zoomStep: v })} />
-              <SliderField label="Zoom lerp" value={settings.zoomLerp} min={0} max={1} step={0.01}
-                onChange={(v) => setSettings({ ...settings, zoomLerp: v })} />
-            </Section>
-
-            <Section title="Ring / team weighting">
-              <SliderField label="Ring weight" value={settings.ringWeight} min={0} max={1} step={0.01}
-                onChange={(v) => setSettings({ ...settings, ringWeight: v })} />
-              <SliderField label="Ring noise tolerance" value={settings.ringNoise} min={0} max={1} step={0.01}
-                onChange={(v) => setSettings({ ...settings, ringNoise: v })} />
-              <SliderField label="Team weight" value={settings.teamWeight} min={0} max={1} step={0.01}
-                onChange={(v) => setSettings({ ...settings, teamWeight: v })} />
-            </Section>
-
-            <Section title="Jump / unlock">
-              <NumField label="Jump threshold (px)" value={settings.jumpThreshold} min={0} max={1000} step={5}
-                onChange={(v) => setSettings({ ...settings, jumpThreshold: v })} />
-              <NumField label="Pre-jump unlock (s)" value={settings.preJumpUnlock} min={0} max={3} step={0.05}
-                onChange={(v) => setSettings({ ...settings, preJumpUnlock: v })} />
-            </Section>
-
-            <div className="border-t border-border pt-3">
-              <div className="label-eyebrow mb-2 text-xs">Presets ({presets.length})</div>
-              <ul className="space-y-1">
-                {presets.map((p) => (
-                  <li key={p.id}>
-                    <button onClick={() => loadPreset(p.id)} className={`w-full rounded-sm border px-2 py-1.5 text-left text-xs hover:bg-muted ${p.id === activePresetId ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface-2"}`}>
-                      <div className="font-semibold">{p.name}</div>
-                      <div className="text-mono text-xs text-muted-foreground">smooth {p.settings.smoothing.toFixed(2)} · zoomLerp {p.settings.zoomLerp.toFixed(2)} · ema {p.settings.ema}</div>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </aside>
+        {/* Settings sidebar (always visible) */}
+        <SettingsSidebar
+          viewMode={viewMode}
+          activeName={active.name}
+          videoUrl={videoUrl} setVideoUrl={setVideoUrl}
+          cropLeft={cropLeft} setCropLeft={setCropLeft}
+          cropRight={cropRight} setCropRight={setCropRight}
+          settings={settings} setSettings={setSettings}
+          presets={presets} activePresetId={activePresetId}
+          loadPreset={loadPreset}
+          updateActivePreset={updateActivePreset}
+          saveCurrentAsPreset={saveCurrentAsPreset}
+          deleteActivePreset={deleteActivePreset}
+        />
       </div>
     </div>
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div><div className="label-eyebrow mb-1 text-xs">{label}</div>{children}</div>;
-}
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+/* ---------- Quality bar ---------- */
+function QualityBar({ quality, preset }: {
+  quality: { trackingQ: number; jumpEvents: number; lostFrames: number; avgConfidence: number };
+  preset: string;
+}) {
+  const tone = quality.trackingQ >= 80 ? "text-emerald-400" : quality.trackingQ >= 60 ? "text-amber-400" : "text-destructive";
   return (
-    <div className="border-t border-border pt-3">
-      <div className="label-eyebrow mb-2 text-xs">{title}</div>
-      <div className="space-y-2">{children}</div>
+    <div className="flex shrink-0 items-center gap-6 border-b border-border bg-surface-2 px-6 py-2">
+      <Stat label="Tracking quality" value={`${quality.trackingQ}%`} valueClass={tone} />
+      <Stat label="Jump events" value={quality.jumpEvents.toString()} />
+      <Stat label="Lost frames" value={quality.lostFrames.toString()} />
+      <Stat label="Avg confidence" value={quality.avgConfidence.toFixed(2)} />
+      <div className="ml-auto text-xs text-muted-foreground">
+        preset · <span className="text-foreground">{preset}</span>
+      </div>
     </div>
   );
+}
+function Stat({ label, value, valueClass = "" }: { label: string; value: string; valueClass?: string }) {
+  return (
+    <div className="flex items-baseline gap-2">
+      <span className="label-eyebrow text-xs">{label}</span>
+      <span className={`text-mono text-sm font-semibold ${valueClass}`}>{value}</span>
+    </div>
+  );
+}
+
+/* ---------- Split controls ---------- */
+function SplitControls({ opts, onChange, onReset, onFit }: {
+  opts: SplitOpts;
+  onChange: (next: SplitOpts) => void;
+  onReset: () => void;
+  onFit: () => void;
+}) {
+  const toggle = (k: keyof SplitOpts) => onChange({ ...opts, [k]: !opts[k] });
+  return (
+    <div className="flex shrink-0 flex-wrap items-center gap-1 border-b border-border bg-surface px-3 py-1.5">
+      <span className="label-eyebrow mr-2 text-xs">Split view</span>
+      <Toggle active={opts.syncMapVideo} onClick={() => toggle("syncMapVideo")}>Sync map/video</Toggle>
+      <Toggle active={opts.lockZoom} onClick={() => toggle("lockZoom")}>Lock zoom</Toggle>
+      <Toggle active={opts.showRingCenter} onClick={() => toggle("showRingCenter")}>Show ring center</Toggle>
+      <Toggle active={opts.showCameraBbox} onClick={() => toggle("showCameraBbox")}>Show camera bbox</Toggle>
+      <span className="mx-2 h-4 w-px bg-border" />
+      <button onClick={onReset} className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:bg-muted">Reset viewport</button>
+      <button onClick={onFit} className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:bg-muted">Fit map</button>
+    </div>
+  );
+}
+function Toggle({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button onClick={onClick}
+      className={`rounded-sm border px-2 py-1 text-xs font-semibold uppercase tracking-wider transition-colors ${
+        active ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface-2 text-muted-foreground hover:bg-muted"
+      }`}>
+      {children}
+    </button>
+  );
+}
+
+/* ---------- Settings sidebar ---------- */
+function SettingsSidebar(props: {
+  viewMode: ViewMode;
+  activeName: string;
+  videoUrl: string; setVideoUrl: (v: string) => void;
+  cropLeft: number; setCropLeft: (v: number) => void;
+  cropRight: number; setCropRight: (v: number) => void;
+  settings: TrackingSettings; setSettings: (v: TrackingSettings) => void;
+  presets: Preset[]; activePresetId: string;
+  loadPreset: (id: string) => void;
+  updateActivePreset: () => void;
+  saveCurrentAsPreset: () => void;
+  deleteActivePreset: () => void;
+}) {
+  const wide = props.viewMode === "settings";
+  const { settings, setSettings } = props;
+  return (
+    <aside className={`${wide ? "w-[420px]" : "w-80"} shrink-0 overflow-auto border-l border-border bg-surface`}>
+      <div className="border-b border-border px-4 py-3">
+        <div className="label-eyebrow text-xs">Camera tracking settings</div>
+        <div className="mt-0.5 text-xs text-muted-foreground">Sent to backend tracker · preset: <span className="text-foreground">{props.activeName}</span></div>
+      </div>
+
+      <div className="space-y-1 p-3">
+        <Collapsible title="Source" defaultOpen>
+          <Field label="Video URL">
+            <input value={props.videoUrl} onChange={(e) => props.setVideoUrl(e.target.value)}
+              className="text-mono w-full rounded-sm border border-border bg-background px-2 py-1.5 text-xs"
+              placeholder="https://…/observer.mp4" />
+          </Field>
+        </Collapsible>
+
+        <Collapsible title="Crop">
+          <div className="grid grid-cols-2 gap-2">
+            <NumField label="Crop L (px)" value={props.cropLeft} min={0} max={900} step={10} onChange={props.setCropLeft} />
+            <NumField label="Crop R (px)" value={props.cropRight} min={0} max={900} step={10} onChange={props.setCropRight} />
+          </div>
+        </Collapsible>
+
+        <Collapsible title="Smoothing / response" defaultOpen>
+          <SliderField label="Smoothing" value={settings.smoothing} min={0} max={1} step={0.01}
+            onChange={(v) => setSettings({ ...settings, smoothing: v })} />
+          <SliderField label="Response speed" value={settings.responseSpeed} min={0} max={1} step={0.01}
+            onChange={(v) => setSettings({ ...settings, responseSpeed: v })} />
+          <NumField label="Deadzone (px)" value={settings.deadzone} min={0} max={200} step={1}
+            onChange={(v) => setSettings({ ...settings, deadzone: v })} />
+          <NumField label="Max speed (px/frame)" value={settings.maxSpeed} min={1} max={500} step={1}
+            onChange={(v) => setSettings({ ...settings, maxSpeed: v })} />
+          <NumField label="EMA window (frames)" value={settings.ema} min={1} max={60} step={1}
+            onChange={(v) => setSettings({ ...settings, ema: v })} />
+        </Collapsible>
+
+        <Collapsible title="Zoom">
+          <div className="grid grid-cols-2 gap-2">
+            <NumField label="Zoom min" value={settings.zoomMin} min={0.5} max={3} step={0.05}
+              onChange={(v) => setSettings({ ...settings, zoomMin: v })} />
+            <NumField label="Zoom max" value={settings.zoomMax} min={1} max={5} step={0.05}
+              onChange={(v) => setSettings({ ...settings, zoomMax: v })} />
+          </div>
+          <NumField label="Zoom step" value={settings.zoomStep} min={0} max={1} step={0.01}
+            onChange={(v) => setSettings({ ...settings, zoomStep: v })} />
+          <SliderField label="Zoom lerp" value={settings.zoomLerp} min={0} max={1} step={0.01}
+            onChange={(v) => setSettings({ ...settings, zoomLerp: v })} />
+        </Collapsible>
+
+        <Collapsible title="Ring / team weighting">
+          <SliderField label="Ring weight" value={settings.ringWeight} min={0} max={1} step={0.01}
+            onChange={(v) => setSettings({ ...settings, ringWeight: v })} />
+          <SliderField label="Ring noise tolerance" value={settings.ringNoise} min={0} max={1} step={0.01}
+            onChange={(v) => setSettings({ ...settings, ringNoise: v })} />
+          <SliderField label="Team weight" value={settings.teamWeight} min={0} max={1} step={0.01}
+            onChange={(v) => setSettings({ ...settings, teamWeight: v })} />
+        </Collapsible>
+
+        <Collapsible title="Advanced">
+          <NumField label="Jump threshold (px)" value={settings.jumpThreshold} min={0} max={1000} step={5}
+            onChange={(v) => setSettings({ ...settings, jumpThreshold: v })} />
+          <NumField label="Pre-jump unlock (s)" value={settings.preJumpUnlock} min={0} max={3} step={0.05}
+            onChange={(v) => setSettings({ ...settings, preJumpUnlock: v })} />
+        </Collapsible>
+      </div>
+
+      {/* Preset manager — buttons + actions, near the settings */}
+      <div className="sticky bottom-0 z-10 border-t border-border bg-surface/95 px-3 py-3 backdrop-blur">
+        <div className="label-eyebrow mb-2 text-xs">Presets ({props.presets.length})</div>
+        <div className="mb-3 flex flex-wrap gap-1.5">
+          {props.presets.map((p) => (
+            <button key={p.id} onClick={() => props.loadPreset(p.id)}
+              className={`rounded-sm border px-2.5 py-1 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                p.id === props.activePresetId ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface-2 text-muted-foreground hover:bg-muted"
+              }`}>
+              {p.name}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <button onClick={props.updateActivePreset}
+            className="flex-1 rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">
+            Update
+          </button>
+          <button onClick={props.saveCurrentAsPreset}
+            className="flex-1 rounded-sm border border-border bg-surface-2 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">
+            Save as…
+          </button>
+          <button onClick={props.deleteActivePreset}
+            className="rounded-sm border border-destructive/40 bg-surface-2 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-destructive hover:bg-destructive/10">
+            Delete
+          </button>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+/* ---------- Collapsible ---------- */
+function Collapsible({ title, defaultOpen = false, children }: {
+  title: string; defaultOpen?: boolean; children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="rounded-sm border border-border bg-surface-2">
+      <button onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between px-3 py-2 text-left hover:bg-muted">
+        <span className="label-eyebrow text-xs">{title}</span>
+        <span className={`text-xs text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`}>▶</span>
+      </button>
+      {open && <div className="space-y-2 border-t border-border px-3 py-2">{children}</div>}
+    </div>
+  );
+}
+
+/* ---------- Reusable inputs ---------- */
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return <div><div className="label-eyebrow mb-1 text-xs">{label}</div>{children}</div>;
 }
 function SliderField({ label, value, min, max, step, onChange }: { label: string; value: number; min: number; max: number; step: number; onChange: (v: number) => void }) {
   return (
     <div>
       <div className="mb-1 flex items-baseline justify-between text-xs">
-        <span className="text-muted-foreground uppercase tracking-wider">{label}</span>
+        <span className="uppercase tracking-wider text-muted-foreground">{label}</span>
         <span className="text-mono">{value.toFixed(2)}</span>
       </div>
       <input type="range" min={min} max={max} step={step} value={value}
@@ -501,7 +702,7 @@ function NumField({ label, value, min, max, step, onChange }: { label: string; v
       <div className="label-eyebrow mb-1 text-xs">{label}</div>
       <input type="number" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full rounded-sm border border-border bg-background px-2 py-1 text-xs text-mono" />
+        className="text-mono w-full rounded-sm border border-border bg-background px-2 py-1 text-xs" />
     </div>
   );
 }
@@ -512,86 +713,215 @@ function fmt(s: number) {
   return `${m}:${sec}`;
 }
 
-/** Multi-lane oscillation chart with sharp/jagged signals. */
-function OscillationChart({ time, duration, onSeek }: { time: number; duration: number; onSeek: (t: number) => void }) {
-  const lanes = useMemo(() => ([
-    { key: "x",      label: "X: camera raw / smoothed",       color: "#22d3a8", color2: "#f59e0b", range: "484.7 … 827.0" },
-    { key: "y",      label: "Y: camera raw / smoothed",       color: "#22d3a8", color2: "#f59e0b", range: "334.0 … 661.0" },
-    { key: "zoom",   label: "Zoom ratio · effective",         color: "#22d3ee", color2: "#a5f3fc", range: "-0.1 … 2.1"   },
-    { key: "radius", label: "Ring radius · zoomedRadius",     color: "#ec4899", color2: "#f9a8d4", range: "139.3 … 562.7" },
-    { key: "ring",   label: "Ring number",                    color: "#94a3b8", color2: "#cbd5e1", range: "0.6 … 2.4"    },
-    { key: "move",   label: "moveDist · jumpScore",           color: "#ef4444", color2: "#22c55e", range: "-45.6 … 805.3" },
-  ]), []);
+/* ---------- Charts panel: grouped collapsible chart sections ---------- */
+function ChartsPanel({ time, duration, onSeek, events, showOriginal, onToggleOriginal }: {
+  time: number; duration: number; onSeek: (t: number) => void;
+  events: TrackEvent[]; showOriginal: boolean; onToggleOriginal: () => void;
+}) {
+  return (
+    <div>
+      <div className="flex flex-wrap items-center gap-4 border-b border-border bg-surface px-3 py-1.5 text-xs text-muted-foreground">
+        <div className="flex items-center gap-1"><span className="h-2 w-3 bg-emerald-400" />smoothed</div>
+        <div className="flex items-center gap-1"><span className="h-2 w-3 bg-zinc-400" />raw</div>
+        <span className="mx-1 h-4 w-px bg-border" />
+        {(Object.keys(eventColor) as TrackEvent["kind"][]).map((k) => (
+          <div key={k} className="flex items-center gap-1">
+            <span className="h-3 w-0.5" style={{ background: eventColor[k] }} />
+            {eventLabel[k]}
+          </div>
+        ))}
+        <span className="ml-auto" />
+        <button onClick={onToggleOriginal}
+          className={`rounded-sm border px-2 py-1 text-xs font-semibold uppercase tracking-wider transition-colors ${
+            showOriginal ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface-2 text-muted-foreground hover:bg-muted"
+          }`}>
+          {showOriginal ? "Before / After" : "After only"}
+        </button>
+      </div>
+      <div className="space-y-2 p-2">
+        <ChartGroup title="Position graphs" defaultOpen lanes={[
+          { key: "x", label: "X: camera raw / smoothed", range: "484.7 … 827.0", seed: 1 },
+          { key: "y", label: "Y: camera raw / smoothed", range: "334.0 … 661.0", seed: 2 },
+        ]} time={time} duration={duration} onSeek={onSeek} events={events} showOriginal={showOriginal} />
+        <ChartGroup title="Zoom graphs" defaultOpen lanes={[
+          { key: "zoom", label: "Zoom ratio · effective", range: "-0.1 … 2.1", seed: 3 },
+        ]} time={time} duration={duration} onSeek={onSeek} events={events} showOriginal={showOriginal} />
+        <ChartGroup title="Ring graphs" lanes={[
+          { key: "radius", label: "Ring radius · zoomedRadius", range: "139.3 … 562.7", seed: 4 },
+          { key: "ring", label: "Ring number", range: "0.6 … 2.4", seed: 5 },
+        ]} time={time} duration={duration} onSeek={onSeek} events={events} showOriginal={showOriginal} />
+        <ChartGroup title="Jump score" lanes={[
+          { key: "move", label: "moveDist · jumpScore", range: "-45.6 … 805.3", seed: 6 },
+        ]} time={time} duration={duration} onSeek={onSeek} events={events} showOriginal={showOriginal} />
+      </div>
+    </div>
+  );
+}
 
-  const W = 1200, H = 80, N = 600;
+type LaneSpec = { key: string; label: string; range: string; seed: number };
+function ChartGroup({ title, lanes, time, duration, onSeek, events, showOriginal, defaultOpen = false }: {
+  title: string; lanes: LaneSpec[]; time: number; duration: number;
+  onSeek: (t: number) => void; events: TrackEvent[]; showOriginal: boolean; defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  const [height, setHeight] = useState(90);
+  return (
+    <div className="rounded-sm border border-border bg-surface">
+      <div className="flex items-center justify-between border-b border-border px-3 py-1.5">
+        <button onClick={() => setOpen((v) => !v)} className="flex items-center gap-2">
+          <span className={`text-xs text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`}>▶</span>
+          <span className="label-eyebrow text-xs">{title}</span>
+          <span className="text-xs text-muted-foreground">· {lanes.length} lane{lanes.length === 1 ? "" : "s"}</span>
+        </button>
+        {open && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span className="label-eyebrow">H</span>
+            <input type="range" min={50} max={180} step={5} value={height}
+              onChange={(e) => setHeight(Number(e.target.value))} className="w-32 accent-primary" />
+            <span className="text-mono w-8 text-right">{height}px</span>
+          </div>
+        )}
+      </div>
+      {open && (
+        <ChartLanes lanes={lanes} height={height} time={time} duration={duration}
+          onSeek={onSeek} events={events} showOriginal={showOriginal} />
+      )}
+    </div>
+  );
+}
 
-  // Deterministic PRNG so each lane is stable but jagged.
+function ChartLanes({ lanes, height, time, duration, onSeek, events, showOriginal }: {
+  lanes: LaneSpec[]; height: number; time: number; duration: number;
+  onSeek: (t: number) => void; events: TrackEvent[]; showOriginal: boolean;
+}) {
+  const W = 1200, N = 600;
+  const H = height;
+
   const rand = (seed: number) => {
     let s = seed | 0;
-    return () => {
-      s = (s * 1664525 + 1013904223) | 0;
-      return ((s >>> 0) % 100000) / 100000;
-    };
+    return () => { s = (s * 1664525 + 1013904223) | 0; return ((s >>> 0) % 100000) / 100000; };
   };
-
-  /** Sharp signal: piecewise random walk with abrupt steps. */
   const sharpSeries = (seed: number) => {
     const r = rand(seed * 9973 + 1);
-    const vals: number[] = [];
-    let v = 0;
+    const vals: number[] = []; let v = 0;
     for (let i = 0; i < N; i++) {
-      // occasional sudden jumps (step zoom feel)
-      if (r() < 0.04) v = (r() - 0.5) * 1.6;
-      else v += (r() - 0.5) * 0.35;          // jagged noise
-      v = Math.max(-1, Math.min(1, v * 0.96)); // soft clamp + slight decay
+      if (r() < 0.04) v = (r() - 0.5) * 1.6; else v += (r() - 0.5) * 0.35;
+      v = Math.max(-1, Math.min(1, v * 0.96));
       vals.push(v);
     }
     return vals;
   };
-
   const path = (vals: number[]) =>
     vals.map((v, i) => `${i === 0 ? "M" : "L"}${(i / (N - 1)) * W},${H / 2 - v * (H / 2.2)}`).join(" ");
 
-  const onChartClick = (e: React.MouseEvent<SVGSVGElement>) => {
+  const totalH = lanes.length * H;
+  const [hover, setHover] = useState<{ x: number; t: number; ev?: TrackEvent } | null>(null);
+  const eventAtX = (xFrac: number): TrackEvent | undefined => {
+    const t = xFrac * duration;
+    let best: TrackEvent | undefined; let bestD = Infinity;
+    for (const ev of events) {
+      const d = Math.abs(ev.t - t);
+      if (d < bestD && d < duration * 0.012) { bestD = d; best = ev; }
+    }
+    return best;
+  };
+  const onMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     const r = e.currentTarget.getBoundingClientRect();
-    const x = (e.clientX - r.left) / r.width;
-    onSeek(Math.max(0, Math.min(duration, x * duration)));
+    const xFrac = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+    setHover({ x: xFrac, t: xFrac * duration, ev: eventAtX(xFrac) });
+  };
+  const onClick = (e: React.MouseEvent<SVGSVGElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const xFrac = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+    onSeek(xFrac * duration);
   };
 
   return (
-    <div className="shrink-0 border-t border-border bg-background">
-      <div className="flex items-center gap-4 border-b border-border px-3 py-1.5 text-xs text-muted-foreground">
-        <div className="flex items-center gap-1"><span className="h-2 w-3 bg-zinc-500" />raw</div>
-        <div className="flex items-center gap-1"><span className="h-2 w-3 bg-emerald-400" />smoothed</div>
-        <div className="flex items-center gap-1"><span className="h-2 w-3 bg-amber-500" />ring center</div>
-        <div className="flex items-center gap-1"><span className="h-2 w-3 bg-pink-500" />1st zoom shift</div>
-        <div className="flex items-center gap-1"><span className="h-2 w-3 bg-cyan-400" />pre-jump unlock</div>
-      </div>
-      <div className="overflow-x-auto">
-        <svg viewBox={`0 0 ${W} ${lanes.length * H + 16}`} className="block w-full" style={{ minHeight: 360, shapeRendering: "crispEdges" }} onClick={onChartClick}>
-          {lanes.map((l, idx) => {
-            const a = sharpSeries(idx * 7 + 1);
-            const b = sharpSeries(idx * 7 + 4).map((v) => v * 0.7);
-            const y = idx * H;
-            return (
-              <g key={l.key} transform={`translate(0,${y})`}>
-                <rect x={0} y={0} width={W} height={H} fill={idx % 2 === 0 ? "rgba(255,255,255,0.015)" : "rgba(255,255,255,0.03)"} />
-                <line x1={0} y1={H} x2={W} y2={H} stroke="rgba(255,255,255,0.06)" />
-                <text x={6} y={14} fill="rgba(255,255,255,0.7)" fontSize={10}>{l.label}</text>
-                <text x={W - 6} y={14} textAnchor="end" fill="rgba(255,255,255,0.5)" fontSize={10}>{l.range}</text>
-                <path d={path(a)} fill="none" stroke={l.color}  strokeWidth={1} opacity={0.95} strokeLinejoin="miter" strokeLinecap="butt" />
-                <path d={path(b)} fill="none" stroke={l.color2} strokeWidth={1} opacity={0.75} strokeLinejoin="miter" strokeLinecap="butt" />
-              </g>
-            );
-          })}
-          <line
-            x1={(time / Math.max(duration, 0.001)) * W}
-            x2={(time / Math.max(duration, 0.001)) * W}
-            y1={0} y2={lanes.length * H}
-            stroke="#fff" strokeWidth={1} strokeDasharray="3 3" opacity={0.7}
-          />
-        </svg>
-      </div>
+    <div className="relative overflow-x-auto">
+      <svg viewBox={`0 0 ${W} ${totalH}`} className="block w-full"
+        style={{ minHeight: totalH, shapeRendering: "crispEdges" }}
+        onMouseMove={onMouseMove} onMouseLeave={() => setHover(null)} onClick={onClick}>
+        {/* Event markers — vertical lines across all lanes */}
+        {events.map((ev, i) => (
+          <line key={`e-${i}`}
+            x1={(ev.t / Math.max(duration, 0.001)) * W}
+            x2={(ev.t / Math.max(duration, 0.001)) * W}
+            y1={0} y2={totalH}
+            stroke={eventColor[ev.kind]} strokeWidth={1} opacity={0.55} strokeDasharray="2 3" />
+        ))}
+        {lanes.map((l, idx) => {
+          const a = sharpSeries(l.seed * 7 + 1);
+          const b = sharpSeries(l.seed * 7 + 4).map((v) => v * 0.7);
+          const y = idx * H;
+          return (
+            <g key={l.key} transform={`translate(0,${y})`}>
+              <rect x={0} y={0} width={W} height={H} fill={idx % 2 === 0 ? "rgba(255,255,255,0.015)" : "rgba(255,255,255,0.03)"} />
+              <line x1={0} y1={H} x2={W} y2={H} stroke="rgba(255,255,255,0.06)" />
+              <text x={6} y={14} fill="rgba(255,255,255,0.7)" fontSize={10}>{l.label}</text>
+              <text x={W - 6} y={14} textAnchor="end" fill="rgba(255,255,255,0.5)" fontSize={10}>{l.range}</text>
+              {showOriginal && (
+                <path d={path(b)} fill="none" stroke="#a1a1aa" strokeWidth={1} opacity={0.55} />
+              )}
+              <path d={path(a)} fill="none" stroke="#34d399" strokeWidth={1.2} opacity={0.95} />
+            </g>
+          );
+        })}
+        {/* Time cursor */}
+        <line
+          x1={(time / Math.max(duration, 0.001)) * W}
+          x2={(time / Math.max(duration, 0.001)) * W}
+          y1={0} y2={totalH}
+          stroke="#fff" strokeWidth={1} strokeDasharray="3 3" opacity={0.7} />
+        {/* Hover cursor */}
+        {hover && (
+          <line x1={hover.x * W} x2={hover.x * W} y1={0} y2={totalH}
+            stroke="#fff" strokeWidth={0.5} opacity={0.3} />
+        )}
+      </svg>
+      {hover && (
+        <div
+          className="pointer-events-none absolute top-1 rounded-sm border border-border bg-surface px-2 py-1 text-xs text-foreground shadow-lg"
+          style={{ left: `${hover.x * 100}%`, transform: "translateX(-50%)" }}
+        >
+          <span className="text-mono text-muted-foreground">{fmt(hover.t)}</span>
+          {hover.ev && (
+            <span className="ml-2 font-semibold" style={{ color: eventColor[hover.ev.kind] }}>{hover.ev.label}</span>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------- Debug panel ---------- */
+function DebugPanel({ settings, viewport, quality, events }: {
+  settings: TrackingSettings; viewport: Viewport;
+  quality: { trackingQ: number; jumpEvents: number; lostFrames: number; avgConfidence: number };
+  events: TrackEvent[];
+}) {
+  return (
+    <div className="grid grid-cols-3 gap-2 p-2">
+      <DebugBlock title="Settings"><pre className="text-mono text-xs leading-relaxed">{JSON.stringify(settings, null, 2)}</pre></DebugBlock>
+      <DebugBlock title="Viewport"><pre className="text-mono text-xs leading-relaxed">{JSON.stringify(viewport, null, 2)}</pre></DebugBlock>
+      <DebugBlock title="Quality"><pre className="text-mono text-xs leading-relaxed">{JSON.stringify(quality, null, 2)}</pre></DebugBlock>
+      <DebugBlock title={`Events (${events.length})`}>
+        <ul className="text-mono space-y-0.5 text-xs">
+          {events.map((e, i) => (
+            <li key={i}>
+              <span className="text-muted-foreground">{fmt(e.t).padStart(5)}</span>{" "}
+              <span style={{ color: eventColor[e.kind] }}>{e.label}</span>
+            </li>
+          ))}
+        </ul>
+      </DebugBlock>
+    </div>
+  );
+}
+function DebugBlock({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-sm border border-border bg-surface p-2">
+      <div className="label-eyebrow mb-1 text-xs">{title}</div>
+      {children}
     </div>
   );
 }
