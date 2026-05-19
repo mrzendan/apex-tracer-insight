@@ -473,6 +473,30 @@ function HsvAdmin() {
                 className="rounded-sm bg-primary px-5 py-2 text-sm font-bold uppercase tracking-wider text-primary-foreground shadow-md hover:brightness-110">
                 Save preset
               </button>
+              <button
+                onClick={() => {
+                  const exported = {
+                    frame: frame.id,
+                    teams: teamList.map((t, i) => {
+                      const p = presets[presetKey(t.id, frame.id)] ?? presetFromColor(t.color);
+                      return {
+                        slot: i + 1,
+                        id: t.id,
+                        name: t.displayName,
+                        hex: savedColors[presetKey(t.id, frame.id)] ?? t.color,
+                        h: p.h, s: p.s, v: p.v,
+                      };
+                    }),
+                  };
+                  const blob = new Blob([JSON.stringify(exported, null, 2)], { type: "application/json" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url; a.download = `hsv_presets.${frame.id}.json`; a.click();
+                  setTimeout(() => URL.revokeObjectURL(url), 1000);
+                }}
+                className="rounded-sm border border-border bg-surface-2 px-3 py-2 text-xs font-semibold uppercase tracking-wider hover:bg-muted">
+                Download hsv_presets.json
+              </button>
             </div>
           </div>
 
