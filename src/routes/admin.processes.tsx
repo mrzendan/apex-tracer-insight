@@ -10,6 +10,7 @@ import {
   type ProcessPov,
   type MapTiming,
   type MapAnalysis,
+  type ProcessKind,
 } from "@/lib/admin-store";
 import { maps as allMaps, type Team, type MatchFull } from "@/lib/mock-match";
 import { Progress } from "@/components/ui/progress";
@@ -29,6 +30,58 @@ const STATUS_COLORS: Record<AnalysisProcess["status"], string> = {
   done: "bg-success/20 text-success",
   failed: "bg-destructive/20 text-destructive",
 };
+
+const KIND_LABELS: Record<ProcessKind, string> = {
+  minimap: "Minimap tracking",
+  camera: "Camera tracking",
+  full: "Full match analysis",
+  hsv: "HSV validation",
+  ring: "Ring detection",
+  debug_export: "Debug export",
+};
+const KIND_OPTIONS: ProcessKind[] = ["minimap", "camera", "full", "hsv", "ring", "debug_export"];
+const PRESET_OPTIONS = ["Default", "Step zoom", "Smooth observer", "Fast camera", "Low noise"];
+
+/** Required analyses per match — used to compute "missing" for Suggested. */
+const REQUIRED_KINDS: ProcessKind[] = ["minimap", "camera", "full"];
+const KIND_SHORT: Record<ProcessKind, string> = {
+  minimap: "minimap", camera: "camera", full: "trajectory", hsv: "hsv", ring: "ring", debug_export: "debug",
+};
+
+/** Derived progress + ETA for a process based on map analyses. */
+function deriveProgress(p: AnalysisProcess): { pct: number; etaSec: number | null; framesDone: number; framesTotal: number } {
+  const ma = p.mapAnalyses ?? [];
+  const totalSec = (p.maps ?? []).reduce((s, m) => s + Math.max(0, m.endSec - m.startSec), 0);
+  const fps = p.frameStep && p.frameStep > 0 ? Math.max(1, Math.round(30 / p.frameStep)) : 15;
+  const framesTotal = Math.max(60, Math.round(totalSec * fps));
+  if (!ma.length) {
+    if (p.status === "done") return { pct: 100, etaSec: 0, framesDone: framesTotal, framesTotal };
+    return { pct: 0, etaSec: null, framesDone: 0, framesTotal };
+  }
+  const avg = ma.reduce((s, a) => s + (a.ring + a.start + a.camera) / 3, 0) / ma.length;
+  const pct = Math.max(0, Math.min(100, Math.round(avg)));
+  const framesDone = Math.round((framesTotal * pct) / 100);
+  let etaSec: number | null = null;
+  if (p.status === "running" && p.startedAt && pct > 1 && pct < 100) {
+    const elapsed = (Date.now() - p.startedAt) / 1000;
+    const remaining = elapsed * ((100 - pct) / pct);
+    etaSec = Math.max(1, Math.round(remaining));
+  }
+  if (p.status === "done") etaSec = 0;
+  return { pct, etaSec, framesDone, framesTotal };
+}
+
+function relTime(ts?: number): string {
+  if (!ts) return "—";
+  const d = new Date(ts);
+  return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
+}
+function durationLabel(start?: number, end?: number): string {
+  if (!start) return "—";
+  const e = end ?? Date.now();
+  const s = Math.max(0, Math.round((e - start) / 1000));
+  return mmss(s);
+}
 
 const mmss = (s: number) =>
   `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
