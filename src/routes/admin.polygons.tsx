@@ -441,7 +441,13 @@ function PolygonRow({ poly, selected, onSelect, onDelete }: {
             className="flex-1 rounded-sm border border-border bg-background px-2 py-1 text-xs"
           />
         ) : (
-          <div className="flex-1 truncate text-sm font-semibold">{poly.name}</div>
+          <div
+            className="flex-1 truncate text-sm font-semibold cursor-text"
+            onDoubleClick={(e) => { e.stopPropagation(); setEditingName(true); }}
+            title="Double-click to rename"
+          >
+            {poly.name}
+          </div>
         )}
         <span className={`rounded-sm border px-1.5 py-0.5 text-xs uppercase tracking-wider ${tagColor}`}>
           {poly.tag}
