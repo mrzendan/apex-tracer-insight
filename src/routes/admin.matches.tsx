@@ -122,7 +122,11 @@ function MatchesAdmin() {
                       <td className="px-3 py-2 text-mono text-xs text-muted-foreground">{m.id}</td>
                       <td className="px-3 py-2 text-xs font-semibold">{m.name}</td>
                       <td className="px-3 py-2 text-xs">{tournament?.name ?? m.tournamentId}</td>
-                      <td className="px-3 py-2 text-xs">{allMaps.find((x) => x.id === m.mapId)?.name ?? m.mapId}</td>
+                      <td className="px-3 py-2 text-xs">
+                        {Array.from(new Set(mapIds))
+                          .map((id) => allMaps.find((x) => x.id === id)?.name ?? id)
+                          .join(", ")}
+                      </td>
                       <td className="px-3 py-2 text-right text-mono text-xs tabular-nums">{Math.floor(m.durationSec / 60)}:{(m.durationSec % 60).toString().padStart(2, "0")}</td>
                       <td className="px-3 py-2 text-xs">
                         {m.vodLink ? (
@@ -147,18 +151,21 @@ function MatchesAdmin() {
                               <div className="label-eyebrow mb-2 text-xs">Top 3 teams</div>
                               <ol className="space-y-1.5">
                                 {topTeams.map((t, i) => (
-                                  <li key={t.id} className="flex items-center gap-2 rounded-sm border border-border bg-surface px-2 py-1.5 text-xs">
-                                    <span className="w-5 text-mono text-xs text-muted-foreground">#{i + 1}</span>
-                                    <TeamLogo team={t} size={22} />
-                                    <span className="flex-1 truncate font-semibold">{t.tag} · {t.name}</span>
-                                    <span className="text-mono text-xs tabular-nums text-muted-foreground">{t.kills}K</span>
+                                  <li key={t.id}>
+                                    <Link
+                                      to="/admin/teams/$teamId"
+                                      params={{ teamId: t.id }}
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="flex items-center gap-2 rounded-sm border border-border bg-surface px-2 py-1.5 text-xs hover:bg-muted"
+                                    >
+                                      <span className="w-5 text-mono text-xs text-muted-foreground">#{i + 1}</span>
+                                      <TeamLogo team={t} size={22} />
+                                      <span className="flex-1 truncate font-semibold">{t.tag} · {t.name}</span>
+                                      <span className="text-mono text-xs tabular-nums text-muted-foreground">{t.kills}K</span>
+                                    </Link>
                                   </li>
                                 ))}
                               </ol>
-                              <div className="mt-3 grid grid-cols-2 gap-2">
-                                <Stat label="Map duration" value={mm(m.durationSec)} />
-                                <Stat label="Match total" value={mm(totalMapSec)} />
-                              </div>
                             </div>
                             <div className="hud-panel p-3">
                               <div className="label-eyebrow mb-2 text-xs">Map order ({mapIds.length})</div>
