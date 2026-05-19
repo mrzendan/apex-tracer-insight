@@ -452,32 +452,6 @@ function ZonesAdmin() {
             </div>
           </div>
 
-          {/* Tag manager popover */}
-          {tagsOpen && (
-            <div className="absolute right-4 top-2 z-10 w-72 rounded-sm border border-border bg-surface p-3 shadow-xl">
-              <div className="mb-2 flex items-center justify-between">
-                <div className="label-eyebrow">Tags</div>
-                <button onClick={() => setTagsOpen(false)} className="grid h-6 w-6 place-items-center rounded-sm hover:bg-muted"><X className="h-3.5 w-3.5" /></button>
-              </div>
-              {tags.map((t) => (
-                <div key={t.id} className="mb-1 flex items-center gap-2 rounded-sm border border-border bg-surface-2 px-2 py-1.5">
-                  <input type="color" value={t.color} onChange={(e) => recolorTag(t.id, e.target.value)}
-                    className="h-5 w-5 cursor-pointer rounded-sm border border-border bg-transparent" />
-                  <input defaultValue={t.id} onBlur={(e) => renameTag(t.id, e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-                    className="text-mono flex-1 rounded-sm bg-background px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-primary/40" />
-                  <button onClick={() => deleteTag(t.id)} disabled={tags.length <= 1} title="Delete tag"
-                    className="grid h-6 w-6 place-items-center rounded-sm text-muted-foreground hover:bg-destructive/20 hover:text-destructive disabled:opacity-30">
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              ))}
-              <button onClick={addTag}
-                className="mt-2 w-full rounded-sm border border-dashed border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:bg-muted hover:text-foreground">
-                + Add tag
-              </button>
-            </div>
-          )}
         </div>
 
         <aside className="w-[340px] shrink-0 border-l border-border bg-surface p-3 overflow-y-auto">
