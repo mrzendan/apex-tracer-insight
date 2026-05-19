@@ -6,6 +6,9 @@ import {
   addPolygon,
   updatePolygon,
   removePolygon,
+  addCustomMap,
+  updateCustomMap,
+  removeCustomMap,
   type Polygon,
   type PolygonTag,
 } from "@/lib/admin-store";
@@ -20,11 +23,12 @@ export const Route = createFileRoute("/admin/polygons")({
 type Mode = "idle" | "draw";
 
 function PolygonsAdmin() {
-  const { polygons } = useAdminStore();
+  const { polygons, customMaps } = useAdminStore();
+  const allMapsCombined = useMemo(() => [...allMaps, ...customMaps], [customMaps]);
   const search = Route.useSearch();
-  const initialMapId = search.mapId && allMaps.some((m) => m.id === search.mapId)
+  const initialMapId = search.mapId && allMapsCombined.some((m) => m.id === search.mapId)
     ? search.mapId
-    : (allMaps[0]?.id ?? "");
+    : (allMapsCombined[0]?.id ?? "");
   const [mapId, setMapId] = useState(initialMapId);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>("idle");
@@ -33,8 +37,11 @@ function PolygonsAdmin() {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [copyOpen, setCopyOpen] = useState(false);
+  const customUploadRef = useRef<HTMLInputElement | null>(null);
+  const [renamingMapId, setRenamingMapId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
 
-  const map = allMaps.find((m) => m.id === mapId);
+  const map = allMapsCombined.find((m) => m.id === mapId);
   const mapPolys = useMemo(() => polygons.filter((p) => p.mapId === mapId), [polygons, mapId]);
 
   useEffect(() => {
@@ -150,29 +157,110 @@ function PolygonsAdmin() {
       });
     });
     setCopyOpen(false);
-    alert(`Copied ${mapPolys.length} polygon${mapPolys.length === 1 ? "" : "s"} to ${allMaps.find((m) => m.id === targetMapId)?.name}`);
+    alert(`Copied ${mapPolys.length} polygon${mapPolys.length === 1 ? "" : "s"} to ${allMapsCombined.find((m) => m.id === targetMapId)?.name}`);
+  };
+
+  const onUploadCustomMap = async (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const id = `custom-${Date.now()}`;
+      const base = file.name.replace(/\.[^.]+$/, "");
+      addCustomMap({ id, name: base || "Custom map", image: String(reader.result) });
+      setMapId(id);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const commitRename = () => {
+    if (!renamingMapId) return;
+    const v = renameValue.trim();
+    if (v) updateCustomMap(renamingMapId, { name: v });
+    setRenamingMapId(null);
   };
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-surface px-6">
-        <div className="flex items-center gap-3">
-          <h1 className="text-sm font-bold uppercase tracking-wider">Polygons</h1>
-          <span className="text-xs text-muted-foreground">·</span>
-          <select
-            value={mapId}
-            onChange={(e) => setMapId(e.target.value)}
-            className="rounded-sm border border-border bg-background px-2 py-1 text-xs"
+      <header className="flex shrink-0 flex-wrap items-center gap-3 border-b border-border bg-surface px-6 py-2">
+        <h1 className="text-sm font-bold uppercase tracking-wider">Polygons</h1>
+        <span className="text-xs text-muted-foreground">·</span>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {allMapsCombined.map((m) => {
+            const isCustom = customMaps.some((c) => c.id === m.id);
+            const active = m.id === mapId;
+            const renaming = renamingMapId === m.id;
+            return (
+              <div
+                key={m.id}
+                className={`group flex items-center gap-1 rounded-sm border px-2 py-1 text-xs transition-colors ${
+                  active
+                    ? "border-primary bg-primary/15 text-foreground"
+                    : "border-border bg-background hover:bg-muted"
+                }`}
+              >
+                {renaming ? (
+                  <input
+                    autoFocus
+                    value={renameValue}
+                    onChange={(e) => setRenameValue(e.target.value)}
+                    onBlur={commitRename}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") commitRename();
+                      if (e.key === "Escape") setRenamingMapId(null);
+                    }}
+                    className="w-32 rounded-sm border border-border bg-background px-1 py-0.5 text-xs"
+                  />
+                ) : (
+                  <button
+                    onClick={() => setMapId(m.id)}
+                    onDoubleClick={() => {
+                      if (!isCustom) return;
+                      setRenamingMapId(m.id);
+                      setRenameValue(m.name);
+                    }}
+                    className="uppercase tracking-wider"
+                    title={isCustom ? "Double-click to rename" : m.name}
+                  >
+                    {m.name}
+                  </button>
+                )}
+                {isCustom && !renaming && (
+                  <button
+                    onClick={() => {
+                      if (!confirm(`Delete custom map "${m.name}" and its polygons?`)) return;
+                      removeCustomMap(m.id);
+                      if (mapId === m.id) setMapId(allMaps[0]?.id ?? "");
+                    }}
+                    className="ml-0.5 rounded-sm px-1 text-muted-foreground opacity-0 transition hover:bg-destructive/20 hover:text-destructive group-hover:opacity-100"
+                    title="Delete custom map"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            );
+          })}
+          <button
+            onClick={() => customUploadRef.current?.click()}
+            className="rounded-sm border border-dashed border-border bg-background px-2 py-1 text-xs uppercase tracking-wider text-muted-foreground hover:bg-muted hover:text-foreground"
+            title="Upload a custom map image"
           >
-            {allMaps.map((m) => (
-              <option key={m.id} value={m.id}>{m.name}</option>
-            ))}
-          </select>
-          <span className="text-mono text-xs text-muted-foreground">
-            {mapPolys.length} polygon{mapPolys.length === 1 ? "" : "s"}
-          </span>
+            + Custom
+          </button>
+          <input
+            ref={customUploadRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) onUploadCustomMap(f);
+              e.target.value = "";
+            }}
+          />
         </div>
-        <div />
+        <span className="text-mono ml-auto text-xs text-muted-foreground">
+          {mapPolys.length} polygon{mapPolys.length === 1 ? "" : "s"}
+        </span>
       </header>
 
       <div className="flex flex-1 overflow-hidden">
