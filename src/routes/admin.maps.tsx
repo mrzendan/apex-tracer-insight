@@ -6,7 +6,8 @@ import { useAdminStore } from "@/lib/admin-store";
 export const Route = createFileRoute("/admin/maps")({ component: MapsAdmin });
 
 type ViewMode = "grid" | "table";
-const CONFIG_KEYS: MapConfigKey[] = ["image", "zones", "polygons", "hsv", "camera", "minimap"];
+const CONFIG_KEYS: MapConfigKey[] = ["image", "polygons", "hsv"];
+const ALL_CONFIG_KEYS: MapConfigKey[] = ["image", "zones", "polygons", "hsv", "camera", "minimap"];
 const CONFIG_LABEL: Record<MapConfigKey, string> = {
   image: "Image",
   zones: "Zones",
@@ -91,7 +92,7 @@ function MapsAdmin() {
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-surface px-6">
+      <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-surface px-6 pr-[360px]">
         <div className="flex items-center gap-4">
           <h1 className="text-sm font-bold uppercase tracking-wider">Maps</h1>
           <input
@@ -317,7 +318,7 @@ function EditDialog({ row, isNew, onChange, onCancel, onSave }: {
           <section>
             <div className="label-eyebrow mb-2 text-xs text-muted-foreground">Configuration status</div>
             <div className="grid grid-cols-2 gap-1 sm:grid-cols-3">
-              {CONFIG_KEYS.map((k) => {
+              {ALL_CONFIG_KEYS.map((k) => {
                 const on = Boolean(row.config?.[k]);
                 return (
                   <button
