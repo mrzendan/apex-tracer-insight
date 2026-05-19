@@ -298,6 +298,55 @@ function PolygonsAdmin() {
             <div className="label-eyebrow text-xs">Polygons on {map?.name}</div>
           </div>
           <div className="flex flex-col gap-2 border-b border-border px-4 py-3">
+            <div className="label-eyebrow text-[10px] text-muted-foreground">Import / Export</div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={exportJson}
+                disabled={mapPolys.length === 0}
+                className="rounded-sm border border-border bg-surface px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted disabled:opacity-40"
+              >
+                Export JSON
+              </button>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="rounded-sm border border-border bg-surface px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted"
+              >
+                Import JSON
+              </button>
+              <button
+                onClick={() => setCopyOpen((v) => !v)}
+                disabled={mapPolys.length === 0}
+                className="rounded-sm border border-border bg-surface px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted disabled:opacity-40"
+              >
+                Copy to map
+              </button>
+            </div>
+            {copyOpen && (
+              <select
+                autoFocus
+                defaultValue=""
+                onChange={(e) => { if (e.target.value) copyToMap(e.target.value); }}
+                className="rounded-sm border border-border bg-background px-2 py-1 text-xs"
+              >
+                <option value="" disabled>Select target map…</option>
+                {allMaps.filter((m) => m.id !== mapId).map((m) => (
+                  <option key={m.id} value={m.id}>{m.name}</option>
+                ))}
+              </select>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) importJson(f);
+                e.target.value = "";
+              }}
+            />
+          </div>
+          <div className="flex flex-col gap-2 border-b border-border px-4 py-3">
             {mode === "draw" ? (
               <>
                 <span className="text-mono text-xs text-muted-foreground">
