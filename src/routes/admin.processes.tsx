@@ -859,6 +859,26 @@ function ProcessEditor({
               ⚠ A {value.pov.toUpperCase()} POV process already exists for this match.
             </div>
           )}
+
+          <div className="grid grid-cols-3 gap-3 border-t border-border pt-3">
+            <div>
+              <div className="label-eyebrow mb-1.5 text-xs">Preset</div>
+              <select value={value.preset ?? "Default"} onChange={(e) => set("preset", e.target.value)}
+                className="w-full rounded-sm border border-border bg-background px-2 py-1.5 text-xs">
+                {PRESET_OPTIONS.map((p) => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+            <div>
+              <div className="label-eyebrow mb-1.5 text-xs">Frame step</div>
+              <input type="number" min={1} max={30} value={value.frameStep ?? 2}
+                onChange={(e) => set("frameStep", Math.max(1, Math.min(30, +e.target.value || 1)))}
+                className="w-full rounded-sm border border-border bg-background px-2 py-1.5 text-xs text-mono" />
+            </div>
+            <label className="flex items-end gap-2 pb-1.5 text-xs">
+              <input type="checkbox" checked={value.debugMode ?? false} onChange={(e) => set("debugMode", e.target.checked)} />
+              <span>Debug mode</span>
+            </label>
+          </div>
         </div>
 
         <div className="mt-5 flex items-center justify-end gap-2">
