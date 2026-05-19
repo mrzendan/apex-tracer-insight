@@ -382,15 +382,43 @@ function MatchesAdmin() {
                             )}
 
                             {tab === "files" && (
-                              <div className="hud-panel p-3">
-                                <div className="label-eyebrow mb-2 text-xs">Broadcast VOD</div>
-                                <input
-                                  value={m.vodLink ?? ""}
-                                  onChange={(e) => updateMatch(m.id, { vodLink: e.target.value })}
-                                  placeholder="https://youtube.com/watch?v=..."
-                                  className="w-full rounded-sm border border-border bg-background px-2 py-1.5 text-sm text-mono"
-                                />
-                                <div className="mt-4 text-xs text-muted-foreground">
+                              <div className="space-y-4">
+                                <div className="hud-panel p-3">
+                                  <div className="label-eyebrow mb-2 text-xs">Broadcast VOD</div>
+                                  <input
+                                    value={m.vodLink ?? ""}
+                                    onChange={(e) => updateMatch(m.id, { vodLink: e.target.value })}
+                                    placeholder="https://youtube.com/watch?v=..."
+                                    className="w-full rounded-sm border border-border bg-background px-2 py-1.5 text-sm text-mono"
+                                  />
+                                </div>
+                                <div className="hud-panel p-3">
+                                  <div className="label-eyebrow mb-2 text-xs">Map VODs ({mapIds.length})</div>
+                                  <ul className="space-y-1.5">
+                                    {mapIds.map((id, i) => {
+                                      const mp = allMaps.find((x) => x.id === id);
+                                      if (!mp) return null;
+                                      const url = m.mapVods?.[i] ?? "";
+                                      return (
+                                        <li key={`mv-${id}-${i}`} className="flex items-center gap-2">
+                                          <span className="w-6 text-mono text-xs text-muted-foreground">#{i + 1}</span>
+                                          <img src={mp.image} alt={mp.name} className="h-8 w-12 rounded-sm object-cover" />
+                                          <span className="w-32 truncate text-xs font-semibold">{mp.name}</span>
+                                          <input
+                                            value={url}
+                                            onChange={(e) => updateMatch(m.id, { mapVods: { ...(m.mapVods ?? {}), [i]: e.target.value } })}
+                                            placeholder="https://youtube.com/watch?v=..."
+                                            className="flex-1 rounded-sm border border-border bg-background px-2 py-1.5 text-xs text-mono"
+                                          />
+                                          {url && (
+                                            <a href={url} target="_blank" rel="noreferrer" className="rounded-sm border border-primary/40 bg-primary/10 px-2 py-1 text-xs uppercase tracking-wider text-primary hover:bg-primary/20">Open</a>
+                                          )}
+                                        </li>
+                                      );
+                                    })}
+                                  </ul>
+                                </div>
+                                <div className="text-xs text-muted-foreground">
                                   Minimap exports, trajectories and other artifacts will appear here once analysis is completed.
                                 </div>
                               </div>
