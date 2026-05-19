@@ -29,6 +29,8 @@ $ErrorActionPreference = "Stop"
 chcp 65001 > $null
 $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$env:PYTHONIOENCODING = "utf-8"
+$env:PYTHONUTF8 = "1"
 
 $repo = (git rev-parse --show-toplevel).Trim()
 if (-not $repo) { throw "Не вижу git-репозитория." }
