@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Download } from "lucide-react";
 import { teams } from "@/lib/mock-match";
 import worldsEdgeSample from "@/assets/hsv-samples/worlds-edge.png";
 import stormPointSample from "@/assets/hsv-samples/storm-point.png";
