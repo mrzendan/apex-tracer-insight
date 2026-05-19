@@ -1,13 +1,13 @@
 {
   "name": "storm_point",
   "image": "storm_point.png",
-  "canonical_size": [4096, 4096],
+  "canonical_size": [1000, 1000],
   "world_bounds": { "x": [0, 1000], "y": [0, 1000] },
   "calibration_points": [
     { "canonical_px": [0, 0],       "world": [0, 0] },
-    { "canonical_px": [4096, 0],    "world": [1000, 0] },
-    { "canonical_px": [4096, 4096], "world": [1000, 1000] },
-    { "canonical_px": [0, 4096],    "world": [0, 1000] }
+    { "canonical_px": [1000, 0],    "world": [1000, 0] },
+    { "canonical_px": [1000, 1000], "world": [1000, 1000] },
+    { "canonical_px": [0, 1000],    "world": [0, 1000] }
   ],
   "_note": "Подмени image на реальный скрин карты и пересчитай calibration_points под него."
 }
