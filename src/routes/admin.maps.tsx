@@ -7,7 +7,7 @@ export const Route = createFileRoute("/admin/maps")({ component: MapsAdmin });
 
 type ViewMode = "grid" | "table";
 const CONFIG_KEYS: MapConfigKey[] = ["image", "polygons", "hsv"];
-const ALL_CONFIG_KEYS: MapConfigKey[] = ["image", "zones", "polygons", "hsv", "camera", "minimap"];
+const ALL_CONFIG_KEYS: MapConfigKey[] = ["image", "polygons", "hsv"];
 const CONFIG_LABEL: Record<MapConfigKey, string> = {
   image: "Image",
   zones: "Zones",
@@ -37,7 +37,6 @@ function ConfigChip({ k, ok }: { k: MapConfigKey; ok: boolean }) {
       }`}
     >
       <span>{CONFIG_LABEL[k]}</span>
-      <span className="opacity-70">{ok ? "✓" : "—"}</span>
     </span>
   );
 }
