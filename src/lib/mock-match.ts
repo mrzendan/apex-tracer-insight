@@ -14,6 +14,8 @@ import darkzeroLogo from "@/assets/teams/darkzero.png";
 
 export type TournamentType = "LAN" | "Online" | "Qualifier";
 export type TournamentRegion = "EMEA" | "APAC" | "North America" | "South America";
+export type TournamentStatus = "draft" | "upcoming" | "active" | "finished" | "archived";
+export type TournamentStage = "Regular Season" | "Playoffs" | "Finals" | "Qualifier" | "Group Stage";
 export type Tournament = {
   id: string;
   name: string;
@@ -22,6 +24,16 @@ export type Tournament = {
   year: number;      // 1..6
   type: TournamentType;
   region: TournamentRegion;
+  /** Optional manual status override. When absent, derived from dates/matches. */
+  status?: TournamentStatus;
+  /** ALGS split (1 or 2), or free-form. */
+  split?: string;
+  /** Stage within the split, e.g. Playoffs, Regular Season. */
+  stage?: TournamentStage;
+  /** Free-form notes shown in the admin overview. */
+  description?: string;
+  /** Link to the Liquipedia page for this tournament. */
+  liquipediaUrl?: string;
 };
 export type Match = { id: string; name: string; tournamentId: string; mapId: string; durationSec: number };
 

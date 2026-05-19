@@ -6,6 +6,8 @@ import {
   type Tournament,
   type TournamentType,
   type TournamentRegion,
+  type TournamentStatus,
+  type TournamentStage,
   type MatchFull,
 } from "@/lib/mock-match";
 import { useAdminStore, type AnalysisProcess } from "@/lib/admin-store";
@@ -16,6 +18,16 @@ export const Route = createFileRoute("/admin/tournaments")({ component: Tourname
 const TYPES: TournamentType[] = ["LAN", "Online", "Qualifier"];
 const REGIONS: TournamentRegion[] = ["EMEA", "APAC", "North America", "South America"];
 const YEARS = [1, 2, 3, 4, 5, 6];
+const STATUSES: TournamentStatus[] = ["draft", "upcoming", "active", "finished", "archived"];
+const STAGES: TournamentStage[] = ["Regular Season", "Playoffs", "Finals", "Qualifier", "Group Stage"];
+const SPLITS = ["1", "2", "3"];
+
+/** ALGS-style points for placement. */
+function placementPoints(p: number): number {
+  if (p <= 0) return 0;
+  const table = [12, 9, 7, 5, 4, 3, 3, 2, 2, 2, 1, 1, 1, 1, 1];
+  return table[p - 1] ?? 0;
+}
 
 function fmt(d: string) {
   const [y, m, day] = d.split("-");
@@ -25,12 +37,12 @@ function fmtRange(a: string, b: string) {
   return `${fmt(a)}–${fmt(b)}`;
 }
 
-type TournamentStatus = "draft" | "upcoming" | "active" | "finished";
 const statusStyle: Record<TournamentStatus, string> = {
   draft:    "border-border bg-surface-2 text-muted-foreground",
   upcoming: "border-primary/40 bg-primary/10 text-primary",
   active:   "border-amber-500/40 bg-amber-500/10 text-amber-400",
   finished: "border-emerald-500/40 bg-emerald-500/10 text-emerald-400",
+  archived: "border-border bg-surface-2 text-muted-foreground/70",
 };
 function StatusBadge({ s }: { s: TournamentStatus }) {
   return (
@@ -59,6 +71,7 @@ function Indicator({ label, state, valueLabel }: { label: string; state: "ok" | 
 }
 
 function deriveStatus(t: Tournament, tMatches: MatchFull[]): TournamentStatus {
+  if (t.status) return t.status;
   if (tMatches.length === 0) return "draft";
   const today = new Date().toISOString().slice(0, 10);
   if (today < t.startDate) return "upcoming";
@@ -80,7 +93,7 @@ function fmtRelative(ts: number): string {
   return `${d}d ago`;
 }
 
-type TabKey = "overview" | "matches" | "teams" | "maps" | "settings";
+type TabKey = "overview" | "matches" | "teams" | "maps";
 
 function TournamentsAdmin() {
   const { matches: allMatches, teams: allTeams, processes } = useAdminStore();
@@ -236,7 +249,7 @@ function TournamentsAdmin() {
                         <td colSpan={9} className="p-0">
                           <div className="p-5" onClick={(e) => e.stopPropagation()}>
                             <div className="mb-3 flex flex-wrap gap-1 border-b border-border pb-2">
-                              {(["overview","matches","teams","maps","settings"] as TabKey[]).map((k) => (
+                              {(["overview","matches","teams","maps"] as TabKey[]).map((k) => (
                                 <button
                                   key={k}
                                   onClick={() => setTab(k)}
@@ -255,13 +268,30 @@ function TournamentsAdmin() {
                                     <dt className="text-muted-foreground">Status</dt><dd><StatusBadge s={status} /></dd>
                                     <dt className="text-muted-foreground">Type</dt><dd><TypeBadge type={row.type} /></dd>
                                     <dt className="text-muted-foreground">Region</dt><dd className="truncate">{row.region}</dd>
+                                    <dt className="text-muted-foreground">Year</dt><dd>Year {row.year}{row.split ? ` · Split ${row.split}` : ""}</dd>
+                                    {row.stage && (<><dt className="text-muted-foreground">Stage</dt><dd>{row.stage}</dd></>)}
                                     <dt className="text-muted-foreground">Dates</dt><dd className="text-mono tabular-nums">{fmtRange(row.startDate, row.endDate)}</dd>
                                     <dt className="text-muted-foreground">Matches</dt><dd className="text-mono tabular-nums">{readyMatches} / {tMatches.length}</dd>
                                     <dt className="text-muted-foreground">Teams</dt><dd className="text-mono tabular-nums">{tTeams.length}</dd>
                                     <dt className="text-muted-foreground">Maps</dt><dd className="text-mono tabular-nums">{tMaps.length}</dd>
                                     <dt className="text-muted-foreground">Active jobs</dt><dd className="text-mono tabular-nums">{activeJobs}{failedJobs > 0 && <span className="ml-2 text-destructive">{failedJobs} failed</span>}</dd>
                                     <dt className="text-muted-foreground">Last updated</dt><dd>{lastTs > 0 ? fmtRelative(lastTs) : "—"}</dd>
+                                    {row.liquipediaUrl && (
+                                      <>
+                                        <dt className="text-muted-foreground">Liquipedia</dt>
+                                        <dd className="truncate">
+                                          <a href={row.liquipediaUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                                            {row.liquipediaUrl.replace(/^https?:\/\//, "")}
+                                          </a>
+                                        </dd>
+                                      </>
+                                    )}
                                   </dl>
+                                  {row.description && (
+                                    <div className="mt-3 border-t border-border pt-2 text-xs text-muted-foreground whitespace-pre-wrap">
+                                      {row.description}
+                                    </div>
+                                  )}
                                 </div>
                                 <div className="hud-panel p-3">
                                   <div className="label-eyebrow mb-2 text-xs">Matches ({tMatches.length})</div>
@@ -323,19 +353,28 @@ function TournamentsAdmin() {
                               <div className="hud-panel p-3">
                                 <div className="label-eyebrow mb-2 text-xs">Teams ({tTeams.length})</div>
                                 <ul className="grid grid-cols-2 gap-1 md:grid-cols-3 lg:grid-cols-4">
-                                  {tTeams.map((t) => (
-                                    <li key={t.id}>
-                                      <Link
-                                        to="/admin/teams/$teamId"
-                                        params={{ teamId: t.id }}
-                                        className="flex items-center gap-2 rounded-sm border border-border bg-surface px-2 py-1.5 text-xs hover:bg-muted"
-                                      >
-                                        <TeamLogo team={t} size={22} />
-                                        <span className="text-mono text-xs font-bold">{t.tag}</span>
-                                        <span className="truncate">{t.name}</span>
-                                      </Link>
-                                    </li>
-                                  ))}
+                                  {[...tTeams]
+                                    .map((t) => ({ t, pts: placementPoints(t.placement) + t.kills }))
+                                    .sort((a, b) => b.pts - a.pts)
+                                    .map(({ t, pts }) => (
+                                      <li key={t.id}>
+                                        <Link
+                                          to="/admin/teams/$teamId"
+                                          params={{ teamId: t.id }}
+                                          className="flex items-center gap-2 rounded-sm border border-border bg-surface px-2 py-1.5 text-xs hover:bg-muted"
+                                        >
+                                          <TeamLogo team={t} size={22} />
+                                          <span className="text-mono text-xs font-bold">{t.tag}</span>
+                                          <span className="flex-1 truncate">{t.name}</span>
+                                          <span
+                                            className="rounded-sm border border-primary/40 bg-primary/10 px-1.5 py-0.5 text-mono text-xs font-bold tabular-nums text-primary"
+                                            title={`Placement pts ${placementPoints(t.placement)} + kills ${t.kills}`}
+                                          >
+                                            {pts} pts
+                                          </span>
+                                        </Link>
+                                      </li>
+                                    ))}
                                 </ul>
                               </div>
                             )}
@@ -356,23 +395,6 @@ function TournamentsAdmin() {
                               </div>
                             )}
 
-                            {tab === "settings" && (
-                              <div className="hud-panel p-3">
-                                <div className="label-eyebrow mb-2 text-xs">Settings</div>
-                                <dl className="grid grid-cols-[160px_1fr] gap-x-3 gap-y-1.5 text-xs">
-                                  <dt className="text-muted-foreground">Status</dt><dd><StatusBadge s={status} /></dd>
-                                  <dt className="text-muted-foreground">Type</dt><dd><TypeBadge type={row.type} /></dd>
-                                  <dt className="text-muted-foreground">Region</dt><dd>{row.region}</dd>
-                                  <dt className="text-muted-foreground">Year</dt><dd>Year {row.year}</dd>
-                                  <dt className="text-muted-foreground">Dates</dt><dd className="text-mono tabular-nums">{fmtRange(row.startDate, row.endDate)}</dd>
-                                  <dt className="text-muted-foreground">ID</dt><dd className="text-mono text-xs text-muted-foreground">{row.id}</dd>
-                                </dl>
-                                <div className="mt-3 flex gap-2">
-                                  <button onClick={(e) => startEdit(e, row)} className="rounded-sm border border-border bg-surface px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted">Edit tournament</button>
-                                  <button onClick={(e) => remove(e, row.id)} className="rounded-sm border border-destructive/40 bg-surface px-2 py-1 text-xs uppercase tracking-wider text-destructive hover:bg-destructive/10">Delete</button>
-                                </div>
-                              </div>
-                            )}
                           </div>
                         </td>
                       </tr>
@@ -421,45 +443,106 @@ function EditDialog({ row, isNew, onChange, onCancel, onSave }: {
   const base = "mt-1 w-full rounded-sm border border-border bg-background px-2 py-1.5 text-sm";
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onCancel}>
-      <div className="hud-panel w-full max-w-lg bg-surface" onClick={(e) => e.stopPropagation()}>
+      <div className="hud-panel w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-surface" onClick={(e) => e.stopPropagation()}>
         <div className="border-b border-border px-4 py-3">
           <h2 className="text-sm font-bold uppercase tracking-wider">{isNew ? "New tournament" : "Edit tournament"}</h2>
         </div>
-        <div className="space-y-3 p-4">
-          <div>
-            <label className="label-eyebrow text-xs">Name</label>
-            <input className={base} value={row.name} onChange={(e) => set("name", e.target.value)} />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="label-eyebrow text-xs">Start date</label>
-              <input type="date" className={base} value={row.startDate} onChange={(e) => set("startDate", e.target.value)} />
+        <div className="space-y-5 p-4">
+          <section>
+            <div className="label-eyebrow mb-2 text-xs text-muted-foreground">Basic info</div>
+            <div className="space-y-3">
+              <div>
+                <label className="label-eyebrow text-xs">Name</label>
+                <input className={base} value={row.name} onChange={(e) => set("name", e.target.value)} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="label-eyebrow text-xs">Status</label>
+                  <select className={base} value={row.status ?? ""} onChange={(e) => set("status", (e.target.value || undefined) as TournamentStatus | undefined)}>
+                    <option value="">Auto (from dates)</option>
+                    {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="label-eyebrow text-xs">Type</label>
+                  <select className={base} value={row.type} onChange={(e) => set("type", e.target.value as TournamentType)}>
+                    {TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+              </div>
             </div>
-            <div>
-              <label className="label-eyebrow text-xs">End date</label>
-              <input type="date" className={base} value={row.endDate} onChange={(e) => set("endDate", e.target.value)} />
+          </section>
+
+          <section>
+            <div className="label-eyebrow mb-2 text-xs text-muted-foreground">Dates</div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="label-eyebrow text-xs">Start date</label>
+                <input type="date" className={base} value={row.startDate} onChange={(e) => set("startDate", e.target.value)} />
+              </div>
+              <div>
+                <label className="label-eyebrow text-xs">End date</label>
+                <input type="date" className={base} value={row.endDate} onChange={(e) => set("endDate", e.target.value)} />
+              </div>
             </div>
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="label-eyebrow text-xs">Year</label>
-              <select className={base} value={row.year} onChange={(e) => set("year", Number(e.target.value))}>
-                {YEARS.map((y) => <option key={y} value={y}>Year {y}</option>)}
-              </select>
+          </section>
+
+          <section>
+            <div className="label-eyebrow mb-2 text-xs text-muted-foreground">Season & region</div>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              <div>
+                <label className="label-eyebrow text-xs">Year</label>
+                <select className={base} value={row.year} onChange={(e) => set("year", Number(e.target.value))}>
+                  {YEARS.map((y) => <option key={y} value={y}>Year {y}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="label-eyebrow text-xs">Split</label>
+                <select className={base} value={row.split ?? ""} onChange={(e) => set("split", e.target.value || undefined)}>
+                  <option value="">—</option>
+                  {SPLITS.map((s) => <option key={s} value={s}>Split {s}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="label-eyebrow text-xs">Stage</label>
+                <select className={base} value={row.stage ?? ""} onChange={(e) => set("stage", (e.target.value || undefined) as TournamentStage | undefined)}>
+                  <option value="">—</option>
+                  {STAGES.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="label-eyebrow text-xs">Region</label>
+                <select className={base} value={row.region} onChange={(e) => set("region", e.target.value as TournamentRegion)}>
+                  {REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}
+                </select>
+              </div>
             </div>
-            <div>
-              <label className="label-eyebrow text-xs">Type</label>
-              <select className={base} value={row.type} onChange={(e) => set("type", e.target.value as TournamentType)}>
-                {TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
+          </section>
+
+          <section>
+            <div className="label-eyebrow mb-2 text-xs text-muted-foreground">Links & notes</div>
+            <div className="space-y-3">
+              <div>
+                <label className="label-eyebrow text-xs">Liquipedia URL</label>
+                <input
+                  type="url"
+                  placeholder="https://liquipedia.net/apexlegends/..."
+                  className={base}
+                  value={row.liquipediaUrl ?? ""}
+                  onChange={(e) => set("liquipediaUrl", e.target.value || undefined)}
+                />
+              </div>
+              <div>
+                <label className="label-eyebrow text-xs">Description / notes</label>
+                <textarea
+                  rows={3}
+                  className={base}
+                  value={row.description ?? ""}
+                  onChange={(e) => set("description", e.target.value || undefined)}
+                />
+              </div>
             </div>
-            <div>
-              <label className="label-eyebrow text-xs">Region</label>
-              <select className={base} value={row.region} onChange={(e) => set("region", e.target.value as TournamentRegion)}>
-                {REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}
-              </select>
-            </div>
-          </div>
+          </section>
         </div>
         <div className="flex justify-end gap-2 border-t border-border bg-surface-2 px-4 py-3">
           <button onClick={onCancel} className="rounded-sm border border-border bg-surface px-3 py-1.5 text-xs uppercase tracking-wider hover:bg-muted">Cancel</button>
