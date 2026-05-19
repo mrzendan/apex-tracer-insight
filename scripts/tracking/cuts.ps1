@@ -39,11 +39,20 @@ New-Item -ItemType Directory -Force -Path $Out | Out-Null
 $logPath = Join-Path $Out "run.log"
 
 Write-Host "[cuts] запускаю find_cuts.py (coarse=$Coarse, fine=$Fine, threshold=$Threshold)..." -ForegroundColor Cyan
-python scripts/tracking/find_cuts.py `
+# временно гасим Stop, чтобы stderr Python'а не превращался в ErrorRecord
+$prevEAP = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
+& python scripts/tracking/find_cuts.py `
   --video $Video --config $Config --out $Out `
   --coarse $Coarse --fine $Fine --threshold $Threshold `
-  --start $Start --end $End 2>&1 | Tee-Object -FilePath $logPath
-if ($LASTEXITCODE -ne 0) { throw "find_cuts.py упал" }
+  --start $Start --end $End 2>&1 | ForEach-Object { "$_" } | Tee-Object -FilePath $logPath
+$code = $LASTEXITCODE
+$ErrorActionPreference = $prevEAP
+if ($code -ne 0) {
+  Write-Host "[cuts] find_cuts.py упал (exit=$code). Последние строки лога:" -ForegroundColor Red
+  Get-Content $logPath -Tail 40
+  throw "find_cuts.py упал"
+}
 
 $size = (Get-ChildItem $Out -Recurse | Measure-Object Length -Sum).Sum / 1MB
 Write-Host ("[cuts] cuts_out весит {0:N1} MB" -f $size) -ForegroundColor Cyan
