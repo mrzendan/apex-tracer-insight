@@ -471,6 +471,7 @@ function ZonesAdmin() {
                 <input defaultValue={t.id} onBlur={(e) => renameTag(t.id, e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
                   className="text-mono flex-1 rounded-sm bg-background px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-primary/40" />
+                <span className="w-[26px] shrink-0" aria-hidden />
                 <button onClick={() => deleteTag(t.id)} disabled={tags.length <= 1} title="Delete tag"
                   className="grid h-6 w-6 place-items-center rounded-sm text-muted-foreground hover:bg-destructive/20 hover:text-destructive disabled:opacity-30">
                   <Trash2 className="h-3.5 w-3.5" />
@@ -495,7 +496,6 @@ function ZonesAdmin() {
                 <button onClick={() => setSel(z.id)} className="mb-1 flex w-full items-center gap-1.5 text-left">
                   <span className="inline-block h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: c }} />
                   <span className="flex-1 truncate text-xs font-semibold">{z.name}</span>
-                  <span className="text-mono shrink-0 text-[10px] uppercase text-muted-foreground">{z.tag}</span>
                 </button>
                 <div className="flex items-center gap-2">
                   <button
@@ -519,19 +519,19 @@ function ZonesAdmin() {
                     </div>
                   </button>
                   <span className="text-mono flex-1 text-[10px] uppercase text-muted-foreground">{z.w}×{z.h}</span>
-                  <div className="flex shrink-0 items-center gap-0.5">
-                  <button onClick={() => patchMeta(z.id, { hidden: !m.hidden })} title={m.hidden ? "Show" : "Hide"}
-                    className="grid h-6 w-6 place-items-center rounded-sm text-muted-foreground hover:bg-muted hover:text-foreground">
-                    {m.hidden ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                  </button>
-                  <button onClick={() => patchMeta(z.id, { locked: !m.locked })} title={m.locked ? "Unlock" : "Lock"}
-                    className={`grid h-6 w-6 place-items-center rounded-sm hover:bg-muted ${m.locked ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>
-                    {m.locked ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
-                  </button>
-                  <button onClick={() => setSel(z.id)} title="Edit"
-                    className="grid h-6 w-6 place-items-center rounded-sm text-muted-foreground hover:bg-muted hover:text-foreground"><Pencil className="h-3.5 w-3.5" /></button>
-                  <button onClick={() => removeZone(z.id)} title="Delete"
-                    className="grid h-6 w-6 place-items-center rounded-sm text-muted-foreground hover:bg-destructive/20 hover:text-destructive">×</button>
+                  <div className="grid shrink-0 grid-cols-2 gap-0.5">
+                    <button onClick={() => patchMeta(z.id, { hidden: !m.hidden })} title={m.hidden ? "Show" : "Hide"}
+                      className="grid h-6 w-6 place-items-center rounded-sm text-muted-foreground hover:bg-muted hover:text-foreground">
+                      {m.hidden ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                    </button>
+                    <button onClick={() => patchMeta(z.id, { locked: !m.locked })} title={m.locked ? "Unlock" : "Lock"}
+                      className={`grid h-6 w-6 place-items-center rounded-sm hover:bg-muted ${m.locked ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>
+                      {m.locked ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
+                    </button>
+                    <button onClick={() => setSel(z.id)} title="Edit"
+                      className="grid h-6 w-6 place-items-center rounded-sm text-muted-foreground hover:bg-muted hover:text-foreground"><Pencil className="h-3.5 w-3.5" /></button>
+                    <button onClick={() => removeZone(z.id)} title="Delete"
+                      className="grid h-6 w-6 place-items-center rounded-sm text-muted-foreground hover:bg-destructive/20 hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
                   </div>
                 </div>
               </div>
