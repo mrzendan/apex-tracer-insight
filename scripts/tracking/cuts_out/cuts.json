@@ -3,6 +3,21 @@
   "fps": 59.94005994005994,
   "coarse": 600,
   "fine": 10,
-  "threshold": 150.0,
-  "events": []
+  "threshold": 90.0,
+  "events": [
+    {
+      "frame": 18231,
+      "t": 304.154,
+      "from_pan": [
+        1023.6,
+        906.6
+      ],
+      "to_pan": [
+        982.6,
+        877.9
+      ],
+      "delta": 50.1,
+      "pixel_diff": 27.01
+    }
+  ]
 }
