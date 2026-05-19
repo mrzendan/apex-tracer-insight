@@ -1570,6 +1570,39 @@ function DebugPanel(props: Parameters<typeof RightPanel>[0]) {
   const copy = (s: string) => navigator.clipboard?.writeText(s);
   return (
     <div className="space-y-3 p-3">
+      <Section title="Tracker pipeline">
+        <ul className="text-mono space-y-1 text-[11px]">
+          {[
+            { k: "ingest",   l: "Video ingest",        s: props.committed.videoUrl ? "ok" : "idle" },
+            { k: "crop",     l: "Crop & rescale",      s: "ok" },
+            { k: "detect",   l: "Frame detection",     s: "ok" },
+            { k: "score",    l: "Candidate scoring",   s: props.quality.avgConfidence < 0.5 ? "warn" : "ok" },
+            { k: "smooth",   l: "EMA smoothing",       s: "ok" },
+            { k: "jump",     l: "Jump detection",      s: props.quality.jumpEvents > 5 ? "warn" : "ok" },
+            { k: "output",   l: "Camera track output", s: "ok" },
+          ].map((row) => (
+            <li key={row.k} className="flex items-center justify-between gap-2">
+              <span className="text-muted-foreground">{row.l}</span>
+              <span className={
+                row.s === "ok" ? "text-emerald-400" :
+                row.s === "warn" ? "text-amber-400" :
+                "text-muted-foreground"
+              }>● {row.s}</span>
+            </li>
+          ))}
+        </ul>
+      </Section>
+
+      <Section title="Processing stats">
+        <dl className="text-mono grid grid-cols-2 gap-y-1 text-xs">
+          <dt className="text-muted-foreground">total frames</dt>
+          <dd>{Math.max(60, Math.round((props.time || 1) * props.committed.frameRate)).toString()}</dd>
+          <dt className="text-muted-foreground">sample step</dt><dd>{props.committed.sampleStep}</dd>
+          <dt className="text-muted-foreground">fps in</dt><dd>{props.committed.frameRate}</dd>
+          <dt className="text-muted-foreground">vp size</dt><dd>{props.viewport.size.toFixed(3)}</dd>
+        </dl>
+      </Section>
+
       <Section title="Debug mode">
         <CheckField label="Debug mode enabled" checked={props.draft.debugMode}
           onChange={(v) => props.patchDraft({ debugMode: v })} />
