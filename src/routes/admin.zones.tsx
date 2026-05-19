@@ -524,6 +524,18 @@ function ZonesAdmin() {
                 className="mt-3 w-full rounded-sm bg-primary px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">
                 Save
               </button>
+              <button
+                onClick={() => {
+                  const payload = { base: [W, H], mode, zones };
+                  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url; a.download = `zones.${mode}.json`; a.click();
+                  setTimeout(() => URL.revokeObjectURL(url), 1000);
+                }}
+                className="mt-2 w-full rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">
+                Download zones.json
+              </button>
               <button onClick={() => removeZone(selZone.id)}
                 className="mt-2 w-full rounded-sm border border-destructive/40 bg-destructive/10 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-destructive hover:bg-destructive/20">
                 Delete zone
