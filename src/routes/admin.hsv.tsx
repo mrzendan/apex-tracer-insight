@@ -204,7 +204,9 @@ function HsvAdmin() {
 
     if (!compareAll) {
       const [hL, hU] = preset.h, [sL, sU] = preset.s, [vL, vU] = preset.v;
-      const others = teamList.filter((t) => t.id !== teamId).map((t) => ({ p: presets[t.id], c: t.color }));
+      const others = teamList
+        .filter((t) => t.id !== teamId)
+        .map((t) => ({ p: presets[presetKey(t.id, frame.id)] ?? presetFromColor(t.color), c: teamSwatch(t.id) }));
       for (let i = 0; i < src.data.length; i += 4) {
         const [h, s, v] = rgbToHsvCv(src.data[i], src.data[i + 1], src.data[i + 2]);
         const ok = h >= hL && h <= hU && s >= sL && s <= sU && v >= vL && v <= vU;
@@ -229,7 +231,11 @@ function HsvAdmin() {
       }
     } else {
       // colorize each pixel by first matching team
-      const all = teamList.map((t) => ({ id: t.id, p: presets[t.id], c: t.color }));
+      const all = teamList.map((t) => ({
+        id: t.id,
+        p: presets[presetKey(t.id, frame.id)] ?? presetFromColor(t.color),
+        c: teamSwatch(t.id),
+      }));
       const myIdx = all.findIndex((a) => a.id === teamId);
       for (let i = 0; i < src.data.length; i += 4) {
         const [h, s, v] = rgbToHsvCv(src.data[i], src.data[i + 1], src.data[i + 2]);
@@ -252,7 +258,7 @@ function HsvAdmin() {
     }
     mctx.putImageData(out, 0, 0);
     setMaskStats({ detected, total, overlapPct: detected > 0 ? Math.round((overlapPixels / detected) * 100) : 0 });
-  }, [preset, presets, imgReady, compareAll, teamId, teamList]);
+  }, [preset, presets, imgReady, compareAll, teamId, teamList, frame.id, savedColors]);
 
   const onPreviewClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const off = sampleCanvasRef.current;
@@ -276,6 +282,16 @@ function HsvAdmin() {
     const url = URL.createObjectURL(file);
     const id = `upload-${Date.now()}`;
     setFrames((prev) => [...prev, { id, name: `Upload · ${file.name.slice(0, 14)}`, image: url }]);
+    setPresets((prev) => {
+      const next = { ...prev };
+      for (const t of teams) next[presetKey(t.id, id)] = presetFromColor(t.color);
+      return next;
+    });
+    setSavedColors((prev) => {
+      const next = { ...prev };
+      for (const t of teams) next[presetKey(t.id, id)] = t.color;
+      return next;
+    });
     setFrameId(id);
     e.target.value = "";
   };
