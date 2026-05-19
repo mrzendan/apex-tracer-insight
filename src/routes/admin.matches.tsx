@@ -225,10 +225,12 @@ function MatchesAdmin() {
                           <Indicator label="Trajectory" state={ind.trajectory} />
                         </div>
                       </td>
-                      <td className="px-3 py-2 text-right text-xs">
-                        <button onClick={(e) => { e.stopPropagation(); navigate({ to: "/admin/matches/$matchId" as "/admin/matches", params: { matchId: m.id } as never }); }} className="mr-1 rounded-sm border border-border bg-surface px-2 py-1 hover:bg-muted">Open</button>
-                        <button onClick={(e) => startEdit(e, m)} className="mr-1 rounded-sm border border-border bg-surface px-2 py-1 hover:bg-muted">Edit</button>
-                        <button onClick={(e) => remove(e, m.id)} className="rounded-sm border border-destructive/40 bg-surface px-2 py-1 text-destructive hover:bg-destructive/10">Delete</button>
+                      <td className="px-3 py-2 text-right text-xs whitespace-nowrap">
+                        <div className="inline-flex items-center gap-1">
+                          <button onClick={(e) => { e.stopPropagation(); navigate({ to: "/admin/matches/$matchId" as "/admin/matches", params: { matchId: m.id } as never }); }} className="rounded-sm border border-border bg-surface px-2 py-1 hover:bg-muted">Open</button>
+                          <button onClick={(e) => startEdit(e, m)} className="rounded-sm border border-border bg-surface px-2 py-1 hover:bg-muted">Edit</button>
+                          <button onClick={(e) => remove(e, m.id)} className="rounded-sm border border-destructive/40 bg-surface px-2 py-1 text-destructive hover:bg-destructive/10">Delete</button>
+                        </div>
                       </td>
                     </tr>
                     {isOpen && (
