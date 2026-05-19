@@ -412,10 +412,10 @@ function TeamDetail() {
         </div>
 
         {/* ---- Form dynamics ---- */}
-        <div className="hud-panel mt-4 grid gap-3 p-3 md:grid-cols-3">
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
           <Sparkline
             title="Placement over time"
-            subtitle="lower is better · inverted"
+            hint={["lower is better", "inverted axis"]}
             values={formPoints.map((p) => p.placement)}
             dates={formPoints.map((p) => p.date)}
             invert
@@ -426,16 +426,16 @@ function TeamDetail() {
           />
           <Sparkline
             title="Kills over time"
-            subtitle="per match"
+            hint={["per match", "season aggregate"]}
             values={formPoints.map((p) => p.kills)}
             dates={formPoints.map((p) => p.date)}
             min={0}
-            color="rgb(245 158 11)"
+            color="hsl(var(--primary))"
             formatVal={(v) => `${v.toFixed(0)}`}
           />
           <Sparkline
             title="Top 5 rate"
-            subtitle="rolling 5-game window · %"
+            hint={["rolling 5-game", "window · %"]}
             values={top5Rate}
             dates={formPoints.map((p) => p.date)}
             min={0}
