@@ -147,6 +147,31 @@ function HsvAdmin() {
   const setPreset = (p: Partial<Preset>) =>
     setPresets((prev) => ({ ...prev, [k]: { ...(prev[k] ?? preset), ...p } }));
 
+  const downloadFramePresets = (fid: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    const f = frames.find((x) => x.id === fid);
+    if (!f) return;
+    const exported = {
+      frame: f.id,
+      frameName: f.name,
+      teams: teamList.map((t, i) => {
+        const p = presets[presetKey(t.id, fid)] ?? presetFromColor(t.color);
+        return {
+          slot: i + 1,
+          id: t.id,
+          name: t.displayName,
+          hex: savedColors[presetKey(t.id, fid)] ?? t.color,
+          h: p.h, s: p.s, v: p.v,
+        };
+      }),
+    };
+    const blob = new Blob([JSON.stringify(exported, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `hsv_presets.${f.id}.json`; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
   // Compute conflicts vs other teams.
   const conflicts = useMemo(() => {
     return teamList
@@ -313,11 +338,18 @@ function HsvAdmin() {
         <div className="flex items-center gap-1">
           <span className="label-eyebrow mr-2 text-xs">Sample</span>
           {frames.map((s) => (
-            <button key={s.id} onClick={() => setFrameId(s.id)}
-              className={`rounded-sm border px-2.5 py-1 text-xs font-semibold uppercase tracking-wider transition-colors ${
-                s.id === frameId ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface-2 text-muted-foreground hover:bg-muted"}`}>
-              {s.name}
-            </button>
+            <div key={s.id}
+              className={`flex items-center rounded-sm border transition-colors ${
+                s.id === frameId ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface-2 text-muted-foreground"}`}>
+              <button onClick={() => setFrameId(s.id)}
+                className="px-2.5 py-1 text-xs font-semibold uppercase tracking-wider hover:text-foreground">
+                {s.name}
+              </button>
+              <button onClick={(e) => downloadFramePresets(s.id, e)} title="Download hsv_presets.json"
+                className="grid h-6 w-6 place-items-center border-l border-border/60 opacity-70 hover:opacity-100">
+                <Download className="h-3 w-3" />
+              </button>
+            </div>
           ))}
           <button
             onClick={() => fileInputRef.current?.click()}
