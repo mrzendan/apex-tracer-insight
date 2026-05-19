@@ -34,6 +34,8 @@ export type MatchExtras = {
   gameDurations?: number[];
   /** Per-team POV VOD links (YouTube URLs). */
   teamVods?: Record<string, string>;
+  /** Per-map (per-game) VOD links, indexed by game index. */
+  mapVods?: Record<number, string>;
   /** Teams that participated. */
   teamIds?: string[];
 };

@@ -38,7 +38,7 @@ const statusStyle: Record<MatchStatus, string> = {
 
 function StatusBadge({ s }: { s: MatchStatus }) {
   return (
-    <span className={`inline-flex items-center rounded-sm border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${statusStyle[s]}`}>{s}</span>
+    <span className={`inline-flex items-center rounded-sm border px-1.5 py-0.5 text-xs font-bold uppercase tracking-wider ${statusStyle[s]}`}>{s}</span>
   );
 }
 
@@ -46,7 +46,7 @@ function Indicator({ label, state }: { label: string; state: "ok" | "missing" | 
   const ch = state === "ok" ? "✓" : state === "pending" ? "…" : "—";
   const cls = state === "ok" ? "text-emerald-400" : state === "pending" ? "text-amber-400" : "text-muted-foreground";
   return (
-    <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground" title={`${label}: ${state}`}>
+    <span className="inline-flex items-center gap-1 text-xs uppercase tracking-wider text-muted-foreground" title={`${label}: ${state}`}>
       {label} <span className={`text-mono ${cls}`}>{ch}</span>
     </span>
   );
@@ -227,18 +227,18 @@ function MatchesAdmin() {
                                   <button
                                     key={k}
                                     onClick={() => setTab(k)}
-                                    className={`rounded-sm border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider ${tab === k ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface text-muted-foreground hover:bg-muted"}`}
+                                    className={`rounded-sm border px-2.5 py-1 text-xs font-semibold uppercase tracking-wider ${tab === k ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface text-muted-foreground hover:bg-muted"}`}
                                   >
                                     {k === "teams" ? "Teams / POV" : k}
                                   </button>
                                 ))}
                               </div>
                               <div className="flex flex-wrap gap-1">
-                                <button onClick={() => navigate({ to: "/admin/matches/$matchId" as "/admin/matches", params: { matchId: m.id } as never })} className="rounded-sm border border-border bg-surface px-2 py-1 text-[11px] uppercase tracking-wider hover:bg-muted">Upload VOD</button>
-                                <button className="rounded-sm border border-primary/40 bg-primary/10 px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-primary hover:bg-primary/20">Run analysis</button>
-                                <Link to="/games/$gameId" params={{ gameId: gameIdFor(m.id, 0) }} className="rounded-sm border border-border bg-surface px-2 py-1 text-[11px] uppercase tracking-wider hover:bg-muted">Open viewer</Link>
-                                <Link to="/admin/processes" className="rounded-sm border border-border bg-surface px-2 py-1 text-[11px] uppercase tracking-wider hover:bg-muted">Open debug</Link>
-                                <button onClick={() => duplicateMatch(m)} className="rounded-sm border border-border bg-surface px-2 py-1 text-[11px] uppercase tracking-wider hover:bg-muted">Duplicate</button>
+                                <button onClick={() => navigate({ to: "/admin/matches/$matchId" as "/admin/matches", params: { matchId: m.id } as never })} className="rounded-sm border border-border bg-surface px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted">Upload VOD</button>
+                                <button className="rounded-sm border border-primary/40 bg-primary/10 px-2 py-1 text-xs font-semibold uppercase tracking-wider text-primary hover:bg-primary/20">Run analysis</button>
+                                <Link to="/games/$gameId" params={{ gameId: gameIdFor(m.id, 0) }} className="rounded-sm border border-border bg-surface px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted">Open viewer</Link>
+                                <Link to="/admin/processes" className="rounded-sm border border-border bg-surface px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted">Open debug</Link>
+                                <button onClick={() => duplicateMatch(m)} className="rounded-sm border border-border bg-surface px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted">Duplicate</button>
                               </div>
                             </div>
 
@@ -290,9 +290,9 @@ function MatchesAdmin() {
                                         <div className="flex-1 text-xs font-semibold">{mp.name}</div>
                                         <span className="text-mono text-xs tabular-nums text-muted-foreground">{mm(dur)}</span>
                                         <StatusBadge s={mst} />
-                                        <Link to="/games/$gameId" params={{ gameId }} className="rounded-sm border border-border bg-surface px-2 py-1 text-[11px] uppercase tracking-wider hover:bg-muted">Open</Link>
-                                        <button className="rounded-sm border border-primary/40 bg-primary/10 px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-primary hover:bg-primary/20">Analyze</button>
-                                        <Link to="/admin/processes" className="rounded-sm border border-border bg-surface px-2 py-1 text-[11px] uppercase tracking-wider hover:bg-muted">Debug</Link>
+                                        <Link to="/games/$gameId" params={{ gameId }} className="rounded-sm border border-border bg-surface px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted">Open</Link>
+                                        <button className="rounded-sm border border-primary/40 bg-primary/10 px-2 py-1 text-xs font-semibold uppercase tracking-wider text-primary hover:bg-primary/20">Analyze</button>
+                                        <Link to="/admin/processes" className="rounded-sm border border-border bg-surface px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted">Debug</Link>
                                         <div className="flex flex-col gap-0.5">
                                           <button
                                             onClick={() => { if (i === 0) return; const next = [...mapIds]; [next[i - 1], next[i]] = [next[i], next[i - 1]]; updateMatch(m.id, { mapIds: next, mapId: next[0] }); }}
@@ -336,7 +336,7 @@ function MatchesAdmin() {
                               <div className="hud-panel overflow-hidden">
                                 <table className="w-full text-xs">
                                   <thead className="border-b border-border bg-surface-2">
-                                    <tr className="label-eyebrow text-left text-[10px]">
+                                    <tr className="label-eyebrow text-left text-xs">
                                       <th className="px-3 py-2">Team</th>
                                       <th className="px-3 py-2">POV VOD</th>
                                       <th className="px-3 py-2 w-[100px]">Status</th>
@@ -357,7 +357,7 @@ function MatchesAdmin() {
                                           </td>
                                           <td className="px-3 py-1.5">
                                             {linked ? (
-                                              <a href={url} target="_blank" rel="noreferrer" className="inline-flex max-w-[280px] items-center gap-1 truncate text-mono text-[11px] text-primary hover:underline">
+                                              <a href={url} target="_blank" rel="noreferrer" className="inline-flex max-w-[280px] items-center gap-1 truncate text-mono text-xs text-primary hover:underline">
                                                 <YoutubeIcon className="h-3 w-3" /> <span className="truncate">{url}</span>
                                               </a>
                                             ) : (
@@ -368,7 +368,7 @@ function MatchesAdmin() {
                                           <td className="px-3 py-1.5 text-right">
                                             <button
                                               onClick={(e) => openVod(e, m.id, t.id, url)}
-                                              className={`rounded-sm border px-2 py-1 text-[11px] uppercase tracking-wider ${linked ? "border-border bg-surface hover:bg-muted" : "border-primary/40 bg-primary/10 text-primary hover:bg-primary/20"}`}
+                                              className={`rounded-sm border px-2 py-1 text-xs uppercase tracking-wider ${linked ? "border-border bg-surface hover:bg-muted" : "border-primary/40 bg-primary/10 text-primary hover:bg-primary/20"}`}
                                             >
                                               {linked ? "Edit" : "+ Add"}
                                             </button>
@@ -382,15 +382,43 @@ function MatchesAdmin() {
                             )}
 
                             {tab === "files" && (
-                              <div className="hud-panel p-3">
-                                <div className="label-eyebrow mb-2 text-xs">Broadcast VOD</div>
-                                <input
-                                  value={m.vodLink ?? ""}
-                                  onChange={(e) => updateMatch(m.id, { vodLink: e.target.value })}
-                                  placeholder="https://youtube.com/watch?v=..."
-                                  className="w-full rounded-sm border border-border bg-background px-2 py-1.5 text-sm text-mono"
-                                />
-                                <div className="mt-4 text-xs text-muted-foreground">
+                              <div className="space-y-4">
+                                <div className="hud-panel p-3">
+                                  <div className="label-eyebrow mb-2 text-xs">Broadcast VOD</div>
+                                  <input
+                                    value={m.vodLink ?? ""}
+                                    onChange={(e) => updateMatch(m.id, { vodLink: e.target.value })}
+                                    placeholder="https://youtube.com/watch?v=..."
+                                    className="w-full rounded-sm border border-border bg-background px-2 py-1.5 text-sm text-mono"
+                                  />
+                                </div>
+                                <div className="hud-panel p-3">
+                                  <div className="label-eyebrow mb-2 text-xs">Map VODs ({mapIds.length})</div>
+                                  <ul className="space-y-1.5">
+                                    {mapIds.map((id, i) => {
+                                      const mp = allMaps.find((x) => x.id === id);
+                                      if (!mp) return null;
+                                      const url = m.mapVods?.[i] ?? "";
+                                      return (
+                                        <li key={`mv-${id}-${i}`} className="flex items-center gap-2">
+                                          <span className="w-6 text-mono text-xs text-muted-foreground">#{i + 1}</span>
+                                          <img src={mp.image} alt={mp.name} className="h-8 w-12 rounded-sm object-cover" />
+                                          <span className="w-32 truncate text-xs font-semibold">{mp.name}</span>
+                                          <input
+                                            value={url}
+                                            onChange={(e) => updateMatch(m.id, { mapVods: { ...(m.mapVods ?? {}), [i]: e.target.value } })}
+                                            placeholder="https://youtube.com/watch?v=..."
+                                            className="flex-1 rounded-sm border border-border bg-background px-2 py-1.5 text-xs text-mono"
+                                          />
+                                          {url && (
+                                            <a href={url} target="_blank" rel="noreferrer" className="rounded-sm border border-primary/40 bg-primary/10 px-2 py-1 text-xs uppercase tracking-wider text-primary hover:bg-primary/20">Open</a>
+                                          )}
+                                        </li>
+                                      );
+                                    })}
+                                  </ul>
+                                </div>
+                                <div className="text-xs text-muted-foreground">
                                   Minimap exports, trajectories and other artifacts will appear here once analysis is completed.
                                 </div>
                               </div>
@@ -407,7 +435,7 @@ function MatchesAdmin() {
                                   <li className="flex items-center justify-between rounded-sm border border-border bg-surface px-2 py-1.5"><span>Trajectory tracking</span><StatusBadge s="draft" /></li>
                                 </ul>
                                 <div className="mt-3 flex justify-end">
-                                  <Link to="/admin/processes" className="rounded-sm border border-border bg-surface px-2 py-1 text-[11px] uppercase tracking-wider hover:bg-muted">Open processes</Link>
+                                  <Link to="/admin/processes" className="rounded-sm border border-border bg-surface px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted">Open processes</Link>
                                 </div>
                               </div>
                             )}
