@@ -1620,6 +1620,50 @@ function UpdateActions({ onUpdate, onSaveAs, isDirty }: { onUpdate: () => void; 
   );
 }
 
+/* Apply (commit draft → committed) · Save (update active preset) · Save as · Reset (draft → active preset) */
+function PresetActions(props: {
+  onUpdateCommit: () => void;
+  onUpdateActivePreset: () => void;
+  onSaveAs: () => void;
+  onResetDraftToActive: () => void;
+  isDirty: boolean;
+}) {
+  return (
+    <div className="mt-1 grid grid-cols-4 gap-1.5">
+      <button onClick={props.onUpdateCommit} title="Применить настройки временно (без сохранения в пресет)"
+        className={`rounded-sm px-2 py-1.5 text-xs font-semibold uppercase tracking-wider transition ${
+          props.isDirty ? "bg-primary text-primary-foreground hover:brightness-110" : "bg-surface-2 text-muted-foreground"
+        }`}>Apply{props.isDirty ? " *" : ""}</button>
+      <button onClick={props.onUpdateActivePreset} title="Сохранить изменения в текущий пресет"
+        className="rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">Save</button>
+      <button onClick={props.onSaveAs} title="Сохранить как новый пресет"
+        className="rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">Save as…</button>
+      <button onClick={props.onResetDraftToActive} title="Вернуть значения текущего пресета"
+        className="rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">Reset</button>
+    </div>
+  );
+}
+
+function CompareRow({ k, cur, prev, delta, suffix = "", decimals = 0, lowerBetter = false }: {
+  k: string; cur: string; prev: string; delta: number; suffix?: string; decimals?: number; lowerBetter?: boolean;
+}) {
+  const sign = delta > 0 ? "+" : "";
+  const val = decimals ? delta.toFixed(decimals) : Math.round(delta).toString();
+  const isZero = Math.abs(delta) < (decimals ? 0.005 : 0.5);
+  const good = lowerBetter ? delta < 0 : delta > 0;
+  const cls = isZero ? "text-muted-foreground" : good ? "text-emerald-400" : "text-destructive";
+  return (
+    <div className="flex items-baseline justify-between">
+      <span className="text-muted-foreground">{k}</span>
+      <span>
+        <span className="text-muted-foreground/70 line-through mr-1">{prev}</span>
+        <span>{cur}</span>
+        {!isZero && <span className={`ml-1 ${cls}`}>{sign}{val}{suffix}</span>}
+      </span>
+    </div>
+  );
+}
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-sm border border-border bg-surface-2">
