@@ -248,11 +248,8 @@ function MatchesAdmin() {
                                 ))}
                               </div>
                               <div className="flex flex-wrap gap-1">
-                                <button onClick={() => navigate({ to: "/admin/matches/$matchId" as "/admin/matches", params: { matchId: m.id } as never })} className="rounded-sm border border-border bg-surface px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted">Upload VOD</button>
                                 <button className="rounded-sm border border-primary/40 bg-primary/10 px-2 py-1 text-xs font-semibold uppercase tracking-wider text-primary hover:bg-primary/20">Run analysis</button>
-                                <Link to="/games/$gameId" params={{ gameId: gameIdFor(m.id, 0) }} className="rounded-sm border border-border bg-surface px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted">Open viewer</Link>
-                                <Link to="/admin/processes" className="rounded-sm border border-border bg-surface px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted">Open debug</Link>
-                                <button onClick={() => duplicateMatch(m)} className="rounded-sm border border-border bg-surface px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted">Duplicate</button>
+                                <Link to="/admin/processes" search={{ matchId: m.id }} className="rounded-sm border border-border bg-surface px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted">Open debug</Link>
                               </div>
                             </div>
 
