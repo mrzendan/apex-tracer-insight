@@ -30,3 +30,19 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# --- Python / Scripts ---
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+scripts/tracking/debug_out
+
+# --- Видео (не коммитим) ---
+*.mp4
+*.avi
+*.mov
+
+# --- OS ---
+Thumbs.db
