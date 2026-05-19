@@ -13,40 +13,49 @@ import { getSlotColor } from "@/lib/team-colors";
 
 export const Route = createFileRoute("/admin/camera")({ component: CameraAdmin });
 
-/** Camera tracking parameters — consumed by the backend tracker. */
+/* =========================================================================
+   Types & constants
+   ========================================================================= */
+
 type TrackingSettings = {
+  // source
+  videoUrl: string;
+  sourceType: "vod" | "player_cam" | "observer";
+  frameRate: number;
+  // crop
+  cropLeft: number; cropRight: number; cropTop: number; cropBottom: number;
+  // smoothing / response
   smoothing: number;
-  deadzone: number;
   responseSpeed: number;
+  deadzone: number;
   maxSpeed: number;
-  zoomMin: number;
-  zoomMax: number;
-  zoomStep: number;
-  zoomLerp: number;
-  ringWeight: number;
-  ringNoise: number;
-  teamWeight: number;
-  jumpThreshold: number;
-  preJumpUnlock: number;
   ema: number;
+  // zoom
+  zoomMin: number; zoomMax: number; zoomStep: number; zoomLerp: number;
+  zoomSensitivity: number; stepZoomEnabled: boolean;
+  // ring / team
+  ringWeight: number; teamWeight: number;
+  ringNoiseTolerance: number; teamClusterTolerance: number; ringCenterLock: boolean;
+  // jump detection
+  jumpThreshold: number; jumpCooldownFrames: number;
+  preJumpUnlock: number; antiLatchTail: number; relockThreshold: number;
+  // advanced
+  sampleStep: number; confidenceThreshold: number; lostFrameThreshold: number;
+  debugMode: boolean; saveDebugFrames: boolean;
 };
 
 type Viewport = { x: number; y: number; size: number };
 type Preset = {
   id: string;
   name: string;
-  videoUrl: string;
-  cropLeft: number;
-  cropRight: number;
   viewport: Viewport;
   settings: TrackingSettings;
 };
 
 const SRC_W = 1920;
 const SRC_H = 1080;
-
-/** Same ring segmentation as match analytics: each phase splits into CD + Closing. */
 const RING_CLOSE_FRACTION = 0.4;
+
 type RingSegment = { phaseIndex: number; kind: "CD" | "Closing"; startSec: number; endSec: number };
 const ringSegments: RingSegment[] = ringPhases.flatMap((p, i) => {
   const dur = p.endSec - p.startSec;
@@ -58,45 +67,48 @@ const ringSegments: RingSegment[] = ringPhases.flatMap((p, i) => {
 });
 const GAME_DURATION_SEC = ringPhases[ringPhases.length - 1].endSec;
 
-const baseSettings: TrackingSettings = {
-  smoothing: 0.55, deadzone: 18, responseSpeed: 0.45, maxSpeed: 60,
-  zoomMin: 1.0, zoomMax: 2.4, zoomStep: 0.1, zoomLerp: 0.35,
-  ringWeight: 0.5, ringNoise: 0.25, teamWeight: 0.6,
-  jumpThreshold: 140, preJumpUnlock: 0.6,
-  ema: 14,
-};
-
 const SAMPLE_VIDEO =
   "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+
+const baseSettings: TrackingSettings = {
+  videoUrl: SAMPLE_VIDEO,
+  sourceType: "observer",
+  frameRate: 60,
+  cropLeft: 420, cropRight: 420, cropTop: 0, cropBottom: 0,
+  smoothing: 0.55, responseSpeed: 0.45, deadzone: 18, maxSpeed: 60, ema: 14,
+  zoomMin: 1.0, zoomMax: 2.4, zoomStep: 0.1, zoomLerp: 0.35,
+  zoomSensitivity: 0.5, stepZoomEnabled: false,
+  ringWeight: 0.5, teamWeight: 0.6,
+  ringNoiseTolerance: 0.25, teamClusterTolerance: 0.3, ringCenterLock: false,
+  jumpThreshold: 140, jumpCooldownFrames: 8,
+  preJumpUnlock: 0.6, antiLatchTail: 0.4, relockThreshold: 0.55,
+  sampleStep: 2, confidenceThreshold: 0.45, lostFrameThreshold: 6,
+  debugMode: false, saveDebugFrames: false,
+};
 
 const defaultPresets: Preset[] = [
   {
     id: "p-step", name: "Step zoom",
-    videoUrl: SAMPLE_VIDEO, cropLeft: 420, cropRight: 420,
     viewport: { x: 0, y: 0, size: 1 },
-    settings: { ...baseSettings, zoomLerp: 0.0, zoomStep: 0.25, smoothing: 0.7 },
+    settings: { ...baseSettings, zoomLerp: 0.0, zoomStep: 0.25, smoothing: 0.7, stepZoomEnabled: true },
   },
   {
     id: "p-smooth", name: "Smooth observer",
-    videoUrl: SAMPLE_VIDEO, cropLeft: 420, cropRight: 420,
     viewport: { x: 0.2, y: 0.2, size: 0.6 },
     settings: { ...baseSettings, smoothing: 0.85, zoomLerp: 0.7, responseSpeed: 0.35, ema: 22 },
   },
   {
     id: "p-fast", name: "Fast camera",
-    videoUrl: SAMPLE_VIDEO, cropLeft: 420, cropRight: 420,
     viewport: { x: 0.3, y: 0.3, size: 0.4 },
     settings: { ...baseSettings, smoothing: 0.15, responseSpeed: 0.95, maxSpeed: 220, deadzone: 0, jumpThreshold: 60, ema: 3 },
   },
   {
     id: "p-lownoise", name: "Low noise",
-    videoUrl: SAMPLE_VIDEO, cropLeft: 420, cropRight: 420,
     viewport: { x: 0.1, y: 0.1, size: 0.7 },
-    settings: { ...baseSettings, ringWeight: 0.85, ringNoise: 0.7, teamWeight: 0.3, smoothing: 0.75 },
+    settings: { ...baseSettings, ringWeight: 0.85, ringNoiseTolerance: 0.7, teamWeight: 0.3, smoothing: 0.75 },
   },
   {
     id: "p-custom", name: "Custom",
-    videoUrl: SAMPLE_VIDEO, cropLeft: 420, cropRight: 420,
     viewport: { x: 0.2, y: 0.2, size: 0.6 },
     settings: { ...baseSettings },
   },
@@ -110,21 +122,17 @@ type SplitOpts = {
   showCameraBbox: boolean;
 };
 
-/** Synthetic event markers placed at fractions of duration for the timeline / charts. */
+type SeriesVisibility = {
+  raw: boolean; smoothed: boolean; ringCenter: boolean; jumpScore: boolean; confidence: boolean;
+};
+
 type TrackEvent = { t: number; kind: "ring" | "jump" | "relock" | "lost" | "manual"; label: string };
 const eventColor: Record<TrackEvent["kind"], string> = {
-  ring: "#22d3ee",
-  jump: "#ef4444",
-  relock: "#22c55e",
-  lost: "#f59e0b",
-  manual: "#a855f7",
+  ring: "#22d3ee", jump: "#ef4444", relock: "#a855f7", lost: "#9ca3af", manual: "#06b6d4",
 };
 const eventLabel: Record<TrackEvent["kind"], string> = {
-  ring: "Ring closing",
-  jump: "Jump detected",
-  relock: "Relock",
-  lost: "Lost tracking",
-  manual: "Manual correction",
+  ring: "Ring closing", jump: "Jump detected", relock: "Relock",
+  lost: "Lost tracking", manual: "Manual correction",
 };
 
 function buildEvents(duration: number): TrackEvent[] {
@@ -143,6 +151,21 @@ function buildEvents(duration: number): TrackEvent[] {
   return frac.map(([f, k]) => ({ t: f * duration, kind: k, label: eventLabel[k] }));
 }
 
+const GRAPH_PRESETS = ["Step zoom", "Ring noise", "Balance", "Max sensitivity"] as const;
+
+const DEBUG_FILES = [
+  { name: "progress.json",        path: "/tmp/tracker/progress.json" },
+  { name: "partial_result.json",  path: "/tmp/tracker/partial_result.json" },
+  { name: "result.json",          path: "/tmp/tracker/result.json" },
+  { name: "camera_track.json",    path: "/tmp/tracker/camera_track.json" },
+  { name: "debug_video.mp4",      path: "/tmp/tracker/debug_video.mp4" },
+  { name: "trajectory_map.jpg",   path: "/tmp/tracker/trajectory_map.jpg" },
+] as const;
+
+/* =========================================================================
+   Root component
+   ========================================================================= */
+
 function CameraAdmin() {
   const { tournaments, matches } = useAdminStore();
 
@@ -159,75 +182,82 @@ function CameraAdmin() {
   useEffect(() => { setMapId(matchMapIds[0] ?? allMaps[0].id); }, [matchId]);
   const map = allMaps.find((m) => m.id === mapId) ?? allMaps[0];
 
+  /* presets + draft/committed split */
   const [presets, setPresets] = useState<Preset[]>(defaultPresets);
   const [activePresetId, setActivePresetId] = useState<string>(defaultPresets[0].id);
   const active = presets.find((p) => p.id === activePresetId) ?? presets[0];
 
-  const [videoUrl, setVideoUrl] = useState(active.videoUrl);
-  const [cropLeft, setCropLeft] = useState(active.cropLeft);
-  const [cropRight, setCropRight] = useState(active.cropRight);
   const [viewport, setViewport] = useState<Viewport>(active.viewport);
-  const [settings, setSettings] = useState<TrackingSettings>(active.settings);
+  const [draft, setDraft] = useState<TrackingSettings>(active.settings);
+  const [committed, setCommitted] = useState<TrackingSettings>(active.settings);
 
-  const [time, setTime] = useState(0);
-  const [duration, setDuration] = useState(60);
-  const [playing, setPlaying] = useState(false);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const patchDraft = (patch: Partial<TrackingSettings>) =>
+    setDraft((d) => ({ ...d, ...patch }));
 
-  // View mode + split overlay toggles
-  const [viewMode, setViewMode] = useState<ViewMode>("overview");
-  const [splitOpts, setSplitOpts] = useState<SplitOpts>({
-    syncMapVideo: true, lockZoom: false, showRingCenter: true, showCameraBbox: true,
-  });
-  const [showOriginal, setShowOriginal] = useState(true);
-
-  const loadPreset = (id: string) => {
+  const applyPreset = (id: string) => {
     const p = presets.find((x) => x.id === id);
     if (!p) return;
     setActivePresetId(id);
-    setVideoUrl(p.videoUrl);
-    setCropLeft(p.cropLeft);
-    setCropRight(p.cropRight);
     setViewport(p.viewport);
-    setSettings(p.settings);
+    setDraft(p.settings);
+  };
+  const commitUpdate = () => setCommitted(draft);
+  const saveAs = () => {
+    const name = window.prompt("Preset name?");
+    if (!name) return;
+    const np: Preset = { id: `p-${Date.now()}`, name, viewport, settings: draft };
+    setPresets((arr) => [...arr, np]);
+    setActivePresetId(np.id);
   };
   const updateActivePreset = () => {
     setPresets((arr) => arr.map((p) => (p.id === activePresetId
-      ? { ...p, videoUrl, cropLeft, cropRight, viewport, settings } : p)));
+      ? { ...p, viewport, settings: draft } : p)));
   };
-  const saveCurrentAsPreset = () => {
-    const name = prompt("Preset name?");
-    if (!name) return;
-    const np: Preset = { id: `p-${Date.now()}`, name, videoUrl, cropLeft, cropRight, viewport, settings };
+  const duplicatePreset = () => {
+    const np: Preset = { id: `p-${Date.now()}`, name: `${active.name} copy`, viewport, settings: draft };
     setPresets((arr) => [...arr, np]);
     setActivePresetId(np.id);
   };
   const deleteActivePreset = () => {
     if (presets.length <= 1) return;
-    if (!confirm(`Delete preset "${active.name}"?`)) return;
+    if (!window.confirm(`Delete preset "${active.name}"?`)) return;
     const next = presets.filter((p) => p.id !== activePresetId);
     setPresets(next);
     setActivePresetId(next[0].id);
   };
+  const resetToDefault = () => {
+    setDraft(baseSettings);
+  };
+
+  /* video / timeline */
+  const [time, setTime] = useState(0);
+  const [duration, setDuration] = useState(60);
+  const [playing, setPlaying] = useState(false);
+  const [videoLoaded, setVideoLoaded] = useState<"loading" | "loaded" | "error">("loading");
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
-    const onLoaded = () => setDuration(v.duration || 60);
+    setVideoLoaded("loading");
+    const onLoaded = () => { setDuration(v.duration || 60); setVideoLoaded("loaded"); };
     const onTime = () => setTime(v.currentTime);
     const onPlay = () => setPlaying(true);
     const onPause = () => setPlaying(false);
+    const onErr = () => setVideoLoaded("error");
     v.addEventListener("loadedmetadata", onLoaded);
     v.addEventListener("timeupdate", onTime);
     v.addEventListener("play", onPlay);
     v.addEventListener("pause", onPause);
+    v.addEventListener("error", onErr);
     return () => {
       v.removeEventListener("loadedmetadata", onLoaded);
       v.removeEventListener("timeupdate", onTime);
       v.removeEventListener("play", onPlay);
       v.removeEventListener("pause", onPause);
+      v.removeEventListener("error", onErr);
     };
-  }, [videoUrl]);
+  }, [committed.videoUrl]);
 
   const togglePlay = () => {
     const v = videoRef.current;
@@ -242,30 +272,29 @@ function CameraAdmin() {
 
   const events = useMemo(() => buildEvents(duration), [duration]);
 
-  // Quality metrics derived from current settings (so they react to tuning).
+  /* metrics derived from committed settings */
   const quality = useMemo(() => {
-    const smoothness = settings.smoothing * 0.5 + (1 - settings.zoomLerp) * 0.1 + settings.ringWeight * 0.1;
-    const stability = Math.max(0, 1 - settings.responseSpeed * 0.4 - (settings.maxSpeed / 500) * 0.3);
-    const trackingQ = Math.round(Math.max(0, Math.min(1, 0.4 + smoothness * 0.4 + stability * 0.4)) * 100);
+    const totalFrames = Math.max(60, Math.round(duration * committed.frameRate));
     const jumpEvents = events.filter((e) => e.kind === "jump").length;
-    const lostFrames = Math.round(18 + settings.responseSpeed * 30 - settings.smoothing * 16);
-    const avgConfidence = Math.max(0, Math.min(1, 0.55 + settings.smoothing * 0.25 + settings.ringWeight * 0.1));
-    return { trackingQ, jumpEvents, lostFrames: Math.max(0, lostFrames), avgConfidence };
-  }, [settings, events]);
+    const lostFrames = Math.max(0, Math.round(18 + committed.responseSpeed * 30 - committed.smoothing * 16));
+    const lowConfFrames = Math.round(totalFrames * (1 - (0.55 + committed.smoothing * 0.25 + committed.ringWeight * 0.1)));
+    const lowConfRatio = Math.max(0, Math.min(1, lowConfFrames / totalFrames));
+    const lostRatio = Math.max(0, Math.min(1, lostFrames / totalFrames));
+    const penalty = jumpEvents * 2 + lostRatio * 100 + lowConfRatio * 50;
+    const trackingQ = Math.max(0, Math.min(100, Math.round(100 - penalty)));
+    const avgConfidence = Math.max(0, Math.min(1, 0.55 + committed.smoothing * 0.25 + committed.ringWeight * 0.1));
+    return { trackingQ, jumpEvents, lostFrames, avgConfidence };
+  }, [committed, events, duration]);
 
-  /** Map the camera's video time onto the match game's 1480s timeline so ring + trajectory logic match analytics. */
+  /* game time + trajectories + rings + deaths (kept from before) */
   const gameTime = useMemo(
     () => (duration > 0 ? (time / duration) * GAME_DURATION_SEC : 0),
     [time, duration],
   );
-
-  /** Trajectories pre-generated once for all 20 teams over the full game span. */
   const trajectories = useMemo(
     () => Object.fromEntries(seedTeams.map((t, i) => [t.id, generateTrajectory(i + 7, GAME_DURATION_SEC)])),
     [],
   );
-
-  /** Death times derived from wipe events (+ placement fallback) — same as match analytics. */
   const teamByTag = useMemo(() => new Map(seedTeams.map((t) => [t.tag, t])), []);
   const deathTimes = useMemo<Record<string, number>>(() => {
     const out: Record<string, number> = {};
@@ -283,8 +312,6 @@ function CameraAdmin() {
     }
     return out;
   }, [teamByTag]);
-
-  /** Active safe area at gameTime (CD = parked at prev ring, Closing = lerp toward target). */
   const ring = useMemo<RingPhase>(() => {
     const seg = ringSegments.find((s) => gameTime >= s.startSec && gameTime <= s.endSec)
       ?? ringSegments[ringSegments.length - 1];
@@ -301,8 +328,6 @@ function CameraAdmin() {
       r:  prev.r  + (target.r  - prev.r ) * k,
     };
   }, [gameTime]);
-
-  /** Team positions at gameTime; frozen at the moment of death. */
   const teamPositions = useMemo(() => {
     return seedTeams.map((tm, i) => {
       const path = trajectories[tm.id];
@@ -315,7 +340,20 @@ function CameraAdmin() {
     });
   }, [trajectories, gameTime, deathTimes]);
 
-  // Viewport drag on map (disabled when locked)
+  /* view-state */
+  const [viewMode, setViewMode] = useState<ViewMode>("overview");
+  const [splitOpts, setSplitOpts] = useState<SplitOpts>({
+    syncMapVideo: true, lockZoom: false, showRingCenter: true, showCameraBbox: true,
+  });
+  const [showOriginal, setShowOriginal] = useState(true);
+  const [seriesVis, setSeriesVis] = useState<SeriesVisibility>({
+    raw: true, smoothed: true, ringCenter: true, jumpScore: true, confidence: true,
+  });
+  const [graphPreset, setGraphPreset] = useState<typeof GRAPH_PRESETS[number]>("Balance");
+  const [selectedEvent, setSelectedEvent] = useState<TrackEvent | null>(null);
+  const [selectedDebugFile, setSelectedDebugFile] = useState<string>("result.json");
+
+  /* map pan/zoom + viewport drag */
   const mapRef = useRef<HTMLDivElement | null>(null);
   const [vpDrag, setVpDrag] = useState<null | { kind: "move" | "resize"; startX: number; startY: number; v: Viewport }>(null);
   useEffect(() => {
@@ -345,329 +383,186 @@ function CameraAdmin() {
       window.removeEventListener("mouseup", onUp);
     };
   }, [vpDrag]);
-
-  // Pan/zoom (matches game analytics MapCanvas)
-  const mapWrapRef = useRef<HTMLDivElement | null>(null);
-  const [mapView, setMapView] = useState({ scale: 1, tx: 0, ty: 0 });
-  const mapPan = useRef<{ x: number; y: number; tx: number; ty: number } | null>(null);
-  const clampScale = (s: number) => Math.max(1, Math.min(6, s));
-  const clampPan = (v: { scale: number; tx: number; ty: number }, w: number, h: number) => {
-    const minX = w - w * v.scale;
-    const minY = h - h * v.scale;
-    return { scale: v.scale, tx: Math.min(0, Math.max(minX, v.tx)), ty: Math.min(0, Math.max(minY, v.ty)) };
-  };
-  const onMapWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    const rect = mapWrapRef.current!.getBoundingClientRect();
-    const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
-    setMapView((v) => {
-      const ns = clampScale(v.scale * Math.exp(-e.deltaY * 0.0015));
-      const k = ns / v.scale;
-      return clampPan({ scale: ns, tx: cx - k * (cx - v.tx), ty: cy - k * (cy - v.ty) }, rect.width, rect.height);
-    });
-  };
-  const onMapMouseDown = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest("[data-vp-handle]")) return;
-    mapPan.current = { x: e.clientX, y: e.clientY, tx: mapView.tx, ty: mapView.ty };
-  };
-  const onMapMouseMove = (e: React.MouseEvent) => {
-    if (!mapPan.current) return;
-    const rect = mapWrapRef.current!.getBoundingClientRect();
-    const nx = mapPan.current.tx + (e.clientX - mapPan.current.x);
-    const ny = mapPan.current.ty + (e.clientY - mapPan.current.y);
-    setMapView((v) => clampPan({ scale: v.scale, tx: nx, ty: ny }, rect.width, rect.height));
-  };
-  const onMapMouseUp = () => { mapPan.current = null; };
-  const zoomMapBy = (factor: number) => {
-    const rect = mapWrapRef.current!.getBoundingClientRect();
-    const cx = rect.width / 2, cy = rect.height / 2;
-    setMapView((v) => {
-      const ns = clampScale(v.scale * factor);
-      const k = ns / v.scale;
-      return clampPan({ scale: ns, tx: cx - k * (cx - v.tx), ty: cy - k * (cy - v.ty) }, rect.width, rect.height);
-    });
-  };
-  const resetMapView = () => setMapView({ scale: 1, tx: 0, ty: 0 });
-
-  const visibleW = Math.max(1, SRC_W - cropLeft - cropRight);
-  const visibleAspect = visibleW / SRC_H;
-
   const resetViewport = () => setViewport({ x: 0.2, y: 0.2, size: 0.6 });
   const fitMap = () => setViewport({ x: 0, y: 0, size: 1 });
 
-  const showCharts = viewMode === "graphs" || viewMode === "debug";
-  const compactSplit = viewMode === "graphs"; // shrink video/map when full charts are on
+  /* Problems list derived from events */
+  const problems = useMemo(
+    () => events.filter((e) => e.kind === "jump" || e.kind === "lost" || e.kind === "relock"),
+    [events],
+  );
+
+  /* visible crop area for video preview */
+  const visibleW = Math.max(1, SRC_W - committed.cropLeft - committed.cropRight);
+  const visibleH = Math.max(1, SRC_H - committed.cropTop - committed.cropBottom);
+  const visibleAspect = visibleW / visibleH;
+
+  /* dirty marker: are draft != committed? */
+  const isDirty = useMemo(() => JSON.stringify(draft) !== JSON.stringify(committed), [draft, committed]);
+
+  /* ====== render ====== */
+
+  const mapPreview = (
+    <MapPreview
+      map={map}
+      mapRef={mapRef}
+      viewport={viewport}
+      setViewport={setViewport}
+      vpDrag={vpDrag}
+      setVpDrag={setVpDrag}
+      ring={ring}
+      teamPositions={teamPositions}
+      splitOpts={splitOpts}
+      onFit={fitMap}
+      onReset={resetViewport}
+    />
+  );
+
+  const videoPreview = (
+    <VideoPreview
+      videoRef={videoRef}
+      videoUrl={committed.videoUrl}
+      cropLeft={committed.cropLeft}
+      cropRight={committed.cropRight}
+      cropTop={committed.cropTop}
+      cropBottom={committed.cropBottom}
+      visibleAspect={visibleAspect}
+      visibleW={visibleW}
+      visibleH={visibleH}
+      time={time}
+      duration={duration}
+      showCameraBbox={splitOpts.showCameraBbox}
+      videoLoaded={videoLoaded}
+      syncMapVideo={splitOpts.syncMapVideo}
+    />
+  );
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      {/* Header */}
-      <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-surface px-6">
-        <div className="flex items-center gap-3">
-          <h1 className="text-sm font-bold uppercase tracking-wider">Camera tracking</h1>
-          <span className="text-mono text-xs text-muted-foreground">·</span>
-          <select value={tournamentId} onChange={(e) => setTournamentId(e.target.value)}
-            className="rounded-sm border border-border bg-background px-2 py-1 text-xs">
-            {tournaments.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-          </select>
-          <select value={matchId} onChange={(e) => setMatchId(e.target.value)}
-            className="rounded-sm border border-border bg-background px-2 py-1 text-xs"
-            disabled={!tournamentMatches.length}>
-            {tournamentMatches.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-          </select>
-          <select value={mapId} onChange={(e) => setMapId(e.target.value)}
-            className="rounded-sm border border-border bg-background px-2 py-1 text-xs">
-            {(matchMapIds.length ? matchMapIds : allMaps.map((m) => m.id)).map((id) => {
-              const m = allMaps.find((x) => x.id === id);
-              return <option key={id} value={id}>{m?.name ?? id}</option>;
-            })}
-          </select>
-          {/* View mode tabs */}
-          <div className="ml-2 flex items-center gap-1 border-l border-border pl-3">
-            <span className="label-eyebrow mr-1 text-xs">View</span>
-            {(["overview", "graphs", "settings", "debug"] as ViewMode[]).map((m) => (
-              <button key={m} onClick={() => setViewMode(m)}
-                className={`rounded-sm border px-2.5 py-1 text-xs font-semibold uppercase tracking-wider transition-colors ${
-                  m === viewMode ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface-2 text-muted-foreground hover:bg-muted"
-                }`}>{m}</button>
-            ))}
-          </div>
-        </div>
-      </header>
-
-      {/* Quality status bar */}
-      <QualityBar quality={quality} preset={active.name} />
+      <HeaderStrip
+        tournamentId={tournamentId} setTournamentId={setTournamentId}
+        tournaments={tournaments}
+        matchId={matchId} setMatchId={setMatchId} tournamentMatches={tournamentMatches}
+        mapId={mapId} setMapId={setMapId} matchMapIds={matchMapIds}
+        viewMode={viewMode} setViewMode={setViewMode}
+      />
+      <QualityBar quality={quality} preset={active.name} isDirty={isDirty} />
 
       <div className="flex flex-1 overflow-hidden">
+        {/* LEFT: tab content */}
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-          {/* Split view controls */}
-          <SplitControls
-            opts={splitOpts}
-            onChange={setSplitOpts}
-            onReset={resetViewport}
-            onFit={fitMap}
-          />
-
-          {/* Video + Map */}
-          <div className={`grid min-h-0 ${compactSplit ? "flex-[0_0_38%]" : "flex-1"} grid-cols-2 gap-3 p-3`}>
-            {/* Video */}
-            <div className="hud-panel relative flex min-h-0 flex-col overflow-hidden bg-black">
-              <div className="flex items-center justify-between border-b border-border bg-surface px-3 py-1.5">
-                <div className="label-eyebrow text-xs">Observer video · crop L{cropLeft} / R{cropRight} px</div>
-                <div className="text-mono text-xs text-muted-foreground">{fmt(time)} / {fmt(duration)}</div>
-              </div>
-              <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-black p-2">
-                <div
-                  className="relative overflow-hidden border border-primary/40 bg-black"
-                  style={{ aspectRatio: `${visibleAspect}`, maxWidth: "100%", maxHeight: "100%", width: "auto", height: "100%" }}
-                >
-                  <video
-                    ref={videoRef}
-                    src={videoUrl}
-                    className="absolute top-0 h-full"
-                    style={{
-                      width: `${(SRC_W / visibleW) * 100}%`,
-                      left: `${-(cropLeft / visibleW) * 100}%`,
-                      maxWidth: "none",
-                    }}
-                    playsInline preload="metadata" crossOrigin="anonymous"
-                  />
-                  {splitOpts.showCameraBbox && (
-                    <div className="pointer-events-none absolute inset-0 border-2 border-dashed border-emerald-400/70" />
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Map */}
-            <div className="hud-panel relative flex min-h-0 flex-col overflow-hidden">
-              <div className="flex items-center justify-between border-b border-border bg-surface px-3 py-1.5">
-                <div className="label-eyebrow text-xs">Map · {map.name}</div>
-                <div className="text-mono text-xs text-muted-foreground">
-                  zoom {(mapView.scale * 100).toFixed(0)}% · viewport {(viewport.size * 100).toFixed(0)}%
-                </div>
-              </div>
-              <div
-                ref={mapWrapRef}
-                onWheel={onMapWheel}
-                onMouseDown={onMapMouseDown}
-                onMouseMove={onMapMouseMove}
-                onMouseUp={onMapMouseUp}
-                onMouseLeave={onMapMouseUp}
-                className="relative min-h-0 flex-1 overflow-hidden bg-background hud-grid-bg select-none"
-                style={{ cursor: mapPan.current ? "grabbing" : "grab" }}
-              >
-                <div
-                  className="absolute inset-0 origin-top-left"
-                  style={{ transform: `translate(${mapView.tx}px, ${mapView.ty}px) scale(${mapView.scale})` }}
-                >
-                  <div ref={mapRef} className="relative h-full w-full">
-                    <img src={map.image} alt={map.name} draggable={false}
-                      className="absolute inset-0 h-full w-full object-contain opacity-95" />
-                    <svg viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet"
-                      className="pointer-events-none absolute inset-0 h-full w-full">
-                      <defs>
-                        <filter id="cam-glow">
-                          <feGaussianBlur stdDeviation="2.5" result="b" />
-                          <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
-                        </filter>
-                        <clipPath id="cam-map-bounds">
-                          <rect x="0" y="0" width="1000" height="1000" />
-                        </clipPath>
-                      </defs>
-                      {(() => {
-                        const active = ring;
-                        return (
-                          <g clipPath="url(#cam-map-bounds)">
-                            {/* Red danger zone outside the active safe ring */}
-                            <path
-                              d={`M0,0 H1000 V1000 H0 Z M ${active.cx * 1000},${(active.cy * 1000) - active.r * 1000} a ${active.r * 1000},${active.r * 1000} 0 1,0 0,${active.r * 2000} a ${active.r * 1000},${active.r * 1000} 0 1,0 0,${-active.r * 2000} Z`}
-                              fillRule="evenodd"
-                              fill="rgba(239,68,68,0.28)"
-                              stroke="none"
-                            />
-                            {/* Static preview of all ring phases */}
-                            {ringPhases.map((p, i) => (
-                              <circle key={`prev-${i}`} cx={p.cx * 1000} cy={p.cy * 1000} r={p.r * 1000}
-                                fill="none" stroke="rgba(255,255,255,0.85)"
-                                strokeWidth={1.6 / mapView.scale}
-                                strokeDasharray={`${4 / mapView.scale} ${4 / mapView.scale}`} />
-                            ))}
-                            <circle cx={active.cx * 1000} cy={active.cy * 1000} r={active.r * 1000}
-                              fill="rgba(34,196,245,0.08)" stroke="#22c4f5"
-                              strokeWidth={3.5 / mapView.scale}
-                              strokeDasharray={`${10 / mapView.scale} ${5 / mapView.scale}`} />
-                            {splitOpts.showRingCenter && (
-                              <circle cx={active.cx * 1000} cy={active.cy * 1000} r={3 / mapView.scale} fill="#22c4f5" />
-                            )}
-                          </g>
-                        );
-                      })()}
-                      {teamPositions.map((t) => {
-                        const slot = getSlotColor(t.slotIdx);
-                        const labelW = t.tag.length * 7 + 6;
-                        const labelH = 14;
-                        return (
-                          <g key={t.id} opacity={t.isDead ? 0.55 : 1}>
-                            {t.isDead ? (
-                              <g transform={`translate(${t.x * 1000} ${t.y * 1000})`}>
-                                <circle r={9 / mapView.scale} fill="none" stroke={slot} strokeWidth={2 / mapView.scale} opacity={0.9} />
-                                <circle r={5.5 / mapView.scale} fill="#6b7280" stroke="rgba(0,0,0,0.85)" strokeWidth={1 / mapView.scale} />
-                                <path d={`M${-3 / mapView.scale},${-3 / mapView.scale} L${3 / mapView.scale},${3 / mapView.scale} M${3 / mapView.scale},${-3 / mapView.scale} L${-3 / mapView.scale},${3 / mapView.scale}`}
-                                  stroke="#fff" strokeWidth={1.4 / mapView.scale} strokeLinecap="round" />
-                              </g>
-                            ) : (
-                              <g filter="url(#cam-glow)">
-                                <circle cx={t.x * 1000} cy={t.y * 1000} r={11 / mapView.scale}
-                                  fill="none" stroke={slot} strokeWidth={1 / mapView.scale} opacity={0.5} />
-                                <circle cx={t.x * 1000} cy={t.y * 1000} r={6 / mapView.scale}
-                                  fill={slot} stroke="rgba(0,0,0,0.8)" strokeWidth={1 / mapView.scale} />
-                              </g>
-                            )}
-                            <g transform={`translate(${t.x * 1000 + 14 / mapView.scale} ${t.y * 1000 - (labelH / 2) / mapView.scale})`}>
-                              <rect x={0} y={0}
-                                width={labelW / mapView.scale} height={labelH / mapView.scale}
-                                rx={3 / mapView.scale} ry={3 / mapView.scale}
-                                fill="rgba(0,0,0,0.7)"
-                                stroke={t.isDead ? "#9ca3af" : slot}
-                                strokeWidth={2 / mapView.scale}
-                                strokeDasharray={t.isDead ? `${3 / mapView.scale} ${2 / mapView.scale}` : undefined} />
-                              <text x={(labelW / 2) / mapView.scale} y={(labelH * 0.72) / mapView.scale}
-                                textAnchor="middle" fontSize={11 / mapView.scale} fontWeight={800}
-                                fill={t.isDead ? "#d1d5db" : "#fff"} fontFamily="Manrope, sans-serif">{t.tag}</text>
-                            </g>
-                          </g>
-                        );
-                      })}
-                    </svg>
-                    {/* Camera viewport rectangle (kept) */}
-                    <div
-                      data-vp-handle
-                      className={`absolute border-2 border-primary ${splitOpts.lockZoom ? "" : "cursor-move"}`}
-                      style={{
-                        left: `${viewport.x * 100}%`, top: `${viewport.y * 100}%`,
-                        width: `${viewport.size * 100}%`, height: `${viewport.size * 100}%`,
-                        boxShadow: "0 0 0 9999px rgba(0,0,0,0.35) inset",
-                      }}
-                      onMouseDown={(e) => { if (!splitOpts.lockZoom) { e.stopPropagation(); setVpDrag({ kind: "move", startX: e.clientX, startY: e.clientY, v: viewport }); } }}
-                    >
-                      {!splitOpts.lockZoom && (
-                        <div data-vp-handle className="absolute -bottom-1 -right-1 h-3 w-3 cursor-nwse-resize border border-primary bg-background"
-                          onMouseDown={(e) => { e.stopPropagation(); setVpDrag({ kind: "resize", startX: e.clientX, startY: e.clientY, v: viewport }); }} />
-                      )}
-                    </div>
-                  </div>
-                </div>
-                {/* Zoom controls */}
-                <div className="pointer-events-auto absolute right-3 bottom-3 hud-panel-strong flex flex-col overflow-hidden text-xs">
-                  <button onClick={() => zoomMapBy(1.5)} className="flex h-7 w-7 items-center justify-center border-b border-border hover:bg-muted" aria-label="Zoom in">+</button>
-                  <button onClick={() => zoomMapBy(1 / 1.5)} className="flex h-7 w-7 items-center justify-center border-b border-border hover:bg-muted" aria-label="Zoom out">−</button>
-                  <button onClick={resetMapView} className="text-mono flex h-7 w-7 items-center justify-center text-xs hover:bg-muted" aria-label="Reset zoom">1:1</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Transport */}
-          <div className="shrink-0 border-t border-border bg-surface px-3 py-2">
-            <div className="flex items-center gap-3">
-              <button onClick={togglePlay} className="rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">
-                {playing ? "Pause" : "Play"}
-              </button>
-              <span className="text-mono text-xs text-muted-foreground">{fmt(time)}</span>
-              <div className="relative flex-1">
-                <input type="range" min={0} max={duration} step={0.05} value={time}
-                  onChange={(e) => seek(Number(e.target.value))} className="w-full accent-primary" />
-                {/* Event ticks on timeline */}
-                <div className="pointer-events-none absolute inset-x-0 -bottom-1 h-1">
-                  {events.map((ev, i) => (
-                    <span key={i}
-                      className="absolute top-0 h-1 w-0.5"
-                      style={{ left: `${(ev.t / Math.max(duration, 0.001)) * 100}%`, background: eventColor[ev.kind] }}
-                      title={`${ev.label} · ${fmt(ev.t)}`}
-                    />
-                  ))}
-                </div>
-              </div>
-              <span className="text-mono text-xs text-muted-foreground">{fmt(duration)}</span>
-            </div>
-          </div>
-
-          {/* Charts area (modes: graphs/debug) */}
-          {showCharts && (
-            <div className="min-h-0 flex-1 overflow-auto border-t border-border bg-background">
-              <ChartsPanel
-                time={time} duration={duration} onSeek={seek}
-                events={events} showOriginal={showOriginal}
-                onToggleOriginal={() => setShowOriginal((v) => !v)}
-              />
-              {viewMode === "debug" && <DebugPanel settings={settings} viewport={viewport} quality={quality} events={events} />}
-            </div>
+          {viewMode === "overview" && (
+            <OverviewTab
+              splitOpts={splitOpts} setSplitOpts={setSplitOpts}
+              onResetViewport={resetViewport} onFitMap={fitMap}
+              videoPreview={videoPreview} mapPreview={mapPreview}
+              time={time} duration={duration} playing={playing}
+              onSeek={seek} onTogglePlay={togglePlay}
+              events={events}
+            />
+          )}
+          {viewMode === "graphs" && (
+            <GraphsTab
+              time={time} duration={duration} onSeek={seek}
+              events={events} showOriginal={showOriginal}
+              onToggleOriginal={() => setShowOriginal((v) => !v)}
+              seriesVis={seriesVis}
+              onSelectEvent={setSelectedEvent}
+            />
+          )}
+          {viewMode === "settings" && (
+            <SettingsTabContent
+              videoPreview={videoPreview} mapPreview={mapPreview}
+            />
+          )}
+          {viewMode === "debug" && (
+            <DebugTab
+              settings={committed} viewport={viewport} quality={quality}
+              events={events} time={time}
+              selectedDebugFile={selectedDebugFile}
+              videoPreview={videoPreview}
+            />
           )}
         </div>
 
-        {/* Settings sidebar (always visible) */}
-        <SettingsSidebar
+        {/* RIGHT: contextual panel */}
+        <RightPanel
           viewMode={viewMode}
-          activeName={active.name}
-          videoUrl={videoUrl} setVideoUrl={setVideoUrl}
-          cropLeft={cropLeft} setCropLeft={setCropLeft}
-          cropRight={cropRight} setCropRight={setCropRight}
-          settings={settings} setSettings={setSettings}
-          presets={presets} activePresetId={activePresetId}
-          loadPreset={loadPreset}
-          updateActivePreset={updateActivePreset}
-          saveCurrentAsPreset={saveCurrentAsPreset}
-          deleteActivePreset={deleteActivePreset}
+          active={active}
+          presets={presets}
+          activePresetId={activePresetId}
+          onApplyPreset={applyPreset}
+          onUpdateCommit={commitUpdate}
+          onSaveAs={saveAs}
+          onUpdateActivePreset={updateActivePreset}
+          onDuplicatePreset={duplicatePreset}
+          onDeletePreset={deleteActivePreset}
+          onResetToDefault={resetToDefault}
+          isDirty={isDirty}
+          quality={quality}
+          problems={problems}
+          onSeek={seek}
+          draft={draft} patchDraft={patchDraft}
+          committed={committed}
+          graphPreset={graphPreset} setGraphPreset={setGraphPreset}
+          seriesVis={seriesVis} setSeriesVis={setSeriesVis}
+          selectedEvent={selectedEvent}
+          selectedDebugFile={selectedDebugFile} setSelectedDebugFile={setSelectedDebugFile}
+          time={time}
         />
       </div>
     </div>
   );
 }
 
-/* ---------- Quality bar ---------- */
-function QualityBar({ quality, preset }: {
+/* =========================================================================
+   Header + quality bar
+   ========================================================================= */
+
+function HeaderStrip(props: {
+  tournamentId: string; setTournamentId: (v: string) => void; tournaments: { id: string; name: string }[];
+  matchId: string; setMatchId: (v: string) => void; tournamentMatches: { id: string; name: string }[];
+  mapId: string; setMapId: (v: string) => void; matchMapIds: string[];
+  viewMode: ViewMode; setViewMode: (v: ViewMode) => void;
+}) {
+  return (
+    <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-surface px-6">
+      <div className="flex items-center gap-3">
+        <h1 className="text-sm font-bold uppercase tracking-wider">Camera tracking</h1>
+        <span className="text-mono text-xs text-muted-foreground">·</span>
+        <select value={props.tournamentId} onChange={(e) => props.setTournamentId(e.target.value)}
+          className="rounded-sm border border-border bg-background px-2 py-1 text-xs">
+          {props.tournaments.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+        </select>
+        <select value={props.matchId} onChange={(e) => props.setMatchId(e.target.value)}
+          className="rounded-sm border border-border bg-background px-2 py-1 text-xs"
+          disabled={!props.tournamentMatches.length}>
+          {props.tournamentMatches.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+        </select>
+        <select value={props.mapId} onChange={(e) => props.setMapId(e.target.value)}
+          className="rounded-sm border border-border bg-background px-2 py-1 text-xs">
+          {(props.matchMapIds.length ? props.matchMapIds : allMaps.map((m) => m.id)).map((id) => {
+            const m = allMaps.find((x) => x.id === id);
+            return <option key={id} value={id}>{m?.name ?? id}</option>;
+          })}
+        </select>
+        <div className="ml-2 flex items-center gap-1 border-l border-border pl-3">
+          <span className="label-eyebrow mr-1 text-xs">View</span>
+          {(["overview", "graphs", "settings", "debug"] as ViewMode[]).map((m) => (
+            <button key={m} onClick={() => props.setViewMode(m)}
+              className={`rounded-sm border px-2.5 py-1 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                m === props.viewMode ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface-2 text-muted-foreground hover:bg-muted"
+              }`}>{m}</button>
+          ))}
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function QualityBar({ quality, preset, isDirty }: {
   quality: { trackingQ: number; jumpEvents: number; lostFrames: number; avgConfidence: number };
-  preset: string;
+  preset: string; isDirty: boolean;
 }) {
   const tone = quality.trackingQ >= 80 ? "text-emerald-400" : quality.trackingQ >= 60 ? "text-amber-400" : "text-destructive";
   return (
@@ -676,12 +571,18 @@ function QualityBar({ quality, preset }: {
       <Stat label="Jump events" value={quality.jumpEvents.toString()} />
       <Stat label="Lost frames" value={quality.lostFrames.toString()} />
       <Stat label="Avg confidence" value={quality.avgConfidence.toFixed(2)} />
-      <div className="ml-auto text-xs text-muted-foreground">
-        preset · <span className="text-foreground">{preset}</span>
+      <div className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
+        {isDirty && (
+          <span className="rounded-sm border border-amber-400/40 bg-amber-400/10 px-2 py-0.5 font-semibold uppercase tracking-wider text-amber-400">
+            Pending update
+          </span>
+        )}
+        <span>current preset · <span className="text-foreground">{preset}</span></span>
       </div>
     </div>
   );
 }
+
 function Stat({ label, value, valueClass = "" }: { label: string; value: string; valueClass?: string }) {
   return (
     <div className="flex items-baseline gap-2">
@@ -691,28 +592,52 @@ function Stat({ label, value, valueClass = "" }: { label: string; value: string;
   );
 }
 
-/* ---------- Split controls ---------- */
+/* =========================================================================
+   OVERVIEW TAB
+   ========================================================================= */
+
+function OverviewTab(props: {
+  splitOpts: SplitOpts; setSplitOpts: (v: SplitOpts) => void;
+  onResetViewport: () => void; onFitMap: () => void;
+  videoPreview: React.ReactNode; mapPreview: React.ReactNode;
+  time: number; duration: number; playing: boolean;
+  onSeek: (t: number) => void; onTogglePlay: () => void;
+  events: TrackEvent[];
+}) {
+  return (
+    <>
+      <SplitControls opts={props.splitOpts} onChange={props.setSplitOpts}
+        onReset={props.onResetViewport} onFit={props.onFitMap} />
+      <div className="grid min-h-0 flex-1 grid-cols-2 gap-3 p-3">
+        {props.videoPreview}
+        {props.mapPreview}
+      </div>
+      <Timeline time={props.time} duration={props.duration} playing={props.playing}
+        onTogglePlay={props.onTogglePlay} onSeek={props.onSeek} events={props.events} />
+    </>
+  );
+}
+
 function SplitControls({ opts, onChange, onReset, onFit }: {
-  opts: SplitOpts;
-  onChange: (next: SplitOpts) => void;
-  onReset: () => void;
-  onFit: () => void;
+  opts: SplitOpts; onChange: (next: SplitOpts) => void;
+  onReset: () => void; onFit: () => void;
 }) {
   const toggle = (k: keyof SplitOpts) => onChange({ ...opts, [k]: !opts[k] });
   return (
     <div className="flex shrink-0 flex-wrap items-center gap-1 border-b border-border bg-surface px-3 py-1.5">
       <span className="label-eyebrow mr-2 text-xs">Split view</span>
-      <Toggle active={opts.syncMapVideo} onClick={() => toggle("syncMapVideo")}>Sync map/video</Toggle>
-      <Toggle active={opts.lockZoom} onClick={() => toggle("lockZoom")}>Lock zoom</Toggle>
-      <Toggle active={opts.showRingCenter} onClick={() => toggle("showRingCenter")}>Show ring center</Toggle>
-      <Toggle active={opts.showCameraBbox} onClick={() => toggle("showCameraBbox")}>Show camera bbox</Toggle>
+      <ToggleBtn active={opts.syncMapVideo} onClick={() => toggle("syncMapVideo")}>Sync map/video</ToggleBtn>
+      <ToggleBtn active={opts.lockZoom} onClick={() => toggle("lockZoom")}>Lock zoom</ToggleBtn>
+      <ToggleBtn active={opts.showRingCenter} onClick={() => toggle("showRingCenter")}>Show ring center</ToggleBtn>
+      <ToggleBtn active={opts.showCameraBbox} onClick={() => toggle("showCameraBbox")}>Show camera bbox</ToggleBtn>
       <span className="mx-2 h-4 w-px bg-border" />
       <button onClick={onReset} className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:bg-muted">Reset viewport</button>
       <button onClick={onFit} className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:bg-muted">Fit map</button>
     </div>
   );
 }
-function Toggle({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+
+function ToggleBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button onClick={onClick}
       className={`rounded-sm border px-2 py-1 text-xs font-semibold uppercase tracking-wider transition-colors ${
@@ -723,94 +648,672 @@ function Toggle({ active, onClick, children }: { active: boolean; onClick: () =>
   );
 }
 
-/* ---------- Settings sidebar ---------- */
-function SettingsSidebar(props: {
+function Timeline({ time, duration, playing, onTogglePlay, onSeek, events }: {
+  time: number; duration: number; playing: boolean;
+  onTogglePlay: () => void; onSeek: (t: number) => void; events: TrackEvent[];
+}) {
+  return (
+    <div className="shrink-0 border-t border-border bg-surface px-3 py-2">
+      <div className="flex items-center gap-3">
+        <button onClick={onTogglePlay} className="rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">
+          {playing ? "Pause" : "Play"}
+        </button>
+        <span className="text-mono text-xs text-muted-foreground">{fmt(time)}</span>
+        <div className="relative flex-1">
+          <input type="range" min={0} max={duration} step={0.05} value={time}
+            onChange={(e) => onSeek(Number(e.target.value))} className="w-full accent-primary" />
+          <div className="pointer-events-none absolute inset-x-0 -bottom-1 h-1">
+            {events.map((ev, i) => (
+              <span key={i}
+                className="absolute top-0 h-1 w-0.5"
+                style={{ left: `${(ev.t / Math.max(duration, 0.001)) * 100}%`, background: eventColor[ev.kind] }}
+                title={`${ev.label} · ${fmt(ev.t)}`}
+              />
+            ))}
+          </div>
+        </div>
+        <span className="text-mono text-xs text-muted-foreground">{fmt(duration)}</span>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================================
+   VIDEO + MAP PREVIEWS (shared across tabs)
+   ========================================================================= */
+
+function VideoPreview(props: {
+  videoRef: React.RefObject<HTMLVideoElement | null>;
+  videoUrl: string;
+  cropLeft: number; cropRight: number; cropTop: number; cropBottom: number;
+  visibleAspect: number; visibleW: number; visibleH: number;
+  time: number; duration: number;
+  showCameraBbox: boolean;
+  videoLoaded: "loading" | "loaded" | "error";
+  syncMapVideo: boolean;
+}) {
+  const loadTone =
+    props.videoLoaded === "loaded" ? "text-emerald-400"
+      : props.videoLoaded === "error" ? "text-destructive"
+      : "text-amber-400";
+  const loadLabel =
+    props.videoLoaded === "loaded" ? "video loaded"
+      : props.videoLoaded === "error" ? "no video"
+      : "loading";
+  return (
+    <div className="hud-panel relative flex min-h-0 flex-col overflow-hidden bg-black">
+      <div className="flex items-center justify-between border-b border-border bg-surface px-3 py-1.5">
+        <div className="label-eyebrow text-xs">
+          Observer · crop L{props.cropLeft} R{props.cropRight} T{props.cropTop} B{props.cropBottom}
+        </div>
+        <div className="flex items-center gap-3 text-mono text-xs text-muted-foreground">
+          <span className={loadTone}>● {loadLabel}</span>
+          {props.syncMapVideo && <span className="text-primary">sync</span>}
+          <span>{fmt(props.time)} / {fmt(props.duration)}</span>
+        </div>
+      </div>
+      <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-black p-2">
+        <div
+          className="relative overflow-hidden border border-primary/40 bg-black"
+          style={{ aspectRatio: `${props.visibleAspect}`, maxWidth: "100%", maxHeight: "100%", width: "auto", height: "100%" }}
+        >
+          <video
+            ref={props.videoRef}
+            src={props.videoUrl}
+            className="absolute"
+            style={{
+              width: `${(SRC_W / props.visibleW) * 100}%`,
+              height: `${(SRC_H / props.visibleH) * 100}%`,
+              left: `${-(props.cropLeft / props.visibleW) * 100}%`,
+              top: `${-(props.cropTop / props.visibleH) * 100}%`,
+              maxWidth: "none",
+            }}
+            playsInline preload="metadata" crossOrigin="anonymous"
+          />
+          {props.showCameraBbox && (
+            <div className="pointer-events-none absolute inset-0 border-2 border-dashed border-emerald-400/70" />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MapPreview(props: {
+  map: { id: string; name: string; image: string };
+  mapRef: React.RefObject<HTMLDivElement | null>;
+  viewport: Viewport; setViewport: (v: Viewport) => void;
+  vpDrag: null | { kind: "move" | "resize"; startX: number; startY: number; v: Viewport };
+  setVpDrag: (v: any) => void;
+  ring: RingPhase;
+  teamPositions: { id: string; tag: string; slotIdx: number; x: number; y: number; isDead: boolean }[];
+  splitOpts: SplitOpts;
+  onFit: () => void; onReset: () => void;
+}) {
+  const mapWrapRef = useRef<HTMLDivElement | null>(null);
+  const [mapView, setMapView] = useState({ scale: 1, tx: 0, ty: 0 });
+  const mapPan = useRef<{ x: number; y: number; tx: number; ty: number } | null>(null);
+  const clampScale = (s: number) => Math.max(1, Math.min(6, s));
+  const clampPan = (v: { scale: number; tx: number; ty: number }, w: number, h: number) => {
+    const minX = w - w * v.scale;
+    const minY = h - h * v.scale;
+    return { scale: v.scale, tx: Math.min(0, Math.max(minX, v.tx)), ty: Math.min(0, Math.max(minY, v.ty)) };
+  };
+  const onWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const rect = mapWrapRef.current!.getBoundingClientRect();
+    const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
+    setMapView((v) => {
+      const ns = clampScale(v.scale * Math.exp(-e.deltaY * 0.0015));
+      const k = ns / v.scale;
+      return clampPan({ scale: ns, tx: cx - k * (cx - v.tx), ty: cy - k * (cy - v.ty) }, rect.width, rect.height);
+    });
+  };
+  const onMouseDown = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest("[data-vp-handle]")) return;
+    mapPan.current = { x: e.clientX, y: e.clientY, tx: mapView.tx, ty: mapView.ty };
+  };
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!mapPan.current) return;
+    const rect = mapWrapRef.current!.getBoundingClientRect();
+    const nx = mapPan.current.tx + (e.clientX - mapPan.current.x);
+    const ny = mapPan.current.ty + (e.clientY - mapPan.current.y);
+    setMapView((v) => clampPan({ scale: v.scale, tx: nx, ty: ny }, rect.width, rect.height));
+  };
+  const onMouseUp = () => { mapPan.current = null; };
+  const zoomBy = (factor: number) => {
+    const rect = mapWrapRef.current!.getBoundingClientRect();
+    const cx = rect.width / 2, cy = rect.height / 2;
+    setMapView((v) => {
+      const ns = clampScale(v.scale * factor);
+      const k = ns / v.scale;
+      return clampPan({ scale: ns, tx: cx - k * (cx - v.tx), ty: cy - k * (cy - v.ty) }, rect.width, rect.height);
+    });
+  };
+  const resetView = () => setMapView({ scale: 1, tx: 0, ty: 0 });
+
+  const { ring, viewport, splitOpts } = props;
+
+  return (
+    <div className="hud-panel relative flex min-h-0 flex-col overflow-hidden">
+      <div className="flex items-center justify-between border-b border-border bg-surface px-3 py-1.5">
+        <div className="label-eyebrow text-xs">Map · {props.map.name}</div>
+        <div className="text-mono text-xs text-muted-foreground">
+          zoom {(mapView.scale * 100).toFixed(0)}% · viewport {(viewport.size * 100).toFixed(0)}%
+        </div>
+      </div>
+      <div
+        ref={mapWrapRef}
+        onWheel={onWheel}
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUp}
+        onMouseLeave={onMouseUp}
+        className="relative min-h-0 flex-1 overflow-hidden bg-background hud-grid-bg select-none"
+        style={{ cursor: mapPan.current ? "grabbing" : "grab" }}
+      >
+        <div className="absolute inset-0 origin-top-left"
+          style={{ transform: `translate(${mapView.tx}px, ${mapView.ty}px) scale(${mapView.scale})` }}>
+          <div ref={props.mapRef} className="relative h-full w-full">
+            <img src={props.map.image} alt={props.map.name} draggable={false}
+              className="absolute inset-0 h-full w-full object-contain opacity-95" />
+            <svg viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet"
+              className="pointer-events-none absolute inset-0 h-full w-full">
+              <defs>
+                <filter id="cam-glow">
+                  <feGaussianBlur stdDeviation="2.5" result="b" />
+                  <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+                <clipPath id="cam-map-bounds">
+                  <rect x="0" y="0" width="1000" height="1000" />
+                </clipPath>
+              </defs>
+              <g clipPath="url(#cam-map-bounds)">
+                <path
+                  d={`M0,0 H1000 V1000 H0 Z M ${ring.cx * 1000},${(ring.cy * 1000) - ring.r * 1000} a ${ring.r * 1000},${ring.r * 1000} 0 1,0 0,${ring.r * 2000} a ${ring.r * 1000},${ring.r * 1000} 0 1,0 0,${-ring.r * 2000} Z`}
+                  fillRule="evenodd" fill="rgba(239,68,68,0.28)" stroke="none" />
+                {ringPhases.map((p, i) => (
+                  <circle key={`prev-${i}`} cx={p.cx * 1000} cy={p.cy * 1000} r={p.r * 1000}
+                    fill="none" stroke="rgba(255,255,255,0.85)"
+                    strokeWidth={1.6 / mapView.scale}
+                    strokeDasharray={`${4 / mapView.scale} ${4 / mapView.scale}`} />
+                ))}
+                <circle cx={ring.cx * 1000} cy={ring.cy * 1000} r={ring.r * 1000}
+                  fill="rgba(34,196,245,0.08)" stroke="#22c4f5"
+                  strokeWidth={3.5 / mapView.scale}
+                  strokeDasharray={`${10 / mapView.scale} ${5 / mapView.scale}`} />
+                {splitOpts.showRingCenter && (
+                  <circle cx={ring.cx * 1000} cy={ring.cy * 1000} r={3 / mapView.scale} fill="#22c4f5" />
+                )}
+              </g>
+              {props.teamPositions.map((t) => {
+                const slot = getSlotColor(t.slotIdx);
+                const labelW = t.tag.length * 7 + 6;
+                const labelH = 14;
+                return (
+                  <g key={t.id} opacity={t.isDead ? 0.55 : 1}>
+                    {t.isDead ? (
+                      <g transform={`translate(${t.x * 1000} ${t.y * 1000})`}>
+                        <circle r={9 / mapView.scale} fill="none" stroke={slot} strokeWidth={2 / mapView.scale} opacity={0.9} />
+                        <circle r={5.5 / mapView.scale} fill="#6b7280" stroke="rgba(0,0,0,0.85)" strokeWidth={1 / mapView.scale} />
+                        <path d={`M${-3 / mapView.scale},${-3 / mapView.scale} L${3 / mapView.scale},${3 / mapView.scale} M${3 / mapView.scale},${-3 / mapView.scale} L${-3 / mapView.scale},${3 / mapView.scale}`}
+                          stroke="#fff" strokeWidth={1.4 / mapView.scale} strokeLinecap="round" />
+                      </g>
+                    ) : (
+                      <g filter="url(#cam-glow)">
+                        <circle cx={t.x * 1000} cy={t.y * 1000} r={11 / mapView.scale}
+                          fill="none" stroke={slot} strokeWidth={1 / mapView.scale} opacity={0.5} />
+                        <circle cx={t.x * 1000} cy={t.y * 1000} r={6 / mapView.scale}
+                          fill={slot} stroke="rgba(0,0,0,0.8)" strokeWidth={1 / mapView.scale} />
+                      </g>
+                    )}
+                    <g transform={`translate(${t.x * 1000 + 14 / mapView.scale} ${t.y * 1000 - (labelH / 2) / mapView.scale})`}>
+                      <rect x={0} y={0}
+                        width={labelW / mapView.scale} height={labelH / mapView.scale}
+                        rx={3 / mapView.scale} ry={3 / mapView.scale}
+                        fill="rgba(0,0,0,0.7)"
+                        stroke={t.isDead ? "#9ca3af" : slot}
+                        strokeWidth={2 / mapView.scale}
+                        strokeDasharray={t.isDead ? `${3 / mapView.scale} ${2 / mapView.scale}` : undefined} />
+                      <text x={(labelW / 2) / mapView.scale} y={(labelH * 0.72) / mapView.scale}
+                        textAnchor="middle" fontSize={11 / mapView.scale} fontWeight={800}
+                        fill={t.isDead ? "#d1d5db" : "#fff"} fontFamily="Manrope, sans-serif">{t.tag}</text>
+                    </g>
+                  </g>
+                );
+              })}
+            </svg>
+            <div
+              data-vp-handle
+              className={`absolute border-2 border-primary ${splitOpts.lockZoom ? "" : "cursor-move"}`}
+              style={{
+                left: `${viewport.x * 100}%`, top: `${viewport.y * 100}%`,
+                width: `${viewport.size * 100}%`, height: `${viewport.size * 100}%`,
+                boxShadow: "0 0 0 9999px rgba(0,0,0,0.35) inset",
+              }}
+              onMouseDown={(e) => { if (!splitOpts.lockZoom) { e.stopPropagation(); props.setVpDrag({ kind: "move", startX: e.clientX, startY: e.clientY, v: viewport }); } }}
+            >
+              {!splitOpts.lockZoom && (
+                <div data-vp-handle className="absolute -bottom-1 -right-1 h-3 w-3 cursor-nwse-resize border border-primary bg-background"
+                  onMouseDown={(e) => { e.stopPropagation(); props.setVpDrag({ kind: "resize", startX: e.clientX, startY: e.clientY, v: viewport }); }} />
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="pointer-events-auto absolute right-3 bottom-3 hud-panel-strong flex flex-col overflow-hidden text-xs">
+          <button onClick={() => zoomBy(1.5)} className="flex h-7 w-7 items-center justify-center border-b border-border hover:bg-muted" aria-label="Zoom in">+</button>
+          <button onClick={() => zoomBy(1 / 1.5)} className="flex h-7 w-7 items-center justify-center border-b border-border hover:bg-muted" aria-label="Zoom out">−</button>
+          <button onClick={resetView} className="text-mono flex h-7 w-7 items-center justify-center border-b border-border hover:bg-muted" aria-label="Reset zoom">1:1</button>
+          <button onClick={props.onFit} className="flex h-7 w-7 items-center justify-center text-xs hover:bg-muted" title="Fit map" aria-label="Fit">⤢</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================================
+   GRAPHS TAB
+   ========================================================================= */
+
+function GraphsTab(props: {
+  time: number; duration: number; onSeek: (t: number) => void;
+  events: TrackEvent[]; showOriginal: boolean; onToggleOriginal: () => void;
+  seriesVis: SeriesVisibility;
+  onSelectEvent: (e: TrackEvent | null) => void;
+}) {
+  return (
+    <div className="min-h-0 flex-1 overflow-auto bg-background">
+      <div className="flex flex-wrap items-center gap-4 border-b border-border bg-surface px-3 py-1.5 text-xs text-muted-foreground">
+        {props.seriesVis.smoothed && <div className="flex items-center gap-1"><span className="h-2 w-3 bg-emerald-400" />smoothed</div>}
+        {props.seriesVis.raw && <div className="flex items-center gap-1"><span className="h-2 w-3 bg-zinc-400" />raw</div>}
+        <span className="mx-1 h-4 w-px bg-border" />
+        {(Object.keys(eventColor) as TrackEvent["kind"][]).map((k) => (
+          <div key={k} className="flex items-center gap-1">
+            <span className="h-3 w-0.5" style={{ background: eventColor[k] }} />
+            {eventLabel[k]}
+          </div>
+        ))}
+        <span className="ml-auto" />
+        <button onClick={props.onToggleOriginal}
+          className={`rounded-sm border px-2 py-1 text-xs font-semibold uppercase tracking-wider transition-colors ${
+            props.showOriginal ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface-2 text-muted-foreground hover:bg-muted"
+          }`}>
+          {props.showOriginal ? "Before / After" : "After only"}
+        </button>
+      </div>
+      <div className="space-y-2 p-2">
+        {[
+          { key: "x",        label: "X: camera raw / smoothed", range: "484.7 … 827.0", seed: 1 },
+          { key: "y",        label: "Y: camera raw / smoothed", range: "334.0 … 661.0", seed: 2 },
+          { key: "zoom",     label: "Zoom ratio · effective",   range: "-0.1 … 2.1",    seed: 3 },
+          { key: "radius",   label: "Ring radius · zoomedRadius", range: "139.3 … 562.7", seed: 4 },
+          { key: "ring",     label: "Ring number",              range: "0 … 8",         seed: 5 },
+          { key: "move",     label: "moveDist · jumpScore",     range: "-45.6 … 805.3", seed: 6 },
+          { key: "conf",     label: "Confidence",               range: "0 … 1",         seed: 7 },
+        ].map((lane) => (
+          <div key={lane.key} className="rounded-sm border border-border bg-surface">
+            <ChartLanes lanes={[lane]} height={90} time={props.time} duration={props.duration}
+              onSeek={props.onSeek} events={props.events} showOriginal={props.showOriginal && props.seriesVis.raw}
+              showSmoothed={props.seriesVis.smoothed}
+              onSelectEvent={props.onSelectEvent} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================================
+   SETTINGS TAB content (preview area)
+   ========================================================================= */
+
+function SettingsTabContent(props: { videoPreview: React.ReactNode; mapPreview: React.ReactNode }) {
+  return (
+    <div className="grid min-h-0 flex-1 grid-cols-2 gap-3 p-3">
+      {props.videoPreview}
+      {props.mapPreview}
+    </div>
+  );
+}
+
+/* =========================================================================
+   DEBUG TAB
+   ========================================================================= */
+
+function DebugTab(props: {
+  settings: TrackingSettings; viewport: Viewport;
+  quality: { trackingQ: number; jumpEvents: number; lostFrames: number; avgConfidence: number };
+  events: TrackEvent[]; time: number;
+  selectedDebugFile: string;
+  videoPreview: React.ReactNode;
+}) {
+  return (
+    <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)_minmax(0,1fr)] gap-3 overflow-auto p-3">
+      <div className="grid min-h-0 grid-cols-2 gap-3">
+        <DebugBlock title="Current frame debug">
+          <div className="grid h-full grid-cols-2 gap-2">
+            <div className="min-h-[160px]">{props.videoPreview}</div>
+            <div className="hud-panel flex min-h-[160px] flex-col p-3 text-xs">
+              <div className="label-eyebrow mb-2">Detected camera bbox</div>
+              <dl className="text-mono grid grid-cols-2 gap-y-1">
+                <dt className="text-muted-foreground">vp x</dt><dd>{props.viewport.x.toFixed(3)}</dd>
+                <dt className="text-muted-foreground">vp y</dt><dd>{props.viewport.y.toFixed(3)}</dd>
+                <dt className="text-muted-foreground">vp size</dt><dd>{props.viewport.size.toFixed(3)}</dd>
+                <dt className="text-muted-foreground">frame</dt><dd>{Math.round(props.time * props.settings.frameRate)}</dd>
+              </dl>
+            </div>
+          </div>
+        </DebugBlock>
+        <DebugBlock title="Event log">
+          <div className="max-h-[320px] overflow-auto">
+            <table className="text-mono w-full text-xs">
+              <thead className="sticky top-0 bg-surface text-muted-foreground">
+                <tr>
+                  <th className="px-2 py-1 text-left">time</th>
+                  <th className="px-2 py-1 text-left">type</th>
+                  <th className="px-2 py-1 text-left">message</th>
+                  <th className="px-2 py-1 text-left">conf</th>
+                  <th className="px-2 py-1 text-left">action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {props.events.map((e, i) => (
+                  <tr key={i} className="border-t border-border">
+                    <td className="px-2 py-1">{fmt(e.t)}</td>
+                    <td className="px-2 py-1" style={{ color: eventColor[e.kind] }}>{e.kind}</td>
+                    <td className="px-2 py-1">{e.label}</td>
+                    <td className="px-2 py-1">{(0.4 + Math.random() * 0.5).toFixed(2)}</td>
+                    <td className="px-2 py-1 text-muted-foreground">log</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </DebugBlock>
+      </div>
+      <div className="grid min-h-0 grid-cols-2 gap-3">
+        <DebugBlock title="Top candidates / rejected">
+          <table className="text-mono w-full text-xs">
+            <thead className="text-muted-foreground">
+              <tr>
+                <th className="px-2 py-1 text-left">center</th>
+                <th className="px-2 py-1 text-left">score</th>
+                <th className="px-2 py-1 text-left">conf</th>
+                <th className="px-2 py-1 text-left">reason</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { c: "(0.41, 0.38)", s: 0.82, k: 0.71, r: "accepted" },
+                { c: "(0.42, 0.39)", s: 0.74, k: 0.62, r: "below relock" },
+                { c: "(0.38, 0.40)", s: 0.55, k: 0.41, r: "ring penalty" },
+                { c: "(0.10, 0.15)", s: 0.49, k: 0.36, r: "outside ring" },
+                { c: "(0.62, 0.71)", s: 0.31, k: 0.20, r: "low conf" },
+              ].map((row, i) => (
+                <tr key={i} className="border-t border-border">
+                  <td className="px-2 py-1">{row.c}</td>
+                  <td className="px-2 py-1">{row.s.toFixed(2)}</td>
+                  <td className="px-2 py-1">{row.k.toFixed(2)}</td>
+                  <td className="px-2 py-1 text-muted-foreground">{row.r}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </DebugBlock>
+        <DebugBlock title={`Raw JSON · ${props.selectedDebugFile}`}>
+          <pre className="text-mono max-h-[260px] overflow-auto text-xs leading-relaxed">
+{JSON.stringify({
+  timestamp: Number(props.time.toFixed(3)),
+  frame: Math.round(props.time * props.settings.frameRate),
+  viewport: props.viewport,
+  quality: props.quality,
+  settings: props.settings,
+}, null, 2)}
+          </pre>
+        </DebugBlock>
+      </div>
+    </div>
+  );
+}
+
+function DebugBlock({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="hud-panel flex min-h-0 flex-col overflow-hidden">
+      <div className="border-b border-border bg-surface px-3 py-1.5">
+        <span className="label-eyebrow text-xs">{title}</span>
+      </div>
+      <div className="min-h-0 flex-1 overflow-auto p-2">{children}</div>
+    </div>
+  );
+}
+
+/* =========================================================================
+   RIGHT PANEL — switches by viewMode
+   ========================================================================= */
+
+function RightPanel(props: {
   viewMode: ViewMode;
-  activeName: string;
-  videoUrl: string; setVideoUrl: (v: string) => void;
-  cropLeft: number; setCropLeft: (v: number) => void;
-  cropRight: number; setCropRight: (v: number) => void;
-  settings: TrackingSettings; setSettings: (v: TrackingSettings) => void;
+  active: Preset;
   presets: Preset[]; activePresetId: string;
-  loadPreset: (id: string) => void;
-  updateActivePreset: () => void;
-  saveCurrentAsPreset: () => void;
-  deleteActivePreset: () => void;
+  onApplyPreset: (id: string) => void;
+  onUpdateCommit: () => void;
+  onSaveAs: () => void;
+  onUpdateActivePreset: () => void;
+  onDuplicatePreset: () => void;
+  onDeletePreset: () => void;
+  onResetToDefault: () => void;
+  isDirty: boolean;
+  quality: { trackingQ: number; jumpEvents: number; lostFrames: number; avgConfidence: number };
+  problems: TrackEvent[];
+  onSeek: (t: number) => void;
+  draft: TrackingSettings; patchDraft: (p: Partial<TrackingSettings>) => void;
+  committed: TrackingSettings;
+  graphPreset: typeof GRAPH_PRESETS[number]; setGraphPreset: (v: typeof GRAPH_PRESETS[number]) => void;
+  seriesVis: SeriesVisibility; setSeriesVis: (v: SeriesVisibility) => void;
+  selectedEvent: TrackEvent | null;
+  selectedDebugFile: string; setSelectedDebugFile: (v: string) => void;
+  time: number;
 }) {
   const wide = props.viewMode === "settings";
-  const { settings, setSettings } = props;
   return (
-    <aside className={`${wide ? "w-[420px]" : "w-80"} shrink-0 overflow-auto border-l border-border bg-surface`}>
+    <aside className={`${wide ? "w-[400px]" : "w-80"} shrink-0 overflow-auto border-l border-border bg-surface`}>
       <div className="border-b border-border px-4 py-3">
         <div className="label-eyebrow text-xs">Camera tracking settings</div>
-        <div className="mt-0.5 text-xs text-muted-foreground">Sent to backend tracker · preset: <span className="text-foreground">{props.activeName}</span></div>
+        <div className="mt-0.5 text-xs text-muted-foreground">
+          preset · <span className="text-foreground">{props.active.name}</span>
+          {props.isDirty && <span className="ml-2 text-amber-400">· edited</span>}
+        </div>
       </div>
 
+      {props.viewMode === "overview" && <OverviewPanel {...props} />}
+      {props.viewMode === "graphs"   && <GraphsPanel {...props} />}
+      {props.viewMode === "settings" && <SettingsPanel {...props} />}
+      {props.viewMode === "debug"    && <DebugPanel {...props} />}
+    </aside>
+  );
+}
+
+/* ---- Overview right panel ---- */
+function OverviewPanel(props: Parameters<typeof RightPanel>[0]) {
+  const { draft, patchDraft } = props;
+  return (
+    <div className="space-y-3 p-3">
+      <Section title="Quick tuning">
+        <Field label="Current preset">
+          <select value={props.activePresetId} onChange={(e) => props.onApplyPreset(e.target.value)}
+            className="w-full rounded-sm border border-border bg-background px-2 py-1.5 text-xs">
+            {props.presets.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+        </Field>
+        <SliderField label="Smoothing" value={draft.smoothing} min={0} max={1} step={0.01}
+          onChange={(v) => patchDraft({ smoothing: v })} />
+        <SliderField label="Response speed" value={draft.responseSpeed} min={0} max={1} step={0.01}
+          onChange={(v) => patchDraft({ responseSpeed: v })} />
+        <NumField label="Deadzone (px)" value={draft.deadzone} min={0} max={200} step={1}
+          onChange={(v) => patchDraft({ deadzone: v })} />
+        <NumField label="Max speed (px/frame)" value={draft.maxSpeed} min={1} max={500} step={1}
+          onChange={(v) => patchDraft({ maxSpeed: v })} />
+        <UpdateActions onUpdate={props.onUpdateCommit} onSaveAs={props.onSaveAs} isDirty={props.isDirty} />
+      </Section>
+
+      <Section title="Tracking health">
+        <div className="text-mono space-y-1 text-xs">
+          <Row k="Tracking quality" v={`${props.quality.trackingQ}%`} />
+          <Row k="Jump events" v={props.quality.jumpEvents.toString()} />
+          <Row k="Lost frames" v={props.quality.lostFrames.toString()} />
+          <Row k="Avg confidence" v={props.quality.avgConfidence.toFixed(2)} />
+          <Row k="Current mode" v={props.committed.stepZoomEnabled ? "Step zoom" : "Smooth zoom"} />
+        </div>
+      </Section>
+
+      <Section title={`Problems detected (${props.problems.length})`}>
+        <ul className="text-mono max-h-[220px] divide-y divide-border overflow-auto text-xs">
+          {props.problems.map((p, i) => (
+            <li key={i}>
+              <button onClick={() => props.onSeek(p.t)}
+                className="flex w-full items-center justify-between px-2 py-1.5 text-left hover:bg-muted">
+                <span className="text-muted-foreground">{fmt(p.t)}</span>
+                <span style={{ color: eventColor[p.kind] }}>{p.label}</span>
+              </button>
+            </li>
+          ))}
+          {!props.problems.length && <li className="px-2 py-1.5 text-muted-foreground">none</li>}
+        </ul>
+      </Section>
+    </div>
+  );
+}
+
+/* ---- Graphs right panel ---- */
+function GraphsPanel(props: Parameters<typeof RightPanel>[0]) {
+  const { seriesVis, setSeriesVis } = props;
+  const toggle = (k: keyof SeriesVisibility) => setSeriesVis({ ...seriesVis, [k]: !seriesVis[k] });
+  return (
+    <div className="space-y-3 p-3">
+      <Section title="Graph presets">
+        <div className="flex flex-wrap gap-1.5">
+          {GRAPH_PRESETS.map((g) => (
+            <button key={g} onClick={() => props.setGraphPreset(g)}
+              className={`rounded-sm border px-2 py-1 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                g === props.graphPreset ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface-2 text-muted-foreground hover:bg-muted"
+              }`}>{g}</button>
+          ))}
+        </div>
+      </Section>
+      <Section title="Series visibility">
+        {(Object.keys(seriesVis) as Array<keyof SeriesVisibility>).map((k) => (
+          <label key={k} className="flex cursor-pointer items-center gap-2 py-0.5 text-xs">
+            <input type="checkbox" checked={seriesVis[k]} onChange={() => toggle(k)} className="accent-primary" />
+            <span className="capitalize">{k.replace(/([A-Z])/g, " $1").trim()}</span>
+          </label>
+        ))}
+      </Section>
+      <Section title="Selected event">
+        {props.selectedEvent ? (
+          <dl className="text-mono grid grid-cols-2 gap-y-1 text-xs">
+            <dt className="text-muted-foreground">timestamp</dt><dd>{fmt(props.selectedEvent.t)}</dd>
+            <dt className="text-muted-foreground">type</dt><dd style={{ color: eventColor[props.selectedEvent.kind] }}>{props.selectedEvent.kind}</dd>
+            <dt className="text-muted-foreground">label</dt><dd>{props.selectedEvent.label}</dd>
+            <dt className="text-muted-foreground">reason</dt><dd className="text-muted-foreground">threshold exceeded</dd>
+          </dl>
+        ) : (
+          <div className="text-xs text-muted-foreground">Click an event marker on a graph</div>
+        )}
+      </Section>
+    </div>
+  );
+}
+
+/* ---- Settings right panel: full accordion ---- */
+function SettingsPanel(props: Parameters<typeof RightPanel>[0]) {
+  const { draft, patchDraft } = props;
+  return (
+    <>
       <div className="space-y-1 p-3">
         <Collapsible title="Source" defaultOpen>
           <Field label="Video URL">
-            <input value={props.videoUrl} onChange={(e) => props.setVideoUrl(e.target.value)}
+            <input value={draft.videoUrl} onChange={(e) => patchDraft({ videoUrl: e.target.value })}
               className="text-mono w-full rounded-sm border border-border bg-background px-2 py-1.5 text-xs"
               placeholder="https://…/observer.mp4" />
           </Field>
+          <Field label="Upload video">
+            <input type="file" accept="video/*" className="w-full text-xs"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) patchDraft({ videoUrl: URL.createObjectURL(f) }); }} />
+          </Field>
+          <Field label="Source type">
+            <select value={draft.sourceType} onChange={(e) => patchDraft({ sourceType: e.target.value as TrackingSettings["sourceType"] })}
+              className="w-full rounded-sm border border-border bg-background px-2 py-1.5 text-xs">
+              <option value="vod">VOD stream</option>
+              <option value="player_cam">Player cam</option>
+              <option value="observer">Observer</option>
+            </select>
+          </Field>
+          <NumField label="Frame rate" value={draft.frameRate} min={1} max={240} step={1}
+            onChange={(v) => patchDraft({ frameRate: v })} />
         </Collapsible>
 
         <Collapsible title="Crop">
           <div className="grid grid-cols-2 gap-2">
-            <NumField label="Crop L (px)" value={props.cropLeft} min={0} max={900} step={10} onChange={props.setCropLeft} />
-            <NumField label="Crop R (px)" value={props.cropRight} min={0} max={900} step={10} onChange={props.setCropRight} />
+            <NumField label="Crop L" value={draft.cropLeft} min={0} max={900} step={10} onChange={(v) => patchDraft({ cropLeft: v })} />
+            <NumField label="Crop R" value={draft.cropRight} min={0} max={900} step={10} onChange={(v) => patchDraft({ cropRight: v })} />
+            <NumField label="Crop T" value={draft.cropTop} min={0} max={500} step={10} onChange={(v) => patchDraft({ cropTop: v })} />
+            <NumField label="Crop B" value={draft.cropBottom} min={0} max={500} step={10} onChange={(v) => patchDraft({ cropBottom: v })} />
           </div>
+          <button onClick={() => patchDraft({ cropLeft: 0, cropRight: 0, cropTop: 0, cropBottom: 0 })}
+            className="w-full rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs font-semibold uppercase tracking-wider hover:bg-muted">
+            Reset crop
+          </button>
         </Collapsible>
 
         <Collapsible title="Smoothing / response" defaultOpen>
-          <SliderField label="Smoothing" value={settings.smoothing} min={0} max={1} step={0.01}
-            onChange={(v) => setSettings({ ...settings, smoothing: v })} />
-          <SliderField label="Response speed" value={settings.responseSpeed} min={0} max={1} step={0.01}
-            onChange={(v) => setSettings({ ...settings, responseSpeed: v })} />
-          <NumField label="Deadzone (px)" value={settings.deadzone} min={0} max={200} step={1}
-            onChange={(v) => setSettings({ ...settings, deadzone: v })} />
-          <NumField label="Max speed (px/frame)" value={settings.maxSpeed} min={1} max={500} step={1}
-            onChange={(v) => setSettings({ ...settings, maxSpeed: v })} />
-          <NumField label="EMA window (frames)" value={settings.ema} min={1} max={60} step={1}
-            onChange={(v) => setSettings({ ...settings, ema: v })} />
+          <SliderField label="Smoothing" value={draft.smoothing} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ smoothing: v })} />
+          <SliderField label="Response speed" value={draft.responseSpeed} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ responseSpeed: v })} />
+          <NumField label="Deadzone (px)" value={draft.deadzone} min={0} max={200} step={1} onChange={(v) => patchDraft({ deadzone: v })} />
+          <NumField label="Max speed (px/frame)" value={draft.maxSpeed} min={1} max={500} step={1} onChange={(v) => patchDraft({ maxSpeed: v })} />
+          <NumField label="EMA window (frames)" value={draft.ema} min={1} max={60} step={1} onChange={(v) => patchDraft({ ema: v })} />
         </Collapsible>
 
         <Collapsible title="Zoom">
           <div className="grid grid-cols-2 gap-2">
-            <NumField label="Zoom min" value={settings.zoomMin} min={0.5} max={3} step={0.05}
-              onChange={(v) => setSettings({ ...settings, zoomMin: v })} />
-            <NumField label="Zoom max" value={settings.zoomMax} min={1} max={5} step={0.05}
-              onChange={(v) => setSettings({ ...settings, zoomMax: v })} />
+            <NumField label="Zoom min" value={draft.zoomMin} min={0.5} max={3} step={0.05} onChange={(v) => patchDraft({ zoomMin: v })} />
+            <NumField label="Zoom max" value={draft.zoomMax} min={1} max={5} step={0.05} onChange={(v) => patchDraft({ zoomMax: v })} />
           </div>
-          <NumField label="Zoom step" value={settings.zoomStep} min={0} max={1} step={0.01}
-            onChange={(v) => setSettings({ ...settings, zoomStep: v })} />
-          <SliderField label="Zoom lerp" value={settings.zoomLerp} min={0} max={1} step={0.01}
-            onChange={(v) => setSettings({ ...settings, zoomLerp: v })} />
+          <NumField label="Zoom step" value={draft.zoomStep} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ zoomStep: v })} />
+          <SliderField label="Zoom lerp" value={draft.zoomLerp} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ zoomLerp: v })} />
+          <SliderField label="Zoom sensitivity" value={draft.zoomSensitivity} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ zoomSensitivity: v })} />
+          <CheckField label="Step zoom enabled" checked={draft.stepZoomEnabled} onChange={(v) => patchDraft({ stepZoomEnabled: v })} />
         </Collapsible>
 
         <Collapsible title="Ring / team weighting">
-          <SliderField label="Ring weight" value={settings.ringWeight} min={0} max={1} step={0.01}
-            onChange={(v) => setSettings({ ...settings, ringWeight: v })} />
-          <SliderField label="Ring noise tolerance" value={settings.ringNoise} min={0} max={1} step={0.01}
-            onChange={(v) => setSettings({ ...settings, ringNoise: v })} />
-          <SliderField label="Team weight" value={settings.teamWeight} min={0} max={1} step={0.01}
-            onChange={(v) => setSettings({ ...settings, teamWeight: v })} />
+          <SliderField label="Ring weight" value={draft.ringWeight} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ ringWeight: v })} />
+          <SliderField label="Team weight" value={draft.teamWeight} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ teamWeight: v })} />
+          <SliderField label="Ring noise tolerance" value={draft.ringNoiseTolerance} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ ringNoiseTolerance: v })} />
+          <SliderField label="Team cluster tolerance" value={draft.teamClusterTolerance} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ teamClusterTolerance: v })} />
+          <CheckField label="Ring center lock" checked={draft.ringCenterLock} onChange={(v) => patchDraft({ ringCenterLock: v })} />
+        </Collapsible>
+
+        <Collapsible title="Jump detection">
+          <NumField label="Jump threshold" value={draft.jumpThreshold} min={0} max={1000} step={5} onChange={(v) => patchDraft({ jumpThreshold: v })} />
+          <NumField label="Jump cooldown (frames)" value={draft.jumpCooldownFrames} min={0} max={120} step={1} onChange={(v) => patchDraft({ jumpCooldownFrames: v })} />
+          <NumField label="Pre-jump unlock (s)" value={draft.preJumpUnlock} min={0} max={3} step={0.05} onChange={(v) => patchDraft({ preJumpUnlock: v })} />
+          <NumField label="Anti-latch tail (s)" value={draft.antiLatchTail} min={0} max={3} step={0.05} onChange={(v) => patchDraft({ antiLatchTail: v })} />
+          <SliderField label="Relock threshold" value={draft.relockThreshold} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ relockThreshold: v })} />
         </Collapsible>
 
         <Collapsible title="Advanced">
-          <NumField label="Jump threshold (px)" value={settings.jumpThreshold} min={0} max={1000} step={5}
-            onChange={(v) => setSettings({ ...settings, jumpThreshold: v })} />
-          <NumField label="Pre-jump unlock (s)" value={settings.preJumpUnlock} min={0} max={3} step={0.05}
-            onChange={(v) => setSettings({ ...settings, preJumpUnlock: v })} />
+          <NumField label="Sample step" value={draft.sampleStep} min={1} max={20} step={1} onChange={(v) => patchDraft({ sampleStep: v })} />
+          <SliderField label="Confidence threshold" value={draft.confidenceThreshold} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ confidenceThreshold: v })} />
+          <NumField label="Lost frame threshold" value={draft.lostFrameThreshold} min={1} max={60} step={1} onChange={(v) => patchDraft({ lostFrameThreshold: v })} />
+          <CheckField label="Debug mode" checked={draft.debugMode} onChange={(v) => patchDraft({ debugMode: v })} />
+          <CheckField label="Save debug frames" checked={draft.saveDebugFrames} onChange={(v) => patchDraft({ saveDebugFrames: v })} />
         </Collapsible>
       </div>
 
-      {/* Preset manager — buttons + actions, near the settings */}
       <div className="sticky bottom-0 z-10 border-t border-border bg-surface/95 px-3 py-3 backdrop-blur">
         <div className="label-eyebrow mb-2 text-xs">Presets ({props.presets.length})</div>
         <div className="mb-3 flex flex-wrap gap-1.5">
           {props.presets.map((p) => (
-            <button key={p.id} onClick={() => props.loadPreset(p.id)}
+            <button key={p.id} onClick={() => props.onApplyPreset(p.id)}
               className={`rounded-sm border px-2.5 py-1 text-xs font-semibold uppercase tracking-wider transition-colors ${
                 p.id === props.activePresetId ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface-2 text-muted-foreground hover:bg-muted"
               }`}>
@@ -818,26 +1321,129 @@ function SettingsSidebar(props: {
             </button>
           ))}
         </div>
-        <div className="flex gap-2">
-          <button onClick={props.updateActivePreset}
-            className="flex-1 rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">
-            Update
-          </button>
-          <button onClick={props.saveCurrentAsPreset}
-            className="flex-1 rounded-sm border border-border bg-surface-2 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">
-            Save as…
-          </button>
-          <button onClick={props.deleteActivePreset}
-            className="rounded-sm border border-destructive/40 bg-surface-2 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-destructive hover:bg-destructive/10">
-            Delete
-          </button>
+        <div className="grid grid-cols-3 gap-1.5">
+          <button onClick={() => props.onApplyPreset(props.activePresetId)}
+            className="rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">Apply</button>
+          <button onClick={props.onUpdateCommit}
+            className="rounded-sm bg-primary px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">Update</button>
+          <button onClick={props.onSaveAs}
+            className="rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">Save as…</button>
+          <button onClick={props.onUpdateActivePreset}
+            className="rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">Save</button>
+          <button onClick={props.onDuplicatePreset}
+            className="rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">Duplicate</button>
+          <button onClick={props.onDeletePreset}
+            className="rounded-sm border border-destructive/40 bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-destructive hover:bg-destructive/10">Delete</button>
         </div>
+        <button onClick={props.onResetToDefault}
+          className="mt-2 w-full rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">
+          Reset to default
+        </button>
       </div>
-    </aside>
+    </>
   );
 }
 
-/* ---------- Collapsible ---------- */
+/* ---- Debug right panel ---- */
+function DebugPanel(props: Parameters<typeof RightPanel>[0]) {
+  const copy = (s: string) => navigator.clipboard?.writeText(s);
+  return (
+    <div className="space-y-3 p-3">
+      <Section title="Debug mode">
+        <CheckField label="Debug mode enabled" checked={props.draft.debugMode}
+          onChange={(v) => props.patchDraft({ debugMode: v })} />
+        <CheckField label="Save debug frames" checked={props.draft.saveDebugFrames}
+          onChange={(v) => props.patchDraft({ saveDebugFrames: v })} />
+        <UpdateActions onUpdate={props.onUpdateCommit} onSaveAs={props.onSaveAs} isDirty={props.isDirty} />
+      </Section>
+
+      <Section title="Selected timestamp">
+        <div className="text-mono text-xs">
+          {fmt(props.time)} · frame {Math.round(props.time * props.committed.frameRate)}
+        </div>
+      </Section>
+
+      <Section title="Debug files">
+        <ul className="space-y-1 text-xs">
+          {DEBUG_FILES.map((f) => (
+            <li key={f.name}
+              className={`rounded-sm border px-2 py-1.5 ${f.name === props.selectedDebugFile ? "border-primary/40 bg-primary/10" : "border-border bg-surface-2"}`}>
+              <button onClick={() => props.setSelectedDebugFile(f.name)}
+                className="text-mono mb-1 block w-full text-left">
+                {f.name}
+              </button>
+              <div className="flex gap-1">
+                <button onClick={() => window.open(f.path, "_blank")} className="rounded-sm border border-border bg-background px-1.5 py-0.5 text-xs hover:bg-muted">Open</button>
+                <button className="rounded-sm border border-border bg-background px-1.5 py-0.5 text-xs hover:bg-muted">Download</button>
+                <button onClick={() => copy(f.path)} className="rounded-sm border border-border bg-background px-1.5 py-0.5 text-xs hover:bg-muted">Copy path</button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </Section>
+
+      <Section title="Event log">
+        <ul className="text-mono max-h-[180px] divide-y divide-border overflow-auto text-xs">
+          {props.problems.map((p, i) => (
+            <li key={i}>
+              <button onClick={() => props.onSeek(p.t)}
+                className="flex w-full items-center justify-between px-2 py-1 text-left hover:bg-muted">
+                <span className="text-muted-foreground">{fmt(p.t)}</span>
+                <span style={{ color: eventColor[p.kind] }}>{p.label}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </Section>
+
+      <button className="w-full rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">
+        Export
+      </button>
+    </div>
+  );
+}
+
+/* =========================================================================
+   Helpers
+   ========================================================================= */
+
+function UpdateActions({ onUpdate, onSaveAs, isDirty }: { onUpdate: () => void; onSaveAs: () => void; isDirty: boolean }) {
+  return (
+    <div className="mt-1 flex gap-2">
+      <button onClick={onUpdate}
+        className={`flex-1 rounded-sm px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition ${
+          isDirty ? "bg-primary text-primary-foreground hover:brightness-110" : "bg-surface-2 text-muted-foreground"
+        }`}>
+        Update{isDirty ? " *" : ""}
+      </button>
+      <button onClick={onSaveAs}
+        className="flex-1 rounded-sm border border-border bg-surface-2 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">
+        Save as…
+      </button>
+    </div>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-sm border border-border bg-surface-2">
+      <div className="border-b border-border px-3 py-1.5">
+        <span className="label-eyebrow text-xs">{title}</span>
+      </div>
+      <div className="space-y-2 p-3">{children}</div>
+    </div>
+  );
+}
+
+function Row({ k, v }: { k: string; v: string }) {
+  return (
+    <div className="flex justify-between">
+      <span className="text-muted-foreground">{k}</span>
+      <span>{v}</span>
+    </div>
+  );
+}
+
 function Collapsible({ title, defaultOpen = false, children }: {
   title: string; defaultOpen?: boolean; children: React.ReactNode;
 }) {
@@ -854,10 +1460,10 @@ function Collapsible({ title, defaultOpen = false, children }: {
   );
 }
 
-/* ---------- Reusable inputs ---------- */
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return <div><div className="label-eyebrow mb-1 text-xs">{label}</div>{children}</div>;
 }
+
 function SliderField({ label, value, min, max, step, onChange }: { label: string; value: number; min: number; max: number; step: number; onChange: (v: number) => void }) {
   return (
     <div>
@@ -870,6 +1476,7 @@ function SliderField({ label, value, min, max, step, onChange }: { label: string
     </div>
   );
 }
+
 function NumField({ label, value, min, max, step, onChange }: { label: string; value: number; min: number; max: number; step: number; onChange: (v: number) => void }) {
   return (
     <div>
@@ -880,6 +1487,16 @@ function NumField({ label, value, min, max, step, onChange }: { label: string; v
     </div>
   );
 }
+
+function CheckField({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <label className="flex cursor-pointer items-center gap-2 text-xs">
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="accent-primary" />
+      <span>{label}</span>
+    </label>
+  );
+}
+
 function fmt(s: number) {
   if (!isFinite(s)) return "0:00";
   const m = Math.floor(s / 60);
@@ -887,81 +1504,21 @@ function fmt(s: number) {
   return `${m}:${sec}`;
 }
 
-/* ---------- Charts panel: grouped collapsible chart sections ---------- */
-function ChartsPanel({ time, duration, onSeek, events, showOriginal, onToggleOriginal }: {
-  time: number; duration: number; onSeek: (t: number) => void;
-  events: TrackEvent[]; showOriginal: boolean; onToggleOriginal: () => void;
-}) {
-  return (
-    <div>
-      <div className="flex flex-wrap items-center gap-4 border-b border-border bg-surface px-3 py-1.5 text-xs text-muted-foreground">
-        <div className="flex items-center gap-1"><span className="h-2 w-3 bg-emerald-400" />smoothed</div>
-        <div className="flex items-center gap-1"><span className="h-2 w-3 bg-zinc-400" />raw</div>
-        <span className="mx-1 h-4 w-px bg-border" />
-        {(Object.keys(eventColor) as TrackEvent["kind"][]).map((k) => (
-          <div key={k} className="flex items-center gap-1">
-            <span className="h-3 w-0.5" style={{ background: eventColor[k] }} />
-            {eventLabel[k]}
-          </div>
-        ))}
-        <span className="ml-auto" />
-        <button onClick={onToggleOriginal}
-          className={`rounded-sm border px-2 py-1 text-xs font-semibold uppercase tracking-wider transition-colors ${
-            showOriginal ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface-2 text-muted-foreground hover:bg-muted"
-          }`}>
-          {showOriginal ? "Before / After" : "After only"}
-        </button>
-      </div>
-      <div className="space-y-2 p-2">
-        <ChartGroup title="Position graphs" defaultOpen lanes={[
-          { key: "x", label: "X: camera raw / smoothed", range: "484.7 … 827.0", seed: 1 },
-          { key: "y", label: "Y: camera raw / smoothed", range: "334.0 … 661.0", seed: 2 },
-        ]} time={time} duration={duration} onSeek={onSeek} events={events} showOriginal={showOriginal} />
-        <ChartGroup title="Zoom graphs" defaultOpen lanes={[
-          { key: "zoom", label: "Zoom ratio · effective", range: "-0.1 … 2.1", seed: 3 },
-        ]} time={time} duration={duration} onSeek={onSeek} events={events} showOriginal={showOriginal} />
-        <ChartGroup title="Ring graphs" lanes={[
-          { key: "radius", label: "Ring radius · zoomedRadius", range: "139.3 … 562.7", seed: 4 },
-          { key: "ring", label: "Ring number", range: "0.6 … 2.4", seed: 5 },
-        ]} time={time} duration={duration} onSeek={onSeek} events={events} showOriginal={showOriginal} />
-        <ChartGroup title="Jump score" lanes={[
-          { key: "move", label: "moveDist · jumpScore", range: "-45.6 … 805.3", seed: 6 },
-        ]} time={time} duration={duration} onSeek={onSeek} events={events} showOriginal={showOriginal} />
-      </div>
-    </div>
-  );
-}
+/* =========================================================================
+   Chart lanes — single lane stack
+   ========================================================================= */
 
 type LaneSpec = { key: string; label: string; range: string; seed: number };
-function ChartGroup({ title, lanes, time, duration, onSeek, events, showOriginal, defaultOpen = false }: {
-  title: string; lanes: LaneSpec[]; time: number; duration: number;
-  onSeek: (t: number) => void; events: TrackEvent[]; showOriginal: boolean; defaultOpen?: boolean;
-}) {
-  const [open, setOpen] = useState(defaultOpen);
-  const height = 90;
-  return (
-    <div className="rounded-sm border border-border bg-surface">
-      <div className="flex items-center justify-between border-b border-border px-3 py-1.5">
-        <button onClick={() => setOpen((v) => !v)} className="flex items-center gap-2">
-          <span className={`text-xs text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`}>▶</span>
-          <span className="label-eyebrow text-xs">{title}</span>
-          <span className="text-xs text-muted-foreground">· {lanes.length} lane{lanes.length === 1 ? "" : "s"}</span>
-        </button>
-      </div>
-      {open && (
-        <ChartLanes lanes={lanes} height={height} time={time} duration={duration}
-          onSeek={onSeek} events={events} showOriginal={showOriginal} />
-      )}
-    </div>
-  );
-}
 
-function ChartLanes({ lanes, height, time, duration, onSeek, events, showOriginal }: {
+function ChartLanes({ lanes, height, time, duration, onSeek, events, showOriginal, showSmoothed, onSelectEvent }: {
   lanes: LaneSpec[]; height: number; time: number; duration: number;
-  onSeek: (t: number) => void; events: TrackEvent[]; showOriginal: boolean;
+  onSeek: (t: number) => void; events: TrackEvent[];
+  showOriginal: boolean; showSmoothed?: boolean;
+  onSelectEvent?: (e: TrackEvent | null) => void;
 }) {
   const W = 1200, N = 600;
   const H = height;
+  const showSm = showSmoothed !== false;
 
   const rand = (seed: number) => {
     let s = seed | 0;
@@ -999,6 +1556,8 @@ function ChartLanes({ lanes, height, time, duration, onSeek, events, showOrigina
   const onClick = (e: React.MouseEvent<SVGSVGElement>) => {
     const r = e.currentTarget.getBoundingClientRect();
     const xFrac = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+    const ev = eventAtX(xFrac);
+    if (ev && onSelectEvent) onSelectEvent(ev);
     onSeek(xFrac * duration);
   };
 
@@ -1007,7 +1566,6 @@ function ChartLanes({ lanes, height, time, duration, onSeek, events, showOrigina
       <svg viewBox={`0 0 ${W} ${totalH}`} className="block w-full"
         style={{ minHeight: totalH, shapeRendering: "crispEdges" }}
         onMouseMove={onMouseMove} onMouseLeave={() => setHover(null)} onClick={onClick}>
-        {/* Event markers — vertical lines across all lanes */}
         {events.map((ev, i) => (
           <line key={`e-${i}`}
             x1={(ev.t / Math.max(duration, 0.001)) * W}
@@ -1028,17 +1586,17 @@ function ChartLanes({ lanes, height, time, duration, onSeek, events, showOrigina
               {showOriginal && (
                 <path d={path(b)} fill="none" stroke="#a1a1aa" strokeWidth={1} opacity={0.55} />
               )}
-              <path d={path(a)} fill="none" stroke="#34d399" strokeWidth={1.2} opacity={0.95} />
+              {showSm && (
+                <path d={path(a)} fill="none" stroke="#34d399" strokeWidth={1.2} opacity={0.95} />
+              )}
             </g>
           );
         })}
-        {/* Time cursor */}
         <line
           x1={(time / Math.max(duration, 0.001)) * W}
           x2={(time / Math.max(duration, 0.001)) * W}
           y1={0} y2={totalH}
           stroke="#fff" strokeWidth={1} strokeDasharray="3 3" opacity={0.7} />
-        {/* Hover cursor */}
         {hover && (
           <line x1={hover.x * W} x2={hover.x * W} y1={0} y2={totalH}
             stroke="#fff" strokeWidth={0.5} opacity={0.3} />
@@ -1055,39 +1613,6 @@ function ChartLanes({ lanes, height, time, duration, onSeek, events, showOrigina
           )}
         </div>
       )}
-    </div>
-  );
-}
-
-/* ---------- Debug panel ---------- */
-function DebugPanel({ settings, viewport, quality, events }: {
-  settings: TrackingSettings; viewport: Viewport;
-  quality: { trackingQ: number; jumpEvents: number; lostFrames: number; avgConfidence: number };
-  events: TrackEvent[];
-}) {
-  return (
-    <div className="grid grid-cols-3 gap-2 p-2">
-      <DebugBlock title="Settings"><pre className="text-mono text-xs leading-relaxed">{JSON.stringify(settings, null, 2)}</pre></DebugBlock>
-      <DebugBlock title="Viewport"><pre className="text-mono text-xs leading-relaxed">{JSON.stringify(viewport, null, 2)}</pre></DebugBlock>
-      <DebugBlock title="Quality"><pre className="text-mono text-xs leading-relaxed">{JSON.stringify(quality, null, 2)}</pre></DebugBlock>
-      <DebugBlock title={`Events (${events.length})`}>
-        <ul className="text-mono space-y-0.5 text-xs">
-          {events.map((e, i) => (
-            <li key={i}>
-              <span className="text-muted-foreground">{fmt(e.t).padStart(5)}</span>{" "}
-              <span style={{ color: eventColor[e.kind] }}>{e.label}</span>
-            </li>
-          ))}
-        </ul>
-      </DebugBlock>
-    </div>
-  );
-}
-function DebugBlock({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="rounded-sm border border-border bg-surface p-2">
-      <div className="label-eyebrow mb-1 text-xs">{title}</div>
-      {children}
     </div>
   );
 }

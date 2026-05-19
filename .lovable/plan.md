@@ -1,54 +1,130 @@
-## Цель
 
-Единая структура во всём проекте:
+# CAMERA Tracking — реструктуризация страницы
 
+Цель: превратить текущую перегруженную страницу `/admin/camera` в инструмент оператора с четырьмя режимами работы. Вся правка — только в `src/routes/admin.camera.tsx` (плюс при необходимости пара вспомогательных файлов рядом). Дизайн-токены и стиль остаются как сейчас (`hud-*` классы, semantic tokens).
+
+## 1. Общий каркас (для всех вкладок)
+
+Верхняя «шапка» — не меняет содержимое при переключении вкладок:
+
+```text
+┌─ CAMERA TRACKING ─────────────────────────────────────────────┐
+│ Tournament ▾  Match ▾  Map ▾   │ OVERVIEW GRAPHS SETTINGS DBG │
+├──────────────────────────────────────────────────────────────┤
+│ Quality 91%   Jumps 4   Lost 20   Conf 0.78   Preset: Step…  │
+└──────────────────────────────────────────────────────────────┘
 ```
-Tournament
-  └── Match (один матч турнира, день/серия)
-        └── Game (= одна карта, объект анализа)
-```
 
-Сейчас `Match` фактически = одна карта (game). Поле `mapIds[]` уже намекает на множественность, но используется только в admin. Нужно явно ввести `Game` и сделать так, чтобы /tournaments и весь UI оперировал двухуровневой моделью.
+- Селекторы турнир/матч/карта — как сейчас.
+- View tabs — уже перенесены рядом с селекторами; оставляем там.
+- Под ними новая **strip метрик качества** (Tracking quality, Jump events, Lost frames, Avg confidence, Current preset) — общая для всех вкладок.
 
-## Изменения в данных (`src/lib/mock-match.ts`)
+Layout страницы: `grid grid-cols-[1fr_320px]` — слева контент вкладки, справа контекстная панель настроек (её содержимое зависит от вкладки). На вкладке Settings правая панель расширяется (`grid-cols-[1fr_380px]`).
 
-- Ввести тип `Game = { id, matchId, mapId, durationSec, index }`.
-- `Match = { id, name, tournamentId, gameIds: string[] }` — без `mapId`/`durationSec`.
-- `MatchExtras` (теперь `MatchFull`) теряет `mapIds` (заменён `gameIds`), оставляет `vodLink`, `teamIds`, `teamVods`.
-- Добавить экспорт `games: Game[]` и хелперы: `getGamesOfMatch(matchId)`, `getMatchOfGame(gameId)`, `matchDurationSec(match)`, `firstGameMapId(match)`.
-- Перегенерировать seed: 6 текущих "матчей" становятся 6 `Game`-ами, сгруппированными в 2–3 `Match` (по турниру). Например:
-  - `algs-2026-split-1` → `m-101` (Match Day 1) с 4 games (Worlds Edge, Storm Point, Broken Moon, E-District).
-  - `esl-pro-league-12` → `m-102` (Week 1) с 2 games (Olympus, King's Canyon).
-- Маршрут анализа `/matches/$matchId` смыслово становится "просмотр карты", поэтому переименуем в `/games/$gameId`. `MatchViewer` принимает `initialGameId`.
+## 2. Вкладка OVERVIEW
 
-## Маршруты
+Главный экран оператора — split view + быстрые настройки.
 
-- Переименовать `src/routes/matches.$matchId.tsx` → `src/routes/games.$gameId.tsx` (просмотрщик одной карты).
-- `src/routes/matches.tsx` оставить как список матчей, но карточка показывает: турнир, название матча, число игр, превью первой карты, список карт. По клику открывается страница матча с играми.
-- Новый файл `src/routes/matches.$matchId.tsx` — детальная страница матча: список Games со ссылками на `/games/$gameId`.
-- `/tournaments` — для каждого турнира показывает список Matches (не игр). У матча: название + чипы карт (games).
+Слева — `grid grid-rows-[1fr_auto]`:
 
-## Admin
+- **Split View** `grid grid-cols-2`:
+  - Левая половина — Observer video / crop preview: `<video>` + crop-рамка, бейдж timestamp, индикатор `video loaded / loading / no video`, метка sync.
+  - Правая половина — Map preview (текущая карта с кольцами/командами/траекторией) + viewport-рамка, ring center, camera path, zoom-кнопки (+/−/1:1/fit).
+- Над split-блоком — toolbar-кнопки toggle: `SYNC MAP/VIDEO`, `LOCK ZOOM`, `SHOW RING CENTER`, `SHOW CAMERA BBOX`, `RESET VIEWPORT`, `FIT MAP`. Состояние хранится в `SplitOpts` (уже есть).
+- Под split — **Timeline** на всю ширину: play/pause, текущий ts, длительность, цветные tick-маркеры событий (jump/lost/relock/ring/manual) с тултипами и кликом-сикером.
 
-- `admin-store`: seed строит `games`, обновить `MatchFull` shape, добавить CRUD по `games` (минимально: `setGames`, `updateGame`).
-- `admin.matches.tsx`: колонка "Map" заменена на "Games (N)" с превью карт; модалка редактирования матча редактирует `gameIds` (порядок, добавить/удалить game, в подформе game — выбрать map и durationSec).
-- `admin.matches.$matchId.tsx`: блок "Map order" становится "Games" — те же действия, но создаёт/удаляет записи в `games`.
-- `admin.processes.tsx`, `admin.maps.tsx`, `admin.minimap.tsx`, `admin.camera.tsx`, `admin.hsv.tsx`, `admin.polygons.tsx`: заменить чтение `match.mapId`/`match.durationSec` на game-based выбор. Где раньше выбирали матч и затем смотрели карту — теперь выбирают game (или match → game).
+Справа в OVERVIEW — компактная панель **Quick settings**:
 
-## Frontend (index/teams/maps)
+- Preset selector
+- Smoothing, Response speed, Deadzone, Max speed (слайдеры)
+- Кнопки `UPDATE`, `SAVE AS…`
 
-- `src/routes/index.tsx`: stats `matches` остаётся (это число матчей), добавить stat `games`. "Последние матчи" → "Последние игры" (Games) и линкуем на `/games/$gameId`; либо оставить матчи и показывать их превью + список игр. Выберу второе: featured = последняя готовая game, "recent matches" = последние матчи с их играми.
-- `src/routes/teams.$teamId.tsx`: панели "Next matches" / "Matches" работают с матчами, но статистика по картам считается по `games` команды.
-- `src/routes/maps.$mapId.tsx`, `src/components/maps/MapDetailContent.tsx`: список "матчей на карте" → "игр на карте" (Games).
+Под ней два мини-блока:
 
-## Адаптеры/совместимость
+- **Tracking health** — те же 5 метрик из шапки, в развёрнутом виде с пояснениями.
+- **Problems detected** — список «00:18 jump detected / 00:32 lost tracking / 00:44 relock». Клик по строке → `setTime(t)` (перематывает таймлайн).
 
-`MatchViewer` сейчас живёт от `matchId` + `mock-match.events/ringPhases`. Эти моки относятся к одной игре, поэтому привязываем их к `gameId`. `events`/`ringPhases` экспортируем как функции `eventsFor(gameId)` / `ringsFor(gameId)` (пока возвращают одно и то же — это мок).
+## 3. Вкладка GRAPHS
 
-## Проверка консистентности
+Слева — стек графиков (sticky-cursor по времени, синхронизация по X):
 
-После рефакторинга прогон по проекту: `rg "\\.mapId\\b|mapIds"` — все оставшиеся вхождения должны относиться к `Game` или к `Map` (карте), не к `Match`. Названия в UI: "матч" = Match (контейнер игр), "игра/карта" = Game.
+1. X camera raw / smoothed
+2. Y camera raw / smoothed
+3. Zoom ratio
+4. Ring radius / zoomed radius
+5. Ring number
+6. moveDist / jumpScore
+7. Confidence
 
-## Объём
+Каждый — отдельная горизонтальная полоса фиксированной высоты (90 px, без регулировки). Над стеком — toolbar: zoom-in/out/reset по времени, переключатели серий (raw/smoothed/ring center/jump score/confidence). На графиках цветные вертикальные риски для событий по палитре:
 
-~14 файлов: `mock-match.ts`, `admin-store.ts`, 2 admin matches + ~5 других admin, `index.tsx`, `matches.tsx`, `matches.$matchId.tsx` (новый), `games.$gameId.tsx` (переименован), `tournaments.tsx`, `teams.$teamId.tsx`, `maps.$mapId.tsx`, `MapDetailContent.tsx`, `MatchViewer.tsx` (мелкая правка пропа).
+- jump — `#ef4444`
+- lost — `#f59e0b`
+- relock — `#22c55e`
+- ring — `#22d3ee`
+- manual — `#a855f7`
+
+Клик по графику → переход timeline на этот ts.
+
+Правая панель GRAPHS:
+
+- **Graph presets** (Step zoom / Ring noise / Balance / Max sensitivity)
+- **Series visibility** (чекбоксы)
+- **Selected event** — ts, type, value, reason (заполняется при клике на маркер)
+
+## 4. Вкладка SETTINGS
+
+Слева — превью карты + crop preview (упрощённый split, чтобы видеть эффект настроек).
+
+Справа — все настройки в `<Accordion>` (collapsible), по 7 секциям из ТЗ:
+
+1. Source — videoUrl, upload, source type, frame rate, duration
+2. Crop — crop_l/r/t/b, preview, reset
+3. Smoothing / Response — smoothing, response_speed, deadzone_px, max_speed_px_per_frame, ema_window_frames
+4. Zoom — zoom_min/max/step/lerp/sensitivity, step_zoom_enabled
+5. Ring / Team weighting — ring_weight, team_weight, ring_noise_tolerance, team_cluster_tolerance, ring_center_lock
+6. Jump detection — jump_threshold, jump_cooldown_frames, pre_jump_unlock_sec, anti_latch_tail, relock_threshold
+7. Advanced — sample_step, confidence_threshold, lost_frame_threshold, debug_mode, save_debug_frames
+
+Под аккордеоном — **Presets**: список (Step zoom / Smooth observer / Fast camera / Low noise / Custom) + кнопки `Apply`, `Update`, `Save as…`, `Duplicate`, `Delete`, `Reset to default`.
+
+Тип `TrackingSettings` расширяется недостающими полями (cropTop, cropBottom, zoomSensitivity, stepZoomEnabled, teamClusterTolerance, ringCenterLock, jumpCooldownFrames, antiLatchTail, sampleStep, confidenceThreshold, lostFrameThreshold, debugMode, saveDebugFrames). Пресеты обновляются соответственно.
+
+## 5. Вкладка DEBUG
+
+Слева — три блока:
+
+- **Current frame debug**: current frame, crop preview, processed frame, detected camera bbox, ring center, team points.
+- **Event log** — таблица (time / event type / message / confidence / action) с моковыми данными jump_detected / lost_tracking / relock / low_confidence.
+- **Top candidates / rejected points** — таблица (center / score / confidence / reason), моки.
+
+Справа:
+
+- **Debug mode** toggle, Selected timestamp
+- **Debug files** — список (`progress.json`, `partial_result.json`, `result.json`, `camera_track.json`, `debug_video.mp4`, `trajectory_map.jpg`) с кнопками Open / Download / Copy path (моки, `navigator.clipboard.writeText`)
+- **Raw JSON viewer** — `<pre>` с JSON текущего таймстэмпа / preset config
+- Кнопка **Export**
+
+## 6. Логика пресетов и UPDATE
+
+- `applyPreset(id)` — копирует значения пресета в `draftSettings` (UI-state), карта/графики при этом НЕ меняются.
+- `UPDATE` — переносит `draftSettings → committedSettings`, пересчитывает trajectories/metrics, обновляет split-view и графики.
+- `SAVE AS…` — диалог имени, добавляет новый пресет в `presets` (хранение в `useState`, без бэкенда).
+- Метрики (`trackingQuality`, `jumpEvents`, `lostFrames`, `avgConfidence`) пересчитываются из `committedSettings` по формулам из ТЗ:
+  - `quality = clamp(100 − jumps·2 − lostRatio·100 − lowConfRatio·50, 0, 100)`
+- В шапке всегда показываются метрики `committedSettings`.
+
+## 7. Технические детали
+
+- Файл: `src/routes/admin.camera.tsx`. Текущий код (split view + map + графики + presets) переиспользуется, перекомпонуется в подкомпоненты внутри файла: `<OverviewTab>`, `<GraphsTab>`, `<SettingsTab>`, `<DebugTab>`, `<HeaderStrip>`, `<RightPanel mode>`.
+- Используем существующие `@/components/ui/accordion`, `tabs`, `slider`, `switch`, `button`, `card`, `table`, `tooltip`.
+- Логика карты (кольца/команды/смерти) — уже скопирована из `MatchViewer`, оставляем как есть.
+- Никаких изменений в `mock-match.ts`, `admin-store.ts`, `team-colors.ts`.
+- Дизайн-токены: только семантические (`bg-card`, `text-muted-foreground`, `border-border`, `hud-panel-*`), без хардкод-цветов кроме палитры событий, которая уже выделена в `eventColor`.
+
+## 8. Что НЕ делаем в этой итерации
+
+- Реальные бэкенд-вызовы (UPDATE/Save as пока локальные).
+- Реальная синхронизация HTML5 `<video>` ↔ карта по `currentTime` (заглушка через единый `time` state).
+- Загрузка/upload видео (только поле URL).
+- Persist пресетов в БД (in-memory `useState`).
