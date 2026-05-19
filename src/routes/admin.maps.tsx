@@ -7,7 +7,7 @@ export const Route = createFileRoute("/admin/maps")({ component: MapsAdmin });
 
 type ViewMode = "grid" | "table";
 const CONFIG_KEYS: MapConfigKey[] = ["image", "polygons", "hsv"];
-const ALL_CONFIG_KEYS: MapConfigKey[] = ["image", "zones", "polygons", "hsv", "camera", "minimap"];
+const ALL_CONFIG_KEYS: MapConfigKey[] = ["image", "polygons", "hsv"];
 const CONFIG_LABEL: Record<MapConfigKey, string> = {
   image: "Image",
   zones: "Zones",
@@ -37,7 +37,6 @@ function ConfigChip({ k, ok }: { k: MapConfigKey; ok: boolean }) {
       }`}
     >
       <span>{CONFIG_LABEL[k]}</span>
-      <span className="opacity-70">{ok ? "✓" : "—"}</span>
     </span>
   );
 }
@@ -92,8 +91,8 @@ function MapsAdmin() {
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-surface px-6 pr-[360px]">
-        <div className="flex items-center gap-4">
+      <header className="flex h-14 shrink-0 items-center border-b border-border bg-surface px-6 pr-[360px]">
+        <div className="flex items-center gap-3">
           <h1 className="text-sm font-bold uppercase tracking-wider">Maps</h1>
           <input
             value={query}
@@ -101,8 +100,6 @@ function MapsAdmin() {
             placeholder="Search maps…"
             className="w-64 rounded-sm border border-border bg-background px-2 py-1.5 text-xs"
           />
-        </div>
-        <div className="flex items-center gap-2">
           <div className="inline-flex overflow-hidden rounded-sm border border-border">
             {(["grid", "table"] as ViewMode[]).map((v) => (
               <button
@@ -324,14 +321,13 @@ function EditDialog({ row, isNew, onChange, onCancel, onSave }: {
                   <button
                     key={k}
                     onClick={() => toggle(k)}
-                    className={`flex items-center justify-between rounded-sm border px-2 py-1.5 text-xs ${
+                    className={`flex items-center justify-center rounded-sm border px-2 py-1.5 text-xs ${
                       on
                         ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
                         : "border-border bg-surface text-muted-foreground hover:bg-muted"
                     }`}
                   >
                     <span className="font-semibold uppercase tracking-wider">{CONFIG_LABEL[k]}</span>
-                    <span>{on ? "✓" : "—"}</span>
                   </button>
                 );
               })}
