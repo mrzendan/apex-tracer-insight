@@ -125,18 +125,18 @@ def main():
                         prev_inl = curr_inl
                         curr_idx += args.coarse
                         continue
-                    cut_frame, from_pan, to_pan, jump_delta = pinned
+                    cut_frame, from_pan, to_pan, pixel_diff = pinned
                     ev = {
                         "frame": int(cut_frame),
                         "t": round(cut_frame / fps, 3),
                         "from_pan": [round(from_pan[0], 1), round(from_pan[1], 1)],
                         "to_pan": [round(to_pan[0], 1), round(to_pan[1], 1)],
                         "delta": round(dist(from_pan, to_pan), 1),
-                        "jump_delta": round(jump_delta, 1),
+                        "pixel_diff": round(pixel_diff, 2),
                     }
                     events.append(ev)
                     print(f"    -> cut at frame {cut_frame} (t={ev['t']}s, "
-                          f"Δ={ev['delta']}px, jump={ev['jump_delta']}px между соседними)")
+                          f"Δpan={ev['delta']}px, pixel_diff={ev['pixel_diff']})")
                     # рисуем overlay со стрелкой
                     draw_cut_overlay(overlay_base.copy(), from_pan, to_pan, reg.scale,
                                      args.out / f"overlay_cut_{cut_frame}.png", ev)
