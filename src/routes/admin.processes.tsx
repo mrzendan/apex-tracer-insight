@@ -366,7 +366,7 @@ function ProcessesAdmin() {
                 const isOpen = expanded === p.id;
                 return (
                   <Fragment key={p.id}>
-                  <tr className="border-b border-border">
+                  <tr id={`process-${p.id}`} className="border-b border-border scroll-mt-20">
                     <td className="px-3 py-2 text-xs">
                       <span className="rounded-sm border border-border bg-background px-1.5 py-0.5 text-mono uppercase">{p.pov} POV</span>
                       {p.live && <span className="ml-1 rounded-sm bg-destructive px-1.5 py-0.5 text-xs font-bold text-destructive-foreground">LIVE</span>}
