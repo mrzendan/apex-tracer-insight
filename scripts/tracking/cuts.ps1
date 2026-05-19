@@ -15,7 +15,7 @@
 
 param(
   [Parameter(Mandatory=$true)][string]$Video,
-  [int]$Coarse = 600,
+  [int]$Coarse = 300,
   [int]$Fine = 10,
   [double]$Threshold = 90,
   [double]$Start = 0,
