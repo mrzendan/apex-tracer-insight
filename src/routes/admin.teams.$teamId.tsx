@@ -471,10 +471,10 @@ function TeamDetail() {
                               <div className="truncate text-base font-semibold">{map?.name ?? s.id}</div>
                               <div className="text-mono text-xs text-muted-foreground">{s.count} games · avg <span className="text-foreground font-semibold">#{s.avg.toFixed(1)}</span></div>
                               <div className="mt-1.5 flex items-center gap-1.5 text-xs">
-                                <span className="inline-flex items-center gap-1 rounded-sm border border-warning/40 bg-warning/10 px-1.5 py-0.5 font-semibold text-warning" title="Победы">
+                                <span className="inline-flex items-center justify-center gap-1 rounded-sm border border-warning/40 bg-warning/10 px-1.5 py-0.5 text-center font-semibold text-warning" title="Победы">
                                   TOP 1 {s.top1}
                                 </span>
-                                <span className="inline-flex items-center gap-1 rounded-sm border border-primary/40 bg-primary/10 px-1.5 py-0.5 font-semibold text-primary" title="Топ-5 финиши">
+                                <span className="inline-flex items-center justify-center gap-1 rounded-sm border border-primary/40 bg-primary/10 px-1.5 py-0.5 text-center font-semibold text-primary" title="Топ-5 финиши">
                                   TOP 5 {s.top5}
                                 </span>
                               </div>
