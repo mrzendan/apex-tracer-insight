@@ -135,6 +135,52 @@ const eventLabel: Record<TrackEvent["kind"], string> = {
   lost: "Lost tracking", manual: "Manual correction",
 };
 
+type VideoOverlays = {
+  showCrop: boolean; showHud: boolean; showDetected: boolean; showMinimap: boolean;
+};
+type EventFilters = Record<TrackEvent["kind"], boolean>;
+type QualityMetrics = { trackingQ: number; jumpEvents: number; lostFrames: number; avgConfidence: number };
+
+/* parameter explanations (tooltips) */
+const HINTS: Record<string, string> = {
+  smoothing: "Доля сглаживания EMA. Выше — плавнее, но возможна задержка реакции.",
+  responseSpeed: "Скорость реакции камеры на смещение цели. Выше — быстрее, но больше шум.",
+  deadzone: "Минимальное смещение, которое считается реальным движением. Меньше — больше шума.",
+  maxSpeed: "Максимальное смещение камеры за кадр. Выше — возможны резкие скачки.",
+  ema: "Количество кадров для сглаживания EMA. Выше — плавнее, но больше задержка.",
+  cropLeft: "Срез слева в пикселях исходного кадра 1920×1080.",
+  cropRight: "Срез справа в пикселях исходного кадра 1920×1080.",
+  cropTop: "Срез сверху (HUD, имена игроков и т.п.).",
+  cropBottom: "Срез снизу (HUD-индикаторы).",
+  zoomLerp: "Скорость интерполяции зума. 0 — мгновенно, 1 — очень плавно.",
+  zoomStep: "Шаг для step-zoom режима.",
+  zoomSensitivity: "Чувствительность авто-зума к радиусу кольца / разлёту команд.",
+  ringWeight: "Вес центра кольца при расчёте позиции камеры.",
+  teamWeight: "Вес позиций команд при расчёте позиции камеры.",
+  ringNoiseTolerance: "Допустимый шум распознавания кольца перед relock.",
+  teamClusterTolerance: "Допустимый шум кластеризации команд.",
+  jumpThreshold: "Смещение в px между кадрами, которое считается джампом.",
+  jumpCooldownFrames: "Сколько кадров после джампа игнорировать новые джампы.",
+  preJumpUnlock: "Сек до джампа, когда камера ослабляет привязку.",
+  antiLatchTail: "Хвост anti-latch после джампа, секунды.",
+  relockThreshold: "Порог уверенности для relock после lost.",
+  confidenceThreshold: "Минимальная уверенность кадра, ниже которой кадр считается low-confidence.",
+  lostFrameThreshold: "Сколько подряд low-confidence кадров считаются lost.",
+  sampleStep: "Каждый N-й кадр для анализа (производительность).",
+};
+
+/* warnings for dangerous values */
+function getWarn(key: string, v: number): string | null {
+  switch (key) {
+    case "maxSpeed":   return v > 300 ? "Max speed слишком высокий — возможны резкие скачки" : null;
+    case "smoothing":  return v > 0.9 ? "Smoothing слишком высокий — возможна задержка реакции" : null;
+    case "deadzone":   return v < 4   ? "Deadzone слишком низкий — возможен шум" : null;
+    case "responseSpeed": return v > 0.95 ? "Response speed слишком высокий — рывки" : null;
+    case "jumpThreshold": return v < 40 ? "Слишком низкий порог — ложные джампы" : null;
+    default: return null;
+  }
+}
+
 function buildEvents(duration: number): TrackEvent[] {
   const frac: Array<[number, TrackEvent["kind"]]> = [
     [0.15, "jump"], [0.16, "relock"],
@@ -352,6 +398,25 @@ function CameraAdmin() {
   const [graphPreset, setGraphPreset] = useState<typeof GRAPH_PRESETS[number]>("Balance");
   const [selectedEvent, setSelectedEvent] = useState<TrackEvent | null>(null);
   const [selectedDebugFile, setSelectedDebugFile] = useState<string>("result.json");
+  const [videoOverlays, setVideoOverlays] = useState<VideoOverlays>({
+    showCrop: true, showHud: false, showDetected: true, showMinimap: false,
+  });
+  const [eventFilters, setEventFilters] = useState<EventFilters>({
+    ring: true, jump: true, relock: true, lost: true, manual: true,
+  });
+  const [prevQuality, setPrevQuality] = useState<QualityMetrics | null>(null);
+
+  const visibleEvents = useMemo(
+    () => events.filter((e) => eventFilters[e.kind]),
+    [events, eventFilters],
+  );
+
+  /* commit snapshots previous metrics for compare */
+  const commitUpdateWithSnapshot = () => {
+    setPrevQuality(quality);
+    setCommitted(draft);
+  };
+  const resetDraftToActive = () => setDraft(active.settings);
 
   /* map pan/zoom + viewport drag */
   const mapRef = useRef<HTMLDivElement | null>(null);
@@ -434,6 +499,9 @@ function CameraAdmin() {
       showCameraBbox={splitOpts.showCameraBbox}
       videoLoaded={videoLoaded}
       syncMapVideo={splitOpts.syncMapVideo}
+      overlays={videoOverlays}
+      onOverlaysChange={setVideoOverlays}
+      onOpenSourceSettings={() => setViewMode("settings")}
     />
   );
 
@@ -446,7 +514,7 @@ function CameraAdmin() {
         mapId={mapId} setMapId={setMapId} matchMapIds={matchMapIds}
         viewMode={viewMode} setViewMode={setViewMode}
       />
-      <QualityBar quality={quality} preset={active.name} isDirty={isDirty} />
+      <QualityBar quality={quality} prevQuality={prevQuality} preset={active.name} isDirty={isDirty} />
 
       <div className="flex flex-1 overflow-hidden">
         {/* LEFT: tab content */}
@@ -458,13 +526,16 @@ function CameraAdmin() {
               videoPreview={videoPreview} mapPreview={mapPreview}
               time={time} duration={duration} playing={playing}
               onSeek={seek} onTogglePlay={togglePlay}
-              events={events}
+              events={visibleEvents}
+              eventFilters={eventFilters} setEventFilters={setEventFilters}
+              onSelectEvent={setSelectedEvent}
+              selectedEvent={selectedEvent}
             />
           )}
           {viewMode === "graphs" && (
             <GraphsTab
               time={time} duration={duration} onSeek={seek}
-              events={events} showOriginal={showOriginal}
+              events={visibleEvents} showOriginal={showOriginal}
               onToggleOriginal={() => setShowOriginal((v) => !v)}
               seriesVis={seriesVis}
               onSelectEvent={setSelectedEvent}
@@ -478,7 +549,7 @@ function CameraAdmin() {
           {viewMode === "debug" && (
             <DebugTab
               settings={committed} viewport={viewport} quality={quality}
-              events={events} time={time}
+              events={visibleEvents} time={time}
               selectedDebugFile={selectedDebugFile}
               videoPreview={videoPreview}
             />
@@ -492,14 +563,16 @@ function CameraAdmin() {
           presets={presets}
           activePresetId={activePresetId}
           onApplyPreset={applyPreset}
-          onUpdateCommit={commitUpdate}
+          onUpdateCommit={commitUpdateWithSnapshot}
           onSaveAs={saveAs}
           onUpdateActivePreset={updateActivePreset}
           onDuplicatePreset={duplicatePreset}
           onDeletePreset={deleteActivePreset}
           onResetToDefault={resetToDefault}
+          onResetDraftToActive={resetDraftToActive}
           isDirty={isDirty}
           quality={quality}
+          prevQuality={prevQuality}
           problems={problems}
           onSeek={seek}
           draft={draft} patchDraft={patchDraft}
@@ -509,6 +582,7 @@ function CameraAdmin() {
           selectedEvent={selectedEvent}
           selectedDebugFile={selectedDebugFile} setSelectedDebugFile={setSelectedDebugFile}
           time={time}
+          eventFilters={eventFilters} setEventFilters={setEventFilters}
         />
       </div>
     </div>
@@ -560,22 +634,37 @@ function HeaderStrip(props: {
   );
 }
 
-function QualityBar({ quality, preset, isDirty }: {
+function QualityBar({ quality, preset, isDirty, prevQuality }: {
   quality: { trackingQ: number; jumpEvents: number; lostFrames: number; avgConfidence: number };
+  prevQuality?: QualityMetrics | null;
   preset: string; isDirty: boolean;
 }) {
   const tone = quality.trackingQ >= 80 ? "text-emerald-400" : quality.trackingQ >= 60 ? "text-amber-400" : "text-destructive";
+  const delta = (cur: number, prev: number | undefined, isPct = false, decimals = 0, lowerIsBetter = false) => {
+    if (prev === undefined) return null;
+    const d = cur - prev;
+    if (Math.abs(d) < (isPct ? 0.5 : decimals ? 0.005 : 0.5)) return null;
+    const good = lowerIsBetter ? d < 0 : d > 0;
+    const cls = good ? "text-emerald-400" : "text-destructive";
+    const sign = d > 0 ? "+" : "";
+    const val = decimals ? d.toFixed(decimals) : Math.round(d).toString();
+    return <span className={`ml-1 text-mono text-[10px] ${cls}`}>{sign}{val}{isPct ? "%" : ""}</span>;
+  };
+  const prev = prevQuality;
   return (
     <div className="flex shrink-0 items-center gap-6 border-b border-border bg-surface-2 px-6 py-2">
-      <Stat label="Tracking quality" value={`${quality.trackingQ}%`} valueClass={tone} />
-      <Stat label="Jump events" value={quality.jumpEvents.toString()} />
-      <Stat label="Lost frames" value={quality.lostFrames.toString()} />
-      <Stat label="Avg confidence" value={quality.avgConfidence.toFixed(2)} />
+      <Stat label="Tracking quality" value={`${quality.trackingQ}%`} valueClass={tone} after={delta(quality.trackingQ, prev?.trackingQ, true)} />
+      <Stat label="Jump events" value={quality.jumpEvents.toString()} after={delta(quality.jumpEvents, prev?.jumpEvents, false, 0, true)} />
+      <Stat label="Lost frames" value={quality.lostFrames.toString()} after={delta(quality.lostFrames, prev?.lostFrames, false, 0, true)} />
+      <Stat label="Avg confidence" value={quality.avgConfidence.toFixed(2)} after={delta(quality.avgConfidence, prev?.avgConfidence, false, 2)} />
       <div className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
         {isDirty && (
           <span className="rounded-sm border border-amber-400/40 bg-amber-400/10 px-2 py-0.5 font-semibold uppercase tracking-wider text-amber-400">
             Pending update
           </span>
+        )}
+        {prev && (
+          <span className="text-mono text-[11px]">vs prev · Q {prev.trackingQ}% · J {prev.jumpEvents} · L {prev.lostFrames}</span>
         )}
         <span>current preset · <span className="text-foreground">{preset}</span></span>
       </div>
@@ -583,11 +672,11 @@ function QualityBar({ quality, preset, isDirty }: {
   );
 }
 
-function Stat({ label, value, valueClass = "" }: { label: string; value: string; valueClass?: string }) {
+function Stat({ label, value, valueClass = "", after }: { label: string; value: string; valueClass?: string; after?: React.ReactNode }) {
   return (
     <div className="flex items-baseline gap-2">
       <span className="label-eyebrow text-xs">{label}</span>
-      <span className={`text-mono text-sm font-semibold ${valueClass}`}>{value}</span>
+      <span className={`text-mono text-sm font-semibold ${valueClass}`}>{value}{after}</span>
     </div>
   );
 }
@@ -603,6 +692,9 @@ function OverviewTab(props: {
   time: number; duration: number; playing: boolean;
   onSeek: (t: number) => void; onTogglePlay: () => void;
   events: TrackEvent[];
+  eventFilters: EventFilters; setEventFilters: (v: EventFilters) => void;
+  onSelectEvent: (e: TrackEvent | null) => void;
+  selectedEvent: TrackEvent | null;
 }) {
   return (
     <>
@@ -613,7 +705,9 @@ function OverviewTab(props: {
         {props.mapPreview}
       </div>
       <Timeline time={props.time} duration={props.duration} playing={props.playing}
-        onTogglePlay={props.onTogglePlay} onSeek={props.onSeek} events={props.events} />
+        onTogglePlay={props.onTogglePlay} onSeek={props.onSeek} events={props.events}
+        eventFilters={props.eventFilters} setEventFilters={props.setEventFilters}
+        onSelectEvent={props.onSelectEvent} selectedEvent={props.selectedEvent} />
     </>
   );
 }
@@ -648,12 +742,31 @@ function ToggleBtn({ active, onClick, children }: { active: boolean; onClick: ()
   );
 }
 
-function Timeline({ time, duration, playing, onTogglePlay, onSeek, events }: {
+function Timeline({ time, duration, playing, onTogglePlay, onSeek, events, eventFilters, setEventFilters, onSelectEvent, selectedEvent }: {
   time: number; duration: number; playing: boolean;
   onTogglePlay: () => void; onSeek: (t: number) => void; events: TrackEvent[];
+  eventFilters?: EventFilters; setEventFilters?: (v: EventFilters) => void;
+  onSelectEvent?: (e: TrackEvent | null) => void;
+  selectedEvent?: TrackEvent | null;
 }) {
+  const toggleFilter = (k: TrackEvent["kind"]) =>
+    eventFilters && setEventFilters && setEventFilters({ ...eventFilters, [k]: !eventFilters[k] });
   return (
     <div className="shrink-0 border-t border-border bg-surface px-3 py-2">
+      {eventFilters && setEventFilters && (
+        <div className="mb-1.5 flex flex-wrap items-center gap-1">
+          <span className="label-eyebrow mr-1 text-[10px]">Layers</span>
+          {(Object.keys(eventFilters) as Array<TrackEvent["kind"]>).map((k) => (
+            <button key={k} onClick={() => toggleFilter(k)}
+              className={`flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider transition-colors ${
+                eventFilters[k] ? "border-border bg-surface-2 text-foreground" : "border-border/50 bg-surface-2/40 text-muted-foreground/60 line-through"
+              }`}>
+              <span className="inline-block h-2 w-2 rounded-sm" style={{ background: eventColor[k] }} />
+              {k}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="flex items-center gap-3">
         <button onClick={onTogglePlay} className="rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">
           {playing ? "Pause" : "Play"}
@@ -662,10 +775,11 @@ function Timeline({ time, duration, playing, onTogglePlay, onSeek, events }: {
         <div className="relative flex-1">
           <input type="range" min={0} max={duration} step={0.05} value={time}
             onChange={(e) => onSeek(Number(e.target.value))} className="w-full accent-primary" />
-          <div className="pointer-events-none absolute inset-x-0 -bottom-1 h-1">
+          <div className="absolute inset-x-0 -bottom-2 h-3">
             {events.map((ev, i) => (
-              <span key={i}
-                className="absolute top-0 h-1 w-0.5"
+              <button key={i}
+                onClick={(e) => { e.stopPropagation(); onSelectEvent?.(ev); onSeek(ev.t); }}
+                className={`absolute top-0 h-3 w-1 cursor-pointer rounded-sm transition-transform hover:scale-y-110 ${selectedEvent === ev ? "ring-1 ring-white" : ""}`}
                 style={{ left: `${(ev.t / Math.max(duration, 0.001)) * 100}%`, background: eventColor[ev.kind] }}
                 title={`${ev.label} · ${fmt(ev.t)}`}
               />
@@ -674,6 +788,14 @@ function Timeline({ time, duration, playing, onTogglePlay, onSeek, events }: {
         </div>
         <span className="text-mono text-xs text-muted-foreground">{fmt(duration)}</span>
       </div>
+      {selectedEvent && (
+        <div className="mt-1.5 flex items-center gap-3 rounded-sm border border-border bg-surface-2 px-2 py-1 text-[11px]">
+          <span className="text-mono text-muted-foreground">{fmt(selectedEvent.t)}</span>
+          <span className="font-semibold" style={{ color: eventColor[selectedEvent.kind] }}>{selectedEvent.label}</span>
+          <span className="ml-auto text-muted-foreground">click marker → seek + map sync</span>
+          <button onClick={() => onSelectEvent?.(null)} className="text-muted-foreground hover:text-foreground">×</button>
+        </div>
+      )}
     </div>
   );
 }
@@ -691,6 +813,9 @@ function VideoPreview(props: {
   showCameraBbox: boolean;
   videoLoaded: "loading" | "loaded" | "error";
   syncMapVideo: boolean;
+  overlays?: VideoOverlays;
+  onOverlaysChange?: (v: VideoOverlays) => void;
+  onOpenSourceSettings?: () => void;
 }) {
   const loadTone =
     props.videoLoaded === "loaded" ? "text-emerald-400"
@@ -700,6 +825,10 @@ function VideoPreview(props: {
     props.videoLoaded === "loaded" ? "video loaded"
       : props.videoLoaded === "error" ? "no video"
       : "loading";
+  const hasVideo = !!props.videoUrl && props.videoLoaded !== "error";
+  const ov = props.overlays ?? { showCrop: true, showHud: false, showDetected: true, showMinimap: false };
+  const toggleOv = (k: keyof VideoOverlays) =>
+    props.onOverlaysChange?.({ ...ov, [k]: !ov[k] });
   return (
     <div className="hud-panel relative flex min-h-0 flex-col overflow-hidden bg-black">
       <div className="flex items-center justify-between border-b border-border bg-surface px-3 py-1.5">
@@ -712,9 +841,34 @@ function VideoPreview(props: {
           <span>{fmt(props.time)} / {fmt(props.duration)}</span>
         </div>
       </div>
+      {props.onOverlaysChange && (
+        <div className="flex flex-wrap items-center gap-1 border-b border-border bg-surface/60 px-2 py-1">
+          <ToggleBtn active={ov.showCrop} onClick={() => toggleOv("showCrop")}>Show crop</ToggleBtn>
+          <ToggleBtn active={ov.showHud} onClick={() => toggleOv("showHud")}>Show HUD zones</ToggleBtn>
+          <ToggleBtn active={ov.showDetected} onClick={() => toggleOv("showDetected")}>Show detected frame</ToggleBtn>
+          <ToggleBtn active={ov.showMinimap} onClick={() => toggleOv("showMinimap")}>Show minimap crop</ToggleBtn>
+        </div>
+      )}
       <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-black p-2">
+        {!hasVideo ? (
+          <div className="flex max-w-md flex-col items-center gap-3 text-center">
+            <div className="rounded-full border border-border bg-surface-2 px-3 py-1 text-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+              ● no video
+            </div>
+            <div className="text-sm font-semibold text-foreground">Видео не загружено</div>
+            <div className="text-xs text-muted-foreground">
+              Укажите Video URL или загрузите файл в настройках Source.
+            </div>
+            {props.onOpenSourceSettings && (
+              <button onClick={props.onOpenSourceSettings}
+                className="mt-1 rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">
+                Open Source Settings
+              </button>
+            )}
+          </div>
+        ) : (
         <div
-          className="relative overflow-hidden border border-primary/40 bg-black"
+          className={`relative overflow-hidden bg-black ${ov.showCrop ? "border border-primary/40" : ""}`}
           style={{ aspectRatio: `${props.visibleAspect}`, maxWidth: "100%", maxHeight: "100%", width: "auto", height: "100%" }}
         >
           <video
@@ -730,10 +884,24 @@ function VideoPreview(props: {
             }}
             playsInline preload="metadata" crossOrigin="anonymous"
           />
-          {props.showCameraBbox && (
+          {props.showCameraBbox && ov.showDetected && (
             <div className="pointer-events-none absolute inset-0 border-2 border-dashed border-emerald-400/70" />
           )}
+          {ov.showHud && (
+            <>
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-[12%] border-b border-amber-400/40 bg-amber-400/5" />
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[14%] border-t border-amber-400/40 bg-amber-400/5" />
+              <div className="pointer-events-none absolute left-1 top-1 text-[10px] font-semibold uppercase tracking-wider text-amber-400/80">HUD top</div>
+              <div className="pointer-events-none absolute bottom-1 left-1 text-[10px] font-semibold uppercase tracking-wider text-amber-400/80">HUD bottom</div>
+            </>
+          )}
+          {ov.showMinimap && (
+            <div className="pointer-events-none absolute right-2 top-2 h-[18%] w-[14%] border border-cyan-400/60 bg-cyan-400/5">
+              <div className="absolute left-1 top-0.5 text-[9px] font-semibold uppercase tracking-wider text-cyan-300">minimap</div>
+            </div>
+          )}
         </div>
+        )}
       </div>
     </div>
   );
@@ -1102,8 +1270,10 @@ function RightPanel(props: {
   onDuplicatePreset: () => void;
   onDeletePreset: () => void;
   onResetToDefault: () => void;
+  onResetDraftToActive: () => void;
   isDirty: boolean;
   quality: { trackingQ: number; jumpEvents: number; lostFrames: number; avgConfidence: number };
+  prevQuality?: QualityMetrics | null;
   problems: TrackEvent[];
   onSeek: (t: number) => void;
   draft: TrackingSettings; patchDraft: (p: Partial<TrackingSettings>) => void;
@@ -1113,6 +1283,7 @@ function RightPanel(props: {
   selectedEvent: TrackEvent | null;
   selectedDebugFile: string; setSelectedDebugFile: (v: string) => void;
   time: number;
+  eventFilters: EventFilters; setEventFilters: (v: EventFilters) => void;
 }) {
   const wide = props.viewMode === "settings";
   return (
@@ -1136,6 +1307,7 @@ function RightPanel(props: {
 /* ---- Overview right panel ---- */
 function OverviewPanel(props: Parameters<typeof RightPanel>[0]) {
   const { draft, patchDraft } = props;
+  const prev = props.prevQuality;
   return (
     <div className="space-y-3 p-3">
       <Section title="Quick tuning">
@@ -1146,14 +1318,18 @@ function OverviewPanel(props: Parameters<typeof RightPanel>[0]) {
           </select>
         </Field>
         <SliderField label="Smoothing" value={draft.smoothing} min={0} max={1} step={0.01}
+          hint={HINTS.smoothing} warn={getWarn("smoothing", draft.smoothing)}
           onChange={(v) => patchDraft({ smoothing: v })} />
         <SliderField label="Response speed" value={draft.responseSpeed} min={0} max={1} step={0.01}
+          hint={HINTS.responseSpeed} warn={getWarn("responseSpeed", draft.responseSpeed)}
           onChange={(v) => patchDraft({ responseSpeed: v })} />
         <NumField label="Deadzone (px)" value={draft.deadzone} min={0} max={200} step={1}
+          hint={HINTS.deadzone} warn={getWarn("deadzone", draft.deadzone)}
           onChange={(v) => patchDraft({ deadzone: v })} />
         <NumField label="Max speed (px/frame)" value={draft.maxSpeed} min={1} max={500} step={1}
+          hint={HINTS.maxSpeed} warn={getWarn("maxSpeed", draft.maxSpeed)}
           onChange={(v) => patchDraft({ maxSpeed: v })} />
-        <UpdateActions onUpdate={props.onUpdateCommit} onSaveAs={props.onSaveAs} isDirty={props.isDirty} />
+        <PresetActions {...props} />
       </Section>
 
       <Section title="Tracking health">
@@ -1164,6 +1340,21 @@ function OverviewPanel(props: Parameters<typeof RightPanel>[0]) {
           <Row k="Avg confidence" v={props.quality.avgConfidence.toFixed(2)} />
           <Row k="Current mode" v={props.committed.stepZoomEnabled ? "Step zoom" : "Smooth zoom"} />
         </div>
+      </Section>
+
+      <Section title="Compare with previous">
+        {prev ? (
+          <div className="text-mono space-y-1 text-xs">
+            <CompareRow k="Tracking quality" cur={`${props.quality.trackingQ}%`} prev={`${prev.trackingQ}%`} delta={props.quality.trackingQ - prev.trackingQ} suffix="%" />
+            <CompareRow k="Jump events" cur={props.quality.jumpEvents.toString()} prev={prev.jumpEvents.toString()} delta={props.quality.jumpEvents - prev.jumpEvents} lowerBetter />
+            <CompareRow k="Lost frames" cur={props.quality.lostFrames.toString()} prev={prev.lostFrames.toString()} delta={props.quality.lostFrames - prev.lostFrames} lowerBetter />
+            <CompareRow k="Avg confidence" cur={props.quality.avgConfidence.toFixed(2)} prev={prev.avgConfidence.toFixed(2)} delta={props.quality.avgConfidence - prev.avgConfidence} decimals={2} />
+          </div>
+        ) : (
+          <div className="text-xs text-muted-foreground">
+            Нет предыдущего снимка. Нажмите <span className="text-foreground">Apply</span>, измените настройки и нажмите ещё раз — здесь появится сравнение.
+          </div>
+        )}
       </Section>
 
       <Section title={`Problems detected (${props.problems.length})`}>
@@ -1249,15 +1440,16 @@ function SettingsPanel(props: Parameters<typeof RightPanel>[0]) {
             </select>
           </Field>
           <NumField label="Frame rate" value={draft.frameRate} min={1} max={240} step={1}
+            hint="Кадры в секунду исходного видео. Влияет на расчёт frame-based параметров."
             onChange={(v) => patchDraft({ frameRate: v })} />
         </Collapsible>
 
         <Collapsible title="Crop">
           <div className="grid grid-cols-2 gap-2">
-            <NumField label="Crop L" value={draft.cropLeft} min={0} max={900} step={10} onChange={(v) => patchDraft({ cropLeft: v })} />
-            <NumField label="Crop R" value={draft.cropRight} min={0} max={900} step={10} onChange={(v) => patchDraft({ cropRight: v })} />
-            <NumField label="Crop T" value={draft.cropTop} min={0} max={500} step={10} onChange={(v) => patchDraft({ cropTop: v })} />
-            <NumField label="Crop B" value={draft.cropBottom} min={0} max={500} step={10} onChange={(v) => patchDraft({ cropBottom: v })} />
+            <NumField label="Crop L" value={draft.cropLeft} min={0} max={900} step={10} hint={HINTS.cropLeft} onChange={(v) => patchDraft({ cropLeft: v })} />
+            <NumField label="Crop R" value={draft.cropRight} min={0} max={900} step={10} hint={HINTS.cropRight} onChange={(v) => patchDraft({ cropRight: v })} />
+            <NumField label="Crop T" value={draft.cropTop} min={0} max={500} step={10} hint={HINTS.cropTop} onChange={(v) => patchDraft({ cropTop: v })} />
+            <NumField label="Crop B" value={draft.cropBottom} min={0} max={500} step={10} hint={HINTS.cropBottom} onChange={(v) => patchDraft({ cropBottom: v })} />
           </div>
           <button onClick={() => patchDraft({ cropLeft: 0, cropRight: 0, cropTop: 0, cropBottom: 0 })}
             className="w-full rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs font-semibold uppercase tracking-wider hover:bg-muted">
@@ -1266,11 +1458,11 @@ function SettingsPanel(props: Parameters<typeof RightPanel>[0]) {
         </Collapsible>
 
         <Collapsible title="Smoothing / response" defaultOpen>
-          <SliderField label="Smoothing" value={draft.smoothing} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ smoothing: v })} />
-          <SliderField label="Response speed" value={draft.responseSpeed} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ responseSpeed: v })} />
-          <NumField label="Deadzone (px)" value={draft.deadzone} min={0} max={200} step={1} onChange={(v) => patchDraft({ deadzone: v })} />
-          <NumField label="Max speed (px/frame)" value={draft.maxSpeed} min={1} max={500} step={1} onChange={(v) => patchDraft({ maxSpeed: v })} />
-          <NumField label="EMA window (frames)" value={draft.ema} min={1} max={60} step={1} onChange={(v) => patchDraft({ ema: v })} />
+          <SliderField label="Smoothing" value={draft.smoothing} min={0} max={1} step={0.01} hint={HINTS.smoothing} warn={getWarn("smoothing", draft.smoothing)} onChange={(v) => patchDraft({ smoothing: v })} />
+          <SliderField label="Response speed" value={draft.responseSpeed} min={0} max={1} step={0.01} hint={HINTS.responseSpeed} warn={getWarn("responseSpeed", draft.responseSpeed)} onChange={(v) => patchDraft({ responseSpeed: v })} />
+          <NumField label="Deadzone (px)" value={draft.deadzone} min={0} max={200} step={1} hint={HINTS.deadzone} warn={getWarn("deadzone", draft.deadzone)} onChange={(v) => patchDraft({ deadzone: v })} />
+          <NumField label="Max speed (px/frame)" value={draft.maxSpeed} min={1} max={500} step={1} hint={HINTS.maxSpeed} warn={getWarn("maxSpeed", draft.maxSpeed)} onChange={(v) => patchDraft({ maxSpeed: v })} />
+          <NumField label="EMA window (frames)" value={draft.ema} min={1} max={60} step={1} hint={HINTS.ema} onChange={(v) => patchDraft({ ema: v })} />
         </Collapsible>
 
         <Collapsible title="Zoom">
@@ -1278,32 +1470,32 @@ function SettingsPanel(props: Parameters<typeof RightPanel>[0]) {
             <NumField label="Zoom min" value={draft.zoomMin} min={0.5} max={3} step={0.05} onChange={(v) => patchDraft({ zoomMin: v })} />
             <NumField label="Zoom max" value={draft.zoomMax} min={1} max={5} step={0.05} onChange={(v) => patchDraft({ zoomMax: v })} />
           </div>
-          <NumField label="Zoom step" value={draft.zoomStep} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ zoomStep: v })} />
-          <SliderField label="Zoom lerp" value={draft.zoomLerp} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ zoomLerp: v })} />
-          <SliderField label="Zoom sensitivity" value={draft.zoomSensitivity} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ zoomSensitivity: v })} />
+          <NumField label="Zoom step" value={draft.zoomStep} min={0} max={1} step={0.01} hint={HINTS.zoomStep} onChange={(v) => patchDraft({ zoomStep: v })} />
+          <SliderField label="Zoom lerp" value={draft.zoomLerp} min={0} max={1} step={0.01} hint={HINTS.zoomLerp} onChange={(v) => patchDraft({ zoomLerp: v })} />
+          <SliderField label="Zoom sensitivity" value={draft.zoomSensitivity} min={0} max={1} step={0.01} hint={HINTS.zoomSensitivity} onChange={(v) => patchDraft({ zoomSensitivity: v })} />
           <CheckField label="Step zoom enabled" checked={draft.stepZoomEnabled} onChange={(v) => patchDraft({ stepZoomEnabled: v })} />
         </Collapsible>
 
         <Collapsible title="Ring / team weighting">
-          <SliderField label="Ring weight" value={draft.ringWeight} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ ringWeight: v })} />
-          <SliderField label="Team weight" value={draft.teamWeight} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ teamWeight: v })} />
-          <SliderField label="Ring noise tolerance" value={draft.ringNoiseTolerance} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ ringNoiseTolerance: v })} />
-          <SliderField label="Team cluster tolerance" value={draft.teamClusterTolerance} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ teamClusterTolerance: v })} />
+          <SliderField label="Ring weight" value={draft.ringWeight} min={0} max={1} step={0.01} hint={HINTS.ringWeight} onChange={(v) => patchDraft({ ringWeight: v })} />
+          <SliderField label="Team weight" value={draft.teamWeight} min={0} max={1} step={0.01} hint={HINTS.teamWeight} onChange={(v) => patchDraft({ teamWeight: v })} />
+          <SliderField label="Ring noise tolerance" value={draft.ringNoiseTolerance} min={0} max={1} step={0.01} hint={HINTS.ringNoiseTolerance} onChange={(v) => patchDraft({ ringNoiseTolerance: v })} />
+          <SliderField label="Team cluster tolerance" value={draft.teamClusterTolerance} min={0} max={1} step={0.01} hint={HINTS.teamClusterTolerance} onChange={(v) => patchDraft({ teamClusterTolerance: v })} />
           <CheckField label="Ring center lock" checked={draft.ringCenterLock} onChange={(v) => patchDraft({ ringCenterLock: v })} />
         </Collapsible>
 
         <Collapsible title="Jump detection">
-          <NumField label="Jump threshold" value={draft.jumpThreshold} min={0} max={1000} step={5} onChange={(v) => patchDraft({ jumpThreshold: v })} />
-          <NumField label="Jump cooldown (frames)" value={draft.jumpCooldownFrames} min={0} max={120} step={1} onChange={(v) => patchDraft({ jumpCooldownFrames: v })} />
-          <NumField label="Pre-jump unlock (s)" value={draft.preJumpUnlock} min={0} max={3} step={0.05} onChange={(v) => patchDraft({ preJumpUnlock: v })} />
-          <NumField label="Anti-latch tail (s)" value={draft.antiLatchTail} min={0} max={3} step={0.05} onChange={(v) => patchDraft({ antiLatchTail: v })} />
-          <SliderField label="Relock threshold" value={draft.relockThreshold} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ relockThreshold: v })} />
+          <NumField label="Jump threshold" value={draft.jumpThreshold} min={0} max={1000} step={5} hint={HINTS.jumpThreshold} warn={getWarn("jumpThreshold", draft.jumpThreshold)} onChange={(v) => patchDraft({ jumpThreshold: v })} />
+          <NumField label="Jump cooldown (frames)" value={draft.jumpCooldownFrames} min={0} max={120} step={1} hint={HINTS.jumpCooldownFrames} onChange={(v) => patchDraft({ jumpCooldownFrames: v })} />
+          <NumField label="Pre-jump unlock (s)" value={draft.preJumpUnlock} min={0} max={3} step={0.05} hint={HINTS.preJumpUnlock} onChange={(v) => patchDraft({ preJumpUnlock: v })} />
+          <NumField label="Anti-latch tail (s)" value={draft.antiLatchTail} min={0} max={3} step={0.05} hint={HINTS.antiLatchTail} onChange={(v) => patchDraft({ antiLatchTail: v })} />
+          <SliderField label="Relock threshold" value={draft.relockThreshold} min={0} max={1} step={0.01} hint={HINTS.relockThreshold} onChange={(v) => patchDraft({ relockThreshold: v })} />
         </Collapsible>
 
         <Collapsible title="Advanced">
-          <NumField label="Sample step" value={draft.sampleStep} min={1} max={20} step={1} onChange={(v) => patchDraft({ sampleStep: v })} />
-          <SliderField label="Confidence threshold" value={draft.confidenceThreshold} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ confidenceThreshold: v })} />
-          <NumField label="Lost frame threshold" value={draft.lostFrameThreshold} min={1} max={60} step={1} onChange={(v) => patchDraft({ lostFrameThreshold: v })} />
+          <NumField label="Sample step" value={draft.sampleStep} min={1} max={20} step={1} hint={HINTS.sampleStep} onChange={(v) => patchDraft({ sampleStep: v })} />
+          <SliderField label="Confidence threshold" value={draft.confidenceThreshold} min={0} max={1} step={0.01} hint={HINTS.confidenceThreshold} onChange={(v) => patchDraft({ confidenceThreshold: v })} />
+          <NumField label="Lost frame threshold" value={draft.lostFrameThreshold} min={1} max={60} step={1} hint={HINTS.lostFrameThreshold} onChange={(v) => patchDraft({ lostFrameThreshold: v })} />
           <CheckField label="Debug mode" checked={draft.debugMode} onChange={(v) => patchDraft({ debugMode: v })} />
           <CheckField label="Save debug frames" checked={draft.saveDebugFrames} onChange={(v) => patchDraft({ saveDebugFrames: v })} />
         </Collapsible>
@@ -1321,24 +1513,15 @@ function SettingsPanel(props: Parameters<typeof RightPanel>[0]) {
             </button>
           ))}
         </div>
-        <div className="grid grid-cols-3 gap-1.5">
-          <button onClick={() => props.onApplyPreset(props.activePresetId)}
-            className="rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">Apply</button>
-          <button onClick={props.onUpdateCommit}
-            className="rounded-sm bg-primary px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">Update</button>
-          <button onClick={props.onSaveAs}
-            className="rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">Save as…</button>
-          <button onClick={props.onUpdateActivePreset}
-            className="rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">Save</button>
+        <PresetActions {...props} />
+        <div className="mt-2 grid grid-cols-3 gap-1.5">
           <button onClick={props.onDuplicatePreset}
             className="rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">Duplicate</button>
           <button onClick={props.onDeletePreset}
             className="rounded-sm border border-destructive/40 bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-destructive hover:bg-destructive/10">Delete</button>
+          <button onClick={props.onResetToDefault}
+            className="rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">Reset default</button>
         </div>
-        <button onClick={props.onResetToDefault}
-          className="mt-2 w-full rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">
-          Reset to default
-        </button>
       </div>
     </>
   );
@@ -1354,12 +1537,25 @@ function DebugPanel(props: Parameters<typeof RightPanel>[0]) {
           onChange={(v) => props.patchDraft({ debugMode: v })} />
         <CheckField label="Save debug frames" checked={props.draft.saveDebugFrames}
           onChange={(v) => props.patchDraft({ saveDebugFrames: v })} />
-        <UpdateActions onUpdate={props.onUpdateCommit} onSaveAs={props.onSaveAs} isDirty={props.isDirty} />
+        <PresetActions {...props} />
       </Section>
 
       <Section title="Selected timestamp">
         <div className="text-mono text-xs">
           {fmt(props.time)} · frame {Math.round(props.time * props.committed.frameRate)}
+        </div>
+      </Section>
+
+      <Section title="Event filters">
+        <div className="flex flex-wrap gap-1">
+          {(Object.keys(props.eventFilters) as Array<TrackEvent["kind"]>).map((k) => (
+            <button key={k} onClick={() => props.setEventFilters({ ...props.eventFilters, [k]: !props.eventFilters[k] })}
+              className={`flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider transition-colors ${
+                props.eventFilters[k] ? "border-border bg-surface-2 text-foreground" : "border-border/50 bg-surface-2/40 text-muted-foreground/60 line-through"
+              }`}>
+              <span className="inline-block h-2 w-2 rounded-sm" style={{ background: eventColor[k] }} />{k}
+            </button>
+          ))}
         </div>
       </Section>
 
@@ -1424,6 +1620,50 @@ function UpdateActions({ onUpdate, onSaveAs, isDirty }: { onUpdate: () => void; 
   );
 }
 
+/* Apply (commit draft → committed) · Save (update active preset) · Save as · Reset (draft → active preset) */
+function PresetActions(props: {
+  onUpdateCommit: () => void;
+  onUpdateActivePreset: () => void;
+  onSaveAs: () => void;
+  onResetDraftToActive: () => void;
+  isDirty: boolean;
+}) {
+  return (
+    <div className="mt-1 grid grid-cols-4 gap-1.5">
+      <button onClick={props.onUpdateCommit} title="Применить настройки временно (без сохранения в пресет)"
+        className={`rounded-sm px-2 py-1.5 text-xs font-semibold uppercase tracking-wider transition ${
+          props.isDirty ? "bg-primary text-primary-foreground hover:brightness-110" : "bg-surface-2 text-muted-foreground"
+        }`}>Apply{props.isDirty ? " *" : ""}</button>
+      <button onClick={props.onUpdateActivePreset} title="Сохранить изменения в текущий пресет"
+        className="rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">Save</button>
+      <button onClick={props.onSaveAs} title="Сохранить как новый пресет"
+        className="rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">Save as…</button>
+      <button onClick={props.onResetDraftToActive} title="Вернуть значения текущего пресета"
+        className="rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">Reset</button>
+    </div>
+  );
+}
+
+function CompareRow({ k, cur, prev, delta, suffix = "", decimals = 0, lowerBetter = false }: {
+  k: string; cur: string; prev: string; delta: number; suffix?: string; decimals?: number; lowerBetter?: boolean;
+}) {
+  const sign = delta > 0 ? "+" : "";
+  const val = decimals ? delta.toFixed(decimals) : Math.round(delta).toString();
+  const isZero = Math.abs(delta) < (decimals ? 0.005 : 0.5);
+  const good = lowerBetter ? delta < 0 : delta > 0;
+  const cls = isZero ? "text-muted-foreground" : good ? "text-emerald-400" : "text-destructive";
+  return (
+    <div className="flex items-baseline justify-between">
+      <span className="text-muted-foreground">{k}</span>
+      <span>
+        <span className="text-muted-foreground/70 line-through mr-1">{prev}</span>
+        <span>{cur}</span>
+        {!isZero && <span className={`ml-1 ${cls}`}>{sign}{val}{suffix}</span>}
+      </span>
+    </div>
+  );
+}
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-sm border border-border bg-surface-2">
@@ -1464,26 +1704,30 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   return <div><div className="label-eyebrow mb-1 text-xs">{label}</div>{children}</div>;
 }
 
-function SliderField({ label, value, min, max, step, onChange }: { label: string; value: number; min: number; max: number; step: number; onChange: (v: number) => void }) {
+function SliderField({ label, value, min, max, step, onChange, hint, warn }: { label: string; value: number; min: number; max: number; step: number; onChange: (v: number) => void; hint?: string; warn?: string | null }) {
   return (
     <div>
       <div className="mb-1 flex items-baseline justify-between text-xs">
-        <span className="uppercase tracking-wider text-muted-foreground">{label}</span>
+        <span className="uppercase tracking-wider text-muted-foreground" title={hint}>{label}{hint && <span className="ml-1 text-muted-foreground/50">ⓘ</span>}</span>
         <span className="text-mono">{value.toFixed(2)}</span>
       </div>
       <input type="range" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(Number(e.target.value))} className="w-full accent-primary" />
+      {hint && <div className="mt-0.5 text-[10px] leading-tight text-muted-foreground/70">{hint}</div>}
+      {warn && <div className="mt-1 rounded-sm border border-amber-400/40 bg-amber-400/10 px-1.5 py-0.5 text-[10px] text-amber-300">⚠ {warn}</div>}
     </div>
   );
 }
 
-function NumField({ label, value, min, max, step, onChange }: { label: string; value: number; min: number; max: number; step: number; onChange: (v: number) => void }) {
+function NumField({ label, value, min, max, step, onChange, hint, warn }: { label: string; value: number; min: number; max: number; step: number; onChange: (v: number) => void; hint?: string; warn?: string | null }) {
   return (
     <div>
-      <div className="label-eyebrow mb-1 text-xs">{label}</div>
+      <div className="label-eyebrow mb-1 text-xs" title={hint}>{label}{hint && <span className="ml-1 text-muted-foreground/50">ⓘ</span>}</div>
       <input type="number" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(Number(e.target.value))}
         className="text-mono w-full rounded-sm border border-border bg-background px-2 py-1 text-xs" />
+      {hint && <div className="mt-0.5 text-[10px] leading-tight text-muted-foreground/70">{hint}</div>}
+      {warn && <div className="mt-1 rounded-sm border border-amber-400/40 bg-amber-400/10 px-1.5 py-0.5 text-[10px] text-amber-300">⚠ {warn}</div>}
     </div>
   );
 }
