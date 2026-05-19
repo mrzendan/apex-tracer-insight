@@ -221,7 +221,6 @@ function ZonesAdmin() {
     });
   };
   const onWheel = (e: React.WheelEvent) => {
-    if (!(e.ctrlKey || e.metaKey)) return; // require modifier so page scroll still works
     e.preventDefault();
     const rect = stageRef.current!.getBoundingClientRect();
     zoomAt(e.deltaY < 0 ? 1.15 : 1 / 1.15, e.clientX - rect.left, e.clientY - rect.top);
