@@ -227,6 +227,24 @@ function ProcessesAdmin() {
     ? processes.some((p) => p.matchId === editing.matchId && p.id !== editing.id && p.pov === editing.pov)
     : false;
 
+  useEffect(() => {
+    const mid = search.matchId;
+    if (!mid || handledMatchRef.current === mid) return;
+    const match = matches.find((m) => m.id === mid);
+    if (!match) return;
+    handledMatchRef.current = mid;
+    const existing = processes.find((p) => p.matchId === mid);
+    if (existing) {
+      setExpanded(existing.id);
+      setStatusFilter("all");
+      requestAnimationFrame(() => {
+        document.getElementById(`process-${existing.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    } else {
+      draft({ tournamentId: match.tournamentId, matchId: mid });
+    }
+  }, [search.matchId, processes, matches]);
+
   const save = (run: boolean) => {
     if (!editing) return;
     const exists = processes.some((p) => p.id === editing.id);
