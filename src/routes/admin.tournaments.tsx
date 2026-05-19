@@ -443,45 +443,106 @@ function EditDialog({ row, isNew, onChange, onCancel, onSave }: {
   const base = "mt-1 w-full rounded-sm border border-border bg-background px-2 py-1.5 text-sm";
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onCancel}>
-      <div className="hud-panel w-full max-w-lg bg-surface" onClick={(e) => e.stopPropagation()}>
+      <div className="hud-panel w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-surface" onClick={(e) => e.stopPropagation()}>
         <div className="border-b border-border px-4 py-3">
           <h2 className="text-sm font-bold uppercase tracking-wider">{isNew ? "New tournament" : "Edit tournament"}</h2>
         </div>
-        <div className="space-y-3 p-4">
-          <div>
-            <label className="label-eyebrow text-xs">Name</label>
-            <input className={base} value={row.name} onChange={(e) => set("name", e.target.value)} />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="label-eyebrow text-xs">Start date</label>
-              <input type="date" className={base} value={row.startDate} onChange={(e) => set("startDate", e.target.value)} />
+        <div className="space-y-5 p-4">
+          <section>
+            <div className="label-eyebrow mb-2 text-xs text-muted-foreground">Basic info</div>
+            <div className="space-y-3">
+              <div>
+                <label className="label-eyebrow text-xs">Name</label>
+                <input className={base} value={row.name} onChange={(e) => set("name", e.target.value)} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="label-eyebrow text-xs">Status</label>
+                  <select className={base} value={row.status ?? ""} onChange={(e) => set("status", (e.target.value || undefined) as TournamentStatus | undefined)}>
+                    <option value="">Auto (from dates)</option>
+                    {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="label-eyebrow text-xs">Type</label>
+                  <select className={base} value={row.type} onChange={(e) => set("type", e.target.value as TournamentType)}>
+                    {TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+              </div>
             </div>
-            <div>
-              <label className="label-eyebrow text-xs">End date</label>
-              <input type="date" className={base} value={row.endDate} onChange={(e) => set("endDate", e.target.value)} />
+          </section>
+
+          <section>
+            <div className="label-eyebrow mb-2 text-xs text-muted-foreground">Dates</div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="label-eyebrow text-xs">Start date</label>
+                <input type="date" className={base} value={row.startDate} onChange={(e) => set("startDate", e.target.value)} />
+              </div>
+              <div>
+                <label className="label-eyebrow text-xs">End date</label>
+                <input type="date" className={base} value={row.endDate} onChange={(e) => set("endDate", e.target.value)} />
+              </div>
             </div>
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="label-eyebrow text-xs">Year</label>
-              <select className={base} value={row.year} onChange={(e) => set("year", Number(e.target.value))}>
-                {YEARS.map((y) => <option key={y} value={y}>Year {y}</option>)}
-              </select>
+          </section>
+
+          <section>
+            <div className="label-eyebrow mb-2 text-xs text-muted-foreground">Season & region</div>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              <div>
+                <label className="label-eyebrow text-xs">Year</label>
+                <select className={base} value={row.year} onChange={(e) => set("year", Number(e.target.value))}>
+                  {YEARS.map((y) => <option key={y} value={y}>Year {y}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="label-eyebrow text-xs">Split</label>
+                <select className={base} value={row.split ?? ""} onChange={(e) => set("split", e.target.value || undefined)}>
+                  <option value="">—</option>
+                  {SPLITS.map((s) => <option key={s} value={s}>Split {s}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="label-eyebrow text-xs">Stage</label>
+                <select className={base} value={row.stage ?? ""} onChange={(e) => set("stage", (e.target.value || undefined) as TournamentStage | undefined)}>
+                  <option value="">—</option>
+                  {STAGES.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="label-eyebrow text-xs">Region</label>
+                <select className={base} value={row.region} onChange={(e) => set("region", e.target.value as TournamentRegion)}>
+                  {REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}
+                </select>
+              </div>
             </div>
-            <div>
-              <label className="label-eyebrow text-xs">Type</label>
-              <select className={base} value={row.type} onChange={(e) => set("type", e.target.value as TournamentType)}>
-                {TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
+          </section>
+
+          <section>
+            <div className="label-eyebrow mb-2 text-xs text-muted-foreground">Links & notes</div>
+            <div className="space-y-3">
+              <div>
+                <label className="label-eyebrow text-xs">Liquipedia URL</label>
+                <input
+                  type="url"
+                  placeholder="https://liquipedia.net/apexlegends/..."
+                  className={base}
+                  value={row.liquipediaUrl ?? ""}
+                  onChange={(e) => set("liquipediaUrl", e.target.value || undefined)}
+                />
+              </div>
+              <div>
+                <label className="label-eyebrow text-xs">Description / notes</label>
+                <textarea
+                  rows={3}
+                  className={base}
+                  value={row.description ?? ""}
+                  onChange={(e) => set("description", e.target.value || undefined)}
+                />
+              </div>
             </div>
-            <div>
-              <label className="label-eyebrow text-xs">Region</label>
-              <select className={base} value={row.region} onChange={(e) => set("region", e.target.value as TournamentRegion)}>
-                {REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}
-              </select>
-            </div>
-          </div>
+          </section>
         </div>
         <div className="flex justify-end gap-2 border-t border-border bg-surface-2 px-4 py-3">
           <button onClick={onCancel} className="rounded-sm border border-border bg-surface px-3 py-1.5 text-xs uppercase tracking-wider hover:bg-muted">Cancel</button>
