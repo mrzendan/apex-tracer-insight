@@ -62,6 +62,30 @@ function rangesAround(h: number, s: number, v: number): Preset {
   };
 }
 
+function hsvCvToRgb(h: number, s: number, v: number): [number, number, number] {
+  const hh = (h * 2) / 60;
+  const ss = s / 255;
+  const vv = v / 255;
+  const c = vv * ss;
+  const x = c * (1 - Math.abs((hh % 2) - 1));
+  const m = vv - c;
+  let r = 0, g = 0, b = 0;
+  if (hh < 1) [r, g, b] = [c, x, 0];
+  else if (hh < 2) [r, g, b] = [x, c, 0];
+  else if (hh < 3) [r, g, b] = [0, c, x];
+  else if (hh < 4) [r, g, b] = [0, x, c];
+  else if (hh < 5) [r, g, b] = [x, 0, c];
+  else [r, g, b] = [c, 0, x];
+  return [Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((b + m) * 255)];
+}
+function presetCenterHex(p: Preset): string {
+  const h = Math.round((p.h[0] + p.h[1]) / 2);
+  const s = Math.round((p.s[0] + p.s[1]) / 2);
+  const v = Math.round((p.v[0] + p.v[1]) / 2);
+  const [r, g, b] = hsvCvToRgb(h, s, v);
+  return `#${[r, g, b].map((n) => n.toString(16).padStart(2, "0")).join("")}`;
+}
+
 function rangeOverlap(a: Range3, b: Range3): number {
   const lo = Math.max(a[0], b[0]);
   const hi = Math.min(a[1], b[1]);
@@ -93,6 +117,12 @@ function HsvAdmin() {
     for (const t of teams) init[t.id] = presetFromColor(t.color);
     return init;
   });
+  // Color saved with the preset — drives the swatches in the sidebar and header.
+  const [savedColors, setSavedColors] = useState<Record<string, string>>(() => {
+    const init: Record<string, string> = {};
+    for (const t of teams) init[t.id] = t.color;
+    return init;
+  });
 
   const [frames, setFrames] = useState<Frame[]>(DEFAULT_FRAMES);
   const [frameId, setFrameId] = useState<string>(DEFAULT_FRAMES[0].id);
@@ -108,6 +138,7 @@ function HsvAdmin() {
   const team = teamList.find((t) => t.id === teamId)!;
   const frame = frames.find((f) => f.id === frameId) ?? frames[0];
   const preset = presets[teamId];
+  const teamSwatch = (id: string) => savedColors[id] ?? teamList.find((t) => t.id === id)!.color;
 
   const setPreset = (p: Partial<Preset>) =>
     setPresets((prev) => ({ ...prev, [teamId]: { ...prev[teamId], ...p } }));
@@ -292,7 +323,7 @@ function HsvAdmin() {
                 <span className={`shrink-0 rounded-sm ring-1 ring-border ${active ? "h-6 w-6" : "h-3 w-3"}`} style={{ backgroundColor: t.color }} />
                 <div className="flex min-w-0 flex-1 flex-col">
                   <span className={`font-semibold ${active ? "text-sm" : "text-xs"}`}>{t.displayName}</span>
-                  {active && <span className="text-mono text-[10px] uppercase text-muted-foreground">{t.color}</span>}
+                  {active && <span className="text-mono text-[10px] uppercase text-muted-foreground">{teamSwatch(t.id)}</span>}
                 </div>
                 <span className="text-mono ml-auto text-xs text-muted-foreground">{String(i + 1).padStart(2, "0")}</span>
               </button>
