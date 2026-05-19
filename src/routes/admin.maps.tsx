@@ -74,6 +74,7 @@ function MapsAdmin() {
       name: "",
       image: "",
       code: "",
+      previewImage: "",
       config: { image: false, zones: false, polygons: false, hsv: false, camera: false, minimap: false },
     });
   const startEdit = (m: ApexMap) => setEditing({ ...m, config: { ...(m.config ?? {}) } });
@@ -138,8 +139,8 @@ function MapsAdmin() {
                     className="block w-full text-left"
                   >
                     <div className="aspect-video w-full overflow-hidden bg-surface-2">
-                      {mp.image ? (
-                        <img src={mp.image} alt={mp.name} className="h-full w-full object-cover transition group-hover:scale-105" />
+                      {(mp.previewImage || mp.image) ? (
+                        <img src={mp.previewImage || mp.image} alt={mp.name} className="h-full w-full object-cover transition group-hover:scale-105" />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">No image</div>
                       )}
@@ -160,9 +161,8 @@ function MapsAdmin() {
                   <div className="flex flex-wrap gap-1 border-t border-border px-3 py-2">
                     <button onClick={() => open(mp.id)} className="rounded-sm border border-border bg-surface px-2 py-0.5 text-xs hover:bg-muted">Open</button>
                     <button onClick={() => startEdit(mp)} className="rounded-sm border border-border bg-surface px-2 py-0.5 text-xs hover:bg-muted">Edit</button>
-                    <button onClick={() => open(mp.id)} className="rounded-sm border border-border bg-surface px-2 py-0.5 text-xs hover:bg-muted">Zones</button>
-                    <button onClick={() => open(mp.id)} className="rounded-sm border border-border bg-surface px-2 py-0.5 text-xs hover:bg-muted">Polygons</button>
-                    <button onClick={() => navigate({ to: "/admin/minimap" })} className="rounded-sm border border-border bg-surface px-2 py-0.5 text-xs hover:bg-muted">Minimap test</button>
+                    <button onClick={() => navigate({ to: "/admin/polygons", search: { mapId: mp.id } })} className="rounded-sm border border-border bg-surface px-2 py-0.5 text-xs hover:bg-muted">Polygons</button>
+                    <button onClick={() => navigate({ to: "/admin/hsv", search: { mapId: mp.id } })} className="rounded-sm border border-border bg-surface px-2 py-0.5 text-xs hover:bg-muted">HSV</button>
                     <button onClick={() => remove(mp.id)} className="rounded-sm border border-destructive/40 bg-surface px-2 py-0.5 text-xs text-destructive hover:bg-destructive/10">Delete</button>
                   </div>
                 </div>
@@ -188,8 +188,8 @@ function MapsAdmin() {
                   return (
                     <tr key={mp.id} className="border-b border-border hover:bg-surface-2">
                       <td className="px-3 py-2">
-                        {mp.image ? (
-                          <img src={mp.image} alt={mp.name} className="h-10 w-16 rounded-sm border border-border object-cover" />
+                        {(mp.previewImage || mp.image) ? (
+                          <img src={mp.previewImage || mp.image} alt={mp.name} className="h-10 w-16 rounded-sm border border-border object-cover" />
                         ) : (
                           <div className="flex h-10 w-16 items-center justify-center rounded-sm border border-dashed border-border text-xs text-muted-foreground">—</div>
                         )}
@@ -208,8 +208,8 @@ function MapsAdmin() {
                         <div className="inline-flex items-center gap-1">
                           <button onClick={() => open(mp.id)} className="rounded-sm border border-border bg-surface px-2 py-1 hover:bg-muted">Open</button>
                           <button onClick={() => startEdit(mp)} className="rounded-sm border border-border bg-surface px-2 py-1 hover:bg-muted">Edit</button>
-                          <button onClick={() => open(mp.id)} className="rounded-sm border border-border bg-surface px-2 py-1 hover:bg-muted">Zones</button>
-                          <button onClick={() => navigate({ to: "/admin/minimap" })} className="rounded-sm border border-border bg-surface px-2 py-1 hover:bg-muted">Minimap</button>
+                          <button onClick={() => navigate({ to: "/admin/polygons", search: { mapId: mp.id } })} className="rounded-sm border border-border bg-surface px-2 py-1 hover:bg-muted">Polygons</button>
+                          <button onClick={() => navigate({ to: "/admin/hsv", search: { mapId: mp.id } })} className="rounded-sm border border-border bg-surface px-2 py-1 hover:bg-muted">HSV</button>
                           <button onClick={() => remove(mp.id)} className="rounded-sm border border-destructive/40 bg-surface px-2 py-1 text-destructive hover:bg-destructive/10">Delete</button>
                         </div>
                       </td>
@@ -274,6 +274,7 @@ function EditDialog({ row, isNew, onChange, onCancel, onSave }: {
 
           <section>
             <div className="label-eyebrow mb-2 text-xs text-muted-foreground">Base image</div>
+            <p className="mb-2 text-xs text-muted-foreground">Используется только на аналитических страницах.</p>
             <input
               className={base}
               placeholder="https://… or imported asset URL"
@@ -283,6 +284,22 @@ function EditDialog({ row, isNew, onChange, onCancel, onSave }: {
             {row.image && (
               <div className="mt-2 aspect-video w-full overflow-hidden rounded-sm border border-border bg-surface-2">
                 <img src={row.image} alt="preview" className="h-full w-full object-cover" />
+              </div>
+            )}
+          </section>
+
+          <section>
+            <div className="label-eyebrow mb-2 text-xs text-muted-foreground">Preview image</div>
+            <p className="mb-2 text-xs text-muted-foreground">Обложка карты в списках и карточках.</p>
+            <input
+              className={base}
+              placeholder="https://… (необязательно, по умолчанию = base image)"
+              value={row.previewImage ?? ""}
+              onChange={(e) => set("previewImage", e.target.value || undefined)}
+            />
+            {(row.previewImage || row.image) && (
+              <div className="mt-2 aspect-video w-full overflow-hidden rounded-sm border border-border bg-surface-2">
+                <img src={row.previewImage || row.image} alt="cover preview" className="h-full w-full object-cover" />
               </div>
             )}
           </section>

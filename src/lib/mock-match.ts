@@ -61,6 +61,8 @@ export type ApexMap = {
   image: string;
   /** Short code, e.g. WE, KC, SP. */
   code?: string;
+  /** Optional cover/preview image shown in admin lists. Falls back to `image`. */
+  previewImage?: string;
   /** Per-feature configuration status for the admin pipeline. */
   config?: Partial<Record<MapConfigKey, boolean>>;
 };

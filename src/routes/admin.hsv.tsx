@@ -6,7 +6,12 @@ import stormPointSample from "@/assets/hsv-samples/storm-point.png";
 import eDistrictSample from "@/assets/hsv-samples/e-district.png";
 import olympusSample from "@/assets/hsv-samples/olympus.png";
 
-export const Route = createFileRoute("/admin/hsv")({ component: HsvAdmin });
+export const Route = createFileRoute("/admin/hsv")({
+  component: HsvAdmin,
+  validateSearch: (s: Record<string, unknown>) => ({
+    mapId: typeof s.mapId === "string" ? s.mapId : undefined,
+  }),
+});
 
 type Range3 = [number, number];
 type Preset = { h: Range3; s: Range3; v: Range3 };
@@ -66,8 +71,10 @@ function HsvAdmin() {
     return init;
   });
 
+  const search = Route.useSearch();
+  const initialSample = (SAMPLES.find((s) => s.id === search.mapId)?.id ?? "worlds-edge") as typeof SAMPLES[number]["id"];
   const [teamId, setTeamId] = useState(teamList[0].id);
-  const [sampleId, setSampleId] = useState<typeof SAMPLES[number]["id"]>("worlds-edge");
+  const [sampleId, setSampleId] = useState<typeof SAMPLES[number]["id"]>(initialSample);
 
   const team = teamList.find((t) => t.id === teamId)!;
   const sample = SAMPLES.find((s) => s.id === sampleId)!;

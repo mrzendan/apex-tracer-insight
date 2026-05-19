@@ -10,13 +10,22 @@ import {
   type PolygonTag,
 } from "@/lib/admin-store";
 
-export const Route = createFileRoute("/admin/polygons")({ component: PolygonsAdmin });
+export const Route = createFileRoute("/admin/polygons")({
+  component: PolygonsAdmin,
+  validateSearch: (s: Record<string, unknown>) => ({
+    mapId: typeof s.mapId === "string" ? s.mapId : undefined,
+  }),
+});
 
 type Mode = "idle" | "draw";
 
 function PolygonsAdmin() {
   const { polygons } = useAdminStore();
-  const [mapId, setMapId] = useState(allMaps[0]?.id ?? "");
+  const search = Route.useSearch();
+  const initialMapId = search.mapId && allMaps.some((m) => m.id === search.mapId)
+    ? search.mapId
+    : (allMaps[0]?.id ?? "");
+  const [mapId, setMapId] = useState(initialMapId);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>("idle");
   const [draft, setDraft] = useState<{ x: number; y: number }[]>([]);
