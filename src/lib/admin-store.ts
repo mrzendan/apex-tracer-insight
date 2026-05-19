@@ -27,6 +27,13 @@ export type CustomMap = { id: string; name: string; image: string };
 
 export type ProcessPov = "map" | "team";
 export type ProcessStatus = "draft" | "queued" | "running" | "done" | "failed";
+export type ProcessKind =
+  | "minimap"
+  | "camera"
+  | "full"
+  | "hsv"
+  | "ring"
+  | "debug_export";
 export type MapTiming = { mapId: string; startSec: number; endSec: number };
 export type MapAnalysis = {
   mapIndex: number;
@@ -38,6 +45,7 @@ export type MapAnalysis = {
 export type AnalysisProcess = {
   id: string;
   pov: ProcessPov;
+  kind?: ProcessKind;
   live: boolean;
   streamUrl: string;
   videoTitle?: string;
@@ -54,6 +62,15 @@ export type AnalysisProcess = {
   mapAnalyses?: MapAnalysis[];
   status: ProcessStatus;
   createdAt: number;
+  /* extended fields for operator control center */
+  preset?: string;
+  frameStep?: number;
+  debugMode?: boolean;
+  startedAt?: number;
+  finishedAt?: number;
+  errorMessage?: string;
+  qualityScore?: number;
+  needsReview?: boolean;
 };
 
 const initialVod: Zone[] = [
