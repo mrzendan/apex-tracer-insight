@@ -11,7 +11,7 @@ import { Slide10, Slide11, Slide12 } from "./slides-extra";
 import { Movable } from "./movable/Movable";
 import { MovableArrow } from "./movable/MovableArrow";
 import { IconSlot } from "./IconSlot";
-import mapImage from "@/assets/maps/storm-point.png";
+import mapImage from "@/assets/maps/storm-point.webp";
 
 type SlideProps = { editing: boolean };
 
