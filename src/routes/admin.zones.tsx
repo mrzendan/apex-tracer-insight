@@ -1,42 +1,57 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
-import { Eye, EyeOff, Lock, Unlock, Pencil, Copy, RotateCcw, AlignCenter, Files } from "lucide-react";
+import { Eye, EyeOff, Lock, Unlock, Pencil, Copy, RotateCcw, AlignCenter, Files, Plus, Trash2, Check, X } from "lucide-react";
 import vodBg from "@/assets/hsv-samples/worlds-edge.png";
 import cameraBg from "@/assets/zones-samples/camera.png";
-import { useAdminStore, setZones as setZonesStore, type Zone, type ZoneTag, type ZoneMode } from "@/lib/admin-store";
+import { useAdminStore, setZones as setZonesStore, type Zone, type ZoneMode } from "@/lib/admin-store";
 
 export const Route = createFileRoute("/admin/zones")({ component: ZonesAdmin });
 
-type Preset = "vod" | "camera" | "observer" | "algs" | "custom";
-const PRESETS: { id: Preset; label: string; mode: ZoneMode }[] = [
-  { id: "vod",      label: "VOD Stream",   mode: "vod" },
-  { id: "camera",   label: "Player Cam",   mode: "camera" },
-  { id: "observer", label: "Observer HUD", mode: "camera" },
-  { id: "algs",     label: "ALGS Layout",  mode: "vod" },
-  { id: "custom",   label: "Custom",       mode: "vod" },
+type BuiltinPreset = "vod" | "camera";
+type CustomPreset = { id: string; label: string; mode: ZoneMode; zones: Zone[] };
+
+const BUILTIN: { id: BuiltinPreset; label: string; mode: ZoneMode }[] = [
+  { id: "vod",    label: "VOD Stream", mode: "vod" },
+  { id: "camera", label: "Player Cam", mode: "camera" },
 ];
 
-const TAGS: ZoneTag[] = ["team", "camera", "minimap", "timer", "map_name"];
-
-// Semantic colors: minimap=orange, timer=yellow, team=cyan, map_name=green, camera=purple
-const TAG_COLOR: Record<ZoneTag, string> = {
+// Semantic colors for default tags. Custom tags get colors from this palette.
+const DEFAULT_TAG_COLORS: Record<string, string> = {
   team:     "#22c4f5",
   camera:   "#a78bfa",
   minimap:  "#ff8a00",
   timer:    "#facc15",
   map_name: "#34d399",
 };
+const FALLBACK_PALETTE = ["#f472b6", "#fb7185", "#60a5fa", "#4ade80", "#fbbf24", "#c084fc", "#f87171", "#2dd4bf"];
 
 let _idc = 0;
-const newId = () => `z-${Date.now().toString(36)}-${_idc++}`;
+const newId = (p = "z") => `${p}-${Date.now().toString(36)}-${_idc++}`;
 
 type ZoneMeta = { hidden?: boolean; locked?: boolean };
 
 function ZonesAdmin() {
   const store = useAdminStore();
-  const [preset, setPreset] = useState<Preset>("vod");
-  const mode: ZoneMode = PRESETS.find((p) => p.id === preset)!.mode;
-  const [sel, setSel] = useState<string | null>(store.zones.vod[0]?.id ?? null);
+
+  // Preset state: either a builtin or a custom preset id
+  const [activeId, setActiveId] = useState<string>("vod");
+  const [customs, setCustoms] = useState<CustomPreset[]>([]);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameVal, setRenameVal] = useState("");
+
+  // Tags (dynamic) with colors
+  const [tags, setTags] = useState<{ id: string; color: string }[]>(
+    Object.entries(DEFAULT_TAG_COLORS).map(([id, color]) => ({ id, color })),
+  );
+  const [tagsOpen, setTagsOpen] = useState(false);
+  const tagColor = (id: string) => tags.find((t) => t.id === id)?.color ?? "#94a3b8";
+
+  const builtin = BUILTIN.find((b) => b.id === activeId);
+  const custom = customs.find((c) => c.id === activeId);
+  const mode: ZoneMode = builtin?.mode ?? custom?.mode ?? "vod";
+  const zones: Zone[] = builtin ? store.zones[builtin.mode] : custom?.zones ?? [];
+
+  const [sel, setSel] = useState<string | null>(zones[0]?.id ?? null);
   const [meta, setMeta] = useState<Record<string, ZoneMeta>>({});
   const [snap, setSnap] = useState(true);
   const [gridSize, setGridSize] = useState<10 | 20>(20);
@@ -45,35 +60,48 @@ function ZonesAdmin() {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const dragRef = useRef<
     | null
-    | {
-        id: string;
-        mode: "move" | "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
-        startX: number;
-        startY: number;
-        orig: Zone;
-      }
+    | { id: string; mode: "move" | "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw"; startX: number; startY: number; orig: Zone }
   >(null);
 
   const W = 1920, H = 1080;
-  const zones = store.zones[mode];
   const bg = mode === "vod" ? vodBg : cameraBg;
   const selZone = zones.find((z) => z.id === sel);
 
   const setZones = (next: Zone[] | ((zs: Zone[]) => Zone[])) => {
     const computed = typeof next === "function" ? (next as (zs: Zone[]) => Zone[])(zones) : next;
-    setZonesStore(mode, computed);
+    if (builtin) setZonesStore(builtin.mode, computed);
+    else if (custom) setCustoms((cs) => cs.map((c) => (c.id === custom.id ? { ...c, zones: computed } : c)));
   };
 
-  const choosePreset = (p: Preset) => {
-    setPreset(p);
-    const m = PRESETS.find((x) => x.id === p)!.mode;
-    const list = store.zones[m];
+  const choosePreset = (id: string) => {
+    setActiveId(id);
+    const b = BUILTIN.find((x) => x.id === id);
+    const c = customs.find((x) => x.id === id);
+    const list = b ? store.zones[b.mode] : c?.zones ?? [];
     setSel(list[0]?.id ?? null);
   };
 
+  const addCustomPreset = () => {
+    const id = newId("p");
+    const next: CustomPreset = { id, label: `Custom ${customs.length + 1}`, mode: "vod", zones: [...store.zones.vod] };
+    setCustoms((cs) => [...cs, next]);
+    setActiveId(id);
+    setSel(next.zones[0]?.id ?? null);
+    setRenamingId(id);
+    setRenameVal(next.label);
+  };
+  const removeCustomPreset = (id: string) => {
+    setCustoms((cs) => cs.filter((c) => c.id !== id));
+    if (activeId === id) choosePreset("vod");
+  };
+  const commitRename = () => {
+    if (!renamingId) return;
+    setCustoms((cs) => cs.map((c) => (c.id === renamingId ? { ...c, label: renameVal.trim() || c.label } : c)));
+    setRenamingId(null);
+  };
+
   const getMeta = (id: string): ZoneMeta => meta[id] ?? {};
-  const patchMeta = (id: string, p: ZoneMeta) =>
-    setMeta((m) => ({ ...m, [id]: { ...(m[id] ?? {}), ...p } }));
+  const patchMeta = (id: string, p: ZoneMeta) => setMeta((m) => ({ ...m, [id]: { ...(m[id] ?? {}), ...p } }));
 
   const snapVal = (v: number) => (snap ? Math.round(v / gridSize) * gridSize : Math.round(v));
 
@@ -81,52 +109,71 @@ function ZonesAdmin() {
     setZones((zs) => zs.map((z) => (z.id === id ? { ...z, ...patch } : z)));
 
   const addZone = () => {
-    const z: Zone = { id: newId(), name: "New zone", tag: "team", x: 760, y: 460, w: 400, h: 160 };
+    const firstTag = tags[0]?.id ?? "team";
+    const z: Zone = { id: newId(), name: "New zone", tag: firstTag as Zone["tag"], x: 760, y: 460, w: 400, h: 160 };
     setZones((zs) => [...zs, z]);
     setSel(z.id);
   };
-
   const removeZone = (id: string) => {
     setZones((zs) => zs.filter((z) => z.id !== id));
     if (sel === id) setSel(null);
   };
-
   const duplicateZone = (z: Zone) => {
     const nz: Zone = { ...z, id: newId(), name: z.name + " copy", x: Math.min(W - z.w, z.x + 30), y: Math.min(H - z.h, z.y + 30) };
     setZones((zs) => [...zs, nz]);
     setSel(nz.id);
   };
-
   const centerZone = (z: Zone) => update(z.id, { x: Math.round((W - z.w) / 2), y: Math.round((H - z.h) / 2) });
-
   const resetZone = (z: Zone) => update(z.id, { x: 100, y: 100, w: 400, h: 200 });
-
   const copyCoords = (z: Zone) => {
     const txt = `x:${z.x} y:${z.y} w:${z.w} h:${z.h}`;
     if (typeof navigator !== "undefined" && navigator.clipboard) navigator.clipboard.writeText(txt).catch(() => {});
+  };
+
+  // Tag editing
+  const addTag = () => {
+    const usedColors = new Set(tags.map((t) => t.color));
+    const color = FALLBACK_PALETTE.find((c) => !usedColors.has(c)) ?? FALLBACK_PALETTE[0];
+    setTags((ts) => [...ts, { id: `tag_${ts.length + 1}`, color }]);
+  };
+  const renameTag = (oldId: string, nextId: string) => {
+    const clean = nextId.trim().replace(/\s+/g, "_").toLowerCase();
+    if (!clean || clean === oldId) return;
+    if (tags.some((t) => t.id === clean)) return;
+    setTags((ts) => ts.map((t) => (t.id === oldId ? { ...t, id: clean } : t)));
+    // Update zones using old tag (only mutate built-in ones via store; custom via state)
+    (["vod", "camera"] as ZoneMode[]).forEach((m) => {
+      const next = store.zones[m].map((z) => (z.tag === oldId ? { ...z, tag: clean as Zone["tag"] } : z));
+      setZonesStore(m, next);
+    });
+    setCustoms((cs) => cs.map((c) => ({ ...c, zones: c.zones.map((z) => (z.tag === oldId ? { ...z, tag: clean as Zone["tag"] } : z)) })));
+  };
+  const recolorTag = (id: string, color: string) => setTags((ts) => ts.map((t) => (t.id === id ? { ...t, color } : t)));
+  const deleteTag = (id: string) => {
+    if (tags.length <= 1) return;
+    const fallback = tags.find((t) => t.id !== id)!.id;
+    setTags((ts) => ts.filter((t) => t.id !== id));
+    (["vod", "camera"] as ZoneMode[]).forEach((m) => {
+      const next = store.zones[m].map((z) => (z.tag === id ? { ...z, tag: fallback as Zone["tag"] } : z));
+      setZonesStore(m, next);
+    });
+    setCustoms((cs) => cs.map((c) => ({ ...c, zones: c.zones.map((z) => (z.tag === id ? { ...z, tag: fallback as Zone["tag"] } : z)) })));
   };
 
   const toSvg = (clientX: number, clientY: number) => {
     const svg = svgRef.current;
     if (!svg) return { x: 0, y: 0 };
     const rect = svg.getBoundingClientRect();
-    return {
-      x: ((clientX - rect.left) / rect.width) * W,
-      y: ((clientY - rect.top) / rect.height) * H,
-    };
+    return { x: ((clientX - rect.left) / rect.width) * W, y: ((clientY - rect.top) / rect.height) * H };
   };
 
-  const onPointerDown = (
-    e: React.PointerEvent,
-    zone: Zone,
-    mode: "move" | "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw",
-  ) => {
+  const onPointerDown = (e: React.PointerEvent, zone: Zone, m: "move" | "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw") => {
     if (getMeta(zone.id).locked) return;
     e.stopPropagation();
     (e.target as Element).setPointerCapture?.(e.pointerId);
     setSel(zone.id);
     const p = toSvg(e.clientX, e.clientY);
-    dragRef.current = { id: zone.id, mode, startX: p.x, startY: p.y, orig: { ...zone } };
+    dragRef.current = { id: zone.id, mode: m, startX: p.x, startY: p.y, orig: { ...zone } };
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
@@ -143,51 +190,83 @@ function ZonesAdmin() {
     } else {
       if (d.mode.includes("e")) w = Math.max(min, d.orig.w + dx);
       if (d.mode.includes("s")) h = Math.max(min, d.orig.h + dy);
-      if (d.mode.includes("w")) {
-        const nw = Math.max(min, d.orig.w - dx);
-        x = d.orig.x + (d.orig.w - nw);
-        w = nw;
-      }
-      if (d.mode.includes("n")) {
-        const nh = Math.max(min, d.orig.h - dy);
-        y = d.orig.y + (d.orig.h - nh);
-        h = nh;
-      }
+      if (d.mode.includes("w")) { const nw = Math.max(min, d.orig.w - dx); x = d.orig.x + (d.orig.w - nw); w = nw; }
+      if (d.mode.includes("n")) { const nh = Math.max(min, d.orig.h - dy); y = d.orig.y + (d.orig.h - nh); h = nh; }
     }
     update(d.id, { x: snapVal(x), y: snapVal(y), w: snapVal(w), h: snapVal(h) });
   };
-
   const onPointerUp = () => { dragRef.current = null; };
 
   const gridLines = useMemo(() => {
     if (!showGrid) return null;
-    const step = gridSize === 10 ? 80 : 160; // displayed grid coarser; major lines
+    const step = gridSize === 10 ? 80 : 160;
     const lines: React.ReactElement[] = [];
     for (let x = step; x < W; x += step) lines.push(<line key={`vx${x}`} x1={x} y1={0} x2={x} y2={H} stroke="#ffffff" strokeOpacity={0.08} strokeWidth={1} />);
     for (let y = step; y < H; y += step) lines.push(<line key={`hy${y}`} x1={0} y1={y} x2={W} y2={y} stroke="#ffffff" strokeOpacity={0.08} strokeWidth={1} />);
     return <g pointerEvents="none">{lines}</g>;
   }, [showGrid, gridSize]);
 
+  // Preview crop: max box keeping zone's aspect ratio (no fixed-frame distortion).
+  const cropBox = (zw: number, zh: number) => {
+    const MAX_W = 80, MAX_H = 56;
+    const r = zw / zh;
+    let w = MAX_W, h = MAX_W / r;
+    if (h > MAX_H) { h = MAX_H; w = MAX_H * r; }
+    return { w: Math.round(w), h: Math.round(h) };
+  };
+
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-surface px-6">
-        <div>
-          <h1 className="text-sm font-bold uppercase tracking-wider">Zones</h1>
-          <div className="label-eyebrow text-xs">HUD areas · 1920 × 1080</div>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex rounded-sm border border-border bg-surface-2 p-0.5">
-            {PRESETS.map((p) => (
+      <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-surface px-6 gap-4">
+        <div className="flex items-center gap-4 min-w-0">
+          <div className="shrink-0">
+            <h1 className="text-xs font-bold uppercase tracking-wider">Zones</h1>
+            <div className="label-eyebrow text-xs">1920 × 1080</div>
+          </div>
+          <div className="flex items-center gap-1 rounded-sm border border-border bg-surface-2 p-0.5 overflow-x-auto">
+            {BUILTIN.map((p) => (
               <button key={p.id} onClick={() => choosePreset(p.id)}
-                className={`rounded-sm px-3 py-1 text-xs font-semibold uppercase tracking-wider transition-colors ${
-                  preset === p.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                className={`shrink-0 rounded-sm px-3 py-1 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                  activeId === p.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
                 }`}>
                 {p.label}
               </button>
             ))}
+            <div className="mx-1 h-5 w-px bg-border" />
+            {customs.map((c) => (
+              <div key={c.id} className={`flex shrink-0 items-center rounded-sm ${activeId === c.id ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
+                {renamingId === c.id ? (
+                  <>
+                    <input
+                      autoFocus value={renameVal} onChange={(e) => setRenameVal(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") commitRename(); if (e.key === "Escape") setRenamingId(null); }}
+                      onBlur={commitRename}
+                      className="w-28 rounded-sm bg-background px-2 py-1 text-xs text-foreground outline-none"
+                    />
+                    <button onClick={commitRename} className="px-1.5 py-1"><Check className="h-3 w-3" /></button>
+                  </>
+                ) : (
+                  <>
+                    <button onClick={() => choosePreset(c.id)}
+                      onDoubleClick={() => { setRenamingId(c.id); setRenameVal(c.label); }}
+                      className="px-3 py-1 text-xs font-semibold uppercase tracking-wider hover:text-foreground">
+                      {c.label}
+                    </button>
+                    <button onClick={() => { setRenamingId(c.id); setRenameVal(c.label); }} title="Rename"
+                      className="grid h-6 w-5 place-items-center opacity-60 hover:opacity-100"><Pencil className="h-3 w-3" /></button>
+                    <button onClick={() => removeCustomPreset(c.id)} title="Delete preset"
+                      className="grid h-6 w-5 place-items-center opacity-60 hover:opacity-100"><Trash2 className="h-3 w-3" /></button>
+                  </>
+                )}
+              </div>
+            ))}
+            <button onClick={addCustomPreset} title="Add custom preset"
+              className="grid h-6 w-7 shrink-0 place-items-center rounded-sm text-muted-foreground hover:bg-muted hover:text-foreground">
+              <Plus className="h-3.5 w-3.5" />
+            </button>
           </div>
-          <button className="rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">Save</button>
         </div>
+        <button className="shrink-0 rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">Save</button>
       </header>
 
       {/* Toolbar */}
@@ -199,7 +278,7 @@ function ZonesAdmin() {
         <div className="flex rounded-sm border border-border bg-surface p-0.5">
           {[10, 20].map((g) => (
             <button key={g} onClick={() => setGridSize(g as 10 | 20)}
-              className={`px-2 py-0.5 text-[11px] font-semibold ${gridSize === g ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+              className={`px-2 py-0.5 text-xs font-semibold ${gridSize === g ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
               {g}px
             </button>
           ))}
@@ -212,21 +291,31 @@ function ZonesAdmin() {
           <input type="checkbox" checked={showSafe} onChange={(e) => setShowSafe(e.target.checked)} />
           <span className="font-semibold uppercase tracking-wider text-muted-foreground">Safe frame</span>
         </label>
+        <div className="ml-auto">
+          <button onClick={() => setTagsOpen((v) => !v)}
+            className="rounded-sm border border-border bg-surface px-2 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:bg-muted hover:text-foreground">
+            Manage tags ({tags.length})
+          </button>
+        </div>
       </div>
 
       <div className="flex min-h-0 flex-1">
-        <div className="flex min-w-0 flex-1 items-center justify-center overflow-auto bg-background p-6">
-          <div className="hud-panel-strong relative overflow-hidden" style={{ width: "min(100%, 1280px)", aspectRatio: `${W}/${H}` }}>
+        {/* Stage — fills available space, keeps aspect ratio */}
+        <div className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center bg-background p-4">
+          <div
+            className="hud-panel-strong relative overflow-hidden"
+            style={{
+              aspectRatio: `${W}/${H}`,
+              maxWidth: "100%",
+              maxHeight: "100%",
+              height: "100%",
+              width: "auto",
+            }}
+          >
             <img src={bg} alt="" className="absolute inset-0 h-full w-full object-cover opacity-90" draggable={false} />
             <div className="absolute inset-0 bg-background/10" />
-            <svg
-              ref={svgRef}
-              viewBox={`0 0 ${W} ${H}`}
-              className="absolute inset-0 h-full w-full touch-none select-none"
-              onPointerMove={onPointerMove}
-              onPointerUp={onPointerUp}
-              onPointerLeave={onPointerUp}
-            >
+            <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} className="absolute inset-0 h-full w-full touch-none select-none"
+              onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerLeave={onPointerUp}>
               {gridLines}
               {showSafe && (
                 <rect x={W * 0.05} y={H * 0.05} width={W * 0.9} height={H * 0.9}
@@ -236,7 +325,7 @@ function ZonesAdmin() {
                 if (getMeta(z.id).hidden) return null;
                 const active = z.id === sel;
                 const locked = getMeta(z.id).locked;
-                const c = TAG_COLOR[z.tag];
+                const c = tagColor(z.tag);
                 const handle = 22;
                 const handles: { m: "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw"; cx: number; cy: number; cur: string }[] = [
                   { m: "nw", cx: z.x,         cy: z.y,         cur: "nwse-resize" },
@@ -248,20 +337,15 @@ function ZonesAdmin() {
                   { m: "w",  cx: z.x,         cy: z.y + z.h/2, cur: "ew-resize" },
                   { m: "e",  cx: z.x + z.w,   cy: z.y + z.h/2, cur: "ew-resize" },
                 ];
-                // active = bright, others = translucent
                 const fillOpacity = active ? "33" : "0d";
                 const strokeOpacity = active ? 1 : 0.45;
                 return (
                   <g key={z.id} opacity={active ? 1 : 0.75}>
-                    <rect
-                      x={z.x} y={z.y} width={z.w} height={z.h}
-                      fill={`${c}${fillOpacity}`}
-                      stroke={c} strokeOpacity={strokeOpacity}
-                      strokeWidth={active ? 4 : 2}
-                      strokeDasharray={locked ? "8 6" : undefined}
+                    <rect x={z.x} y={z.y} width={z.w} height={z.h}
+                      fill={`${c}${fillOpacity}`} stroke={c} strokeOpacity={strokeOpacity}
+                      strokeWidth={active ? 4 : 2} strokeDasharray={locked ? "8 6" : undefined}
                       style={{ cursor: locked ? "not-allowed" : "move" }}
-                      onPointerDown={(e) => onPointerDown(e, z, "move")}
-                    />
+                      onPointerDown={(e) => onPointerDown(e, z, "move")} />
                     {active && (
                       <>
                         <rect x={z.x} y={z.y - 32} width={Math.max(160, z.name.length * 11 + 90)} height={28} fill={c}
@@ -271,18 +355,9 @@ function ZonesAdmin() {
                           {z.name} · {z.tag}{locked ? " · locked" : ""}
                         </text>
                         {!locked && handles.map((h) => (
-                          <rect
-                            key={h.m}
-                            x={h.cx - handle/2}
-                            y={h.cy - handle/2}
-                            width={handle}
-                            height={handle}
-                            fill="#0a0a0a"
-                            stroke={c}
-                            strokeWidth={3}
-                            style={{ cursor: h.cur }}
-                            onPointerDown={(e) => onPointerDown(e, z, h.m)}
-                          />
+                          <rect key={h.m} x={h.cx - handle/2} y={h.cy - handle/2} width={handle} height={handle}
+                            fill="#0a0a0a" stroke={c} strokeWidth={3} style={{ cursor: h.cur }}
+                            onPointerDown={(e) => onPointerDown(e, z, h.m)} />
                         ))}
                       </>
                     )}
@@ -291,75 +366,78 @@ function ZonesAdmin() {
               })}
             </svg>
           </div>
+
+          {/* Tag manager popover */}
+          {tagsOpen && (
+            <div className="absolute right-4 top-2 z-10 w-72 rounded-sm border border-border bg-surface p-3 shadow-xl">
+              <div className="mb-2 flex items-center justify-between">
+                <div className="label-eyebrow">Tags</div>
+                <button onClick={() => setTagsOpen(false)} className="grid h-6 w-6 place-items-center rounded-sm hover:bg-muted"><X className="h-3.5 w-3.5" /></button>
+              </div>
+              {tags.map((t) => (
+                <div key={t.id} className="mb-1 flex items-center gap-2 rounded-sm border border-border bg-surface-2 px-2 py-1.5">
+                  <input type="color" value={t.color} onChange={(e) => recolorTag(t.id, e.target.value)}
+                    className="h-5 w-5 cursor-pointer rounded-sm border border-border bg-transparent" />
+                  <input defaultValue={t.id} onBlur={(e) => renameTag(t.id, e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                    className="text-mono flex-1 rounded-sm bg-background px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-primary/40" />
+                  <button onClick={() => deleteTag(t.id)} disabled={tags.length <= 1} title="Delete tag"
+                    className="grid h-6 w-6 place-items-center rounded-sm text-muted-foreground hover:bg-destructive/20 hover:text-destructive disabled:opacity-30">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+              <button onClick={addTag}
+                className="mt-2 w-full rounded-sm border border-dashed border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:bg-muted hover:text-foreground">
+                + Add tag
+              </button>
+            </div>
+          )}
         </div>
 
         <aside className="w-[340px] shrink-0 border-l border-border bg-surface p-3 overflow-y-auto">
           <div className="mb-2 flex items-center justify-between">
             <div className="label-eyebrow">Zones ({zones.length})</div>
-            <button onClick={addZone}
-              className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs font-semibold hover:bg-muted">
-              + Add
-            </button>
+            <button onClick={addZone} className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs font-semibold hover:bg-muted">+ Add</button>
           </div>
           {zones.map((z) => {
             const m = getMeta(z.id);
-            const c = TAG_COLOR[z.tag];
-            // crop dimensions
-            const cropW = 60, cropH = 34;
-            const scale = Math.min(cropW / z.w, cropH / z.h);
-            const dispW = z.w * scale;
-            const dispH = z.h * scale;
+            const c = tagColor(z.tag);
+            const cb = cropBox(z.w, z.h);
             return (
               <div key={z.id}
                 className={`mb-1 flex items-center gap-2 rounded-sm border px-2 py-1.5 transition-colors ${
                   z.id === sel ? "border-primary/40 bg-primary/10" : "border-transparent hover:bg-muted"} ${m.hidden ? "opacity-50" : ""}`}>
                 <button onClick={() => setSel(z.id)} className="flex flex-1 items-center gap-2 text-left min-w-0">
-                  {/* mini crop preview */}
                   <div className="relative shrink-0 overflow-hidden rounded-sm border border-border bg-background"
-                    style={{ width: cropW, height: cropH }}>
-                    <div
-                      className="absolute"
-                      style={{
-                        width: W * (cropW / z.w),
-                        height: H * (cropH / z.h),
-                        left: -(z.x * (cropW / z.w)),
-                        top: -(z.y * (cropH / z.h)),
-                        backgroundImage: `url(${bg})`,
-                        backgroundSize: "100% 100%",
-                      }}
-                    />
-                    <div className="absolute inset-0 ring-1" style={{ boxShadow: `inset 0 0 0 1px ${c}` }} />
-                    {/* zone outline within preview */}
-                    <div className="absolute" style={{
-                      left: (cropW - dispW) / 2, top: (cropH - dispH) / 2,
-                      width: dispW, height: dispH,
-                      border: `1.5px solid ${c}`,
-                      display: "none",
+                    style={{ width: cb.w, height: cb.h }}>
+                    <div className="absolute inset-0" style={{
+                      backgroundImage: `url(${bg})`,
+                      backgroundSize: `${(cb.w * W) / z.w}px ${(cb.h * H) / z.h}px`,
+                      backgroundPosition: `-${(z.x * cb.w) / z.w}px -${(z.y * cb.h) / z.h}px`,
+                      backgroundRepeat: "no-repeat",
                     }} />
+                    <div className="absolute inset-0" style={{ boxShadow: `inset 0 0 0 1px ${c}` }} />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
                       <span className="inline-block h-2 w-2 rounded-sm" style={{ backgroundColor: c }} />
                       <span className="truncate text-xs font-semibold">{z.name}</span>
                     </div>
-                    <span className="text-mono text-[10px] uppercase text-muted-foreground">{z.tag} · {z.w}×{z.h}</span>
+                    <span className="text-mono text-xs uppercase text-muted-foreground">{z.tag} · {z.w}×{z.h}</span>
                   </div>
                 </button>
                 <div className="flex shrink-0 items-center gap-0.5">
-                  <button onClick={() => patchMeta(z.id, { hidden: !m.hidden })}
-                    title={m.hidden ? "Show" : "Hide"}
+                  <button onClick={() => patchMeta(z.id, { hidden: !m.hidden })} title={m.hidden ? "Show" : "Hide"}
                     className="grid h-6 w-6 place-items-center rounded-sm text-muted-foreground hover:bg-muted hover:text-foreground">
                     {m.hidden ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                   </button>
-                  <button onClick={() => patchMeta(z.id, { locked: !m.locked })}
-                    title={m.locked ? "Unlock" : "Lock"}
+                  <button onClick={() => patchMeta(z.id, { locked: !m.locked })} title={m.locked ? "Unlock" : "Lock"}
                     className={`grid h-6 w-6 place-items-center rounded-sm hover:bg-muted ${m.locked ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>
                     {m.locked ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
                   </button>
                   <button onClick={() => setSel(z.id)} title="Edit"
-                    className="grid h-6 w-6 place-items-center rounded-sm text-muted-foreground hover:bg-muted hover:text-foreground">
-                    <Pencil className="h-3.5 w-3.5" />
-                  </button>
+                    className="grid h-6 w-6 place-items-center rounded-sm text-muted-foreground hover:bg-muted hover:text-foreground"><Pencil className="h-3.5 w-3.5" /></button>
                   <button onClick={() => removeZone(z.id)} title="Delete"
                     className="grid h-6 w-6 place-items-center rounded-sm text-muted-foreground hover:bg-destructive/20 hover:text-destructive">×</button>
                 </div>
@@ -373,9 +451,9 @@ function ZonesAdmin() {
               <Field label="Name" value={selZone.name} onChange={(v) => update(selZone.id, { name: v })} />
               <label className="mb-2 block">
                 <span className="label-eyebrow mb-1 block text-xs">Tag</span>
-                <select value={selZone.tag} onChange={(e) => update(selZone.id, { tag: e.target.value as ZoneTag })}
+                <select value={selZone.tag} onChange={(e) => update(selZone.id, { tag: e.target.value as Zone["tag"] })}
                   className="w-full rounded-sm border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary/60">
-                  {TAGS.map((t) => <option key={t} value={t}>{t}</option>)}
+                  {tags.map((t) => <option key={t.id} value={t.id}>{t.id}</option>)}
                 </select>
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -399,19 +477,16 @@ function ZonesAdmin() {
         </aside>
       </div>
 
-      {/* Status bar */}
-      <div className="flex h-8 shrink-0 items-center justify-between border-t border-border bg-surface-2 px-6 text-[11px] text-muted-foreground">
+      <div className="flex h-8 shrink-0 items-center justify-between border-t border-border bg-surface-2 px-6 text-xs text-muted-foreground">
         <div className="text-mono uppercase tracking-wider">
           {selZone ? (
             <>
-              <span className="text-foreground font-semibold">Selected:</span> {selZone.name} · {selZone.w}×{selZone.h} · tag: <span style={{ color: TAG_COLOR[selZone.tag] }}>{selZone.tag}</span> · x:{selZone.x} y:{selZone.y}
+              <span className="text-foreground font-semibold">Selected:</span> {selZone.name} · {selZone.w}×{selZone.h} · tag: <span style={{ color: tagColor(selZone.tag) }}>{selZone.tag}</span> · x:{selZone.x} y:{selZone.y}
             </>
-          ) : (
-            "No zone selected"
-          )}
+          ) : "No zone selected"}
         </div>
         <div className="text-mono uppercase tracking-wider">
-          Preset: {PRESETS.find((p) => p.id === preset)!.label} · Snap {snap ? `${gridSize}px` : "off"}
+          Preset: {builtin?.label ?? custom?.label ?? "—"} · Snap {snap ? `${gridSize}px` : "off"}
         </div>
       </div>
     </div>
@@ -421,7 +496,7 @@ function ZonesAdmin() {
 function ActionBtn({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
   return (
     <button onClick={onClick}
-      className="flex flex-col items-center gap-0.5 rounded-sm border border-border bg-surface-2 px-1 py-1.5 text-[10px] font-semibold uppercase tracking-wider hover:bg-muted">
+      className="flex flex-col items-center gap-0.5 rounded-sm border border-border bg-surface-2 px-1 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">
       {icon}
       {label}
     </button>
