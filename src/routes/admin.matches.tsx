@@ -6,10 +6,67 @@ import { TeamLogo } from "@/components/admin/TeamLogo";
 
 export const Route = createFileRoute("/admin/matches")({ component: MatchesAdmin });
 
+type MatchStatus = "draft" | "ready" | "processing" | "completed" | "error";
+
+const hashStr = (s: string) => {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  return Math.abs(h);
+};
+
+function deriveMatchStatus(m: MatchFull): MatchStatus {
+  const hasVod = !!m.vodLink;
+  const mapIds = m.mapIds && m.mapIds.length > 0 ? m.mapIds : [m.mapId];
+  const hasMaps = mapIds.length > 0;
+  const teamIds = m.teamIds ?? [];
+  const povCount = Object.values(m.teamVods ?? {}).filter(Boolean).length;
+  if (!hasVod && !hasMaps) return "draft";
+  if (!hasVod) return "draft";
+  if (teamIds.length > 0 && povCount === teamIds.length) return "completed";
+  if (povCount > 0) return "processing";
+  if (hasVod && hasMaps) return "ready";
+  return "draft";
+}
+
+const statusStyle: Record<MatchStatus, string> = {
+  draft:      "border-border bg-surface-2 text-muted-foreground",
+  ready:      "border-primary/40 bg-primary/10 text-primary",
+  processing: "border-amber-500/40 bg-amber-500/10 text-amber-400",
+  completed:  "border-emerald-500/40 bg-emerald-500/10 text-emerald-400",
+  error:      "border-destructive/40 bg-destructive/10 text-destructive",
+};
+
+function StatusBadge({ s }: { s: MatchStatus }) {
+  return (
+    <span className={`inline-flex items-center rounded-sm border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${statusStyle[s]}`}>{s}</span>
+  );
+}
+
+function Indicator({ label, state }: { label: string; state: "ok" | "missing" | "pending" }) {
+  const ch = state === "ok" ? "✓" : state === "pending" ? "…" : "—";
+  const cls = state === "ok" ? "text-emerald-400" : state === "pending" ? "text-amber-400" : "text-muted-foreground";
+  return (
+    <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground" title={`${label}: ${state}`}>
+      {label} <span className={`text-mono ${cls}`}>{ch}</span>
+    </span>
+  );
+}
+
+function deriveMapStatus(matchId: string, mapId: string, idx: number): MatchStatus {
+  const h = hashStr(`${matchId}:${mapId}:${idx}`) % 10;
+  if (h < 4) return "ready";
+  if (h < 7) return "processing";
+  if (h < 9) return "completed";
+  return "draft";
+}
+
+type TabKey = "overview" | "maps" | "teams" | "files" | "analysis";
+
 function MatchesAdmin() {
   const { matches, tournaments, teams } = useAdminStore();
   const navigate = useNavigate();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [tabById, setTabById] = useState<Record<string, TabKey>>({});
   const [editing, setEditing] = useState<MatchFull | null>(null);
   const [vodTeamId, setVodTeamId] = useState<{ matchId: string; teamId: string } | null>(null);
   const [vodValue, setVodValue] = useState("");
@@ -66,6 +123,11 @@ function MatchesAdmin() {
     setVodTeamId(null);
   };
 
+  const duplicateMatch = (m: MatchFull) => {
+    const copy: MatchFull = { ...m, id: `m-${Date.now()}`, name: `${m.name} (copy)`, teamVods: { ...(m.teamVods ?? {}) } };
+    setMatches([...matches, copy]);
+  };
+
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-surface px-6">
@@ -89,8 +151,8 @@ function MatchesAdmin() {
                 <th className="px-3 py-2">Match</th>
                 <th className="px-3 py-2">Tournament</th>
                 <th className="px-3 py-2">Map</th>
-                <th className="px-3 py-2 w-[100px] text-right">Duration</th>
-                <th className="px-3 py-2 w-[180px]">VOD link</th>
+                <th className="px-3 py-2 w-[110px]">Status</th>
+                <th className="px-3 py-2 w-[220px]">Readiness</th>
                 <th className="px-3 py-2 w-[200px] text-right">
                   <div className="flex items-center justify-end gap-2">
                     <span>Actions</span>
@@ -111,6 +173,18 @@ function MatchesAdmin() {
                   .filter(Boolean) as typeof teams;
                 const topTeams = [...matchTeams].sort((a, b) => a.placement - b.placement).slice(0, 3);
                 const mm = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
+                const status = deriveMatchStatus(m);
+                const povCount = Object.values(m.teamVods ?? {}).filter(Boolean).length;
+                const ind = {
+                  vod: m.vodLink ? "ok" as const : "missing" as const,
+                  maps: mapIds.length > 0 ? "ok" as const : "missing" as const,
+                  teams: matchTeams.length > 0 ? "ok" as const : "missing" as const,
+                  pov: povCount === 0 ? "missing" as const : povCount === matchTeams.length ? "ok" as const : "pending" as const,
+                  minimap: "missing" as const,
+                  trajectory: "missing" as const,
+                };
+                const tab: TabKey = tabById[m.id] ?? "overview";
+                const setTab = (t: TabKey) => setTabById((s) => ({ ...s, [m.id]: t }));
                 return (
                   <Fragment key={m.id}>
                     <tr
@@ -126,15 +200,16 @@ function MatchesAdmin() {
                           .map((id) => allMaps.find((x) => x.id === id)?.name ?? id)
                           .join(", ")}
                       </td>
-                      <td className="px-3 py-2 text-right text-mono text-xs tabular-nums">{Math.floor(m.durationSec / 60)}:{(m.durationSec % 60).toString().padStart(2, "0")}</td>
-                      <td className="px-3 py-2 text-xs">
-                        {m.vodLink ? (
-                          <a href={m.vodLink} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-1 truncate text-primary hover:underline">
-                            <YoutubeIcon className="h-3 w-3" /> <span className="max-w-[120px] truncate">{m.vodLink}</span>
-                          </a>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
+                      <td className="px-3 py-2"><StatusBadge s={status} /></td>
+                      <td className="px-3 py-2">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                          <Indicator label="VOD" state={ind.vod} />
+                          <Indicator label="Maps" state={ind.maps} />
+                          <Indicator label="Teams" state={ind.teams} />
+                          <Indicator label="POV" state={ind.pov} />
+                          <Indicator label="Minimap" state={ind.minimap} />
+                          <Indicator label="Trajectory" state={ind.trajectory} />
+                        </div>
                       </td>
                       <td className="px-3 py-2 text-right text-xs">
                         <button onClick={(e) => { e.stopPropagation(); navigate({ to: "/admin/matches/$matchId" as "/admin/matches", params: { matchId: m.id } as never }); }} className="mr-1 rounded-sm border border-border bg-surface px-2 py-1 hover:bg-muted">Open</button>
@@ -145,109 +220,197 @@ function MatchesAdmin() {
                     {isOpen && (
                       <tr className="border-b border-border bg-background">
                         <td colSpan={8} className="p-0">
-                          <div className="grid gap-4 p-5 md:grid-cols-3">
-                            <div className="hud-panel p-3">
-                              <div className="label-eyebrow mb-2 text-xs">Top 3 teams</div>
-                              <ol className="space-y-1.5">
-                                {topTeams.map((t, i) => (
-                                  <li key={t.id}>
-                                    <Link
-                                      to="/admin/teams/$teamId"
-                                      params={{ teamId: t.id }}
-                                      onClick={(e) => e.stopPropagation()}
-                                      className="flex items-center gap-2 rounded-sm border border-border bg-surface px-2 py-1.5 text-xs hover:bg-muted"
-                                    >
-                                      <span className="w-5 text-mono text-xs text-muted-foreground">#{i + 1}</span>
-                                      <TeamLogo team={t} size={22} />
-                                      <span className="flex-1 truncate font-semibold">{t.tag} · {t.name}</span>
-                                      <span className="text-mono text-xs tabular-nums text-muted-foreground">{t.kills}K</span>
-                                    </Link>
-                                  </li>
+                          <div className="p-5" onClick={(e) => e.stopPropagation()}>
+                            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-border pb-2">
+                              <div className="flex flex-wrap gap-1">
+                                {(["overview","maps","teams","files","analysis"] as TabKey[]).map((k) => (
+                                  <button
+                                    key={k}
+                                    onClick={() => setTab(k)}
+                                    className={`rounded-sm border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider ${tab === k ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface text-muted-foreground hover:bg-muted"}`}
+                                  >
+                                    {k === "teams" ? "Teams / POV" : k}
+                                  </button>
                                 ))}
-                              </ol>
-                            </div>
-                            <div className="hud-panel p-3">
-                              <div className="label-eyebrow mb-2 text-xs">Map order ({mapIds.length})</div>
-                              <ol className="space-y-2">
-                                {mapIds.map((id, i) => {
-                                  const mp = allMaps.find((x) => x.id === id);
-                                  if (!mp) return null;
-                                  const gameId = gameIdFor(m.id, i);
-                                  const dur = m.gameDurations?.[i] ?? m.durationSec;
-                                  return (
-                                    <li key={`${id}-${i}`} className="flex items-center gap-3 rounded-sm border border-border bg-surface p-2">
-                                      <span className="text-mono text-xs text-muted-foreground">#{i + 1}</span>
-                                      <Link
-                                        to="/games/$gameId"
-                                        params={{ gameId }}
-                                        onClick={(e) => e.stopPropagation()}
-                                        title={`Open game ${i + 1}`}
-                                        className="flex flex-1 items-center gap-3 hover:opacity-80"
-                                      >
-                                        <img src={mp.image} alt={mp.name} className="h-10 w-14 rounded-sm object-cover" />
-                                        <div className="flex-1 text-xs font-semibold hover:underline">{mp.name}</div>
-                                        <span className="text-mono text-xs tabular-nums text-muted-foreground">{mm(dur)}</span>
-                                      </Link>
-                                      <div className="flex flex-col gap-0.5">
-                                        <button
-                                          onClick={(e) => { e.stopPropagation(); if (i === 0) return; const next = [...mapIds]; [next[i - 1], next[i]] = [next[i], next[i - 1]]; updateMatch(m.id, { mapIds: next, mapId: next[0] }); }}
-                                          disabled={i === 0}
-                                          className="rounded-sm border border-border bg-surface px-1 text-xs hover:bg-muted disabled:opacity-30"
-                                        >▲</button>
-                                        <button
-                                          onClick={(e) => { e.stopPropagation(); if (i === mapIds.length - 1) return; const next = [...mapIds]; [next[i + 1], next[i]] = [next[i], next[i + 1]]; updateMatch(m.id, { mapIds: next, mapId: next[0] }); }}
-                                          disabled={i === mapIds.length - 1}
-                                          className="rounded-sm border border-border bg-surface px-1 text-xs hover:bg-muted disabled:opacity-30"
-                                        >▼</button>
-                                      </div>
-                                      <button
-                                        onClick={(e) => { e.stopPropagation(); const next = mapIds.filter((_, idx) => idx !== i); if (next.length === 0) return; updateMatch(m.id, { mapIds: next, mapId: next[0] }); }}
-                                        className="rounded-sm border border-destructive/40 bg-surface px-1.5 text-xs text-destructive hover:bg-destructive/10"
-                                      >×</button>
-                                    </li>
-                                  );
-                                })}
-                              </ol>
-                              <div className="mt-2 flex items-center gap-2">
-                                <select
-                                  defaultValue=""
-                                  onClick={(e) => e.stopPropagation()}
-                                  onChange={(e) => {
-                                    e.stopPropagation();
-                                    const v = e.target.value;
-                                    if (!v) return;
-                                    const next = [...mapIds, v];
-                                    updateMatch(m.id, { mapIds: next, mapId: next[0] });
-                                    e.currentTarget.value = "";
-                                  }}
-                                  className="flex-1 rounded-sm border border-border bg-background px-2 py-1 text-xs"
-                                >
-                                  <option value="">+ Add map…</option>
-                                  {allMaps.map((mp) => <option key={mp.id} value={mp.id}>{mp.name}</option>)}
-                                </select>
+                              </div>
+                              <div className="flex flex-wrap gap-1">
+                                <button onClick={() => navigate({ to: "/admin/matches/$matchId" as "/admin/matches", params: { matchId: m.id } as never })} className="rounded-sm border border-border bg-surface px-2 py-1 text-[11px] uppercase tracking-wider hover:bg-muted">Upload VOD</button>
+                                <button className="rounded-sm border border-primary/40 bg-primary/10 px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-primary hover:bg-primary/20">Run analysis</button>
+                                <Link to="/games/$gameId" params={{ gameId: gameIdFor(m.id, 0) }} className="rounded-sm border border-border bg-surface px-2 py-1 text-[11px] uppercase tracking-wider hover:bg-muted">Open viewer</Link>
+                                <Link to="/admin/processes" className="rounded-sm border border-border bg-surface px-2 py-1 text-[11px] uppercase tracking-wider hover:bg-muted">Open debug</Link>
+                                <button onClick={() => duplicateMatch(m)} className="rounded-sm border border-border bg-surface px-2 py-1 text-[11px] uppercase tracking-wider hover:bg-muted">Duplicate</button>
                               </div>
                             </div>
-                            <div className="hud-panel p-3">
-                              <div className="label-eyebrow mb-2 text-xs">Teams ({matchTeams.length}) · POV VODs</div>
-                              <ul className="grid grid-cols-2 gap-1">
-                                {matchTeams.map((t) => {
-                                  const url = m.teamVods?.[t.id] ?? "";
-                                  return (
-                                    <li key={t.id} className="flex items-center gap-2 rounded-sm border border-border bg-surface px-2 py-1.5 text-xs">
-                                      <TeamLogo team={t} size={20} />
-                                      <span className="flex-1 truncate font-semibold">{t.tag}</span>
-                                      <button
-                                        onClick={(e) => openVod(e, m.id, t.id, url)}
-                                        title={url ? `Edit POV: ${url}` : "Add POV VOD link"}
-                                        className={`rounded-sm border px-1.5 py-0.5 ${url ? "border-primary/40 text-primary hover:bg-primary/10" : "border-border text-muted-foreground hover:bg-muted"}`}
-                                      >
-                                        <YoutubeIcon className="h-3.5 w-3.5" />
-                                      </button>
-                                    </li>
-                                  );
-                                })}
-                              </ul>
-                            </div>
+
+                            {tab === "overview" && (
+                              <div className="grid gap-4 md:grid-cols-3">
+                                <div className="hud-panel p-3 md:col-span-2">
+                                  <div className="label-eyebrow mb-2 text-xs">Summary</div>
+                                  <dl className="grid grid-cols-2 gap-y-1.5 text-xs">
+                                    <dt className="text-muted-foreground">Status</dt><dd><StatusBadge s={status} /></dd>
+                                    <dt className="text-muted-foreground">Tournament</dt><dd>{tournament?.name ?? "—"}</dd>
+                                    <dt className="text-muted-foreground">Maps</dt><dd className="text-mono tabular-nums">{mapIds.length}</dd>
+                                    <dt className="text-muted-foreground">Teams</dt><dd className="text-mono tabular-nums">{matchTeams.length}</dd>
+                                    <dt className="text-muted-foreground">POV VODs</dt><dd className="text-mono tabular-nums">{povCount} / {matchTeams.length}</dd>
+                                    <dt className="text-muted-foreground">Duration</dt><dd className="text-mono tabular-nums">{mm(m.durationSec)}</dd>
+                                  </dl>
+                                </div>
+                                <div className="hud-panel p-3">
+                                  <div className="label-eyebrow mb-2 text-xs">Top 3 teams</div>
+                                  <ol className="space-y-1.5">
+                                    {topTeams.map((t, i) => (
+                                      <li key={t.id}>
+                                        <Link to="/admin/teams/$teamId" params={{ teamId: t.id }} className="flex items-center gap-2 rounded-sm border border-border bg-surface px-2 py-1.5 text-xs hover:bg-muted">
+                                          <span className="w-5 text-mono text-xs text-muted-foreground">#{i + 1}</span>
+                                          <TeamLogo team={t} size={22} />
+                                          <span className="flex-1 truncate font-semibold">{t.tag} · {t.name}</span>
+                                          <span className="text-mono text-xs tabular-nums text-muted-foreground">{t.kills}K</span>
+                                        </Link>
+                                      </li>
+                                    ))}
+                                  </ol>
+                                </div>
+                              </div>
+                            )}
+
+                            {tab === "maps" && (
+                              <div className="hud-panel p-3">
+                                <div className="label-eyebrow mb-2 text-xs">Map order ({mapIds.length})</div>
+                                <ol className="space-y-2">
+                                  {mapIds.map((id, i) => {
+                                    const mp = allMaps.find((x) => x.id === id);
+                                    if (!mp) return null;
+                                    const gameId = gameIdFor(m.id, i);
+                                    const dur = m.gameDurations?.[i] ?? m.durationSec;
+                                    const mst = deriveMapStatus(m.id, id, i);
+                                    return (
+                                      <li key={`${id}-${i}`} className="flex items-center gap-3 rounded-sm border border-border bg-surface p-2">
+                                        <span className="text-mono text-xs text-muted-foreground">#{i + 1}</span>
+                                        <img src={mp.image} alt={mp.name} className="h-10 w-14 rounded-sm object-cover" />
+                                        <div className="flex-1 text-xs font-semibold">{mp.name}</div>
+                                        <span className="text-mono text-xs tabular-nums text-muted-foreground">{mm(dur)}</span>
+                                        <StatusBadge s={mst} />
+                                        <Link to="/games/$gameId" params={{ gameId }} className="rounded-sm border border-border bg-surface px-2 py-1 text-[11px] uppercase tracking-wider hover:bg-muted">Open</Link>
+                                        <button className="rounded-sm border border-primary/40 bg-primary/10 px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-primary hover:bg-primary/20">Analyze</button>
+                                        <Link to="/admin/processes" className="rounded-sm border border-border bg-surface px-2 py-1 text-[11px] uppercase tracking-wider hover:bg-muted">Debug</Link>
+                                        <div className="flex flex-col gap-0.5">
+                                          <button
+                                            onClick={() => { if (i === 0) return; const next = [...mapIds]; [next[i - 1], next[i]] = [next[i], next[i - 1]]; updateMatch(m.id, { mapIds: next, mapId: next[0] }); }}
+                                            disabled={i === 0}
+                                            className="rounded-sm border border-border bg-surface px-1 text-xs hover:bg-muted disabled:opacity-30"
+                                          >▲</button>
+                                          <button
+                                            onClick={() => { if (i === mapIds.length - 1) return; const next = [...mapIds]; [next[i + 1], next[i]] = [next[i], next[i + 1]]; updateMatch(m.id, { mapIds: next, mapId: next[0] }); }}
+                                            disabled={i === mapIds.length - 1}
+                                            className="rounded-sm border border-border bg-surface px-1 text-xs hover:bg-muted disabled:opacity-30"
+                                          >▼</button>
+                                        </div>
+                                        <button
+                                          onClick={() => { const next = mapIds.filter((_, idx) => idx !== i); if (next.length === 0) return; updateMatch(m.id, { mapIds: next, mapId: next[0] }); }}
+                                          className="rounded-sm border border-destructive/40 bg-surface px-1.5 text-xs text-destructive hover:bg-destructive/10"
+                                        >×</button>
+                                      </li>
+                                    );
+                                  })}
+                                </ol>
+                                <div className="mt-2 flex items-center gap-2">
+                                  <select
+                                    defaultValue=""
+                                    onChange={(e) => {
+                                      const v = e.target.value;
+                                      if (!v) return;
+                                      const next = [...mapIds, v];
+                                      updateMatch(m.id, { mapIds: next, mapId: next[0] });
+                                      e.currentTarget.value = "";
+                                    }}
+                                    className="flex-1 rounded-sm border border-border bg-background px-2 py-1 text-xs"
+                                  >
+                                    <option value="">+ Add map…</option>
+                                    {allMaps.map((mp) => <option key={mp.id} value={mp.id}>{mp.name}</option>)}
+                                  </select>
+                                </div>
+                              </div>
+                            )}
+
+                            {tab === "teams" && (
+                              <div className="hud-panel overflow-hidden">
+                                <table className="w-full text-xs">
+                                  <thead className="border-b border-border bg-surface-2">
+                                    <tr className="label-eyebrow text-left text-[10px]">
+                                      <th className="px-3 py-2">Team</th>
+                                      <th className="px-3 py-2">POV VOD</th>
+                                      <th className="px-3 py-2 w-[100px]">Status</th>
+                                      <th className="px-3 py-2 w-[160px] text-right">Action</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {matchTeams.map((t) => {
+                                      const url = m.teamVods?.[t.id] ?? "";
+                                      const linked = !!url;
+                                      return (
+                                        <tr key={t.id} className="border-b border-border hover:bg-surface-2">
+                                          <td className="px-3 py-1.5">
+                                            <Link to="/admin/teams/$teamId" params={{ teamId: t.id }} className="flex items-center gap-2 font-semibold hover:underline">
+                                              <TeamLogo team={t} size={20} />
+                                              <span>{t.tag} · {t.name}</span>
+                                            </Link>
+                                          </td>
+                                          <td className="px-3 py-1.5">
+                                            {linked ? (
+                                              <a href={url} target="_blank" rel="noreferrer" className="inline-flex max-w-[280px] items-center gap-1 truncate text-mono text-[11px] text-primary hover:underline">
+                                                <YoutubeIcon className="h-3 w-3" /> <span className="truncate">{url}</span>
+                                              </a>
+                                            ) : (
+                                              <span className="text-muted-foreground">missing</span>
+                                            )}
+                                          </td>
+                                          <td className="px-3 py-1.5"><StatusBadge s={linked ? "ready" : "draft"} /></td>
+                                          <td className="px-3 py-1.5 text-right">
+                                            <button
+                                              onClick={(e) => openVod(e, m.id, t.id, url)}
+                                              className={`rounded-sm border px-2 py-1 text-[11px] uppercase tracking-wider ${linked ? "border-border bg-surface hover:bg-muted" : "border-primary/40 bg-primary/10 text-primary hover:bg-primary/20"}`}
+                                            >
+                                              {linked ? "Edit" : "+ Add"}
+                                            </button>
+                                          </td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
+
+                            {tab === "files" && (
+                              <div className="hud-panel p-3">
+                                <div className="label-eyebrow mb-2 text-xs">Broadcast VOD</div>
+                                <input
+                                  value={m.vodLink ?? ""}
+                                  onChange={(e) => updateMatch(m.id, { vodLink: e.target.value })}
+                                  placeholder="https://youtube.com/watch?v=..."
+                                  className="w-full rounded-sm border border-border bg-background px-2 py-1.5 text-sm text-mono"
+                                />
+                                <div className="mt-4 text-xs text-muted-foreground">
+                                  Minimap exports, trajectories and other artifacts will appear here once analysis is completed.
+                                </div>
+                              </div>
+                            )}
+
+                            {tab === "analysis" && (
+                              <div className="hud-panel p-3">
+                                <div className="label-eyebrow mb-2 text-xs">Analysis pipeline</div>
+                                <ul className="space-y-1 text-xs">
+                                  <li className="flex items-center justify-between rounded-sm border border-border bg-surface px-2 py-1.5"><span>VOD ingest</span><StatusBadge s={ind.vod === "ok" ? "completed" : "draft"} /></li>
+                                  <li className="flex items-center justify-between rounded-sm border border-border bg-surface px-2 py-1.5"><span>Map detection</span><StatusBadge s={ind.maps === "ok" ? "ready" : "draft"} /></li>
+                                  <li className="flex items-center justify-between rounded-sm border border-border bg-surface px-2 py-1.5"><span>POV linking</span><StatusBadge s={ind.pov === "ok" ? "completed" : ind.pov === "pending" ? "processing" : "draft"} /></li>
+                                  <li className="flex items-center justify-between rounded-sm border border-border bg-surface px-2 py-1.5"><span>Minimap extraction</span><StatusBadge s="draft" /></li>
+                                  <li className="flex items-center justify-between rounded-sm border border-border bg-surface px-2 py-1.5"><span>Trajectory tracking</span><StatusBadge s="draft" /></li>
+                                </ul>
+                                <div className="mt-3 flex justify-end">
+                                  <Link to="/admin/processes" className="rounded-sm border border-border bg-surface px-2 py-1 text-[11px] uppercase tracking-wider hover:bg-muted">Open processes</Link>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </td>
                       </tr>
