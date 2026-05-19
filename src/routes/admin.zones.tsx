@@ -301,12 +301,16 @@ function ZonesAdmin() {
           </div>
           <div className="flex items-center gap-1 rounded-sm border border-border bg-surface-2 p-0.5 overflow-x-auto">
             {BUILTIN.map((p) => (
-              <button key={p.id} onClick={() => choosePreset(p.id)}
-                className={`shrink-0 rounded-sm px-3 py-1 text-xs font-semibold uppercase tracking-wider transition-colors ${
-                  activeId === p.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                }`}>
-                {p.label}
-              </button>
+              <div key={p.id} className={`flex shrink-0 items-center rounded-sm ${activeId === p.id ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
+                <button onClick={() => choosePreset(p.id)}
+                  className="rounded-sm px-3 py-1 text-xs font-semibold uppercase tracking-wider hover:text-foreground">
+                  {p.label}
+                </button>
+                <button onClick={(e) => downloadPreset(p.id, e)} title="Download JSON"
+                  className="grid h-6 w-5 place-items-center opacity-60 hover:opacity-100">
+                  <Download className="h-3 w-3" />
+                </button>
+              </div>
             ))}
             <div className="mx-1 h-5 w-px bg-border" />
             {customs.map((c) => (
@@ -330,6 +334,8 @@ function ZonesAdmin() {
                     </button>
                     <button onClick={() => { setRenamingId(c.id); setRenameVal(c.label); }} title="Rename"
                       className="grid h-6 w-5 place-items-center opacity-60 hover:opacity-100"><Pencil className="h-3 w-3" /></button>
+                    <button onClick={(e) => downloadPreset(c.id, e)} title="Download JSON"
+                      className="grid h-6 w-5 place-items-center opacity-60 hover:opacity-100"><Download className="h-3 w-3" /></button>
                     <button onClick={() => removeCustomPreset(c.id)} title="Delete preset"
                       className="grid h-6 w-5 place-items-center opacity-60 hover:opacity-100"><Trash2 className="h-3 w-3" /></button>
                   </>
