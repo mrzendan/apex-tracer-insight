@@ -37,6 +37,27 @@ function StatusBadge({ s }: { s: TournamentStatus }) {
     <span className={`inline-flex items-center rounded-sm border px-1.5 py-0.5 text-xs font-bold uppercase tracking-wider ${statusStyle[s]}`}>{s}</span>
   );
 }
+
+function Indicator({ label, state, valueLabel }: { label: string; state: "ok" | "missing" | "pending"; valueLabel?: string }) {
+  const cls =
+    state === "ok"
+      ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
+      : state === "pending"
+      ? "border-amber-500/40 bg-amber-500/10 text-amber-400"
+      : "border-border bg-surface-2 text-muted-foreground";
+  const tag = valueLabel ?? (state === "ok" ? "ready" : state === "pending" ? "partial" : "missing");
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wider ${cls}`}
+      title={`${label}: ${tag}`}
+    >
+      <span>{label}</span>
+      <span className="opacity-70">·</span>
+      <span>{tag}</span>
+    </span>
+  );
+}
+
 function deriveStatus(t: Tournament, tMatches: MatchFull[]): TournamentStatus {
   if (tMatches.length === 0) return "draft";
   const today = new Date().toISOString().slice(0, 10);
@@ -59,7 +80,7 @@ function fmtRelative(ts: number): string {
   return `${d}d ago`;
 }
 
-type TabKey = "matches" | "teams" | "maps" | "settings";
+type TabKey = "overview" | "matches" | "teams" | "maps" | "settings";
 
 function TournamentsAdmin() {
   const { matches: allMatches, teams: allTeams, processes } = useAdminStore();
@@ -128,7 +149,7 @@ function TournamentsAdmin() {
                 <th className="px-3 py-2 w-[80px]">Year</th>
                 <th className="px-3 py-2 w-[110px]">Type</th>
                 <th className="px-3 py-2 w-[110px]">Status</th>
-                <th className="px-3 py-2 w-[280px]">Progress</th>
+                <th className="px-3 py-2 w-[520px]">Progress</th>
                 <th className="px-3 py-2 w-[150px]">Region</th>
                 <th className="px-3 py-2 w-[180px] text-right">
                   <div className="flex items-center justify-end gap-2">
@@ -156,11 +177,26 @@ function TournamentsAdmin() {
                 const tProcesses = processes.filter((p: AnalysisProcess) => tMatches.some((m) => m.id === p.matchId));
                 const activeJobs = tProcesses.filter((p) => p.status === "queued" || p.status === "running").length;
                 const failedJobs = tProcesses.filter((p) => p.status === "failed").length;
+                const doneJobs = tProcesses.filter((p) => p.status === "done").length;
                 const lastTs = tProcesses.reduce((acc, p) => Math.max(acc, p.createdAt), 0);
                 const readyMatches = tMatches.filter(isMatchReady).length;
                 const status = deriveStatus(row, tMatches);
-                const tab: TabKey = tabById[row.id] ?? "matches";
+                const tab: TabKey = tabById[row.id] ?? "overview";
                 const setTab = (t: TabKey) => setTabById((s) => ({ ...s, [row.id]: t }));
+
+                const matchesState: "ok" | "pending" | "missing" =
+                  tMatches.length === 0 ? "missing"
+                  : readyMatches === tMatches.length ? "ok"
+                  : readyMatches > 0 ? "pending" : "missing";
+                const jobsState: "ok" | "pending" | "missing" =
+                  tProcesses.length === 0 ? "missing"
+                  : activeJobs > 0 ? "pending"
+                  : doneJobs > 0 ? "ok" : "missing";
+                const teamsState: "ok" | "pending" | "missing" =
+                  tTeams.length >= 20 ? "ok" : tTeams.length > 0 ? "pending" : "missing";
+                const mapsState: "ok" | "pending" | "missing" =
+                  tMaps.length > 0 ? "ok" : "missing";
+
                 return (
                   <Fragment key={row.id}>
                     <tr
@@ -173,12 +209,18 @@ function TournamentsAdmin() {
                       <td className="px-3 py-2 text-xs">Year {row.year}</td>
                       <td className="px-3 py-2 text-xs"><TypeBadge type={row.type} /></td>
                       <td className="px-3 py-2 text-xs"><StatusBadge s={status} /></td>
-                      <td className="px-3 py-2 text-xs">
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
-                          <span className="text-mono tabular-nums">{readyMatches}/{tMatches.length} ready</span>
-                          {failedJobs > 0 && <span className="rounded-sm border border-destructive/40 bg-destructive/10 px-1.5 py-0.5 text-destructive">{failedJobs} failed</span>}
-                          {activeJobs > 0 && <span className="rounded-sm border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 text-amber-400">{activeJobs} active</span>}
-                          <span className="text-muted-foreground">· last: {lastTs > 0 ? fmtRelative(lastTs) : "—"}</span>
+                      <td className="px-3 py-2">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                          <Indicator label="Matches" state={matchesState} valueLabel={`${readyMatches}/${tMatches.length}`} />
+                          <Indicator label="Teams" state={teamsState} valueLabel={String(tTeams.length)} />
+                          <Indicator label="Maps" state={mapsState} valueLabel={String(tMaps.length)} />
+                          <Indicator label="Jobs" state={jobsState} valueLabel={activeJobs > 0 ? `${activeJobs} active` : tProcesses.length === 0 ? "missing" : "done"} />
+                          {failedJobs > 0 && (
+                            <span className="rounded-sm border border-destructive/40 bg-destructive/10 px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wider text-destructive">
+                              {failedJobs} failed
+                            </span>
+                          )}
+                          <span className="text-xs text-muted-foreground">· last: {lastTs > 0 ? fmtRelative(lastTs) : "—"}</span>
                         </div>
                       </td>
                       <td className="px-3 py-2 text-xs">{row.region}</td>
@@ -193,16 +235,8 @@ function TournamentsAdmin() {
                       <tr className="border-b border-border bg-background">
                         <td colSpan={9} className="p-0">
                           <div className="p-5" onClick={(e) => e.stopPropagation()}>
-                            <div className="mb-3 grid grid-cols-2 gap-2 md:grid-cols-5">
-                              <SummaryStat label="Matches" value={`${readyMatches}/${tMatches.length}`} hint="ready" />
-                              <SummaryStat label="Teams" value={String(tTeams.length)} />
-                              <SummaryStat label="Maps" value={String(tMaps.length)} />
-                              <SummaryStat label="Active jobs" value={String(activeJobs)} hint={failedJobs > 0 ? `${failedJobs} failed` : undefined} hintTone={failedJobs > 0 ? "destructive" : undefined} />
-                              <SummaryStat label="Last updated" value={lastTs > 0 ? fmtRelative(lastTs) : "—"} />
-                            </div>
-
                             <div className="mb-3 flex flex-wrap gap-1 border-b border-border pb-2">
-                              {(["matches","teams","maps","settings"] as TabKey[]).map((k) => (
+                              {(["overview","matches","teams","maps","settings"] as TabKey[]).map((k) => (
                                 <button
                                   key={k}
                                   onClick={() => setTab(k)}
@@ -213,8 +247,52 @@ function TournamentsAdmin() {
                               ))}
                             </div>
 
+                            {tab === "overview" && (
+                              <div className="grid gap-4 md:grid-cols-[360px_1fr]">
+                                <div className="hud-panel p-3">
+                                  <div className="label-eyebrow mb-2 text-xs">Summary</div>
+                                  <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-xs">
+                                    <dt className="text-muted-foreground">Status</dt><dd><StatusBadge s={status} /></dd>
+                                    <dt className="text-muted-foreground">Type</dt><dd><TypeBadge type={row.type} /></dd>
+                                    <dt className="text-muted-foreground">Region</dt><dd className="truncate">{row.region}</dd>
+                                    <dt className="text-muted-foreground">Dates</dt><dd className="text-mono tabular-nums">{fmtRange(row.startDate, row.endDate)}</dd>
+                                    <dt className="text-muted-foreground">Matches</dt><dd className="text-mono tabular-nums">{readyMatches} / {tMatches.length}</dd>
+                                    <dt className="text-muted-foreground">Teams</dt><dd className="text-mono tabular-nums">{tTeams.length}</dd>
+                                    <dt className="text-muted-foreground">Maps</dt><dd className="text-mono tabular-nums">{tMaps.length}</dd>
+                                    <dt className="text-muted-foreground">Active jobs</dt><dd className="text-mono tabular-nums">{activeJobs}{failedJobs > 0 && <span className="ml-2 text-destructive">{failedJobs} failed</span>}</dd>
+                                    <dt className="text-muted-foreground">Last updated</dt><dd>{lastTs > 0 ? fmtRelative(lastTs) : "—"}</dd>
+                                  </dl>
+                                </div>
+                                <div className="hud-panel p-3">
+                                  <div className="label-eyebrow mb-2 text-xs">Matches ({tMatches.length})</div>
+                                  {tMatches.length === 0 ? <Empty /> : (
+                                    <ol className="grid grid-cols-1 gap-1 sm:grid-cols-2 2xl:grid-cols-3">
+                                      {tMatches.map((m) => {
+                                        const ids = m.mapIds && m.mapIds.length > 0 ? m.mapIds : [m.mapId];
+                                        const names = Array.from(new Set(ids.map((id) => seedMaps.find((x) => x.id === id)?.name ?? id))).join(", ");
+                                        return (
+                                          <li key={m.id}>
+                                            <Link
+                                              to={"/admin/matches/$matchId" as "/admin/matches"}
+                                              params={{ matchId: m.id } as never}
+                                              className="flex items-center gap-2 rounded-sm border border-border bg-surface px-2 py-1 text-xs hover:bg-muted"
+                                            >
+                                              <span className="flex-1 truncate font-semibold">{m.name}</span>
+                                              <span className="truncate text-muted-foreground">{names}</span>
+                                              <span className={`rounded-sm border px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wider ${isMatchReady(m) ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400" : "border-border bg-surface-2 text-muted-foreground"}`}>{isMatchReady(m) ? "ready" : "draft"}</span>
+                                            </Link>
+                                          </li>
+                                        );
+                                      })}
+                                    </ol>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
                             {tab === "matches" && (
-                              <Panel title={`Matches (${tMatches.length})`}>
+                              <div className="hud-panel p-3">
+                                <div className="label-eyebrow mb-2 text-xs">Matches ({tMatches.length})</div>
                                 {tMatches.length === 0 ? <Empty /> : (
                                   <ul className="space-y-1">
                                     {tMatches.map((m) => {
@@ -238,11 +316,12 @@ function TournamentsAdmin() {
                                     })}
                                   </ul>
                                 )}
-                              </Panel>
+                              </div>
                             )}
 
                             {tab === "teams" && (
-                              <Panel title={`Teams (${tTeams.length})`}>
+                              <div className="hud-panel p-3">
+                                <div className="label-eyebrow mb-2 text-xs">Teams ({tTeams.length})</div>
                                 <ul className="grid grid-cols-2 gap-1 md:grid-cols-3 lg:grid-cols-4">
                                   {tTeams.map((t) => (
                                     <li key={t.id}>
@@ -258,11 +337,12 @@ function TournamentsAdmin() {
                                     </li>
                                   ))}
                                 </ul>
-                              </Panel>
+                              </div>
                             )}
 
                             {tab === "maps" && (
-                              <Panel title={`Maps used (${tMaps.length})`}>
+                              <div className="hud-panel p-3">
+                                <div className="label-eyebrow mb-2 text-xs">Maps used ({tMaps.length})</div>
                                 {tMaps.length === 0 ? <Empty /> : (
                                   <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                                     {tMaps.map((mp) => (
@@ -273,11 +353,12 @@ function TournamentsAdmin() {
                                     ))}
                                   </ul>
                                 )}
-                              </Panel>
+                              </div>
                             )}
 
                             {tab === "settings" && (
-                              <Panel title="Settings">
+                              <div className="hud-panel p-3">
+                                <div className="label-eyebrow mb-2 text-xs">Settings</div>
                                 <dl className="grid grid-cols-[160px_1fr] gap-x-3 gap-y-1.5 text-xs">
                                   <dt className="text-muted-foreground">Status</dt><dd><StatusBadge s={status} /></dd>
                                   <dt className="text-muted-foreground">Type</dt><dd><TypeBadge type={row.type} /></dd>
@@ -290,7 +371,7 @@ function TournamentsAdmin() {
                                   <button onClick={(e) => startEdit(e, row)} className="rounded-sm border border-border bg-surface px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted">Edit tournament</button>
                                   <button onClick={(e) => remove(e, row.id)} className="rounded-sm border border-destructive/40 bg-surface px-2 py-1 text-xs uppercase tracking-wider text-destructive hover:bg-destructive/10">Delete</button>
                                 </div>
-                              </Panel>
+                              </div>
                             )}
                           </div>
                         </td>
@@ -320,28 +401,8 @@ function TournamentsAdmin() {
   );
 }
 
-function Panel({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="hud-panel p-3">
-      <div className="label-eyebrow mb-2 text-xs">{title}</div>
-      {children}
-    </div>
-  );
-}
 function Empty() {
   return <div className="rounded-sm border border-dashed border-border px-2 py-4 text-center text-xs text-muted-foreground">No data</div>;
-}
-
-function SummaryStat({ label, value, hint, hintTone }: { label: string; value: string; hint?: string; hintTone?: "destructive" }) {
-  return (
-    <div className="hud-panel p-2">
-      <div className="label-eyebrow text-xs">{label}</div>
-      <div className="mt-0.5 flex items-baseline gap-2">
-        <span className="text-mono text-sm font-bold tabular-nums">{value}</span>
-        {hint && <span className={`text-xs ${hintTone === "destructive" ? "text-destructive" : "text-muted-foreground"}`}>{hint}</span>}
-      </div>
-    </div>
-  );
 }
 
 function TypeBadge({ type }: { type: TournamentType }) {
