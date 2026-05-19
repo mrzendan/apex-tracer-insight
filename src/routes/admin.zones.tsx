@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Eye, EyeOff, Lock, Unlock, Pencil, Copy, RotateCcw, AlignCenter, Files, Plus, Trash2, Check, X, ZoomIn, ZoomOut, Maximize2, Hand } from "lucide-react";
+import { Eye, EyeOff, Lock, Unlock, Pencil, Copy, RotateCcw, AlignCenter, Files, Plus, Trash2, Check, ZoomIn, ZoomOut, Maximize2, Hand } from "lucide-react";
 import vodBg from "@/assets/hsv-samples/worlds-edge.png";
 import cameraBg from "@/assets/zones-samples/camera.png";
 import { useAdminStore, setZones as setZonesStore, type Zone, type ZoneMode } from "@/lib/admin-store";
@@ -44,7 +44,6 @@ function ZonesAdmin() {
   const [tags, setTags] = useState<{ id: string; color: string }[]>(
     Object.entries(DEFAULT_TAG_COLORS).map(([id, color]) => ({ id, color })),
   );
-  const [tagsOpen, setTagsOpen] = useState(false);
   const tagColor = (id: string) => tags.find((t) => t.id === id)?.color ?? "#94a3b8";
 
   const builtin = BUILTIN.find((b) => b.id === activeId);
