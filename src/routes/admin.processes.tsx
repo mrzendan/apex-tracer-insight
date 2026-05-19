@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import {
   useAdminStore,
   addProcess,
@@ -15,7 +15,12 @@ import { maps as allMaps, type Team, type MatchFull } from "@/lib/mock-match";
 import { Progress } from "@/components/ui/progress";
 import { TeamLogo } from "@/components/admin/TeamLogo";
 
-export const Route = createFileRoute("/admin/processes")({ component: ProcessesAdmin });
+export const Route = createFileRoute("/admin/processes")({
+  component: ProcessesAdmin,
+  validateSearch: (s: Record<string, unknown>) => ({
+    matchId: typeof s.matchId === "string" ? s.matchId : undefined,
+  }),
+});
 
 const STATUS_COLORS: Record<AnalysisProcess["status"], string> = {
   draft: "bg-muted text-foreground/80",
@@ -172,6 +177,8 @@ function ProcessesAdmin() {
   const [editing, setEditing] = useState<AnalysisProcess | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<AnalysisProcess["status"] | "all">("all");
+  const search = Route.useSearch();
+  const handledMatchRef = useRef<string | null>(null);
 
   const statusCounts = useMemo(() => {
     const c: Record<AnalysisProcess["status"], number> = {
