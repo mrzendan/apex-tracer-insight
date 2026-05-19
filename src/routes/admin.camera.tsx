@@ -1687,10 +1687,10 @@ function PresetPipeline({ isDirty, hasPrev }: { isDirty: boolean; hasPrev: boole
   return (
     <div className="mt-2 flex items-center gap-1 rounded-sm border border-border bg-surface px-1.5 py-1 text-[9px] font-semibold uppercase tracking-wider">
       {steps.map((s, i) => (
-        <>
-          <span key={s.k} className={s.on ? "text-primary" : "text-muted-foreground/50"}>{s.label}</span>
-          {i < steps.length - 1 && <span key={`a-${i}`} className="text-muted-foreground/40">→</span>}
-        </>
+        <span key={s.k} className="flex items-center gap-1">
+          <span className={s.on ? "text-primary" : "text-muted-foreground/50"}>{s.label}</span>
+          {i < steps.length - 1 && <span className="text-muted-foreground/40">→</span>}
+        </span>
       ))}
     </div>
   );
