@@ -336,19 +336,28 @@ function TournamentsAdmin() {
                               <div className="hud-panel p-3">
                                 <div className="label-eyebrow mb-2 text-xs">Teams ({tTeams.length})</div>
                                 <ul className="grid grid-cols-2 gap-1 md:grid-cols-3 lg:grid-cols-4">
-                                  {tTeams.map((t) => (
-                                    <li key={t.id}>
-                                      <Link
-                                        to="/admin/teams/$teamId"
-                                        params={{ teamId: t.id }}
-                                        className="flex items-center gap-2 rounded-sm border border-border bg-surface px-2 py-1.5 text-xs hover:bg-muted"
-                                      >
-                                        <TeamLogo team={t} size={22} />
-                                        <span className="text-mono text-xs font-bold">{t.tag}</span>
-                                        <span className="truncate">{t.name}</span>
-                                      </Link>
-                                    </li>
-                                  ))}
+                                  {[...tTeams]
+                                    .map((t) => ({ t, pts: placementPoints(t.placement) + t.kills }))
+                                    .sort((a, b) => b.pts - a.pts)
+                                    .map(({ t, pts }) => (
+                                      <li key={t.id}>
+                                        <Link
+                                          to="/admin/teams/$teamId"
+                                          params={{ teamId: t.id }}
+                                          className="flex items-center gap-2 rounded-sm border border-border bg-surface px-2 py-1.5 text-xs hover:bg-muted"
+                                        >
+                                          <TeamLogo team={t} size={22} />
+                                          <span className="text-mono text-xs font-bold">{t.tag}</span>
+                                          <span className="flex-1 truncate">{t.name}</span>
+                                          <span
+                                            className="rounded-sm border border-primary/40 bg-primary/10 px-1.5 py-0.5 text-mono text-xs font-bold tabular-nums text-primary"
+                                            title={`Placement pts ${placementPoints(t.placement)} + kills ${t.kills}`}
+                                          >
+                                            {pts} pts
+                                          </span>
+                                        </Link>
+                                      </li>
+                                    ))}
                                 </ul>
                               </div>
                             )}
