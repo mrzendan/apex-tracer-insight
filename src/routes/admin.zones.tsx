@@ -579,18 +579,6 @@ function ZonesAdmin() {
         </aside>
       </div>
 
-      <div className="flex h-8 shrink-0 items-center justify-between border-t border-border bg-surface-2 px-6 text-xs text-muted-foreground">
-        <div className="text-mono uppercase tracking-wider">
-          {selZone ? (
-            <>
-              <span className="text-foreground font-semibold">Selected:</span> {selZone.name} · {selZone.w}×{selZone.h} · tag: <span style={{ color: tagColor(selZone.tag) }}>{selZone.tag}</span> · x:{selZone.x} y:{selZone.y}
-            </>
-          ) : "No zone selected"}
-        </div>
-        <div className="text-mono uppercase tracking-wider">
-          Preset: {builtin?.label ?? custom?.label ?? "—"} · Snap {snap ? `${gridSize}px` : "off"}
-        </div>
-      </div>
       {hover && typeof document !== "undefined" && createPortal(
         (() => {
           const z = hover.z;
