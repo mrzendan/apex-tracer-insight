@@ -683,7 +683,7 @@ function Timeline({ time, duration, playing, onTogglePlay, onSeek, events }: {
    ========================================================================= */
 
 function VideoPreview(props: {
-  videoRef: React.RefObject<HTMLVideoElement>;
+  videoRef: React.RefObject<HTMLVideoElement | null>;
   videoUrl: string;
   cropLeft: number; cropRight: number; cropTop: number; cropBottom: number;
   visibleAspect: number; visibleW: number; visibleH: number;
@@ -741,7 +741,7 @@ function VideoPreview(props: {
 
 function MapPreview(props: {
   map: { id: string; name: string; image: string };
-  mapRef: React.RefObject<HTMLDivElement>;
+  mapRef: React.RefObject<HTMLDivElement | null>;
   viewport: Viewport; setViewport: (v: Viewport) => void;
   vpDrag: null | { kind: "move" | "resize"; startX: number; startY: number; v: Viewport };
   setVpDrag: (v: any) => void;
