@@ -421,7 +421,7 @@ function TeamDetail() {
             invert
             min={1}
             max={20}
-            color="hsl(var(--primary))"
+            color="var(--primary)"
             formatVal={(v) => `#${v.toFixed(1)}`}
           />
           <Sparkline
@@ -430,7 +430,7 @@ function TeamDetail() {
             values={formPoints.map((p) => p.kills)}
             dates={formPoints.map((p) => p.date)}
             min={0}
-            color="hsl(var(--primary))"
+            color="var(--primary)"
             formatVal={(v) => `${v.toFixed(0)}`}
           />
           <Sparkline
@@ -681,7 +681,7 @@ function Sparkline({
         )}
       </div>
 
-      <div className="grid shrink-0 grid-cols-4 divide-x divide-border border-t border-border bg-background/40 py-2">
+      <div className="grid shrink-0 grid-cols-4 divide-x divide-border border-t border-border bg-background/60 py-2">
         {[
           ["Best", values.length ? formatVal(bestV) : "—"],
           ["Worst", values.length ? formatVal(worstV) : "—"],
@@ -689,8 +689,8 @@ function Sparkline({
           ["Current", values.length ? formatVal(last) : "—"],
         ].map(([label, val]) => (
           <div key={label} className="flex flex-col items-center">
-            <span className="text-[8px] uppercase tracking-wider text-muted-foreground">{label}</span>
-            <span className="text-mono text-[10px] text-foreground">{val}</span>
+            <span className="text-[9px] uppercase tracking-wider text-muted-foreground">{label}</span>
+            <span className="text-mono text-xs font-semibold text-foreground">{val}</span>
           </div>
         ))}
       </div>
