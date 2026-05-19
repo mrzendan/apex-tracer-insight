@@ -620,7 +620,7 @@ function Sparkline({
           <div className="flex h-full items-center justify-center text-xs text-muted-foreground">No data</div>
         ) : (
           <>
-            <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="h-full w-full">
+            <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="h-full w-full overflow-visible">
               {/* Gridlines */}
               {[0.2, 0.5, 0.8].map((f) => (
                 <line
@@ -632,14 +632,15 @@ function Sparkline({
                   stroke="currentColor"
                   className="text-foreground"
                   strokeOpacity={0.08}
-                  strokeWidth={0.5}
+                  strokeWidth={1}
+                  vectorEffect="non-scaling-stroke"
                   strokeDasharray="2 4"
                 />
               ))}
               {/* Avg ref line */}
-              <line x1={0} x2={w} y1={yAvg} y2={yAvg} stroke={color} strokeWidth={1} strokeDasharray="4 4" strokeOpacity={0.3} />
+              <line x1={0} x2={w} y1={yAvg} y2={yAvg} stroke={color} strokeWidth={1} strokeDasharray="4 4" strokeOpacity={0.35} vectorEffect="non-scaling-stroke" />
               {/* Path */}
-              <path d={path} fill="none" stroke={color} strokeWidth={1.5} />
+              <path d={path} fill="none" stroke={color} strokeWidth={2} vectorEffect="non-scaling-stroke" strokeLinejoin="round" strokeLinecap="round" />
               {/* Dots */}
               {points.map(([x, y], i) => {
                 const isPeak = i === peakIdx;
@@ -649,10 +650,11 @@ function Sparkline({
                     key={i}
                     cx={x}
                     cy={y}
-                    r={isPeak || isLast ? 2.5 : 1.8}
-                    fill={isPeak ? color : "var(--surface-2, hsl(var(--background)))"}
+                    r={isPeak || isLast ? 3 : 2}
+                    fill={isPeak ? color : "hsl(var(--background))"}
                     stroke={color}
                     strokeWidth={1.5}
+                    vectorEffect="non-scaling-stroke"
                   />
                 );
               })}
@@ -679,7 +681,7 @@ function Sparkline({
         )}
       </div>
 
-      <div className="mt-2 grid grid-cols-4 divide-x divide-border border-t border-border bg-surface-2/60 py-2">
+      <div className="grid shrink-0 grid-cols-4 divide-x divide-border border-t border-border bg-background/40 py-2">
         {[
           ["Best", values.length ? formatVal(bestV) : "—"],
           ["Worst", values.length ? formatVal(worstV) : "—"],
