@@ -672,10 +672,10 @@ function QualityBar({ quality, preset, isDirty, prevQuality }: {
   const prev = prevQuality;
   return (
     <div className="flex shrink-0 items-center gap-6 border-b border-border bg-surface-2 px-6 py-2">
-      <Stat label="Tracking quality" value={`${quality.trackingQ}%`} valueClass={tone} after={delta(quality.trackingQ, prev?.trackingQ, true)} />
-      <Stat label="Jump events" value={quality.jumpEvents.toString()} after={delta(quality.jumpEvents, prev?.jumpEvents, false, 0, true)} />
-      <Stat label="Lost frames" value={quality.lostFrames.toString()} after={delta(quality.lostFrames, prev?.lostFrames, false, 0, true)} />
-      <Stat label="Avg confidence" value={quality.avgConfidence.toFixed(2)} after={delta(quality.avgConfidence, prev?.avgConfidence, false, 2)} />
+      <Stat label="Tracking quality" hint={METRIC_HINTS.trackingQ} value={`${quality.trackingQ}%`} valueClass={tone} after={delta(quality.trackingQ, prev?.trackingQ, true)} />
+      <Stat label="Jump events" hint={METRIC_HINTS.jumpEvents} value={quality.jumpEvents.toString()} after={delta(quality.jumpEvents, prev?.jumpEvents, false, 0, true)} />
+      <Stat label="Lost frames" hint={METRIC_HINTS.lostFrames} value={quality.lostFrames.toString()} after={delta(quality.lostFrames, prev?.lostFrames, false, 0, true)} />
+      <Stat label="Avg confidence" hint={METRIC_HINTS.avgConfidence} value={quality.avgConfidence.toFixed(2)} after={delta(quality.avgConfidence, prev?.avgConfidence, false, 2)} />
       <div className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
         {isDirty && (
           <span className="rounded-sm border border-amber-400/40 bg-amber-400/10 px-2 py-0.5 font-semibold uppercase tracking-wider text-amber-400">
@@ -691,10 +691,12 @@ function QualityBar({ quality, preset, isDirty, prevQuality }: {
   );
 }
 
-function Stat({ label, value, valueClass = "", after }: { label: string; value: string; valueClass?: string; after?: React.ReactNode }) {
+function Stat({ label, value, valueClass = "", after, hint }: { label: string; value: string; valueClass?: string; after?: React.ReactNode; hint?: string }) {
   return (
     <div className="flex items-baseline gap-2">
-      <span className="label-eyebrow text-xs">{label}</span>
+      <span className="label-eyebrow text-xs" title={hint}>
+        {label}{hint && <span className="ml-1 cursor-help text-muted-foreground/60">ⓘ</span>}
+      </span>
       <span className={`text-mono text-sm font-semibold ${valueClass}`}>{value}{after}</span>
     </div>
   );
