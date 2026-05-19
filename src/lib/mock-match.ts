@@ -54,7 +54,16 @@ export type MatchExtras = {
   teamIds?: string[];
 };
 export type MatchFull = Match & MatchExtras;
-export type ApexMap = { id: string; name: string; image: string };
+export type MapConfigKey = "image" | "zones" | "polygons" | "hsv" | "camera" | "minimap";
+export type ApexMap = {
+  id: string;
+  name: string;
+  image: string;
+  /** Short code, e.g. WE, KC, SP. */
+  code?: string;
+  /** Per-feature configuration status for the admin pipeline. */
+  config?: Partial<Record<MapConfigKey, boolean>>;
+};
 
 /**
  * A Game = a single map analyzed inside a Match.
