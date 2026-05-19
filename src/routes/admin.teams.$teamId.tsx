@@ -8,7 +8,10 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 
 export const Route = createFileRoute("/admin/teams/$teamId")({ component: TeamDetail });
 
-type Mode = "all" | "year" | "tournaments";
+type Mode = "all" | "year" | "tournaments" | "range";
+type RangeKey = "7d" | "30d" | "90d" | "180d" | "365d";
+const RANGE_DAYS: Record<RangeKey, number> = { "7d": 7, "30d": 30, "90d": 90, "180d": 180, "365d": 365 };
+const RANGE_LABEL: Record<RangeKey, string> = { "7d": "Week", "30d": "Month", "90d": "3 mo", "180d": "6 mo", "365d": "12 mo" };
 
 /** Deterministic per-match date derived from tournament window + match index. */
 function matchDateTime(match: MatchFull, tourStart?: string, tourEnd?: string, indexInTour = 0) {
@@ -68,18 +71,27 @@ function TeamDetail() {
   const [mode, setMode] = useState<Mode>("all");
   const [year, setYear] = useState<number>(allYears[0] ?? 6);
   const [selectedTours, setSelectedTours] = useState<string[]>([]);
+  const [range, setRange] = useState<RangeKey>("30d");
 
   const filteredRows = useMemo(() => {
     if (mode === "year") return teamRows.filter((r) => r.tour?.year === year);
     if (mode === "tournaments") return teamRows.filter((r) => selectedTours.includes(r.match.tournamentId));
+    if (mode === "range") {
+      const cutoff = today - RANGE_DAYS[range] * 86400000;
+      return teamRows.filter((r) => r.date && r.date.getTime() >= cutoff && r.date.getTime() <= today);
+    }
     return teamRows;
-  }, [teamRows, mode, year, selectedTours]);
+  }, [teamRows, mode, year, selectedTours, range]);
 
   const filteredTournaments = useMemo(() => {
     if (mode === "year") return teamTournaments.filter((t) => t.year === year);
     if (mode === "tournaments") return teamTournaments.filter((t) => selectedTours.includes(t.id));
+    if (mode === "range") {
+      const ids = new Set(filteredRows.map((r) => r.match.tournamentId));
+      return teamTournaments.filter((t) => ids.has(t.id));
+    }
     return teamTournaments;
-  }, [teamTournaments, mode, year, selectedTours]);
+  }, [teamTournaments, mode, year, selectedTours, filteredRows]);
 
   // Per-map deterministic placement sampler (1..20) — stable per (mapId, matchId, teamId).
   function pseudoPlacement(mapId: string, matchId: string): number {
@@ -148,7 +160,7 @@ function TeamDetail() {
     return filteredRows
       .filter((r) => r.date)
       .sort((a, b) => a.date!.getTime() - b.date!.getTime())
-      .slice(-20)
+      .slice(-30)
       .map((r) => {
         const ids = r.match.mapIds ?? [r.match.mapId];
         const placements = ids.map((id) => pseudoPlacement(id, r.match.id));
