@@ -115,12 +115,6 @@ function MapsAdmin() {
               </button>
             ))}
           </div>
-          <button
-            onClick={startCreate}
-            className="rounded-sm bg-primary px-2.5 py-1 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110"
-          >
-            + Add map
-          </button>
         </div>
       </header>
 
@@ -168,6 +162,13 @@ function MapsAdmin() {
                 </div>
               );
             })}
+            <button
+              onClick={startCreate}
+              className="hud-panel group flex min-h-[260px] flex-col items-center justify-center gap-2 border-2 border-dashed border-primary/60 bg-primary/10 text-primary transition hover:border-primary hover:bg-primary/20"
+            >
+              <span className="text-5xl font-light leading-none">+</span>
+              <span className="text-xs font-semibold uppercase tracking-wider">Add map</span>
+            </button>
           </div>
         ) : (
           <div className="hud-panel overflow-hidden">
@@ -219,6 +220,16 @@ function MapsAdmin() {
                 {filtered.length === 0 && (
                   <tr><td colSpan={6} className="px-3 py-6 text-center text-xs text-muted-foreground">No maps</td></tr>
                 )}
+                <tr className="bg-surface-2/40">
+                  <td colSpan={6} className="px-3 py-2 text-right">
+                    <button
+                      onClick={startCreate}
+                      className="inline-flex items-center gap-1 rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110"
+                    >
+                      <span className="text-base leading-none">+</span> Add map
+                    </button>
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
