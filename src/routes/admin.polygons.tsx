@@ -238,6 +238,15 @@ function PolygonsAdmin() {
                     ×
                   </button>
                 )}
+                {!renaming && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); exportJsonFor(m.id); }}
+                    className="ml-0.5 rounded-sm px-1 opacity-60 transition hover:bg-muted hover:opacity-100"
+                    title="Download polygons JSON"
+                  >
+                    ↓
+                  </button>
+                )}
               </div>
             );
           })}
