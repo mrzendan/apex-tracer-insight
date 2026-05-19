@@ -153,6 +153,8 @@ export type Team = {
   placement: number;
   kills: number;
   alive: boolean;
+  /** Lifecycle status. Defaults to "active" when missing. */
+  status?: "active" | "archived";
 };
 
 export const teams: Team[] = [
