@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useAdminStore, setTeams } from "@/lib/admin-store";
 import type { Team } from "@/lib/mock-match";
 import { TeamLogo } from "@/components/admin/TeamLogo";
@@ -11,6 +11,7 @@ function TeamsAdmin() {
   const navigate = useNavigate();
   const [editing, setEditing] = useState<Team | null>(null);
   const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "archived">("all");
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   if (pathname !== "/admin/teams" && pathname !== "/admin/teams/") {
     return <Outlet />;
@@ -37,11 +38,12 @@ function TeamsAdmin() {
   }
 
   const q = query.trim().toLowerCase();
-  const filtered = q
-    ? teams.filter((t) =>
-        [t.tag, t.name, ...(t.players ?? [])].some((v) => String(v).toLowerCase().includes(q)),
-      )
-    : teams;
+  const filtered = teams.filter((t) => {
+    const st = t.status ?? "active";
+    if (statusFilter !== "all" && st !== statusFilter) return false;
+    if (!q) return true;
+    return [t.tag, t.name, ...(t.players ?? [])].some((v) => String(v).toLowerCase().includes(q));
+  });
 
   const startCreate = () =>
     setEditing({
@@ -54,6 +56,7 @@ function TeamsAdmin() {
       placement: teams.length + 1,
       kills: 0,
       alive: true,
+      status: "active",
     });
   const startEdit = (e: React.MouseEvent, t: Team) => {
     e.stopPropagation();
@@ -82,6 +85,22 @@ function TeamsAdmin() {
             placeholder="Search teams or players…"
             className="w-64 rounded-sm border border-border bg-background px-2 py-1.5 text-xs"
           />
+          <div className="flex items-center gap-1 rounded-sm border border-border bg-background p-0.5">
+            {(["all", "active", "archived"] as const).map((s) => (
+              <button
+                key={s}
+                onClick={() => setStatusFilter(s)}
+                className={
+                  "rounded-sm px-2 py-1 text-xs font-semibold uppercase tracking-wider " +
+                  (statusFilter === s
+                    ? "border border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
+                    : "bg-surface text-muted-foreground hover:text-foreground")
+                }
+              >
+                {s}
+              </button>
+            ))}
+          </div>
         </div>
       </header>
       <div className="flex-1 overflow-auto p-6">
@@ -92,6 +111,7 @@ function TeamsAdmin() {
                 <th className="px-3 py-2 w-[64px]">Logo</th>
                 <th className="px-3 py-2 w-[100px]">Tag</th>
                 <th className="px-3 py-2">Name</th>
+                <th className="px-3 py-2 w-[110px]">Status</th>
                 <th className="px-3 py-2 w-[260px]">Last match</th>
                 <th className="px-3 py-2 w-[260px]">Next match</th>
                 <th className="px-3 py-2 w-[200px] text-right">
@@ -107,6 +127,7 @@ function TeamsAdmin() {
             <tbody>
               {filtered.map((t) => {
                 const sched = teamSchedule(t.id);
+                const st = t.status ?? "active";
                 return (
                   <tr
                     key={t.id}
@@ -116,6 +137,19 @@ function TeamsAdmin() {
                     <td className="px-3 py-2"><TeamLogo team={t} size={32} /></td>
                     <td className="px-3 py-2 text-xs text-mono font-bold">{t.tag}</td>
                     <td className="px-3 py-2 text-xs">{t.name}</td>
+                    <td className="px-3 py-2 text-xs">
+                      <span
+                        className={
+                          "inline-flex items-center gap-1.5 rounded-sm border px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wider " +
+                          (st === "active"
+                            ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
+                            : "border-border bg-surface text-muted-foreground")
+                        }
+                      >
+                        <span className={"inline-block h-1.5 w-1.5 rounded-full " + (st === "active" ? "bg-emerald-400" : "bg-muted-foreground")} />
+                        {st}
+                      </span>
+                    </td>
                     <td className="px-3 py-2 text-xs">
                       {sched.last ? (
                         <div>
@@ -148,7 +182,7 @@ function TeamsAdmin() {
                 );
               })}
               {filtered.length === 0 && (
-                <tr><td colSpan={6} className="px-3 py-6 text-center text-xs text-muted-foreground">No teams</td></tr>
+                <tr><td colSpan={7} className="px-3 py-6 text-center text-xs text-muted-foreground">No teams</td></tr>
               )}
             </tbody>
           </table>
@@ -165,38 +199,17 @@ function TeamDialog({ row, isNew, onChange, onCancel, onSave }: {
 }) {
   const set = <K extends keyof Team>(k: K, v: Team[K]) => onChange({ ...row, [k]: v });
   const base = "mt-1 w-full rounded-sm border border-border bg-background px-2 py-1.5 text-sm";
-  const readFile = (file: File | undefined, key: "logo" | "logoLight" | "logoDark") => {
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => set(key, String(reader.result));
-    reader.readAsDataURL(file);
-  };
-  const logoField = (key: "logo" | "logoLight" | "logoDark", label: string, hint: string) => (
-    <div>
-      <label className="label-eyebrow text-xs">{label}</label>
-      <input className={base + " text-mono text-xs"} placeholder="https://... or upload below" value={row[key] ?? ""} onChange={(e) => set(key, e.target.value)} />
-      <div className="mt-2 flex items-center gap-2">
-        <TeamLogo team={{ ...row, logo: row[key] ?? row.logo, logoLight: key === "logoLight" ? row[key] : row.logoLight, logoDark: key === "logoDark" ? row[key] : row.logoDark }} size={36} />
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => readFile(e.target.files?.[0], key)}
-          className="text-xs"
-        />
-        {row[key] && (
-          <button type="button" onClick={() => set(key, "")} className="rounded-sm border border-border bg-surface px-2 py-1 text-xs hover:bg-muted">Clear</button>
-        )}
-      </div>
-      <div className="mt-1 text-xs text-muted-foreground">{hint}</div>
-    </div>
-  );
+  const status = row.status ?? "active";
+  // Determine which logo variant is actually shown right now (matches TeamLogo fallback order).
+  const activeKey: "logo" | "logoLight" | "logoDark" =
+    row.logoDark ? "logoDark" : row.logoLight ? "logoLight" : "logo";
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onCancel}>
       <div className="hud-panel w-full max-w-lg bg-surface" onClick={(e) => e.stopPropagation()}>
         <div className="border-b border-border px-4 py-3">
           <h2 className="text-sm font-bold uppercase tracking-wider">{isNew ? "New team" : "Edit team"}</h2>
         </div>
-        <div className="max-h-[70vh] space-y-3 overflow-auto p-4">
+        <div className="max-h-[70vh] space-y-4 overflow-y-auto overflow-x-hidden p-4">
           <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="label-eyebrow text-xs">Tag</label>
@@ -207,16 +220,134 @@ function TeamDialog({ row, isNew, onChange, onCancel, onSave }: {
               <input className={base} value={row.name} onChange={(e) => set("name", e.target.value)} />
             </div>
           </div>
-          {logoField("logo", "Logo (default)", "Used when a theme-specific variant is missing.")}
-          <div className="grid grid-cols-2 gap-3">
-            {logoField("logoDark", "Logo · dark theme", "Shown on dark / OLED themes.")}
-            {logoField("logoLight", "Logo · light theme", "Shown on light theme.")}
+          <div>
+            <label className="label-eyebrow text-xs">Status</label>
+            <div className="mt-1 flex items-center gap-1 rounded-sm border border-border bg-background p-0.5 w-fit">
+              {(["active", "archived"] as const).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => set("status", s)}
+                  className={
+                    "rounded-sm px-3 py-1 text-xs font-semibold uppercase tracking-wider " +
+                    (status === s
+                      ? s === "active"
+                        ? "border border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
+                        : "border border-border bg-muted text-foreground"
+                      : "bg-surface text-muted-foreground hover:text-foreground")
+                  }
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="space-y-3">
+            <LogoField row={row} setKey={set} fieldKey="logo" label="Default logo" hint="Used when a theme-specific variant is missing." isActive={activeKey === "logo"} />
+            <LogoField row={row} setKey={set} fieldKey="logoDark" label="Dark theme logo" hint="Shown on dark / OLED themes." isActive={activeKey === "logoDark"} />
+            <LogoField row={row} setKey={set} fieldKey="logoLight" label="Light theme logo" hint="Shown on light theme." isActive={activeKey === "logoLight"} />
           </div>
         </div>
         <div className="flex justify-end gap-2 border-t border-border bg-surface-2 px-4 py-3">
           <button onClick={onCancel} className="rounded-sm border border-border bg-surface px-3 py-1.5 text-xs uppercase tracking-wider hover:bg-muted">Cancel</button>
           <button onClick={onSave} className="rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">Save</button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function LogoField({
+  row,
+  setKey,
+  fieldKey,
+  label,
+  hint,
+  isActive,
+}: {
+  row: Team;
+  setKey: <K extends keyof Team>(k: K, v: Team[K]) => void;
+  fieldKey: "logo" | "logoLight" | "logoDark";
+  label: string;
+  hint: string;
+  isActive: boolean;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const value = row[fieldKey] ?? "";
+  const previewTeam = {
+    ...row,
+    logo: fieldKey === "logo" ? value : row.logo,
+    logoLight: fieldKey === "logoLight" ? value : undefined,
+    logoDark: fieldKey === "logoDark" ? value : undefined,
+  } as Team;
+  const readFile = (file: File | undefined) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setKey(fieldKey, String(reader.result));
+    reader.readAsDataURL(file);
+  };
+  return (
+    <div className="rounded-sm border border-border bg-surface-2/40 p-3">
+      <div className="flex items-center justify-between gap-2">
+        <label className="label-eyebrow text-xs">{label}</label>
+        {isActive && value && (
+          <span className="rounded-sm border border-emerald-500/40 bg-emerald-500/10 px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wider text-emerald-400">
+            In use
+          </span>
+        )}
+      </div>
+      <div className="mt-2 flex items-stretch gap-3">
+        <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-sm border border-border bg-background">
+          {value ? (
+            <TeamLogo team={previewTeam} size={56} />
+          ) : (
+            <span className="text-xs text-muted-foreground">Preview</span>
+          )}
+        </div>
+        <div
+          onClick={() => inputRef.current?.click()}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragOver(true);
+          }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragOver(false);
+            readFile(e.dataTransfer.files?.[0]);
+          }}
+          className={
+            "flex flex-1 cursor-pointer flex-col items-center justify-center rounded-sm border border-dashed px-3 py-2 text-center text-xs transition " +
+            (dragOver
+              ? "border-primary bg-primary/10 text-foreground"
+              : "border-border bg-background text-muted-foreground hover:border-primary/60 hover:text-foreground")
+          }
+        >
+          <div className="font-semibold uppercase tracking-wider">Drop logo here</div>
+          <div className="text-xs">or click to choose file</div>
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => readFile(e.target.files?.[0])}
+          />
+        </div>
+      </div>
+      <input
+        className="mt-2 w-full rounded-sm border border-border bg-background px-2 py-1.5 text-mono text-xs"
+        placeholder="https://… or paste URL"
+        value={value}
+        onChange={(e) => setKey(fieldKey, e.target.value)}
+      />
+      <div className="mt-1 flex items-center justify-between gap-2">
+        <div className="text-xs text-muted-foreground">{hint}</div>
+        {value && (
+          <button type="button" onClick={() => setKey(fieldKey, "")} className="rounded-sm border border-border bg-surface px-2 py-0.5 text-xs hover:bg-muted">
+            Clear
+          </button>
+        )}
       </div>
     </div>
   );
