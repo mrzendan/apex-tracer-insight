@@ -37,7 +37,6 @@ __pycache__
 *.pyc
 *.pyo
 *.egg-info
-scripts/tracking/debug_out
 
 # --- Видео (не коммитим) ---
 *.mp4
