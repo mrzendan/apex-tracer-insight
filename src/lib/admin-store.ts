@@ -23,6 +23,8 @@ export type ZoneTag = "team" | "camera" | "minimap" | "timer" | "map_name";
 export type Zone = { id: string; name: string; tag: ZoneTag; x: number; y: number; w: number; h: number };
 export type ZoneMode = "vod" | "camera";
 
+export type CustomMap = { id: string; name: string; image: string };
+
 export type ProcessPov = "map" | "team";
 export type ProcessStatus = "draft" | "queued" | "running" | "done" | "failed";
 export type MapTiming = { mapId: string; startSec: number; endSec: number };
@@ -74,6 +76,7 @@ type State = {
   polygons: Polygon[];
   zones: { vod: Zone[]; camera: Zone[] };
   processes: AnalysisProcess[];
+  customMaps: CustomMap[];
 };
 
 // Seed: каждый match содержит N games (через mapIds/gameDurations). Все 20 команд участвуют.
@@ -96,7 +99,27 @@ let state: State = {
   polygons: [],
   zones: { vod: initialVod, camera: initialCamera },
   processes: [],
+  customMaps: loadCustomMaps(),
 };
+
+const CUSTOM_MAPS_KEY = "admin:customMaps";
+function loadCustomMaps(): CustomMap[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(CUSTOM_MAPS_KEY);
+    return raw ? (JSON.parse(raw) as CustomMap[]) : [];
+  } catch {
+    return [];
+  }
+}
+function persistCustomMaps(maps: CustomMap[]) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(CUSTOM_MAPS_KEY, JSON.stringify(maps));
+  } catch {
+    /* quota or serialization errors – ignore */
+  }
+}
 
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
@@ -184,5 +207,24 @@ export function updateProcess(id: string, patch: Partial<AnalysisProcess>) {
 }
 export function removeProcess(id: string) {
   state = { ...state, processes: state.processes.filter((p) => p.id !== id) };
+  emit();
+}
+
+export function addCustomMap(m: CustomMap) {
+  const next = [...state.customMaps, m];
+  state = { ...state, customMaps: next };
+  persistCustomMaps(next);
+  emit();
+}
+export function updateCustomMap(id: string, patch: Partial<CustomMap>) {
+  const next = state.customMaps.map((m) => (m.id === id ? { ...m, ...patch } : m));
+  state = { ...state, customMaps: next };
+  persistCustomMaps(next);
+  emit();
+}
+export function removeCustomMap(id: string) {
+  const next = state.customMaps.filter((m) => m.id !== id);
+  state = { ...state, customMaps: next, polygons: state.polygons.filter((p) => p.mapId !== id) };
+  persistCustomMaps(next);
   emit();
 }
