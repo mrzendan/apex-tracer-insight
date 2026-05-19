@@ -522,7 +522,7 @@ function Empty() {
 /* -------------------------------------------------------------------------- */
 function Sparkline({
   title,
-  subtitle,
+  hint,
   values,
   dates,
   min,
@@ -532,7 +532,7 @@ function Sparkline({
   formatVal,
 }: {
   title: string;
-  subtitle?: string;
+  hint?: string[];
   values: number[];
   dates?: (Date | null)[];
   min?: number;
@@ -541,95 +541,156 @@ function Sparkline({
   color: string;
   formatVal: (v: number) => string;
 }) {
-  const w = 320;
-  const h = 110;
-  const pad = 8;
-  const padBottom = 18;
+  const w = 300;
+  const h = 100;
+  const padX = 0;
+  const padTop = 6;
+  const padBottom = 14;
   const lo = min ?? Math.min(...values, 0);
   const hi = max ?? Math.max(...values, 1);
   const span = Math.max(1e-6, hi - lo);
+  const innerH = h - padTop - padBottom;
+
   const last = values[values.length - 1];
   const first = values[0];
   const delta = values.length >= 2 ? last - first : 0;
-  // For inverted metrics (placement), a negative delta is good.
   const goodDir = invert ? delta < 0 : delta > 0;
-  const points = values.map((v, i) => {
-    const x = pad + (i / Math.max(1, values.length - 1)) * (w - pad * 2);
+  const deltaUp = invert ? delta <= 0 : delta >= 0;
+
+  const yFor = (v: number) => {
     const norm = (v - lo) / span;
-    const inner = h - pad - padBottom;
-    const y = invert ? pad + norm * (inner - pad) : pad + inner - norm * (inner - pad);
-    return [x, y] as const;
+    return invert ? padTop + norm * innerH : padTop + innerH - norm * innerH;
+  };
+  const points = values.map((v, i) => {
+    const x = padX + (i / Math.max(1, values.length - 1)) * (w - padX * 2);
+    return [x, yFor(v)] as const;
   });
   const path = points.length
     ? points.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`).join(" ")
     : "";
-  // Peak index — for inverted metrics, peak = smallest value (best); else largest.
+
+  // Stats
+  const minV = values.length ? Math.min(...values) : 0;
+  const maxV = values.length ? Math.max(...values) : 0;
+  const avgV = values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+  const bestV = invert ? minV : maxV;
+  const worstV = invert ? maxV : minV;
+  const yAvg = values.length ? yFor(avgV) : 0;
+
+  // Peak (best) index
   let peakIdx = -1;
-  if (values.length >= 2) {
+  if (values.length >= 1) {
     let best = values[0];
     peakIdx = 0;
     for (let i = 1; i < values.length; i++) {
       if (invert ? values[i] < best : values[i] > best) { best = values[i]; peakIdx = i; }
     }
   }
+
   const fmtShort = (d: Date | null | undefined) =>
     d ? d.toLocaleDateString(undefined, { day: "2-digit", month: "short" }) : "";
   const firstDate = dates?.[0];
   const lastDate = dates?.[dates.length - 1];
+
   return (
-    <div className="rounded-sm border border-border bg-surface-2/40 p-3">
-      <div className="flex items-baseline justify-between gap-2">
+    <div className="flex h-[220px] flex-col overflow-hidden rounded-sm border border-border bg-surface-2/40">
+      <div className="flex items-start justify-between gap-2 p-3 pb-2">
         <div>
-          <div className="label-eyebrow text-xs">{title}</div>
-          {subtitle && <div className="text-xs text-muted-foreground">{subtitle}</div>}
+          <div className="label-eyebrow text-[10px] tracking-wider">{title}</div>
+          {values.length > 0 && (
+            <div className="flex items-baseline gap-2">
+              <span className="text-mono text-xl font-bold text-foreground">{formatVal(last)}</span>
+              {values.length >= 2 && (
+                <span className={`text-mono text-[10px] font-medium ${goodDir ? "text-emerald-400" : "text-destructive"}`}>
+                  {deltaUp ? "▲" : "▼"} {Math.abs(delta).toFixed(1)}
+                </span>
+              )}
+            </div>
+          )}
         </div>
-        {values.length > 0 && (
-          <div className="text-right">
-            <div className="text-mono text-base font-bold">{formatVal(last)}</div>
-            {values.length >= 2 && (
-              <div className={`text-mono text-xs ${goodDir ? "text-emerald-400" : "text-destructive"}`}>
-                {invert ? (delta <= 0 ? "▲" : "▼") : delta >= 0 ? "▲" : "▼"} {Math.abs(delta).toFixed(1)}
-              </div>
-            )}
+        {hint && (
+          <div className="text-right text-[9px] uppercase leading-tight tracking-wider text-muted-foreground">
+            {hint.map((line, i) => <div key={i}>{line}</div>)}
           </div>
         )}
       </div>
-      <div className="mt-2">
+
+      <div className="relative flex-1 px-4">
         {values.length === 0 ? (
-          <div className="rounded-sm border border-dashed border-border px-2 py-4 text-center text-xs text-muted-foreground">No data</div>
+          <div className="flex h-full items-center justify-center text-xs text-muted-foreground">No data</div>
         ) : (
-          <svg viewBox={`0 0 ${w} ${h}`} className="h-28 w-full overflow-visible">
-            <path d={path} fill="none" stroke={color} strokeWidth="1.5" />
-            {points.map(([x, y], i) => (
-              <circle key={i} cx={x} cy={y} r={i === points.length - 1 ? 2.5 : 1.5} fill={color} />
-            ))}
-            {peakIdx >= 0 && points[peakIdx] && (
-              <g>
-                <circle cx={points[peakIdx][0]} cy={points[peakIdx][1]} r={3.5} fill="none" stroke={color} strokeWidth="1.2" />
+          <>
+            <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="h-full w-full">
+              {/* Gridlines */}
+              {[0.2, 0.5, 0.8].map((f) => (
+                <line
+                  key={f}
+                  x1={0}
+                  x2={w}
+                  y1={padTop + innerH * f}
+                  y2={padTop + innerH * f}
+                  stroke="currentColor"
+                  className="text-foreground"
+                  strokeOpacity={0.08}
+                  strokeWidth={0.5}
+                  strokeDasharray="2 4"
+                />
+              ))}
+              {/* Avg ref line */}
+              <line x1={0} x2={w} y1={yAvg} y2={yAvg} stroke={color} strokeWidth={1} strokeDasharray="4 4" strokeOpacity={0.3} />
+              {/* Path */}
+              <path d={path} fill="none" stroke={color} strokeWidth={1.5} />
+              {/* Dots */}
+              {points.map(([x, y], i) => {
+                const isPeak = i === peakIdx;
+                const isLast = i === points.length - 1;
+                return (
+                  <circle
+                    key={i}
+                    cx={x}
+                    cy={y}
+                    r={isPeak || isLast ? 2.5 : 1.8}
+                    fill={isPeak ? color : "var(--surface-2, hsl(var(--background)))"}
+                    stroke={color}
+                    strokeWidth={1.5}
+                  />
+                );
+              })}
+              {/* Peak label */}
+              {peakIdx >= 0 && points[peakIdx] && (
                 <text
                   x={points[peakIdx][0]}
-                  y={Math.max(10, points[peakIdx][1] - 6)}
+                  y={Math.max(8, points[peakIdx][1] - 5)}
                   textAnchor="middle"
-                  fontSize="9"
+                  fontSize="7"
                   fill="currentColor"
                   className="text-foreground"
                 >
                   {formatVal(values[peakIdx])}{dates?.[peakIdx] ? ` · ${fmtShort(dates[peakIdx])}` : ""}
                 </text>
-              </g>
-            )}
-            {dates && firstDate && (
-              <text x={pad} y={h - 4} fontSize="9" fill="currentColor" className="text-muted-foreground">
-                {fmtShort(firstDate)}
-              </text>
-            )}
-            {dates && lastDate && (
-              <text x={w - pad} y={h - 4} fontSize="9" textAnchor="end" fill="currentColor" className="text-muted-foreground">
-                {fmtShort(lastDate)}
-              </text>
-            )}
-          </svg>
+              )}
+            </svg>
+            {/* X-axis dates */}
+            <div className="pointer-events-none absolute bottom-0 left-4 right-4 flex justify-between text-mono text-[8px] uppercase text-muted-foreground">
+              <span>{fmtShort(firstDate)}</span>
+              <span>{fmtShort(lastDate)}</span>
+            </div>
+          </>
         )}
+      </div>
+
+      <div className="mt-2 grid grid-cols-4 divide-x divide-border border-t border-border bg-surface-2/60 py-2">
+        {[
+          ["Best", values.length ? formatVal(bestV) : "—"],
+          ["Worst", values.length ? formatVal(worstV) : "—"],
+          ["Avg", values.length ? formatVal(avgV) : "—"],
+          ["Current", values.length ? formatVal(last) : "—"],
+        ].map(([label, val]) => (
+          <div key={label} className="flex flex-col items-center">
+            <span className="text-[8px] uppercase tracking-wider text-muted-foreground">{label}</span>
+            <span className="text-mono text-[10px] text-foreground">{val}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
