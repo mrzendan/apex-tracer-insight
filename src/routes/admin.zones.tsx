@@ -64,6 +64,7 @@ function ZonesAdmin() {
   const [spaceDown, setSpaceDown] = useState(false);
   const [hover, setHover] = useState<null | { z: Zone; top: number; left: number }>(null);
   const [tagsOpen, setTagsOpen] = useState(false);
+  const [hiddenTags, setHiddenTags] = useState<Set<string>>(new Set());
   const stageRef = useRef<HTMLDivElement | null>(null);
   const panRef = useRef<null | { startX: number; startY: number; orig: { x: number; y: number } }>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
