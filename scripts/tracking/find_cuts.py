@@ -115,18 +115,33 @@ def main():
                                    args.fine, args.threshold)
                 if exact is not None:
                     cut_frame, from_pan, to_pan = exact
+                    # второй проход: шаг 1 в окне ±fine, ищем настоящий межкадровый скачок
+                    pinned = pinpoint_cut(cap, reg, cut_frame, args.fine, args.threshold)
+                    if pinned is None:
+                        print(f"    -> отброшено: в окне ±{args.fine} нет межкадрового скачка "
+                              f">{args.threshold/2:.0f}px (это был плавный pan)")
+                        prev_idx = curr_idx
+                        prev_pan = curr_pan
+                        prev_inl = curr_inl
+                        curr_idx += args.coarse
+                        continue
+                    cut_frame, from_pan, to_pan, jump_delta = pinned
                     ev = {
                         "frame": int(cut_frame),
                         "t": round(cut_frame / fps, 3),
                         "from_pan": [round(from_pan[0], 1), round(from_pan[1], 1)],
                         "to_pan": [round(to_pan[0], 1), round(to_pan[1], 1)],
                         "delta": round(dist(from_pan, to_pan), 1),
+                        "jump_delta": round(jump_delta, 1),
                     }
                     events.append(ev)
-                    print(f"    -> cut at frame {cut_frame} (t={ev['t']}s, Δ={ev['delta']}px)")
+                    print(f"    -> cut at frame {cut_frame} (t={ev['t']}s, "
+                          f"Δ={ev['delta']}px, jump={ev['jump_delta']}px между соседними)")
                     # рисуем overlay со стрелкой
                     draw_cut_overlay(overlay_base.copy(), from_pan, to_pan, reg.scale,
                                      args.out / f"overlay_cut_{cut_frame}.png", ev)
+                    # сохраняем 4 видеокадра вокруг cut'а
+                    dump_context_frames(cap, cut_frame, args.out)
                 else:
                     print(f"    -> не смог уточнить (регистрация в окне нестабильна)")
 
@@ -214,6 +229,55 @@ def draw_cut_overlay(canvas, from_pan, to_pan, scale, out_path: Path, ev: dict):
     label = f"f={ev['frame']} t={ev['t']}s d={ev['delta']}px"
     cv2.putText(canvas, label, (10, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
     cv2.imwrite(str(out_path), canvas)
+
+
+def pinpoint_cut(cap, reg, approx_cut_frame: int, window: int, threshold: float):
+    """
+    Шаг 1 в окне [approx_cut_frame - window, approx_cut_frame + window].
+    Регистрируем каждый кадр, ищем пару соседей (i, i+1) с max Δpan.
+    Если max Δ > threshold/2 -> настоящий cut at i+1, иначе None.
+    """
+    start = max(0, approx_cut_frame - window)
+    end = approx_cut_frame + window
+    pans: dict[int, tuple] = {}
+    for idx in range(start, end + 1):
+        pan, inl, _ = register_frame(cap, reg, idx)
+        if pan is not None:
+            pans[idx] = pan
+    best_jump = 0.0
+    best_i = None
+    for idx in sorted(pans.keys()):
+        nxt = idx + 1
+        if nxt not in pans:
+            continue
+        d = dist(pans[idx], pans[nxt])
+        if d > best_jump:
+            best_jump = d
+            best_i = idx
+    if best_i is None:
+        return None
+    print(f"    [pin]    best adjacent jump: f{best_i}->f{best_i+1}, Δ={best_jump:.1f}px")
+    if best_jump < threshold / 2:
+        return None
+    cut_frame = best_i + 1
+    return cut_frame, pans[best_i], pans[best_i + 1], best_jump
+
+
+def dump_context_frames(cap, cut_frame: int, out_dir: Path):
+    """Сохраняет 4 кадра видео: cut-1, cut, cut+1, cut+10."""
+    for offset, tag in [(-1, "before"), (0, "at"), (1, "after"), (10, "after10")]:
+        idx = max(0, cut_frame + offset)
+        cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
+        ok, frame = cap.read()
+        if not ok:
+            continue
+        # уменьшаем до ширины 960 чтобы не раздувать debug_out
+        h, w = frame.shape[:2]
+        if w > 960:
+            scale = 960 / w
+            frame = cv2.resize(frame, (960, int(h * scale)))
+        out_path = out_dir / f"frame_cut_{cut_frame}_{tag}_f{idx}.jpg"
+        cv2.imwrite(str(out_path), frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
 
 
 if __name__ == "__main__":
