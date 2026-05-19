@@ -1675,6 +1675,27 @@ function PresetActions(props: {
   );
 }
 
+/* Visual pipeline showing the preset workflow: select → edit → apply → recalc → save */
+function PresetPipeline({ isDirty, hasPrev }: { isDirty: boolean; hasPrev: boolean }) {
+  const steps = [
+    { k: "select", label: "Select", on: true },
+    { k: "edit",   label: "Edit",   on: isDirty },
+    { k: "apply",  label: "Apply",  on: hasPrev || !isDirty },
+    { k: "recalc", label: "Recalc", on: hasPrev },
+    { k: "save",   label: "Save",   on: false },
+  ];
+  return (
+    <div className="mt-2 flex items-center gap-1 rounded-sm border border-border bg-surface px-1.5 py-1 text-[9px] font-semibold uppercase tracking-wider">
+      {steps.map((s, i) => (
+        <>
+          <span key={s.k} className={s.on ? "text-primary" : "text-muted-foreground/50"}>{s.label}</span>
+          {i < steps.length - 1 && <span key={`a-${i}`} className="text-muted-foreground/40">→</span>}
+        </>
+      ))}
+    </div>
+  );
+}
+
 function CompareRow({ k, cur, prev, delta, suffix = "", decimals = 0, lowerBetter = false }: {
   k: string; cur: string; prev: string; delta: number; suffix?: string; decimals?: number; lowerBetter?: boolean;
 }) {
