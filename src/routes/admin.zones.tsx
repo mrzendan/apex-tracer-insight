@@ -530,32 +530,6 @@ function ZonesAdmin() {
             </div>
           )}
 
-          <section className="mb-3 rounded-sm border border-border bg-surface-2 p-2.5">
-            <div className="mb-2 flex items-center justify-between">
-              <div className="label-eyebrow">Tags ({tags.length})</div>
-              <button onClick={addTag}
-                className="rounded-sm border border-border bg-surface px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:bg-muted hover:text-foreground">
-                + Add
-              </button>
-            </div>
-            {tags.map((t) => (
-              <div key={t.id} className="mb-1 flex items-center gap-2 rounded-sm border border-border bg-surface px-2 py-1.5">
-                <label className="relative block h-2.5 w-2.5 shrink-0 cursor-pointer overflow-hidden rounded-sm"
-                  style={{ backgroundColor: t.color }} title={t.color}>
-                  <input type="color" value={t.color} onChange={(e) => recolorTag(t.id, e.target.value)}
-                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
-                </label>
-                <input defaultValue={t.id} onBlur={(e) => renameTag(t.id, e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-                  className="text-mono min-w-0 flex-1 rounded-sm bg-background px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-primary/40" />
-                <button onClick={() => deleteTag(t.id)} disabled={tags.length <= 1} title="Delete tag"
-                  className="grid h-6 w-6 place-items-center rounded-sm text-muted-foreground hover:bg-destructive/20 hover:text-destructive disabled:opacity-30">
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            ))}
-          </section>
-
           <div className="mb-2 flex items-center justify-between">
             <div className="label-eyebrow">Zones ({zones.length})</div>
             <button onClick={addZone} className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs font-semibold hover:bg-muted">+ Add</button>
