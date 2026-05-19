@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Eye, EyeOff, Lock, Unlock, Pencil, Copy, RotateCcw, AlignCenter, Files, Plus, Trash2, Check, ZoomIn, ZoomOut, Maximize2, Hand } from "lucide-react";
 import vodBg from "@/assets/hsv-samples/worlds-edge.png";
 import cameraBg from "@/assets/zones-samples/camera.png";
@@ -61,6 +62,7 @@ function ZonesAdmin() {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [spaceDown, setSpaceDown] = useState(false);
+  const [hover, setHover] = useState<null | { z: Zone; top: number; left: number }>(null);
   const stageRef = useRef<HTMLDivElement | null>(null);
   const panRef = useRef<null | { startX: number; startY: number; orig: { x: number; y: number } }>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
