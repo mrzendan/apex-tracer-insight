@@ -692,6 +692,20 @@ function ProcessEditor({
 
         <div className="space-y-4">
           <div>
+            <div className="label-eyebrow mb-1.5 text-xs">Process type</div>
+            <div className="grid grid-cols-3 gap-1.5">
+              {KIND_OPTIONS.map((k) => (
+                <button key={k} onClick={() => set("kind", k)}
+                  className={`rounded-sm border px-2 py-1.5 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                    (value.kind ?? "minimap") === k ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-background hover:bg-surface-2"
+                  }`}>
+                  {KIND_LABELS[k]}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
             <div className="label-eyebrow mb-1.5 text-xs">Point of view</div>
             <div className="flex gap-2">
               {povBtn("map", "Map POV")}
