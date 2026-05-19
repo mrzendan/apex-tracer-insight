@@ -417,7 +417,7 @@ function PolygonsAdmin() {
                 className="rounded-sm border border-border bg-background px-2 py-1 text-xs"
               >
                 <option value="" disabled>Select target map…</option>
-                {allMaps.filter((m) => m.id !== mapId).map((m) => (
+                {allMapsCombined.filter((m) => m.id !== mapId).map((m) => (
                   <option key={m.id} value={m.id}>{m.name}</option>
                 ))}
               </select>
