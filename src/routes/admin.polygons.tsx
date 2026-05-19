@@ -104,24 +104,21 @@ function PolygonsAdmin() {
   const strokeFor = (tag: PolygonTag) =>
     tag === "forbidden" ? "#ef4444" : "#22c55e";
 
-  const exportJsonFor = (targetMapId: string) => {
-    const m = allMapsCombined.find((x) => x.id === targetMapId);
-    const polys = polygons.filter((p) => p.mapId === targetMapId);
+  const exportJson = () => {
     const payload = {
-      mapId: targetMapId,
-      mapName: m?.name,
+      mapId,
+      mapName: map?.name,
       exportedAt: new Date().toISOString(),
-      polygons: polys.map((p) => ({ name: p.name, tag: p.tag, points: p.points })),
+      polygons: mapPolys.map((p) => ({ name: p.name, tag: p.tag, points: p.points })),
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `polygons-${m?.name ?? targetMapId}.json`;
+    a.download = `polygons-${map?.name ?? mapId}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
-  const exportJson = () => exportJsonFor(mapId);
 
   const importJson = async (file: File) => {
     try {
@@ -236,15 +233,6 @@ function PolygonsAdmin() {
                     title="Delete custom map"
                   >
                     ×
-                  </button>
-                )}
-                {!renaming && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); exportJsonFor(m.id); }}
-                    className="ml-0.5 rounded-sm px-1 opacity-60 transition hover:bg-muted hover:opacity-100"
-                    title="Download polygons JSON"
-                  >
-                    ↓
                   </button>
                 )}
               </div>
