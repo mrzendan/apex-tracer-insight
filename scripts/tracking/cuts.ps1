@@ -17,7 +17,7 @@ param(
   [Parameter(Mandatory=$true)][string]$Video,
   [int]$Coarse = 600,
   [int]$Fine = 10,
-  [double]$Threshold = 150,
+  [double]$Threshold = 90,
   [double]$Start = 0,
   [double]$End = -1,
   [string]$Config = "scripts/tracking/config.example.yaml",
