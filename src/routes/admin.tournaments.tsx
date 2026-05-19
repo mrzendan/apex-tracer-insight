@@ -369,23 +369,6 @@ function TournamentsAdmin() {
                               </div>
                             )}
 
-                            {tab === "settings" && (
-                              <div className="hud-panel p-3">
-                                <div className="label-eyebrow mb-2 text-xs">Settings</div>
-                                <dl className="grid grid-cols-[160px_1fr] gap-x-3 gap-y-1.5 text-xs">
-                                  <dt className="text-muted-foreground">Status</dt><dd><StatusBadge s={status} /></dd>
-                                  <dt className="text-muted-foreground">Type</dt><dd><TypeBadge type={row.type} /></dd>
-                                  <dt className="text-muted-foreground">Region</dt><dd>{row.region}</dd>
-                                  <dt className="text-muted-foreground">Year</dt><dd>Year {row.year}</dd>
-                                  <dt className="text-muted-foreground">Dates</dt><dd className="text-mono tabular-nums">{fmtRange(row.startDate, row.endDate)}</dd>
-                                  <dt className="text-muted-foreground">ID</dt><dd className="text-mono text-xs text-muted-foreground">{row.id}</dd>
-                                </dl>
-                                <div className="mt-3 flex gap-2">
-                                  <button onClick={(e) => startEdit(e, row)} className="rounded-sm border border-border bg-surface px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted">Edit tournament</button>
-                                  <button onClick={(e) => remove(e, row.id)} className="rounded-sm border border-destructive/40 bg-surface px-2 py-1 text-xs uppercase tracking-wider text-destructive hover:bg-destructive/10">Delete</button>
-                                </div>
-                              </div>
-                            )}
                           </div>
                         </td>
                       </tr>
