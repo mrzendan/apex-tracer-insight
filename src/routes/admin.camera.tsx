@@ -1544,6 +1544,13 @@ function SettingsPanel(props: Parameters<typeof RightPanel>[0]) {
             </button>
           ))}
         </div>
+        {PRESET_DESCRIPTIONS[props.active.name] && (
+          <div className="mb-2 rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-[11px] leading-snug text-muted-foreground">
+            <span className="label-eyebrow mr-1 text-[10px] text-foreground">{props.active.name}</span>
+            {PRESET_DESCRIPTIONS[props.active.name]}
+          </div>
+        )}
+        <PresetPipeline isDirty={props.isDirty} hasPrev={!!props.prevQuality} />
         <PresetActions {...props} />
         <div className="mt-2 grid grid-cols-3 gap-1.5">
           <button onClick={props.onDuplicatePreset}
