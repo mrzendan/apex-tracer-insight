@@ -381,12 +381,3 @@ function YoutubeIcon({ className = "" }: { className?: string }) {
     </svg>
   );
 }
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-sm border border-border bg-surface px-2 py-1">
-      <div className="label-eyebrow text-xs">{label}</div>
-      <div className="text-mono text-xs tabular-nums">{value}</div>
-    </div>
-  );
-}
