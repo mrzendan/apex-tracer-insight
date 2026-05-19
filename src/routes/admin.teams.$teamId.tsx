@@ -221,50 +221,8 @@ function TeamDetail() {
           title={team.liquipediaUrl ? "Open Liquipedia page" : "Search team on Liquipedia"}
           className="ml-2 inline-flex items-center gap-1 rounded-sm border border-primary/40 bg-primary/10 px-2 py-1 text-xs uppercase tracking-wider text-primary hover:bg-primary/20"
         >
-          Liquipedia ↗{!team.liquipediaUrl && <span className="ml-1 opacity-60">(search)</span>}
+          Liquipedia
         </a>
-        {/* ---- Admin actions ---- */}
-        <div className="ml-auto flex items-center gap-1.5">
-          <button
-            onClick={() => setEditing({ ...team })}
-            className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted"
-          >
-            Edit team
-          </button>
-          <ColorSwatch team={team} />
-          <Popover>
-            <PopoverTrigger asChild>
-              <button className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted">
-                Add to tournament ▾
-              </button>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="max-h-80 w-72 overflow-auto p-1">
-              {missingTournaments.length === 0 ? (
-                <div className="px-2 py-3 text-center text-xs text-muted-foreground">In every tournament</div>
-              ) : (
-                missingTournaments.map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => addToTournament(t.id)}
-                    className="block w-full rounded-sm px-2 py-1.5 text-left text-xs hover:bg-muted"
-                  >
-                    <div className="truncate font-semibold">{t.name}</div>
-                    <div className="text-mono text-xs text-muted-foreground">{t.startDate} → {t.endDate}</div>
-                  </button>
-                ))
-              )}
-            </PopoverContent>
-          </Popover>
-          {latestMatch && (
-            <Link
-              to={"/admin/matches/$matchId" as "/admin/matches"}
-              params={{ matchId: latestMatch.id } as never}
-              className="rounded-sm border border-primary/40 bg-primary/10 px-2 py-1 text-xs uppercase tracking-wider text-primary hover:bg-primary/20"
-            >
-              Open in Match Viewer ↗
-            </Link>
-          )}
-        </div>
       </header>
       <div className="flex-1 overflow-auto p-6">
         <div className="hud-panel mb-4 p-3">
