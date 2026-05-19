@@ -443,7 +443,7 @@ function HsvAdmin() {
               <div className="flex flex-wrap gap-2">
                 {conflicts.slice(0, 6).map((c) => (
                   <div key={c.team.id} className="inline-flex items-center gap-2 rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs">
-                    <span className="h-3 w-3 rounded-sm ring-1 ring-border" style={{ backgroundColor: c.team.color }} />
+                    <span className="h-3 w-3 rounded-sm ring-1 ring-border" style={{ backgroundColor: teamSwatch(c.team.id) }} />
                     <span className="font-semibold">{c.team.displayName}</span>
                     <span className={`text-mono tabular-nums ${c.pct >= 30 ? "text-destructive" : "text-warning"}`}>{c.pct}%</span>
                   </div>
@@ -461,7 +461,7 @@ function HsvAdmin() {
 
             <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
               <button
-                onClick={() => setPresets((p) => ({ ...p, [teamId]: presetFromColor(team.color) }))}
+                onClick={() => setPresets((p) => ({ ...p, [k]: presetFromColor(team.color) }))}
                 className="rounded-sm border border-border bg-surface-2 px-3 py-2 text-xs font-semibold hover:bg-muted">
                 Reset to team color
               </button>
@@ -469,7 +469,7 @@ function HsvAdmin() {
                 Save as new profile
               </button>
               <button
-                onClick={() => setSavedColors((s) => ({ ...s, [teamId]: presetCenterHex(preset) }))}
+                onClick={() => setSavedColors((s) => ({ ...s, [k]: presetCenterHex(preset) }))}
                 className="rounded-sm bg-primary px-5 py-2 text-sm font-bold uppercase tracking-wider text-primary-foreground shadow-md hover:brightness-110">
                 Save preset
               </button>
