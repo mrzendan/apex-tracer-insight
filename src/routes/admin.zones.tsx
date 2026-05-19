@@ -299,16 +299,15 @@ function ZonesAdmin() {
       </div>
 
       <div className="flex min-h-0 flex-1">
-        {/* Stage — fills available space, keeps aspect ratio */}
-        <div className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center bg-background p-4">
+        {/* Stage — fills available space, keeps aspect ratio without clipping */}
+        <div className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center bg-background p-4"
+          style={{ containerType: "size" } as React.CSSProperties}>
           <div
             className="hud-panel-strong relative overflow-hidden"
             style={{
               aspectRatio: `${W}/${H}`,
-              maxWidth: "100%",
-              maxHeight: "100%",
-              height: "100%",
-              width: "auto",
+              width: `min(100cqw, calc(100cqh * ${W} / ${H}))`,
+              height: `min(100cqh, calc(100cqw * ${H} / ${W}))`,
             }}
           >
             <img src={bg} alt="" className="absolute inset-0 h-full w-full object-cover opacity-90" draggable={false} />
