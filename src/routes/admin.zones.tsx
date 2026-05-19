@@ -248,7 +248,7 @@ function ZonesAdmin() {
 
   const gridLines = useMemo(() => {
     if (!showGrid) return null;
-    const step = gridSize === 10 ? 80 : 160;
+    const step = gridSize === 5 ? 40 : gridSize === 10 ? 80 : 160;
     const lines: React.ReactElement[] = [];
     for (let x = step; x < W; x += step) lines.push(<line key={`vx${x}`} x1={x} y1={0} x2={x} y2={H} stroke="#ffffff" strokeOpacity={0.08} strokeWidth={1} />);
     for (let y = step; y < H; y += step) lines.push(<line key={`hy${y}`} x1={0} y1={y} x2={W} y2={y} stroke="#ffffff" strokeOpacity={0.08} strokeWidth={1} />);
