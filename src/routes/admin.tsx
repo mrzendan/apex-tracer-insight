@@ -124,7 +124,7 @@ function AdminLayout() {
 
       </aside>
 
-      <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden [&>div>header]:pr-[380px]">
+      <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden [&_header]:pr-[300px]">
         <Outlet />
       </main>
     </div>
