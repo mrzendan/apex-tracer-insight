@@ -421,16 +421,16 @@ function CameraAdmin() {
               return <option key={id} value={id}>{m?.name ?? id}</option>;
             })}
           </select>
-        </div>
-        {/* View mode tabs */}
-        <div className="flex items-center gap-1">
-          <span className="label-eyebrow mr-2 text-xs">View</span>
-          {(["overview", "graphs", "settings", "debug"] as ViewMode[]).map((m) => (
-            <button key={m} onClick={() => setViewMode(m)}
-              className={`rounded-sm border px-2.5 py-1 text-xs font-semibold uppercase tracking-wider transition-colors ${
-                m === viewMode ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface-2 text-muted-foreground hover:bg-muted"
-              }`}>{m}</button>
-          ))}
+          {/* View mode tabs */}
+          <div className="ml-2 flex items-center gap-1 border-l border-border pl-3">
+            <span className="label-eyebrow mr-1 text-xs">View</span>
+            {(["overview", "graphs", "settings", "debug"] as ViewMode[]).map((m) => (
+              <button key={m} onClick={() => setViewMode(m)}
+                className={`rounded-sm border px-2.5 py-1 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                  m === viewMode ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface-2 text-muted-foreground hover:bg-muted"
+                }`}>{m}</button>
+            ))}
+          </div>
         </div>
       </header>
 
@@ -938,7 +938,7 @@ function ChartGroup({ title, lanes, time, duration, onSeek, events, showOriginal
   onSeek: (t: number) => void; events: TrackEvent[]; showOriginal: boolean; defaultOpen?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
-  const [height, setHeight] = useState(90);
+  const height = 90;
   return (
     <div className="rounded-sm border border-border bg-surface">
       <div className="flex items-center justify-between border-b border-border px-3 py-1.5">
@@ -947,14 +947,6 @@ function ChartGroup({ title, lanes, time, duration, onSeek, events, showOriginal
           <span className="label-eyebrow text-xs">{title}</span>
           <span className="text-xs text-muted-foreground">· {lanes.length} lane{lanes.length === 1 ? "" : "s"}</span>
         </button>
-        {open && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="label-eyebrow">H</span>
-            <input type="range" min={50} max={180} step={5} value={height}
-              onChange={(e) => setHeight(Number(e.target.value))} className="w-32 accent-primary" />
-            <span className="text-mono w-8 text-right">{height}px</span>
-          </div>
-        )}
       </div>
       {open && (
         <ChartLanes lanes={lanes} height={height} time={time} duration={duration}
