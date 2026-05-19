@@ -426,52 +426,112 @@ function CameraAdmin() {
             <div className="hud-panel relative flex min-h-0 flex-col overflow-hidden">
               <div className="flex items-center justify-between border-b border-border bg-surface px-3 py-1.5">
                 <div className="label-eyebrow text-xs">Map · {map.name}</div>
-                <div className="text-mono text-xs text-muted-foreground">viewport {(viewport.size * 100).toFixed(0)}%</div>
+                <div className="text-mono text-xs text-muted-foreground">
+                  zoom {(mapView.scale * 100).toFixed(0)}% · viewport {(viewport.size * 100).toFixed(0)}%
+                </div>
               </div>
-              <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-background p-2">
-                <div ref={mapRef} className="relative" style={{ aspectRatio: "1 / 1", height: "100%", maxWidth: "100%" }}>
-                  <img src={map.image} alt={map.name} className="absolute inset-0 h-full w-full object-contain" draggable={false} />
-                  <svg viewBox="0 0 1000 1000" preserveAspectRatio="none" className="pointer-events-none absolute inset-0 h-full w-full">
-                    {rings.map((r, i) => (
-                      <g key={`ring-${i}`}>
-                        <circle cx={r.cx * 1000} cy={r.cy * 1000} r={r.r * 1000}
-                          fill="none" stroke={r.color} strokeWidth={2} strokeDasharray="6 4" opacity={0.85} />
-                        <circle cx={r.cx * 1000} cy={r.cy * 1000} r={r.r * 1000}
-                          fill={r.color} opacity={0.06} />
-                        {splitOpts.showRingCenter && (
-                          <g>
-                            <circle cx={r.cx * 1000} cy={r.cy * 1000} r={3} fill={r.color} />
-                            <line x1={r.cx * 1000 - 8} y1={r.cy * 1000} x2={r.cx * 1000 + 8} y2={r.cy * 1000} stroke={r.color} strokeWidth={1} />
-                            <line x1={r.cx * 1000} y1={r.cy * 1000 - 8} x2={r.cx * 1000} y2={r.cy * 1000 + 8} stroke={r.color} strokeWidth={1} />
+              <div
+                ref={mapWrapRef}
+                onWheel={onMapWheel}
+                onMouseDown={onMapMouseDown}
+                onMouseMove={onMapMouseMove}
+                onMouseUp={onMapMouseUp}
+                onMouseLeave={onMapMouseUp}
+                className="relative min-h-0 flex-1 overflow-hidden bg-background hud-grid-bg select-none"
+                style={{ cursor: mapPan.current ? "grabbing" : "grab" }}
+              >
+                <div
+                  className="absolute inset-0 origin-top-left"
+                  style={{ transform: `translate(${mapView.tx}px, ${mapView.ty}px) scale(${mapView.scale})` }}
+                >
+                  <div ref={mapRef} className="relative h-full w-full">
+                    <img src={map.image} alt={map.name} draggable={false}
+                      className="absolute inset-0 h-full w-full object-contain opacity-95" />
+                    <svg viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet"
+                      className="pointer-events-none absolute inset-0 h-full w-full">
+                      <defs>
+                        <filter id="cam-glow">
+                          <feGaussianBlur stdDeviation="2.5" result="b" />
+                          <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+                        </filter>
+                        <clipPath id="cam-map-bounds">
+                          <rect x="0" y="0" width="1000" height="1000" />
+                        </clipPath>
+                      </defs>
+                      {rings.length > 0 && (() => {
+                        const active = rings[rings.length - 1];
+                        return (
+                          <g clipPath="url(#cam-map-bounds)">
+                            {/* Red danger zone outside the active safe ring */}
+                            <path
+                              d={`M0,0 H1000 V1000 H0 Z M ${active.cx * 1000},${(active.cy * 1000) - active.r * 1000} a ${active.r * 1000},${active.r * 1000} 0 1,0 0,${active.r * 2000} a ${active.r * 1000},${active.r * 1000} 0 1,0 0,${-active.r * 2000} Z`}
+                              fillRule="evenodd"
+                              fill="rgba(239,68,68,0.28)"
+                              stroke="none"
+                            />
+                            {/* Static preview of all ring phases */}
+                            {rings.map((p, i) => (
+                              <circle key={`prev-${i}`} cx={p.cx * 1000} cy={p.cy * 1000} r={p.r * 1000}
+                                fill="none" stroke="rgba(255,255,255,0.85)"
+                                strokeWidth={1.6 / mapView.scale}
+                                strokeDasharray={`${4 / mapView.scale} ${4 / mapView.scale}`} />
+                            ))}
+                            <circle cx={active.cx * 1000} cy={active.cy * 1000} r={active.r * 1000}
+                              fill="rgba(34,196,245,0.08)" stroke="#22c4f5"
+                              strokeWidth={3.5 / mapView.scale}
+                              strokeDasharray={`${10 / mapView.scale} ${5 / mapView.scale}`} />
+                            {splitOpts.showRingCenter && (
+                              <circle cx={active.cx * 1000} cy={active.cy * 1000} r={3 / mapView.scale} fill="#22c4f5" />
+                            )}
                           </g>
-                        )}
-                        <text x={r.cx * 1000} y={(r.cy - r.r) * 1000 - 6} textAnchor="middle"
-                          fontSize={11} fill={r.color} stroke="#000" strokeWidth={2}
-                          paintOrder="stroke" className="font-mono">{r.label}</text>
-                      </g>
-                    ))}
-                    {teamPositions.map((t) => (
-                      <g key={t.id}>
-                        <circle cx={t.x * 1000} cy={t.y * 1000} r={10} fill={t.color} stroke="#000" strokeWidth={2} />
-                        <text x={t.x * 1000} y={t.y * 1000 - 14} textAnchor="middle" fontSize={11} fill="#fff"
-                          stroke="#000" strokeWidth={3} paintOrder="stroke" className="font-mono">{t.tag}</text>
-                      </g>
-                    ))}
-                  </svg>
-                  <div
-                    className={`absolute border-2 border-primary ${splitOpts.lockZoom ? "" : "cursor-move"}`}
-                    style={{
-                      left: `${viewport.x * 100}%`, top: `${viewport.y * 100}%`,
-                      width: `${viewport.size * 100}%`, height: `${viewport.size * 100}%`,
-                      boxShadow: "0 0 0 9999px rgba(0,0,0,0.35) inset",
-                    }}
-                    onMouseDown={(e) => { if (!splitOpts.lockZoom) setVpDrag({ kind: "move", startX: e.clientX, startY: e.clientY, v: viewport }); }}
-                  >
-                    {!splitOpts.lockZoom && (
-                      <div className="absolute -bottom-1 -right-1 h-3 w-3 cursor-nwse-resize border border-primary bg-background"
-                        onMouseDown={(e) => { e.stopPropagation(); setVpDrag({ kind: "resize", startX: e.clientX, startY: e.clientY, v: viewport }); }} />
-                    )}
+                        );
+                      })()}
+                      {teamPositions.map((t, i) => {
+                        const slot = getSlotColor(i);
+                        const labelW = t.tag.length * 7 + 6;
+                        const labelH = 14;
+                        return (
+                          <g key={t.id} filter="url(#cam-glow)">
+                            <circle cx={t.x * 1000} cy={t.y * 1000} r={11 / mapView.scale}
+                              fill="none" stroke={slot} strokeWidth={1 / mapView.scale} opacity={0.5} />
+                            <circle cx={t.x * 1000} cy={t.y * 1000} r={6 / mapView.scale}
+                              fill={slot} stroke="rgba(0,0,0,0.8)" strokeWidth={1 / mapView.scale} />
+                            <g transform={`translate(${t.x * 1000 + 14 / mapView.scale} ${t.y * 1000 - (labelH / 2) / mapView.scale})`}>
+                              <rect x={0} y={0}
+                                width={labelW / mapView.scale} height={labelH / mapView.scale}
+                                rx={3 / mapView.scale} ry={3 / mapView.scale}
+                                fill="rgba(0,0,0,0.7)" stroke={slot} strokeWidth={2 / mapView.scale} />
+                              <text x={(labelW / 2) / mapView.scale} y={(labelH * 0.72) / mapView.scale}
+                                textAnchor="middle" fontSize={11 / mapView.scale} fontWeight={800}
+                                fill="#fff" fontFamily="Manrope, sans-serif">{t.tag}</text>
+                            </g>
+                          </g>
+                        );
+                      })}
+                    </svg>
+                    {/* Camera viewport rectangle (kept) */}
+                    <div
+                      data-vp-handle
+                      className={`absolute border-2 border-primary ${splitOpts.lockZoom ? "" : "cursor-move"}`}
+                      style={{
+                        left: `${viewport.x * 100}%`, top: `${viewport.y * 100}%`,
+                        width: `${viewport.size * 100}%`, height: `${viewport.size * 100}%`,
+                        boxShadow: "0 0 0 9999px rgba(0,0,0,0.35) inset",
+                      }}
+                      onMouseDown={(e) => { if (!splitOpts.lockZoom) { e.stopPropagation(); setVpDrag({ kind: "move", startX: e.clientX, startY: e.clientY, v: viewport }); } }}
+                    >
+                      {!splitOpts.lockZoom && (
+                        <div data-vp-handle className="absolute -bottom-1 -right-1 h-3 w-3 cursor-nwse-resize border border-primary bg-background"
+                          onMouseDown={(e) => { e.stopPropagation(); setVpDrag({ kind: "resize", startX: e.clientX, startY: e.clientY, v: viewport }); }} />
+                      )}
+                    </div>
                   </div>
+                </div>
+                {/* Zoom controls */}
+                <div className="pointer-events-auto absolute right-3 bottom-3 hud-panel-strong flex flex-col overflow-hidden text-xs">
+                  <button onClick={() => zoomMapBy(1.5)} className="flex h-7 w-7 items-center justify-center border-b border-border hover:bg-muted" aria-label="Zoom in">+</button>
+                  <button onClick={() => zoomMapBy(1 / 1.5)} className="flex h-7 w-7 items-center justify-center border-b border-border hover:bg-muted" aria-label="Zoom out">−</button>
+                  <button onClick={resetMapView} className="text-mono flex h-7 w-7 items-center justify-center text-xs hover:bg-muted" aria-label="Reset zoom">1:1</button>
                 </div>
               </div>
             </div>
