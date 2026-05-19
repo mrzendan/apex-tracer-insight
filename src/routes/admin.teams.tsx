@@ -93,7 +93,7 @@ function TeamsAdmin() {
                 className={
                   "rounded-sm px-2 py-1 text-xs font-semibold uppercase tracking-wider " +
                   (statusFilter === s
-                    ? "border border-orange-500/40 bg-orange-500/10 text-orange-400"
+                    ? "border border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
                     : "bg-surface text-muted-foreground hover:text-foreground")
                 }
               >
