@@ -135,6 +135,52 @@ const eventLabel: Record<TrackEvent["kind"], string> = {
   lost: "Lost tracking", manual: "Manual correction",
 };
 
+type VideoOverlays = {
+  showCrop: boolean; showHud: boolean; showDetected: boolean; showMinimap: boolean;
+};
+type EventFilters = Record<TrackEvent["kind"], boolean>;
+type QualityMetrics = { trackingQ: number; jumpEvents: number; lostFrames: number; avgConfidence: number };
+
+/* parameter explanations (tooltips) */
+const HINTS: Record<string, string> = {
+  smoothing: "Доля сглаживания EMA. Выше — плавнее, но возможна задержка реакции.",
+  responseSpeed: "Скорость реакции камеры на смещение цели. Выше — быстрее, но больше шум.",
+  deadzone: "Минимальное смещение, которое считается реальным движением. Меньше — больше шума.",
+  maxSpeed: "Максимальное смещение камеры за кадр. Выше — возможны резкие скачки.",
+  ema: "Количество кадров для сглаживания EMA. Выше — плавнее, но больше задержка.",
+  cropLeft: "Срез слева в пикселях исходного кадра 1920×1080.",
+  cropRight: "Срез справа в пикселях исходного кадра 1920×1080.",
+  cropTop: "Срез сверху (HUD, имена игроков и т.п.).",
+  cropBottom: "Срез снизу (HUD-индикаторы).",
+  zoomLerp: "Скорость интерполяции зума. 0 — мгновенно, 1 — очень плавно.",
+  zoomStep: "Шаг для step-zoom режима.",
+  zoomSensitivity: "Чувствительность авто-зума к радиусу кольца / разлёту команд.",
+  ringWeight: "Вес центра кольца при расчёте позиции камеры.",
+  teamWeight: "Вес позиций команд при расчёте позиции камеры.",
+  ringNoiseTolerance: "Допустимый шум распознавания кольца перед relock.",
+  teamClusterTolerance: "Допустимый шум кластеризации команд.",
+  jumpThreshold: "Смещение в px между кадрами, которое считается джампом.",
+  jumpCooldownFrames: "Сколько кадров после джампа игнорировать новые джампы.",
+  preJumpUnlock: "Сек до джампа, когда камера ослабляет привязку.",
+  antiLatchTail: "Хвост anti-latch после джампа, секунды.",
+  relockThreshold: "Порог уверенности для relock после lost.",
+  confidenceThreshold: "Минимальная уверенность кадра, ниже которой кадр считается low-confidence.",
+  lostFrameThreshold: "Сколько подряд low-confidence кадров считаются lost.",
+  sampleStep: "Каждый N-й кадр для анализа (производительность).",
+};
+
+/* warnings for dangerous values */
+function getWarn(key: string, v: number): string | null {
+  switch (key) {
+    case "maxSpeed":   return v > 300 ? "Max speed слишком высокий — возможны резкие скачки" : null;
+    case "smoothing":  return v > 0.9 ? "Smoothing слишком высокий — возможна задержка реакции" : null;
+    case "deadzone":   return v < 4   ? "Deadzone слишком низкий — возможен шум" : null;
+    case "responseSpeed": return v > 0.95 ? "Response speed слишком высокий — рывки" : null;
+    case "jumpThreshold": return v < 40 ? "Слишком низкий порог — ложные джампы" : null;
+    default: return null;
+  }
+}
+
 function buildEvents(duration: number): TrackEvent[] {
   const frac: Array<[number, TrackEvent["kind"]]> = [
     [0.15, "jump"], [0.16, "relock"],
@@ -352,6 +398,25 @@ function CameraAdmin() {
   const [graphPreset, setGraphPreset] = useState<typeof GRAPH_PRESETS[number]>("Balance");
   const [selectedEvent, setSelectedEvent] = useState<TrackEvent | null>(null);
   const [selectedDebugFile, setSelectedDebugFile] = useState<string>("result.json");
+  const [videoOverlays, setVideoOverlays] = useState<VideoOverlays>({
+    showCrop: true, showHud: false, showDetected: true, showMinimap: false,
+  });
+  const [eventFilters, setEventFilters] = useState<EventFilters>({
+    ring: true, jump: true, relock: true, lost: true, manual: true,
+  });
+  const [prevQuality, setPrevQuality] = useState<QualityMetrics | null>(null);
+
+  const visibleEvents = useMemo(
+    () => events.filter((e) => eventFilters[e.kind]),
+    [events, eventFilters],
+  );
+
+  /* commit snapshots previous metrics for compare */
+  const commitUpdateWithSnapshot = () => {
+    setPrevQuality(quality);
+    setCommitted(draft);
+  };
+  const resetDraftToActive = () => setDraft(active.settings);
 
   /* map pan/zoom + viewport drag */
   const mapRef = useRef<HTMLDivElement | null>(null);
@@ -434,6 +499,9 @@ function CameraAdmin() {
       showCameraBbox={splitOpts.showCameraBbox}
       videoLoaded={videoLoaded}
       syncMapVideo={splitOpts.syncMapVideo}
+      overlays={videoOverlays}
+      onOverlaysChange={setVideoOverlays}
+      onOpenSourceSettings={() => setViewMode("settings")}
     />
   );
 
@@ -446,7 +514,7 @@ function CameraAdmin() {
         mapId={mapId} setMapId={setMapId} matchMapIds={matchMapIds}
         viewMode={viewMode} setViewMode={setViewMode}
       />
-      <QualityBar quality={quality} preset={active.name} isDirty={isDirty} />
+      <QualityBar quality={quality} prevQuality={prevQuality} preset={active.name} isDirty={isDirty} />
 
       <div className="flex flex-1 overflow-hidden">
         {/* LEFT: tab content */}
@@ -458,13 +526,16 @@ function CameraAdmin() {
               videoPreview={videoPreview} mapPreview={mapPreview}
               time={time} duration={duration} playing={playing}
               onSeek={seek} onTogglePlay={togglePlay}
-              events={events}
+              events={visibleEvents}
+              eventFilters={eventFilters} setEventFilters={setEventFilters}
+              onSelectEvent={setSelectedEvent}
+              selectedEvent={selectedEvent}
             />
           )}
           {viewMode === "graphs" && (
             <GraphsTab
               time={time} duration={duration} onSeek={seek}
-              events={events} showOriginal={showOriginal}
+              events={visibleEvents} showOriginal={showOriginal}
               onToggleOriginal={() => setShowOriginal((v) => !v)}
               seriesVis={seriesVis}
               onSelectEvent={setSelectedEvent}
@@ -478,7 +549,7 @@ function CameraAdmin() {
           {viewMode === "debug" && (
             <DebugTab
               settings={committed} viewport={viewport} quality={quality}
-              events={events} time={time}
+              events={visibleEvents} time={time}
               selectedDebugFile={selectedDebugFile}
               videoPreview={videoPreview}
             />
@@ -492,14 +563,16 @@ function CameraAdmin() {
           presets={presets}
           activePresetId={activePresetId}
           onApplyPreset={applyPreset}
-          onUpdateCommit={commitUpdate}
+          onUpdateCommit={commitUpdateWithSnapshot}
           onSaveAs={saveAs}
           onUpdateActivePreset={updateActivePreset}
           onDuplicatePreset={duplicatePreset}
           onDeletePreset={deleteActivePreset}
           onResetToDefault={resetToDefault}
+          onResetDraftToActive={resetDraftToActive}
           isDirty={isDirty}
           quality={quality}
+          prevQuality={prevQuality}
           problems={problems}
           onSeek={seek}
           draft={draft} patchDraft={patchDraft}
@@ -509,6 +582,7 @@ function CameraAdmin() {
           selectedEvent={selectedEvent}
           selectedDebugFile={selectedDebugFile} setSelectedDebugFile={setSelectedDebugFile}
           time={time}
+          eventFilters={eventFilters} setEventFilters={setEventFilters}
         />
       </div>
     </div>
