@@ -636,20 +636,35 @@ function HeaderStrip(props: {
 
 function QualityBar({ quality, preset, isDirty }: {
   quality: { trackingQ: number; jumpEvents: number; lostFrames: number; avgConfidence: number };
+  prevQuality?: QualityMetrics | null;
   preset: string; isDirty: boolean;
 }) {
   const tone = quality.trackingQ >= 80 ? "text-emerald-400" : quality.trackingQ >= 60 ? "text-amber-400" : "text-destructive";
+  const delta = (cur: number, prev: number | undefined, isPct = false, decimals = 0, lowerIsBetter = false) => {
+    if (prev === undefined) return null;
+    const d = cur - prev;
+    if (Math.abs(d) < (isPct ? 0.5 : decimals ? 0.005 : 0.5)) return null;
+    const good = lowerIsBetter ? d < 0 : d > 0;
+    const cls = good ? "text-emerald-400" : "text-destructive";
+    const sign = d > 0 ? "+" : "";
+    const val = decimals ? d.toFixed(decimals) : Math.round(d).toString();
+    return <span className={`ml-1 text-mono text-[10px] ${cls}`}>{sign}{val}{isPct ? "%" : ""}</span>;
+  };
+  const prev = arguments[0].prevQuality as QualityMetrics | null | undefined;
   return (
     <div className="flex shrink-0 items-center gap-6 border-b border-border bg-surface-2 px-6 py-2">
-      <Stat label="Tracking quality" value={`${quality.trackingQ}%`} valueClass={tone} />
-      <Stat label="Jump events" value={quality.jumpEvents.toString()} />
-      <Stat label="Lost frames" value={quality.lostFrames.toString()} />
-      <Stat label="Avg confidence" value={quality.avgConfidence.toFixed(2)} />
+      <Stat label="Tracking quality" value={`${quality.trackingQ}%`} valueClass={tone} after={delta(quality.trackingQ, prev?.trackingQ, true)} />
+      <Stat label="Jump events" value={quality.jumpEvents.toString()} after={delta(quality.jumpEvents, prev?.jumpEvents, false, 0, true)} />
+      <Stat label="Lost frames" value={quality.lostFrames.toString()} after={delta(quality.lostFrames, prev?.lostFrames, false, 0, true)} />
+      <Stat label="Avg confidence" value={quality.avgConfidence.toFixed(2)} after={delta(quality.avgConfidence, prev?.avgConfidence, false, 2)} />
       <div className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
         {isDirty && (
           <span className="rounded-sm border border-amber-400/40 bg-amber-400/10 px-2 py-0.5 font-semibold uppercase tracking-wider text-amber-400">
             Pending update
           </span>
+        )}
+        {prev && (
+          <span className="text-mono text-[11px]">vs prev · Q {prev.trackingQ}% · J {prev.jumpEvents} · L {prev.lostFrames}</span>
         )}
         <span>current preset · <span className="text-foreground">{preset}</span></span>
       </div>
@@ -657,11 +672,11 @@ function QualityBar({ quality, preset, isDirty }: {
   );
 }
 
-function Stat({ label, value, valueClass = "" }: { label: string; value: string; valueClass?: string }) {
+function Stat({ label, value, valueClass = "", after }: { label: string; value: string; valueClass?: string; after?: React.ReactNode }) {
   return (
     <div className="flex items-baseline gap-2">
       <span className="label-eyebrow text-xs">{label}</span>
-      <span className={`text-mono text-sm font-semibold ${valueClass}`}>{value}</span>
+      <span className={`text-mono text-sm font-semibold ${valueClass}`}>{value}{after}</span>
     </div>
   );
 }
