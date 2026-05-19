@@ -104,21 +104,24 @@ function PolygonsAdmin() {
   const strokeFor = (tag: PolygonTag) =>
     tag === "forbidden" ? "#ef4444" : "#22c55e";
 
-  const exportJson = () => {
+  const exportJsonFor = (targetMapId: string) => {
+    const m = allMapsCombined.find((x) => x.id === targetMapId);
+    const polys = polygons.filter((p) => p.mapId === targetMapId);
     const payload = {
-      mapId,
-      mapName: map?.name,
+      mapId: targetMapId,
+      mapName: m?.name,
       exportedAt: new Date().toISOString(),
-      polygons: mapPolys.map((p) => ({ name: p.name, tag: p.tag, points: p.points })),
+      polygons: polys.map((p) => ({ name: p.name, tag: p.tag, points: p.points })),
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `polygons-${map?.name ?? mapId}.json`;
+    a.download = `polygons-${m?.name ?? targetMapId}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
+  const exportJson = () => exportJsonFor(mapId);
 
   const importJson = async (file: File) => {
     try {
