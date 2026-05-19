@@ -208,7 +208,14 @@ function ZonesAdmin() {
 
   // Preview crop: max box keeping zone's aspect ratio (no fixed-frame distortion).
   const cropBox = (zw: number, zh: number) => {
-    const MAX_W = 80, MAX_H = 56;
+    const MAX_W = 100, MAX_H = 64;
+    const r = zw / zh;
+    let w = MAX_W, h = MAX_W / r;
+    if (h > MAX_H) { h = MAX_H; w = MAX_H * r; }
+    return { w: Math.round(w), h: Math.round(h) };
+  };
+  const cropBoxBig = (zw: number, zh: number) => {
+    const MAX_W = 320, MAX_H = 180;
     const r = zw / zh;
     let w = MAX_W, h = MAX_W / r;
     if (h > MAX_H) { h = MAX_H; w = MAX_H * r; }
@@ -402,20 +409,39 @@ function ZonesAdmin() {
             const m = getMeta(z.id);
             const c = tagColor(z.tag);
             const cb = cropBox(z.w, z.h);
+            const big = cropBoxBig(z.w, z.h);
             return (
               <div key={z.id}
                 className={`mb-1 flex items-center gap-2 rounded-sm border px-2 py-1.5 transition-colors ${
                   z.id === sel ? "border-primary/40 bg-primary/10" : "border-transparent hover:bg-muted"} ${m.hidden ? "opacity-50" : ""}`}>
                 <button onClick={() => setSel(z.id)} className="flex flex-1 items-center gap-2 text-left min-w-0">
-                  <div className="relative shrink-0 overflow-hidden rounded-sm border border-border bg-background"
-                    style={{ width: cb.w, height: cb.h }}>
-                    <div className="absolute inset-0" style={{
-                      backgroundImage: `url(${bg})`,
-                      backgroundSize: `${(cb.w * W) / z.w}px ${(cb.h * H) / z.h}px`,
-                      backgroundPosition: `-${(z.x * cb.w) / z.w}px -${(z.y * cb.h) / z.h}px`,
-                      backgroundRepeat: "no-repeat",
-                    }} />
-                    <div className="absolute inset-0" style={{ boxShadow: `inset 0 0 0 1px ${c}` }} />
+                  <div className="group/preview relative shrink-0">
+                    <div className="relative overflow-hidden rounded-sm border border-border bg-background"
+                      style={{ width: cb.w, height: cb.h }}>
+                      <div className="absolute inset-0" style={{
+                        backgroundImage: `url(${bg})`,
+                        backgroundSize: `${(cb.w * W) / z.w}px ${(cb.h * H) / z.h}px`,
+                        backgroundPosition: `-${(z.x * cb.w) / z.w}px -${(z.y * cb.h) / z.h}px`,
+                        backgroundRepeat: "no-repeat",
+                      }} />
+                      <div className="absolute inset-0" style={{ boxShadow: `inset 0 0 0 1px ${c}` }} />
+                    </div>
+                    {/* Hover zoom */}
+                    <div
+                      className="pointer-events-none absolute right-full top-1/2 z-50 mr-2 -translate-y-1/2 rounded-sm border border-border bg-surface p-1 opacity-0 shadow-2xl transition-opacity group-hover/preview:opacity-100"
+                    >
+                      <div className="relative overflow-hidden rounded-sm bg-background"
+                        style={{ width: big.w, height: big.h }}>
+                        <div className="absolute inset-0" style={{
+                          backgroundImage: `url(${bg})`,
+                          backgroundSize: `${(big.w * W) / z.w}px ${(big.h * H) / z.h}px`,
+                          backgroundPosition: `-${(z.x * big.w) / z.w}px -${(z.y * big.h) / z.h}px`,
+                          backgroundRepeat: "no-repeat",
+                        }} />
+                        <div className="absolute inset-0" style={{ boxShadow: `inset 0 0 0 2px ${c}` }} />
+                      </div>
+                      <div className="text-mono mt-1 px-1 text-xs uppercase text-muted-foreground">{z.w}×{z.h}</div>
+                    </div>
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
