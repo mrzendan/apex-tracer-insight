@@ -35,7 +35,6 @@ function UsersPage() {
   const create = useServerFn(createUserAccount);
   const setRole = useServerFn(setUserRole);
   const del = useServerFn(deleteUserAccount);
-  const [tab, setTab] = useState<"accounts" | "invites">("accounts");
 
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
@@ -127,18 +126,8 @@ function UsersPage() {
     <div className="flex h-full flex-col overflow-auto">
       <header className="flex h-14 shrink-0 items-center border-b border-border bg-surface px-6">
         <h1 className="text-sm font-bold uppercase tracking-wider">Users</h1>
-        <div className="ml-6 flex gap-1">
-          <TabBtn active={tab === "accounts"} onClick={() => setTab("accounts")}>
-            Accounts
-          </TabBtn>
-          <TabBtn active={tab === "invites"} onClick={() => setTab("invites")}>
-            Invites
-          </TabBtn>
-        </div>
-        <div className="ml-auto label-eyebrow text-xs">Administrator only</div>
       </header>
 
-      {tab === "accounts" && (
       <div className="space-y-6 p-6">
         <section className="hud-panel p-4">
           <h2 className="label-eyebrow mb-3">Create account</h2>
@@ -256,10 +245,9 @@ function UsersPage() {
             </table>
           </div>
         </section>
-      </div>
-      )}
 
-      {tab === "invites" && <InvitesTab />}
+        <InvitesTab />
+      </div>
     </div>
   );
 }
@@ -273,29 +261,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function TabBtn({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`rounded-sm px-3 py-1 text-xs font-bold uppercase tracking-wider transition-colors ${
-        active
-          ? "bg-primary text-primary-foreground"
-          : "text-muted-foreground hover:bg-surface-2 hover:text-foreground"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
 type InviteRow = {
   id: string;
   email: string;
@@ -304,6 +269,8 @@ type InviteRow = {
   expires_at: string;
   used_at: string | null;
   created_at: string;
+  max_uses?: number;
+  uses_count?: number;
 };
 
 function InvitesTab() {
