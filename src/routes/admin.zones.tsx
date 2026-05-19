@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Eye, EyeOff, Lock, Unlock, Pencil, Copy, RotateCcw, AlignCenter, Files, Plus, Trash2, Check, ZoomIn, ZoomOut, Maximize2, Hand } from "lucide-react";
+import { Eye, EyeOff, Lock, Unlock, Pencil, Copy, RotateCcw, AlignCenter, Files, Plus, Trash2, Check, ZoomIn, ZoomOut, Maximize2, Hand, Download } from "lucide-react";
 import vodBg from "@/assets/hsv-samples/worlds-edge.png";
 import cameraBg from "@/assets/zones-samples/camera.png";
 import { useAdminStore, setZones as setZonesStore, type Zone, type ZoneMode } from "@/lib/admin-store";
@@ -108,6 +108,22 @@ function ZonesAdmin() {
     if (!renamingId) return;
     setCustoms((cs) => cs.map((c) => (c.id === renamingId ? { ...c, label: renameVal.trim() || c.label } : c)));
     setRenamingId(null);
+  };
+
+  const downloadPreset = (id: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    const b = BUILTIN.find((x) => x.id === id);
+    const c = customs.find((x) => x.id === id);
+    const presetMode: ZoneMode = b?.mode ?? c?.mode ?? "vod";
+    const presetZones: Zone[] = b ? store.zones[b.mode] : c?.zones ?? [];
+    const label = b?.label ?? c?.label ?? id;
+    const slug = label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || id;
+    const payload = { preset: label, base: [W, H], mode: presetMode, zones: presetZones };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `zones.${slug}.json`; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   const getMeta = (id: string): ZoneMeta => meta[id] ?? {};
