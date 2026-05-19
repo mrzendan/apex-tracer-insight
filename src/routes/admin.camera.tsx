@@ -1440,15 +1440,16 @@ function SettingsPanel(props: Parameters<typeof RightPanel>[0]) {
             </select>
           </Field>
           <NumField label="Frame rate" value={draft.frameRate} min={1} max={240} step={1}
+            hint="Кадры в секунду исходного видео. Влияет на расчёт frame-based параметров."
             onChange={(v) => patchDraft({ frameRate: v })} />
         </Collapsible>
 
         <Collapsible title="Crop">
           <div className="grid grid-cols-2 gap-2">
-            <NumField label="Crop L" value={draft.cropLeft} min={0} max={900} step={10} onChange={(v) => patchDraft({ cropLeft: v })} />
-            <NumField label="Crop R" value={draft.cropRight} min={0} max={900} step={10} onChange={(v) => patchDraft({ cropRight: v })} />
-            <NumField label="Crop T" value={draft.cropTop} min={0} max={500} step={10} onChange={(v) => patchDraft({ cropTop: v })} />
-            <NumField label="Crop B" value={draft.cropBottom} min={0} max={500} step={10} onChange={(v) => patchDraft({ cropBottom: v })} />
+            <NumField label="Crop L" value={draft.cropLeft} min={0} max={900} step={10} hint={HINTS.cropLeft} onChange={(v) => patchDraft({ cropLeft: v })} />
+            <NumField label="Crop R" value={draft.cropRight} min={0} max={900} step={10} hint={HINTS.cropRight} onChange={(v) => patchDraft({ cropRight: v })} />
+            <NumField label="Crop T" value={draft.cropTop} min={0} max={500} step={10} hint={HINTS.cropTop} onChange={(v) => patchDraft({ cropTop: v })} />
+            <NumField label="Crop B" value={draft.cropBottom} min={0} max={500} step={10} hint={HINTS.cropBottom} onChange={(v) => patchDraft({ cropBottom: v })} />
           </div>
           <button onClick={() => patchDraft({ cropLeft: 0, cropRight: 0, cropTop: 0, cropBottom: 0 })}
             className="w-full rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs font-semibold uppercase tracking-wider hover:bg-muted">
@@ -1457,11 +1458,11 @@ function SettingsPanel(props: Parameters<typeof RightPanel>[0]) {
         </Collapsible>
 
         <Collapsible title="Smoothing / response" defaultOpen>
-          <SliderField label="Smoothing" value={draft.smoothing} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ smoothing: v })} />
-          <SliderField label="Response speed" value={draft.responseSpeed} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ responseSpeed: v })} />
-          <NumField label="Deadzone (px)" value={draft.deadzone} min={0} max={200} step={1} onChange={(v) => patchDraft({ deadzone: v })} />
-          <NumField label="Max speed (px/frame)" value={draft.maxSpeed} min={1} max={500} step={1} onChange={(v) => patchDraft({ maxSpeed: v })} />
-          <NumField label="EMA window (frames)" value={draft.ema} min={1} max={60} step={1} onChange={(v) => patchDraft({ ema: v })} />
+          <SliderField label="Smoothing" value={draft.smoothing} min={0} max={1} step={0.01} hint={HINTS.smoothing} warn={getWarn("smoothing", draft.smoothing)} onChange={(v) => patchDraft({ smoothing: v })} />
+          <SliderField label="Response speed" value={draft.responseSpeed} min={0} max={1} step={0.01} hint={HINTS.responseSpeed} warn={getWarn("responseSpeed", draft.responseSpeed)} onChange={(v) => patchDraft({ responseSpeed: v })} />
+          <NumField label="Deadzone (px)" value={draft.deadzone} min={0} max={200} step={1} hint={HINTS.deadzone} warn={getWarn("deadzone", draft.deadzone)} onChange={(v) => patchDraft({ deadzone: v })} />
+          <NumField label="Max speed (px/frame)" value={draft.maxSpeed} min={1} max={500} step={1} hint={HINTS.maxSpeed} warn={getWarn("maxSpeed", draft.maxSpeed)} onChange={(v) => patchDraft({ maxSpeed: v })} />
+          <NumField label="EMA window (frames)" value={draft.ema} min={1} max={60} step={1} hint={HINTS.ema} onChange={(v) => patchDraft({ ema: v })} />
         </Collapsible>
 
         <Collapsible title="Zoom">
@@ -1469,32 +1470,32 @@ function SettingsPanel(props: Parameters<typeof RightPanel>[0]) {
             <NumField label="Zoom min" value={draft.zoomMin} min={0.5} max={3} step={0.05} onChange={(v) => patchDraft({ zoomMin: v })} />
             <NumField label="Zoom max" value={draft.zoomMax} min={1} max={5} step={0.05} onChange={(v) => patchDraft({ zoomMax: v })} />
           </div>
-          <NumField label="Zoom step" value={draft.zoomStep} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ zoomStep: v })} />
-          <SliderField label="Zoom lerp" value={draft.zoomLerp} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ zoomLerp: v })} />
-          <SliderField label="Zoom sensitivity" value={draft.zoomSensitivity} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ zoomSensitivity: v })} />
+          <NumField label="Zoom step" value={draft.zoomStep} min={0} max={1} step={0.01} hint={HINTS.zoomStep} onChange={(v) => patchDraft({ zoomStep: v })} />
+          <SliderField label="Zoom lerp" value={draft.zoomLerp} min={0} max={1} step={0.01} hint={HINTS.zoomLerp} onChange={(v) => patchDraft({ zoomLerp: v })} />
+          <SliderField label="Zoom sensitivity" value={draft.zoomSensitivity} min={0} max={1} step={0.01} hint={HINTS.zoomSensitivity} onChange={(v) => patchDraft({ zoomSensitivity: v })} />
           <CheckField label="Step zoom enabled" checked={draft.stepZoomEnabled} onChange={(v) => patchDraft({ stepZoomEnabled: v })} />
         </Collapsible>
 
         <Collapsible title="Ring / team weighting">
-          <SliderField label="Ring weight" value={draft.ringWeight} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ ringWeight: v })} />
-          <SliderField label="Team weight" value={draft.teamWeight} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ teamWeight: v })} />
-          <SliderField label="Ring noise tolerance" value={draft.ringNoiseTolerance} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ ringNoiseTolerance: v })} />
-          <SliderField label="Team cluster tolerance" value={draft.teamClusterTolerance} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ teamClusterTolerance: v })} />
+          <SliderField label="Ring weight" value={draft.ringWeight} min={0} max={1} step={0.01} hint={HINTS.ringWeight} onChange={(v) => patchDraft({ ringWeight: v })} />
+          <SliderField label="Team weight" value={draft.teamWeight} min={0} max={1} step={0.01} hint={HINTS.teamWeight} onChange={(v) => patchDraft({ teamWeight: v })} />
+          <SliderField label="Ring noise tolerance" value={draft.ringNoiseTolerance} min={0} max={1} step={0.01} hint={HINTS.ringNoiseTolerance} onChange={(v) => patchDraft({ ringNoiseTolerance: v })} />
+          <SliderField label="Team cluster tolerance" value={draft.teamClusterTolerance} min={0} max={1} step={0.01} hint={HINTS.teamClusterTolerance} onChange={(v) => patchDraft({ teamClusterTolerance: v })} />
           <CheckField label="Ring center lock" checked={draft.ringCenterLock} onChange={(v) => patchDraft({ ringCenterLock: v })} />
         </Collapsible>
 
         <Collapsible title="Jump detection">
-          <NumField label="Jump threshold" value={draft.jumpThreshold} min={0} max={1000} step={5} onChange={(v) => patchDraft({ jumpThreshold: v })} />
-          <NumField label="Jump cooldown (frames)" value={draft.jumpCooldownFrames} min={0} max={120} step={1} onChange={(v) => patchDraft({ jumpCooldownFrames: v })} />
-          <NumField label="Pre-jump unlock (s)" value={draft.preJumpUnlock} min={0} max={3} step={0.05} onChange={(v) => patchDraft({ preJumpUnlock: v })} />
-          <NumField label="Anti-latch tail (s)" value={draft.antiLatchTail} min={0} max={3} step={0.05} onChange={(v) => patchDraft({ antiLatchTail: v })} />
-          <SliderField label="Relock threshold" value={draft.relockThreshold} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ relockThreshold: v })} />
+          <NumField label="Jump threshold" value={draft.jumpThreshold} min={0} max={1000} step={5} hint={HINTS.jumpThreshold} warn={getWarn("jumpThreshold", draft.jumpThreshold)} onChange={(v) => patchDraft({ jumpThreshold: v })} />
+          <NumField label="Jump cooldown (frames)" value={draft.jumpCooldownFrames} min={0} max={120} step={1} hint={HINTS.jumpCooldownFrames} onChange={(v) => patchDraft({ jumpCooldownFrames: v })} />
+          <NumField label="Pre-jump unlock (s)" value={draft.preJumpUnlock} min={0} max={3} step={0.05} hint={HINTS.preJumpUnlock} onChange={(v) => patchDraft({ preJumpUnlock: v })} />
+          <NumField label="Anti-latch tail (s)" value={draft.antiLatchTail} min={0} max={3} step={0.05} hint={HINTS.antiLatchTail} onChange={(v) => patchDraft({ antiLatchTail: v })} />
+          <SliderField label="Relock threshold" value={draft.relockThreshold} min={0} max={1} step={0.01} hint={HINTS.relockThreshold} onChange={(v) => patchDraft({ relockThreshold: v })} />
         </Collapsible>
 
         <Collapsible title="Advanced">
-          <NumField label="Sample step" value={draft.sampleStep} min={1} max={20} step={1} onChange={(v) => patchDraft({ sampleStep: v })} />
-          <SliderField label="Confidence threshold" value={draft.confidenceThreshold} min={0} max={1} step={0.01} onChange={(v) => patchDraft({ confidenceThreshold: v })} />
-          <NumField label="Lost frame threshold" value={draft.lostFrameThreshold} min={1} max={60} step={1} onChange={(v) => patchDraft({ lostFrameThreshold: v })} />
+          <NumField label="Sample step" value={draft.sampleStep} min={1} max={20} step={1} hint={HINTS.sampleStep} onChange={(v) => patchDraft({ sampleStep: v })} />
+          <SliderField label="Confidence threshold" value={draft.confidenceThreshold} min={0} max={1} step={0.01} hint={HINTS.confidenceThreshold} onChange={(v) => patchDraft({ confidenceThreshold: v })} />
+          <NumField label="Lost frame threshold" value={draft.lostFrameThreshold} min={1} max={60} step={1} hint={HINTS.lostFrameThreshold} onChange={(v) => patchDraft({ lostFrameThreshold: v })} />
           <CheckField label="Debug mode" checked={draft.debugMode} onChange={(v) => patchDraft({ debugMode: v })} />
           <CheckField label="Save debug frames" checked={draft.saveDebugFrames} onChange={(v) => patchDraft({ saveDebugFrames: v })} />
         </Collapsible>
@@ -1512,24 +1513,15 @@ function SettingsPanel(props: Parameters<typeof RightPanel>[0]) {
             </button>
           ))}
         </div>
-        <div className="grid grid-cols-3 gap-1.5">
-          <button onClick={() => props.onApplyPreset(props.activePresetId)}
-            className="rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">Apply</button>
-          <button onClick={props.onUpdateCommit}
-            className="rounded-sm bg-primary px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">Update</button>
-          <button onClick={props.onSaveAs}
-            className="rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">Save as…</button>
-          <button onClick={props.onUpdateActivePreset}
-            className="rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">Save</button>
+        <PresetActions {...props} />
+        <div className="mt-2 grid grid-cols-3 gap-1.5">
           <button onClick={props.onDuplicatePreset}
             className="rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">Duplicate</button>
           <button onClick={props.onDeletePreset}
             className="rounded-sm border border-destructive/40 bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-destructive hover:bg-destructive/10">Delete</button>
+          <button onClick={props.onResetToDefault}
+            className="rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">Reset default</button>
         </div>
-        <button onClick={props.onResetToDefault}
-          className="mt-2 w-full rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">
-          Reset to default
-        </button>
       </div>
     </>
   );
