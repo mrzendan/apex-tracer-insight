@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Eye, EyeOff, Lock, Unlock, Pencil, Copy, RotateCcw, AlignCenter, Files, Plus, Trash2, Check, ZoomIn, ZoomOut, Maximize2, Hand } from "lucide-react";
 import vodBg from "@/assets/hsv-samples/worlds-edge.png";
 import cameraBg from "@/assets/zones-samples/camera.png";
@@ -61,6 +62,7 @@ function ZonesAdmin() {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [spaceDown, setSpaceDown] = useState(false);
+  const [hover, setHover] = useState<null | { z: Zone; top: number; left: number }>(null);
   const stageRef = useRef<HTMLDivElement | null>(null);
   const panRef = useRef<null | { startX: number; startY: number; orig: { x: number; y: number } }>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -450,7 +452,7 @@ function ZonesAdmin() {
 
         </div>
 
-        <aside className="w-[340px] shrink-0 border-l border-border bg-surface p-3 overflow-y-auto">
+        <aside className="w-[340px] shrink-0 border-l border-border bg-surface p-3">
           <section className="mb-3 rounded-sm border border-border bg-surface-2 p-2.5">
             <div className="mb-2 flex items-center justify-between">
               <div className="label-eyebrow">Tags ({tags.length})</div>
@@ -461,7 +463,7 @@ function ZonesAdmin() {
             </div>
             {tags.map((t) => (
               <div key={t.id} className="mb-1 flex items-center gap-2 rounded-sm border border-border bg-surface px-2 py-1.5">
-                <label className="relative block h-7 w-7 shrink-0 cursor-pointer overflow-hidden rounded-sm border border-border"
+                <label className="relative block h-2.5 w-2.5 shrink-0 cursor-pointer overflow-hidden rounded-sm"
                   style={{ backgroundColor: t.color }} title={t.color}>
                   <input type="color" value={t.color} onChange={(e) => recolorTag(t.id, e.target.value)}
                     className="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
@@ -496,7 +498,15 @@ function ZonesAdmin() {
                   <span className="text-mono shrink-0 text-[10px] uppercase text-muted-foreground">{z.tag}</span>
                 </button>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => setSel(z.id)} className="group/preview relative shrink-0">
+                  <button
+                    onClick={() => setSel(z.id)}
+                    onMouseEnter={(e) => {
+                      const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                      setHover({ z, top: r.top + r.height / 2, left: r.left });
+                    }}
+                    onMouseLeave={() => setHover((h) => (h?.z.id === z.id ? null : h))}
+                    className="relative shrink-0"
+                  >
                     <div className="relative overflow-hidden rounded-sm border border-border bg-background"
                       style={{ width: cb.w, height: cb.h }}>
                       <div className="absolute inset-0" style={{
@@ -506,22 +516,6 @@ function ZonesAdmin() {
                         backgroundRepeat: "no-repeat",
                       }} />
                       <div className="absolute inset-0" style={{ boxShadow: `inset 0 0 0 1px ${c}` }} />
-                    </div>
-                    {/* Hover zoom */}
-                    <div
-                      className="pointer-events-none absolute right-full top-1/2 z-50 mr-2 -translate-y-1/2 rounded-sm border border-border bg-surface p-1 opacity-0 shadow-2xl transition-opacity group-hover/preview:opacity-100"
-                    >
-                      <div className="relative overflow-hidden rounded-sm bg-background"
-                        style={{ width: big.w, height: big.h }}>
-                        <div className="absolute inset-0" style={{
-                          backgroundImage: `url(${bg})`,
-                          backgroundSize: `${(big.w * W) / z.w}px ${(big.h * H) / z.h}px`,
-                          backgroundPosition: `-${(z.x * big.w) / z.w}px -${(z.y * big.h) / z.h}px`,
-                          backgroundRepeat: "no-repeat",
-                        }} />
-                        <div className="absolute inset-0" style={{ boxShadow: `inset 0 0 0 2px ${c}` }} />
-                      </div>
-                      <div className="text-mono mt-1 px-1 text-xs uppercase text-muted-foreground">{z.w}×{z.h}</div>
                     </div>
                   </button>
                   <span className="text-mono flex-1 text-[10px] uppercase text-muted-foreground">{z.w}×{z.h}</span>
@@ -598,6 +592,31 @@ function ZonesAdmin() {
           Preset: {builtin?.label ?? custom?.label ?? "—"} · Snap {snap ? `${gridSize}px` : "off"}
         </div>
       </div>
+      {hover && typeof document !== "undefined" && createPortal(
+        (() => {
+          const z = hover.z;
+          const big = cropBoxBig(z.w, z.h);
+          const c = tagColor(z.tag);
+          return (
+            <div
+              className="pointer-events-none fixed z-[1000] -translate-y-1/2 rounded-sm border border-border bg-surface p-1 shadow-2xl"
+              style={{ top: hover.top, left: hover.left - big.w - 12 }}
+            >
+              <div className="relative overflow-hidden rounded-sm bg-background" style={{ width: big.w, height: big.h }}>
+                <div className="absolute inset-0" style={{
+                  backgroundImage: `url(${bg})`,
+                  backgroundSize: `${(big.w * W) / z.w}px ${(big.h * H) / z.h}px`,
+                  backgroundPosition: `-${(z.x * big.w) / z.w}px -${(z.y * big.h) / z.h}px`,
+                  backgroundRepeat: "no-repeat",
+                }} />
+                <div className="absolute inset-0" style={{ boxShadow: `inset 0 0 0 2px ${c}` }} />
+              </div>
+              <div className="text-mono mt-1 px-1 text-xs uppercase text-muted-foreground">{z.name} · {z.w}×{z.h}</div>
+            </div>
+          );
+        })(),
+        document.body,
+      )}
     </div>
   );
 }
