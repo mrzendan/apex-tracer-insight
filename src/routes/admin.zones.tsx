@@ -54,7 +54,7 @@ function ZonesAdmin() {
   const [sel, setSel] = useState<string | null>(zones[0]?.id ?? null);
   const [meta, setMeta] = useState<Record<string, ZoneMeta>>({});
   const [snap, setSnap] = useState(true);
-  const [gridSize, setGridSize] = useState<10 | 20>(20);
+  const [gridSize, setGridSize] = useState<5 | 10 | 20>(20);
   const [showGrid, setShowGrid] = useState(true);
   const [showSafe, setShowSafe] = useState(false);
   // Zoom & pan inside the stage
@@ -248,7 +248,7 @@ function ZonesAdmin() {
 
   const gridLines = useMemo(() => {
     if (!showGrid) return null;
-    const step = gridSize === 10 ? 80 : 160;
+    const step = gridSize === 5 ? 40 : gridSize === 10 ? 80 : 160;
     const lines: React.ReactElement[] = [];
     for (let x = step; x < W; x += step) lines.push(<line key={`vx${x}`} x1={x} y1={0} x2={x} y2={H} stroke="#ffffff" strokeOpacity={0.08} strokeWidth={1} />);
     for (let y = step; y < H; y += step) lines.push(<line key={`hy${y}`} x1={0} y1={y} x2={W} y2={y} stroke="#ffffff" strokeOpacity={0.08} strokeWidth={1} />);
@@ -331,8 +331,8 @@ function ZonesAdmin() {
           <span className="font-semibold uppercase tracking-wider text-muted-foreground">Snap to grid</span>
         </label>
         <div className="flex rounded-sm border border-border bg-surface p-0.5">
-          {[10, 20].map((g) => (
-            <button key={g} onClick={() => setGridSize(g as 10 | 20)}
+          {[5, 10, 20].map((g) => (
+            <button key={g} onClick={() => setGridSize(g as 5 | 10 | 20)}
               className={`px-2 py-0.5 text-xs font-semibold ${gridSize === g ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
               {g}px
             </button>
@@ -461,8 +461,11 @@ function ZonesAdmin() {
             </div>
             {tags.map((t) => (
               <div key={t.id} className="mb-1 flex items-center gap-2 rounded-sm border border-border bg-surface px-2 py-1.5">
-                <input type="color" value={t.color} onChange={(e) => recolorTag(t.id, e.target.value)}
-                  className="h-5 w-5 cursor-pointer rounded-sm border border-border bg-transparent" />
+                <label className="relative block h-7 w-7 shrink-0 cursor-pointer overflow-hidden rounded-sm border border-border"
+                  style={{ backgroundColor: t.color }} title={t.color}>
+                  <input type="color" value={t.color} onChange={(e) => recolorTag(t.id, e.target.value)}
+                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
+                </label>
                 <input defaultValue={t.id} onBlur={(e) => renameTag(t.id, e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
                   className="text-mono flex-1 rounded-sm bg-background px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-primary/40" />
@@ -485,10 +488,15 @@ function ZonesAdmin() {
             const big = cropBoxBig(z.w, z.h);
             return (
               <div key={z.id}
-                className={`mb-1 flex items-center gap-2 rounded-sm border px-2 py-1.5 transition-colors ${
+                className={`mb-1 rounded-sm border px-2 py-1.5 transition-colors ${
                   z.id === sel ? "border-primary/40 bg-primary/10" : "border-transparent hover:bg-muted"} ${m.hidden ? "opacity-50" : ""}`}>
-                <button onClick={() => setSel(z.id)} className="flex flex-1 items-center gap-2 text-left min-w-0">
-                  <div className="group/preview relative shrink-0">
+                <button onClick={() => setSel(z.id)} className="mb-1 flex w-full items-center gap-1.5 text-left">
+                  <span className="inline-block h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: c }} />
+                  <span className="flex-1 truncate text-xs font-semibold">{z.name}</span>
+                  <span className="text-mono shrink-0 text-[10px] uppercase text-muted-foreground">{z.tag}</span>
+                </button>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setSel(z.id)} className="group/preview relative shrink-0">
                     <div className="relative overflow-hidden rounded-sm border border-border bg-background"
                       style={{ width: cb.w, height: cb.h }}>
                       <div className="absolute inset-0" style={{
@@ -515,16 +523,9 @@ function ZonesAdmin() {
                       </div>
                       <div className="text-mono mt-1 px-1 text-xs uppercase text-muted-foreground">{z.w}×{z.h}</div>
                     </div>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <span className="inline-block h-2 w-2 rounded-sm" style={{ backgroundColor: c }} />
-                      <span className="truncate text-xs font-semibold">{z.name}</span>
-                    </div>
-                    <span className="text-mono text-xs uppercase text-muted-foreground">{z.tag} · {z.w}×{z.h}</span>
-                  </div>
-                </button>
-                <div className="flex shrink-0 items-center gap-0.5">
+                  </button>
+                  <span className="text-mono flex-1 text-[10px] uppercase text-muted-foreground">{z.w}×{z.h}</span>
+                  <div className="flex shrink-0 items-center gap-0.5">
                   <button onClick={() => patchMeta(z.id, { hidden: !m.hidden })} title={m.hidden ? "Show" : "Hide"}
                     className="grid h-6 w-6 place-items-center rounded-sm text-muted-foreground hover:bg-muted hover:text-foreground">
                     {m.hidden ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
@@ -537,6 +538,7 @@ function ZonesAdmin() {
                     className="grid h-6 w-6 place-items-center rounded-sm text-muted-foreground hover:bg-muted hover:text-foreground"><Pencil className="h-3.5 w-3.5" /></button>
                   <button onClick={() => removeZone(z.id)} title="Delete"
                     className="grid h-6 w-6 place-items-center rounded-sm text-muted-foreground hover:bg-destructive/20 hover:text-destructive">×</button>
+                  </div>
                 </div>
               </div>
             );
