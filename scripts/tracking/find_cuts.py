@@ -251,10 +251,13 @@ def pinpoint_cut(cap, reg, approx_cut_frame: int, window: int, threshold: float)
     ПОПИКСЕЛЬНАЯ разница между соседними кадрами в ROI карты, а не Δpan
     (Δpan может скакать из-за нестабильности SIFT на UI-кадрах).
 
-    Cut = пара (i, i+1) с max mean-abs-diff в ROI, если diff > PIXEL_DIFF_THR.
-    Иначе None.
+    Возвращает (cut_frame, pan_from, pan_to, best_diff, status):
+      status="accepted"  если best_diff >= PIXEL_DIFF_THR
+      status="gray"      если GRAY_LO <= best_diff < PIXEL_DIFF_THR  (для ручной верификации)
+      status="rejected"  если best_diff < GRAY_LO
     """
-    PIXEL_DIFF_THR = 15.0   # mean abs diff (grayscale 0..255) для настоящего cut'а
+    PIXEL_DIFF_THR = 10.0   # mean abs diff (grayscale 0..255) — настоящий cut
+    GRAY_LO = 5.0           # серая зона: подозрительные кандидаты для ручной проверки
     start = max(0, approx_cut_frame - window)
     end = approx_cut_frame + window
 
@@ -287,8 +290,9 @@ def pinpoint_cut(cap, reg, approx_cut_frame: int, window: int, threshold: float)
         return None
     print(f"    [pin]    max pixel-diff: f{best_i}->f{best_i+1}, diff={best_diff:.2f} "
           f"(thr={PIXEL_DIFF_THR})")
-    if best_diff < PIXEL_DIFF_THR:
+    if best_diff < GRAY_LO:
         return None
+    status = "accepted" if best_diff >= PIXEL_DIFF_THR else "gray"
 
     # для overlay нужны pan'ы; регистрируем только эти два кадра
     cut_frame = best_i + 1
@@ -298,7 +302,7 @@ def pinpoint_cut(cap, reg, approx_cut_frame: int, window: int, threshold: float)
         # регистрация фейлится, но cut точно был (diff большой) — пишем без pan'ов
         pan_from = pan_from or (0.0, 0.0)
         pan_to = pan_to or (0.0, 0.0)
-    return cut_frame, pan_from, pan_to, best_diff
+    return cut_frame, pan_from, pan_to, best_diff, status
 
 
 def dump_context_frames(cap, cut_frame: int, out_dir: Path):
