@@ -175,6 +175,18 @@ function TeamsAdmin() {
                       ) : <span className="text-muted-foreground">—</span>}
                     </td>
                     <td className="px-3 py-2 text-right text-xs">
+                      {t.liquipediaUrl && (
+                        <a
+                          href={t.liquipediaUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          title="Open Liquipedia page"
+                          className="mr-1 inline-flex items-center rounded-sm border border-border bg-surface px-2 py-1 hover:bg-muted"
+                        >
+                          Liquipedia ↗
+                        </a>
+                      )}
                       <button onClick={(e) => startEdit(e, t)} className="mr-1 rounded-sm border border-border bg-surface px-2 py-1 hover:bg-muted">Edit</button>
                       <button onClick={(e) => remove(e, t.id)} className="rounded-sm border border-destructive/40 bg-surface px-2 py-1 text-destructive hover:bg-destructive/10">Delete</button>
                     </td>
@@ -246,6 +258,25 @@ function TeamDialog({ row, isNew, onChange, onCancel, onSave }: {
             <LogoField row={row} setKey={set} fieldKey="logo" label="Default logo" hint="Used when a theme-specific variant is missing." isActive={activeKey === "logo"} />
             <LogoField row={row} setKey={set} fieldKey="logoDark" label="Dark theme logo" hint="Shown on dark / OLED themes." isActive={activeKey === "logoDark"} />
             <LogoField row={row} setKey={set} fieldKey="logoLight" label="Light theme logo" hint="Shown on light theme." isActive={activeKey === "logoLight"} />
+          </div>
+          <div>
+            <label className="label-eyebrow text-xs">Liquipedia page</label>
+            <input
+              className={base + " text-mono text-xs"}
+              placeholder="https://liquipedia.net/apexlegends/Team_Name"
+              value={row.liquipediaUrl ?? ""}
+              onChange={(e) => set("liquipediaUrl", e.target.value || undefined)}
+            />
+            {row.liquipediaUrl && (
+              <a
+                href={row.liquipediaUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-1 inline-flex items-center gap-1 text-xs text-primary hover:underline"
+              >
+                Open in new tab ↗
+              </a>
+            )}
           </div>
         </div>
         <div className="flex justify-end gap-2 border-t border-border bg-surface-2 px-4 py-3">

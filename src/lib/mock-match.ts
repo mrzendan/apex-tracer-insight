@@ -155,6 +155,8 @@ export type Team = {
   alive: boolean;
   /** Lifecycle status. Defaults to "active" when missing. */
   status?: "active" | "archived";
+  /** Optional Liquipedia team page URL. */
+  liquipediaUrl?: string;
 };
 
 export const teams: Team[] = [
