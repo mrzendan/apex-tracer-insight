@@ -499,6 +499,22 @@ function MatchesAdmin() {
   );
 }
 
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="hud-panel p-3">
+      <div className="label-eyebrow mb-2 text-xs">{title}</div>
+      {children}
+    </section>
+  );
+}
+
+const fmtMMSS = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
+const parseMMSS = (v: string): number | null => {
+  const m = v.trim().match(/^(\d+):([0-5]?\d)$/);
+  if (!m) return null;
+  return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+};
+
 function MatchDialog({ row, isNew, onChange, onCancel, onSave }: {
   row: MatchFull; isNew: boolean;
   onChange: (r: MatchFull) => void; onCancel: () => void; onSave: () => void;
@@ -506,81 +522,169 @@ function MatchDialog({ row, isNew, onChange, onCancel, onSave }: {
   const { tournaments, teams } = useAdminStore();
   const set = <K extends keyof MatchFull>(k: K, v: MatchFull[K]) => onChange({ ...row, [k]: v });
   const base = "mt-1 w-full rounded-sm border border-border bg-background px-2 py-1.5 text-sm";
-  const mapIds = row.mapIds ?? [row.mapId];
+  const mapIds = row.mapIds && row.mapIds.length > 0 ? row.mapIds : [row.mapId].filter(Boolean);
+  const teamIds = row.teamIds ?? [];
+  const [teamQuery, setTeamQuery] = useState("");
+
+  // Per-map durations editing state (mm:ss strings, validated independently)
+  const durations = mapIds.map((_, i) => row.gameDurations?.[i] ?? row.durationSec);
+  const setDuration = (i: number, sec: number) => {
+    const next = [...durations];
+    next[i] = sec;
+    set("gameDurations", next);
+  };
+
+  const setMapAt = (i: number, mapId: string) => {
+    const next = [...mapIds];
+    next[i] = mapId;
+    set("mapIds", next);
+    if (i === 0) set("mapId", mapId);
+  };
+  const addMap = () => {
+    const id = allMaps[0]?.id ?? "";
+    set("mapIds", [...mapIds, id]);
+    set("gameDurations", [...durations, row.durationSec || 1200]);
+  };
+  const removeMap = (i: number) => {
+    set("mapIds", mapIds.filter((_, idx) => idx !== i));
+    set("gameDurations", durations.filter((_, idx) => idx !== i));
+  };
+
+  const filteredTeams = teams.filter((t) => {
+    if (!teamQuery.trim()) return true;
+    const q = teamQuery.trim().toLowerCase();
+    return t.name.toLowerCase().includes(q) || t.tag.toLowerCase().includes(q);
+  });
+  const toggleTeam = (id: string) =>
+    set("teamIds", teamIds.includes(id) ? teamIds.filter((x) => x !== id) : [...teamIds, id]);
+  const selectAllTeams = () => set("teamIds", Array.from(new Set([...teamIds, ...filteredTeams.map((t) => t.id)])));
+  const clearTeams = () => set("teamIds", []);
+
+  // Validation
+  const errors: string[] = [];
+  if (!row.name.trim()) errors.push("Name is required");
+  if (!row.tournamentId) errors.push("Tournament is required");
+  if (mapIds.length === 0) errors.push("At least one map is required");
+  if (!Number.isFinite(row.durationSec) || row.durationSec <= 0) errors.push("Match duration must be a positive number");
+  durations.forEach((d, i) => {
+    if (!Number.isFinite(d) || d <= 0) errors.push(`Map #${i + 1} duration must be a positive number`);
+  });
+  const canSave = errors.length === 0;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onCancel}>
-      <div className="hud-panel w-full max-w-xl bg-surface" onClick={(e) => e.stopPropagation()}>
+      <div className="hud-panel w-full max-w-3xl bg-surface" onClick={(e) => e.stopPropagation()}>
         <div className="border-b border-border px-4 py-3">
           <h2 className="text-sm font-bold uppercase tracking-wider">{isNew ? "New match" : "Edit match"}</h2>
         </div>
-        <div className="max-h-[70vh] space-y-3 overflow-auto p-4">
-          <div>
+        <div className="max-h-[75vh] space-y-3 overflow-auto p-4">
+          <Section title="Basic info">
             <label className="label-eyebrow text-xs">Name</label>
-            <input className={base} value={row.name} onChange={(e) => set("name", e.target.value)} />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="label-eyebrow text-xs">Tournament</label>
-              <select className={base} value={row.tournamentId} onChange={(e) => set("tournamentId", e.target.value)}>
-                {tournaments.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-              </select>
+            <input className={base} value={row.name} onChange={(e) => set("name", e.target.value)} maxLength={120} placeholder="e.g. Day 1 — Match 3" />
+            {!row.name.trim() && <p className="mt-1 text-xs text-destructive">Required</p>}
+          </Section>
+
+          <Section title="Tournament & duration">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="label-eyebrow text-xs">Tournament</label>
+                <select className={base} value={row.tournamentId} onChange={(e) => set("tournamentId", e.target.value)}>
+                  <option value="">— select tournament —</option>
+                  {tournaments.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                </select>
+                {!row.tournamentId && <p className="mt-1 text-xs text-destructive">Required</p>}
+              </div>
+              <div>
+                <label className="label-eyebrow text-xs">Match duration (mm:ss)</label>
+                <input
+                  className={base + " text-mono"}
+                  value={fmtMMSS(row.durationSec || 0)}
+                  onChange={(e) => {
+                    const v = parseMMSS(e.target.value);
+                    if (v !== null) set("durationSec", v);
+                    else if (e.target.value === "") set("durationSec", 0);
+                  }}
+                  placeholder="20:00"
+                />
+              </div>
             </div>
-            <div>
-              <label className="label-eyebrow text-xs">Duration (sec)</label>
-              <input type="number" className={base} value={row.durationSec} onChange={(e) => set("durationSec", Number(e.target.value))} />
+          </Section>
+
+          <Section title={`Map order (${mapIds.length})`}>
+            <div className="space-y-1">
+              {mapIds.map((id, i) => {
+                const mp = allMaps.find((x) => x.id === id);
+                return (
+                  <div key={i} className="flex items-center gap-2 rounded-sm border border-border bg-surface px-2 py-1.5">
+                    <span className="text-mono text-xs w-6 text-muted-foreground">#{i + 1}</span>
+                    {mp && <img src={mp.image} alt={mp.name} className="h-8 w-12 rounded-sm object-cover" />}
+                    <select
+                      className="flex-1 rounded-sm border border-border bg-background px-2 py-1 text-xs"
+                      value={id}
+                      onChange={(e) => setMapAt(i, e.target.value)}
+                    >
+                      {allMaps.map((mp) => <option key={mp.id} value={mp.id}>{mp.name}</option>)}
+                    </select>
+                    <input
+                      className="w-20 rounded-sm border border-border bg-background px-2 py-1 text-mono text-xs tabular-nums"
+                      value={fmtMMSS(durations[i] ?? 0)}
+                      onChange={(e) => {
+                        const v = parseMMSS(e.target.value);
+                        if (v !== null) setDuration(i, v);
+                      }}
+                      placeholder="22:00"
+                      title="Map duration (mm:ss)"
+                    />
+                    <button type="button" onClick={() => removeMap(i)} className="rounded-sm border border-border bg-surface px-2 py-1 text-xs hover:bg-muted">Remove</button>
+                  </div>
+                );
+              })}
+              <button type="button" onClick={addMap} className="rounded-sm border border-border bg-surface px-2 py-1 text-xs hover:bg-muted">+ Add map</button>
+              {mapIds.length === 0 && <p className="mt-1 text-xs text-destructive">At least one map required</p>}
             </div>
-          </div>
-          <div>
-            <label className="label-eyebrow text-xs">VOD link</label>
-            <input className={base + " text-mono text-xs"} placeholder="https://..." value={row.vodLink ?? ""} onChange={(e) => set("vodLink", e.target.value)} />
-          </div>
-          <div>
-            <label className="label-eyebrow text-xs">Map order</label>
-            <div className="mt-1 space-y-1">
-              {mapIds.map((id, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <span className="text-mono text-xs w-6 text-muted-foreground">#{i + 1}</span>
-                  <select
-                    className={base.replace("mt-1 ", "") + " flex-1"}
-                    value={id}
-                    onChange={(e) => {
-                      const next = [...mapIds];
-                      next[i] = e.target.value;
-                      set("mapIds", next);
-                      if (i === 0) set("mapId", e.target.value);
-                    }}
-                  >
-                    {allMaps.map((mp) => <option key={mp.id} value={mp.id}>{mp.name}</option>)}
-                  </select>
-                  <button type="button" onClick={() => set("mapIds", mapIds.filter((_, idx) => idx !== i))} className="rounded-sm border border-border bg-surface px-2 py-1 text-xs hover:bg-muted">Remove</button>
-                </div>
-              ))}
-              <button type="button" onClick={() => set("mapIds", [...mapIds, allMaps[0]?.id ?? ""])} className="rounded-sm border border-border bg-surface px-2 py-1 text-xs hover:bg-muted">+ Add map</button>
+          </Section>
+
+          <Section title={`Teams (${teamIds.length} / ${teams.length})`}>
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <input
+                value={teamQuery}
+                onChange={(e) => setTeamQuery(e.target.value)}
+                placeholder="Search team…"
+                className="flex-1 min-w-[160px] rounded-sm border border-border bg-background px-2 py-1 text-xs"
+              />
+              <button type="button" onClick={selectAllTeams} className="rounded-sm border border-border bg-surface px-2 py-1 text-xs hover:bg-muted">Select all</button>
+              <button type="button" onClick={clearTeams} className="rounded-sm border border-border bg-surface px-2 py-1 text-xs hover:bg-muted">Clear</button>
             </div>
-          </div>
-          <div>
-            <label className="label-eyebrow text-xs">Teams</label>
-            <div className="mt-1 flex flex-wrap gap-1">
-              {teams.map((t) => {
-                const on = (row.teamIds ?? []).includes(t.id);
+            <div className="flex flex-wrap gap-1">
+              {filteredTeams.map((t) => {
+                const on = teamIds.includes(t.id);
                 return (
                   <button
                     key={t.id}
                     type="button"
-                    onClick={() => set("teamIds", on ? (row.teamIds ?? []).filter((x) => x !== t.id) : [...(row.teamIds ?? []), t.id])}
+                    onClick={() => toggleTeam(t.id)}
                     className={`flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-xs ${on ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface text-muted-foreground hover:bg-muted"}`}
                   >
                     <TeamLogo team={t} size={14} /> {t.tag}
                   </button>
                 );
               })}
+              {filteredTeams.length === 0 && <p className="text-xs text-muted-foreground">No teams match “{teamQuery}”.</p>}
             </div>
-          </div>
+          </Section>
+
+          <Section title="VOD links">
+            <label className="label-eyebrow text-xs">Broadcast VOD</label>
+            <input className={base + " text-mono text-xs"} placeholder="https://youtube.com/watch?v=..." value={row.vodLink ?? ""} onChange={(e) => set("vodLink", e.target.value)} maxLength={500} />
+            <div className="mt-1 text-xs text-muted-foreground">POV-VOD команд редактируются в раскрытой строке матча → вкладка Teams / POV.</div>
+          </Section>
         </div>
-        <div className="flex justify-end gap-2 border-t border-border bg-surface-2 px-4 py-3">
-          <button onClick={onCancel} className="rounded-sm border border-border bg-surface px-3 py-1.5 text-xs uppercase tracking-wider hover:bg-muted">Cancel</button>
-          <button onClick={onSave} className="rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">Save</button>
+        <div className="flex items-center justify-between gap-2 border-t border-border bg-surface-2 px-4 py-3">
+          <div className="text-xs text-destructive">{errors[0] ?? ""}</div>
+          <div className="flex gap-2">
+            <button onClick={onCancel} className="rounded-sm border border-border bg-surface px-3 py-1.5 text-xs uppercase tracking-wider hover:bg-muted">Cancel</button>
+            <button onClick={onSave} disabled={!canSave} className="rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40">Save</button>
+          </div>
         </div>
       </div>
     </div>
