@@ -168,7 +168,7 @@ class FrameRegistrar:
         if len(good) < 8:
             return None, len(good)
         src = np.float32([(kp_f[m.queryIdx].pt[0] + ox, kp_f[m.queryIdx].pt[1] + oy) for m in good]).reshape(-1, 1, 2)
-        dst = np.float32([kp_f and self.kp_map[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
+        dst = np.float32([self.kp_map[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
         # rescale map points back to full canonical
         if self.scale != 1.0:
             dst = dst / self.scale
