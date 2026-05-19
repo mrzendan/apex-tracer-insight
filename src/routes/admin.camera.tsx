@@ -721,6 +721,10 @@ function OverviewTab(props: {
     <>
       <SplitControls opts={props.splitOpts} onChange={props.setSplitOpts}
         onReset={props.onResetViewport} onFit={props.onFitMap} />
+      <div className="shrink-0 border-b border-border bg-surface-2/60 px-3 py-1.5 text-[11px] leading-snug text-muted-foreground">
+        <span className="label-eyebrow mr-2 text-[10px] text-foreground">Split view</span>
+        {SPLIT_VIEW_PURPOSE}
+      </div>
       <div className="grid min-h-0 flex-1 grid-cols-2 gap-3 p-3">
         {props.videoPreview}
         {props.mapPreview}
