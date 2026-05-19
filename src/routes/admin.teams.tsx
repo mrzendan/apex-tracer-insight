@@ -247,6 +247,25 @@ function TeamDialog({ row, isNew, onChange, onCancel, onSave }: {
             <LogoField row={row} setKey={set} fieldKey="logoDark" label="Dark theme logo" hint="Shown on dark / OLED themes." isActive={activeKey === "logoDark"} />
             <LogoField row={row} setKey={set} fieldKey="logoLight" label="Light theme logo" hint="Shown on light theme." isActive={activeKey === "logoLight"} />
           </div>
+          <div>
+            <label className="label-eyebrow text-xs">Liquipedia page</label>
+            <input
+              className={base + " text-mono text-xs"}
+              placeholder="https://liquipedia.net/apexlegends/Team_Name"
+              value={row.liquipediaUrl ?? ""}
+              onChange={(e) => set("liquipediaUrl", e.target.value || undefined)}
+            />
+            {row.liquipediaUrl && (
+              <a
+                href={row.liquipediaUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-1 inline-flex items-center gap-1 text-xs text-primary hover:underline"
+              >
+                Open in new tab ↗
+              </a>
+            )}
+          </div>
         </div>
         <div className="flex justify-end gap-2 border-t border-border bg-surface-2 px-4 py-3">
           <button onClick={onCancel} className="rounded-sm border border-border bg-surface px-3 py-1.5 text-xs uppercase tracking-wider hover:bg-muted">Cancel</button>
