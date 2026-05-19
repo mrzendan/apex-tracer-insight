@@ -229,7 +229,9 @@ function ProcessesAdmin() {
   const { processes, matches, tournaments, teams } = useAdminStore();
   const [editing, setEditing] = useState<AnalysisProcess | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<AnalysisProcess["status"] | "all">("all");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  type FilterKey = "all" | "suggested" | "queued" | "running" | "done" | "failed" | "needs_review" | "draft";
+  const [statusFilter, setStatusFilter] = useState<FilterKey>("all");
   const search = Route.useSearch();
   const handledMatchRef = useRef<string | null>(null);
 
@@ -241,21 +243,38 @@ function ProcessesAdmin() {
     return c;
   }, [processes]);
 
-  const visibleProcesses = useMemo(
-    () => (statusFilter === "all" ? processes : processes.filter((p) => p.status === statusFilter)),
-    [processes, statusFilter],
-  );
-
-  // Suggestions: matches whose tournament endDate is in the past and no process exists.
+  // Suggestions: matches whose tournament endDate is in the past and required analyses are missing.
   const suggestions = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10);
-    const analyzed = new Set(processes.map((p) => p.matchId));
-    return matches.filter((m) => {
-      if (analyzed.has(m.id)) return false;
-      const t = tournaments.find((x) => x.id === m.tournamentId);
-      return t ? t.endDate < today : false;
-    });
+    return matches
+      .map((m) => {
+        const t = tournaments.find((x) => x.id === m.tournamentId);
+        if (!t || t.endDate >= today) return null;
+        const done = new Set(
+          processes.filter((p) => p.matchId === m.id && p.status === "done").map((p) => p.kind ?? "minimap"),
+        );
+        const missing = REQUIRED_KINDS.filter((k) => !done.has(k));
+        if (missing.length === 0) return null;
+        return { match: m, tournament: t, missing };
+      })
+      .filter(Boolean) as { match: typeof matches[number]; tournament: typeof tournaments[number]; missing: ProcessKind[] }[];
   }, [processes, matches, tournaments]);
+
+  const needsReviewCount = useMemo(
+    () => processes.filter((p) => p.needsReview || (p.status === "done" && (p.qualityScore ?? 100) < 60)).length,
+    [processes],
+  );
+
+  const visibleProcesses = useMemo(() => {
+    if (statusFilter === "all") return processes;
+    if (statusFilter === "suggested") return [];
+    if (statusFilter === "needs_review") {
+      return processes.filter((p) => p.needsReview || (p.status === "done" && (p.qualityScore ?? 100) < 60));
+    }
+    return processes.filter((p) => p.status === statusFilter);
+  }, [processes, statusFilter]);
+
+  const selected = processes.find((p) => p.id === selectedId) ?? null;
 
   const draft = (preset?: Partial<AnalysisProcess>) => {
     const tId = preset?.tournamentId ?? tournaments[0]?.id ?? "";
@@ -263,6 +282,7 @@ function ProcessesAdmin() {
     setEditing({
       id: `p-${Date.now()}`,
       pov: "map",
+      kind: "minimap",
       live: false,
       streamUrl: "",
       tournamentId: tId,
@@ -272,6 +292,9 @@ function ProcessesAdmin() {
       maps: [],
       status: "draft",
       createdAt: Date.now(),
+      preset: "Default",
+      frameStep: 2,
+      debugMode: false,
       ...preset,
     });
   };
@@ -311,11 +334,16 @@ function ProcessesAdmin() {
           teams: teamIds.slice(0, 20).map((tid) => ({ teamId: tid, progress: 0 })),
         }))
       : editing.mapAnalyses;
-    const next: AnalysisProcess = { ...editing, status: run ? "queued" : editing.status, mapAnalyses };
+    const next: AnalysisProcess = {
+      ...editing,
+      status: run ? "queued" : editing.status,
+      mapAnalyses,
+      startedAt: run ? Date.now() : editing.startedAt,
+    };
     if (exists) updateProcess(editing.id, next);
     else addProcess(next);
     if (run) {
-      setTimeout(() => updateProcess(next.id, { status: "running" }), 600);
+      setTimeout(() => updateProcess(next.id, { status: "running", startedAt: Date.now() }), 600);
       // Each task is independent: separate random multipliers per map per task.
       const rng = (seed: number) => {
         let s = seed >>> 0;
@@ -340,15 +368,59 @@ function ProcessesAdmin() {
         }),
       });
       [15, 30, 50, 70, 90, 100].forEach((p, i) => setTimeout(() => tick(p), 800 + i * 600));
-      setTimeout(() => updateProcess(next.id, { status: "done" }), 5000);
+      setTimeout(() => {
+        // synthesize a quality score and flag for review when low
+        const q = 55 + Math.round(Math.random() * 40);
+        updateProcess(next.id, {
+          status: "done",
+          finishedAt: Date.now(),
+          qualityScore: q,
+          needsReview: q < 65,
+        });
+      }, 5000);
     }
     setEditing(null);
+  };
+
+  const runDirect = (preset: Partial<AnalysisProcess>) => {
+    // Create + immediately enqueue a process (used by Suggested "Analyze" buttons).
+    draft(preset);
+    requestAnimationFrame(() => {
+      // nothing — operator confirms in modal
+    });
+  };
+
+  const onAction = (p: AnalysisProcess, action: string) => {
+    switch (action) {
+      case "start":
+      case "retry":
+      case "rerun":
+        updateProcess(p.id, { status: "queued", startedAt: Date.now(), finishedAt: undefined, errorMessage: undefined });
+        setTimeout(() => updateProcess(p.id, { status: "running" }), 400);
+        setTimeout(() => updateProcess(p.id, { status: "done", finishedAt: Date.now(), qualityScore: 70 + Math.round(Math.random() * 25), needsReview: false }), 3200);
+        break;
+      case "cancel":
+      case "stop":
+        updateProcess(p.id, { status: "failed", errorMessage: "Cancelled by operator", finishedAt: Date.now() });
+        break;
+      case "edit": setEditing({ ...p }); break;
+      case "review": updateProcess(p.id, { needsReview: false }); break;
+      case "delete":
+        if (confirm("Delete process?")) {
+          removeProcess(p.id);
+          if (selectedId === p.id) setSelectedId(null);
+        }
+        break;
+    }
   };
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-surface px-6">
-        <h1 className="text-sm font-bold uppercase tracking-wider">Processes</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-sm font-bold uppercase tracking-wider">Processes</h1>
+          <span className="text-xs text-muted-foreground">· operator control center</span>
+        </div>
         <button
           onClick={() => draft()}
           className="rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110"
@@ -357,100 +429,166 @@ function ProcessesAdmin() {
         </button>
       </header>
 
-      <div className="flex-1 overflow-auto p-6 space-y-6">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <FilterChip label="All" count={processes.length} active={statusFilter === "all"} onClick={() => setStatusFilter("all")} tone="muted" />
-          <FilterChip label="Draft"   count={statusCounts.draft}   active={statusFilter === "draft"}   onClick={() => setStatusFilter("draft")}   tone="muted" />
-          <FilterChip label="Queued"  count={statusCounts.queued}  active={statusFilter === "queued"}  onClick={() => setStatusFilter("queued")}  tone="primary" />
-          <FilterChip label="Running" count={statusCounts.running} active={statusFilter === "running"} onClick={() => setStatusFilter("running")} tone="warning" />
-          <FilterChip label="Done"    count={statusCounts.done}    active={statusFilter === "done"}    onClick={() => setStatusFilter("done")}    tone="success" />
-          <FilterChip label="Failed"  count={statusCounts.failed}  active={statusFilter === "failed"}  onClick={() => setStatusFilter("failed")}  tone="destructive" />
+      <div className="flex flex-1 overflow-hidden">
+        <div className="flex-1 overflow-auto p-6 space-y-6">
+          {/* FILTERS */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <FilterChip label="All" count={processes.length} active={statusFilter === "all"} onClick={() => setStatusFilter("all")} tone="muted" />
+            <FilterChip label="Suggested" count={suggestions.length} active={statusFilter === "suggested"} onClick={() => setStatusFilter("suggested")} tone="primary" />
+            <FilterChip label="Queued"  count={statusCounts.queued}  active={statusFilter === "queued"}  onClick={() => setStatusFilter("queued")}  tone="primary" />
+            <FilterChip label="Running" count={statusCounts.running} active={statusFilter === "running"} onClick={() => setStatusFilter("running")} tone="warning" />
+            <FilterChip label="Done"    count={statusCounts.done}    active={statusFilter === "done"}    onClick={() => setStatusFilter("done")}    tone="success" />
+            <FilterChip label="Failed"  count={statusCounts.failed}  active={statusFilter === "failed"}  onClick={() => setStatusFilter("failed")}  tone="destructive" />
+            <FilterChip label="Needs review" count={needsReviewCount} active={statusFilter === "needs_review"} onClick={() => setStatusFilter("needs_review")} tone="warning" />
+            <FilterChip label="Draft"   count={statusCounts.draft}   active={statusFilter === "draft"}   onClick={() => setStatusFilter("draft")}   tone="muted" />
+          </div>
+
+          {/* NEEDS ATTENTION */}
+          <NeedsAttention
+            suggestionsCount={suggestions.length}
+            failedCount={statusCounts.failed}
+            needsReviewCount={needsReviewCount}
+            runningCount={statusCounts.running}
+            onJump={(f) => setStatusFilter(f)}
+          />
+
+          {/* SUGGESTED with missing list */}
+          {(statusFilter === "all" || statusFilter === "suggested") && suggestions.length > 0 && (
+            <section className="hud-panel p-4">
+              <div className="mb-2 flex items-center justify-between">
+                <h2 className="label-eyebrow">Suggested · finished without analysis</h2>
+                <span className="text-mono text-xs text-muted-foreground">{suggestions.length}</span>
+              </div>
+              <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
+                {suggestions.slice(0, 9).map(({ match: m, tournament: t, missing }) => (
+                  <div key={m.id} className="rounded-sm border border-border bg-surface-2 p-3">
+                    <div className="text-xs font-semibold">{m.name}</div>
+                    <div className="mb-2 text-xs text-muted-foreground">{t.name}</div>
+                    <div className="mb-2 flex flex-wrap gap-1">
+                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Missing:</span>
+                      {missing.map((k) => (
+                        <span key={k} className="rounded-sm border border-warning/40 bg-warning/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-warning">
+                          {KIND_SHORT[k]}
+                        </span>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => draft({ tournamentId: m.tournamentId, matchId: m.id, kind: missing[0] ?? "minimap" })}
+                      className="w-full rounded-sm bg-primary/15 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary hover:bg-primary/25"
+                    >
+                      Analyze →
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* TABLE */}
+          {statusFilter !== "suggested" && (
+            <section className="hud-panel overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="border-b border-border bg-surface-2">
+                  <tr className="label-eyebrow text-left text-xs">
+                    <th className="px-3 py-2">Type</th>
+                    <th className="px-3 py-2">Match</th>
+                    <th className="px-3 py-2">Team/POV</th>
+                    <th className="px-3 py-2">Map</th>
+                    <th className="px-3 py-2">Status</th>
+                    <th className="px-3 py-2">Progress</th>
+                    <th className="px-3 py-2">Quality</th>
+                    <th className="px-3 py-2">Started</th>
+                    <th className="px-3 py-2 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visibleProcesses.length === 0 && (
+                    <tr><td colSpan={9} className="px-3 py-10 text-center">
+                      <div className="text-sm font-semibold text-foreground">No processes yet</div>
+                      <div className="mt-1 text-xs text-muted-foreground">Create a new process or analyze suggested matches.</div>
+                      <button onClick={() => draft()} className="mt-3 rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">+ New process</button>
+                    </td></tr>
+                  )}
+                  {visibleProcesses.map((p) => {
+                    const m = matches.find((x) => x.id === p.matchId);
+                    const t = tournaments.find((x) => x.id === p.tournamentId);
+                    const team = p.teamId ? teams.find((x) => x.id === p.teamId) : null;
+                    const isOpen = expanded === p.id;
+                    const prog = deriveProgress(p);
+                    const firstMap = p.maps[0] ? allMaps.find((x) => x.id === p.maps[0].mapId) : null;
+                    const isSelected = selectedId === p.id;
+                    return (
+                      <Fragment key={p.id}>
+                        <tr
+                          id={`process-${p.id}`}
+                          onClick={() => setSelectedId(isSelected ? null : p.id)}
+                          className={`cursor-pointer border-b border-border scroll-mt-20 ${isSelected ? "bg-surface-2" : "hover:bg-surface-2/40"}`}
+                        >
+                          <td className="px-3 py-2 text-xs">
+                            <div className="font-semibold">{KIND_LABELS[p.kind ?? "minimap"]}</div>
+                            {p.live && <span className="mt-0.5 inline-block rounded-sm bg-destructive px-1.5 py-0.5 text-[10px] font-bold text-destructive-foreground">LIVE</span>}
+                          </td>
+                          <td className="px-3 py-2 text-xs">
+                            <button onClick={(e) => { e.stopPropagation(); setExpanded(isOpen ? null : p.id); }} className="font-semibold hover:text-primary">
+                              {isOpen ? "▼" : "▶"} {m?.name ?? p.matchId}
+                            </button>
+                            <div className="text-muted-foreground">{t?.name ?? p.tournamentId}</div>
+                          </td>
+                          <td className="px-3 py-2 text-xs">
+                            {p.pov === "team" ? (team?.name ?? team?.tag ?? "—") : <span className="text-muted-foreground">Map POV</span>}
+                          </td>
+                          <td className="px-3 py-2 text-xs">
+                            {firstMap?.name ?? <span className="text-muted-foreground">—</span>}
+                            {p.maps.length > 1 && <span className="ml-1 text-mono text-[10px] text-muted-foreground">+{p.maps.length - 1}</span>}
+                          </td>
+                          <td className="px-3 py-2"><span className={`rounded-sm px-1.5 py-0.5 text-xs uppercase ${STATUS_COLORS[p.status]}`}>{p.status}</span>
+                            {p.needsReview && <span className="ml-1 rounded-sm border border-warning/40 bg-warning/10 px-1 text-[10px] font-semibold uppercase tracking-wider text-warning">review</span>}
+                          </td>
+                          <td className="px-3 py-2 w-44">
+                            <ProgressMini status={p.status} prog={prog} />
+                          </td>
+                          <td className="px-3 py-2 text-xs">
+                            {p.qualityScore !== undefined ? (
+                              <span className={`text-mono font-semibold ${p.qualityScore >= 80 ? "text-success" : p.qualityScore >= 60 ? "text-warning" : "text-destructive"}`}>
+                                {p.qualityScore}%
+                              </span>
+                            ) : <span className="text-muted-foreground">—</span>}
+                          </td>
+                          <td className="px-3 py-2 text-mono text-xs text-muted-foreground">
+                            {p.startedAt ? relTime(p.startedAt) : "—"}
+                            {p.startedAt && <div className="text-[10px] opacity-70">{durationLabel(p.startedAt, p.finishedAt)}</div>}
+                          </td>
+                          <td className="px-3 py-2 text-right" onClick={(e) => e.stopPropagation()}>
+                            <StatusActions process={p} onAction={(a) => onAction(p, a)} />
+                          </td>
+                        </tr>
+                        {isOpen && (
+                          <tr className="border-b border-border bg-surface-2/40">
+                            <td colSpan={9} className="px-4 py-3">
+                              <ProcessAnalysisDetail process={p} teams={teams} matchTeamIds={m?.teamIds ?? []} />
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </section>
+          )}
         </div>
 
-        {suggestions.length > 0 && (
-          <section className="hud-panel p-4">
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="label-eyebrow">Suggested · finished without analysis</h2>
-              <span className="text-mono text-xs text-muted-foreground">{suggestions.length}</span>
-            </div>
-            <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
-              {suggestions.slice(0, 9).map((m) => {
-                const t = tournaments.find((x) => x.id === m.tournamentId);
-                return (
-                  <button
-                    key={m.id}
-                    onClick={() => draft({ tournamentId: m.tournamentId, matchId: m.id })}
-                    className="flex items-center justify-between rounded-sm border border-border bg-surface-2 px-3 py-2 text-left hover:border-primary/40"
-                  >
-                    <div>
-                      <div className="text-xs font-semibold">{m.name}</div>
-                      <div className="text-xs text-muted-foreground">{t?.name ?? m.tournamentId}</div>
-                    </div>
-                    <span className="text-mono text-xs text-primary">analyze →</span>
-                  </button>
-                );
-              })}
-            </div>
-          </section>
+        {/* RIGHT DETAIL PANEL */}
+        {selected && (
+          <ProcessDetailPanel
+            process={selected}
+            match={matches.find((x) => x.id === selected.matchId)}
+            tournament={tournaments.find((x) => x.id === selected.tournamentId)}
+            team={selected.teamId ? teams.find((x) => x.id === selected.teamId) : null}
+            onClose={() => setSelectedId(null)}
+            onAction={(a) => onAction(selected, a)}
+          />
         )}
-
-        <section className="hud-panel overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="border-b border-border bg-surface-2">
-              <tr className="label-eyebrow text-left text-xs">
-                <th className="px-3 py-2">POV</th>
-                <th className="px-3 py-2">Match</th>
-                <th className="px-3 py-2">Tournament</th>
-                <th className="px-3 py-2">Stream</th>
-                <th className="px-3 py-2">Maps</th>
-                <th className="px-3 py-2">Status</th>
-                <th className="px-3 py-2 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visibleProcesses.length === 0 && (
-                <tr><td colSpan={7} className="px-3 py-6 text-center text-xs text-muted-foreground">
-                  {processes.length === 0 ? "No processes yet." : `No processes with status "${statusFilter}".`}
-                </td></tr>
-              )}
-              {visibleProcesses.map((p) => {
-                const m = matches.find((x) => x.id === p.matchId);
-                const t = tournaments.find((x) => x.id === p.tournamentId);
-                const isOpen = expanded === p.id;
-                return (
-                  <Fragment key={p.id}>
-                  <tr id={`process-${p.id}`} className="border-b border-border scroll-mt-20">
-                    <td className="px-3 py-2 text-xs">
-                      <span className="rounded-sm border border-border bg-background px-1.5 py-0.5 text-mono uppercase">{p.pov} POV</span>
-                      {p.live && <span className="ml-1 rounded-sm bg-destructive px-1.5 py-0.5 text-xs font-bold text-destructive-foreground">LIVE</span>}
-                    </td>
-                    <td className="px-3 py-2 text-xs font-semibold">
-                      <button onClick={() => setExpanded(isOpen ? null : p.id)} className="hover:text-primary">
-                        {isOpen ? "▼" : "▶"} {m?.name ?? p.matchId}
-                      </button>
-                    </td>
-                    <td className="px-3 py-2 text-xs">{t?.name ?? p.tournamentId}</td>
-                    <td className="px-3 py-2 text-xs text-muted-foreground truncate max-w-[260px]" title={p.streamUrl}>{p.streamUrl || "—"}</td>
-                    <td className="px-3 py-2 text-mono text-xs">{p.maps.length}</td>
-                    <td className="px-3 py-2"><span className={`rounded-sm px-1.5 py-0.5 text-xs uppercase ${STATUS_COLORS[p.status]}`}>{p.status}</span></td>
-                    <td className="px-3 py-2 text-right">
-                      <button onClick={() => setEditing({ ...p })} className="text-xs text-primary hover:underline mr-2">Edit</button>
-                      <button onClick={() => { if (confirm("Delete process?")) removeProcess(p.id); }} className="text-xs text-destructive hover:underline">Delete</button>
-                    </td>
-                  </tr>
-                  {isOpen && (
-                    <tr className="border-b border-border bg-surface-2/40">
-                      <td colSpan={7} className="px-4 py-3">
-                        <ProcessAnalysisDetail process={p} teams={teams} matchTeamIds={m?.teamIds ?? []} />
-                      </td>
-                    </tr>
-                  )}
-                  </Fragment>
-                );
-              })}
-            </tbody>
-          </table>
-        </section>
       </div>
 
       {editing && (
