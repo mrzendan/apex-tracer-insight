@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ApexTracksFile",
+  "type": "object",
+  "required": ["meta", "frames"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["video", "fps_source", "fps_processed", "frame_count", "canonical_map", "canonical_size", "world_bounds", "schema_version"],
+      "properties": {
+        "video": { "type": "string" },
+        "fps_source": { "type": "number" },
+        "fps_processed": { "type": "number" },
+        "frame_count": { "type": "integer" },
+        "canonical_map": { "type": "string" },
+        "canonical_size": { "type": "array", "items": { "type": "integer" }, "minItems": 2, "maxItems": 2 },
+        "world_bounds": {
+          "type": "object",
+          "properties": {
+            "x": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+            "y": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 }
+          }
+        },
+        "teams": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id"],
+            "properties": {
+              "id": { "type": "string" },
+              "name": { "type": "string" },
+              "color": { "type": "string" }
+            }
+          }
+        },
+        "schema_version": { "type": "integer", "const": 1 }
+      }
+    },
+    "frames": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["t", "frame", "camera", "tracks"],
+        "properties": {
+          "t": { "type": "number" },
+          "frame": { "type": "integer" },
+          "camera": {
+            "type": "object",
+            "required": ["registration"],
+            "properties": {
+              "zoom": { "type": "number" },
+              "pan_canonical": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+              "rotation_deg": { "type": "number" },
+              "registration": { "type": "string", "enum": ["ok", "low_confidence", "failed"] },
+              "ransac_inliers": { "type": "integer" }
+            }
+          },
+          "tracks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["team_id", "world", "state"],
+              "properties": {
+                "team_id": { "type": "string" },
+                "world": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+                "canonical_px": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+                "frame_px": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+                "angle_world_deg": { "type": "number" },
+                "state": { "type": "string", "enum": ["alive", "low_conf", "lost"] },
+                "confidence": { "type": "number" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

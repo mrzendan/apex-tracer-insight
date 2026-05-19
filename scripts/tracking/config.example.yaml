@@ -1,0 +1,55 @@
+# Каноническая карта (файлы в canonical_maps/<name>.png + .json)
+canonical_map: storm_point
+
+# Параметры регистрации кадра -> канонической карты
+registration:
+  detector: orb           # orb | sift
+  max_features: 1500
+  match_ratio: 0.75       # Lowe ratio test
+  ransac_reproj_px: 5.0
+  min_inliers: 25         # ниже -> кадр помечается low_confidence
+  # ROI внутри кадра, где реально видна тактическая карта (нормализованные 0..1).
+  # Если карта на весь экран -- оставь [0,0,1,1].
+  roi: [0.0, 0.0, 1.0, 1.0]
+
+# Команды и их HSV-диапазоны (как в /admin/hsv).
+# Hue: 0..179, Sat: 0..255, Val: 0..255 (OpenCV convention).
+teams:
+  - id: red
+    name: "Team Red"
+    hsv_lower: [0, 160, 140]
+    hsv_upper: [8, 255, 255]
+    hsv_lower2: [172, 160, 140]   # red wraps around hue
+    hsv_upper2: [179, 255, 255]
+  - id: blue
+    name: "Team Blue"
+    hsv_lower: [100, 160, 140]
+    hsv_upper: [120, 255, 255]
+  - id: yellow
+    name: "Team Yellow"
+    hsv_lower: [22, 160, 160]
+    hsv_upper: [34, 255, 255]
+  - id: green
+    name: "Team Green"
+    hsv_lower: [55, 140, 120]
+    hsv_upper: [78, 255, 255]
+
+# Параметры детекции плашек
+detection:
+  min_area_px: 60
+  max_area_px: 1200
+  morph_kernel: 3
+  arrow_min_area_px: 12
+  arrow_approx_eps: 0.05
+
+# Трекинг (в мировых координатах)
+tracking:
+  max_gap_frames: 30      # сколько кадров жить без детекции
+  gating_world_dist: 50.0 # макс. расстояние в мире для ассоциации
+  process_noise: 1.0
+  measurement_noise: 4.0
+
+# Выход
+output:
+  include_frame_px: true
+  include_canonical_px: true

@@ -30,6 +30,7 @@ const calibrationItems: NavItem[] = [
 const analysisItems: NavItem[] = [
   { to: "/admin/processes", label: "Processes",       hint: "Analysis & tracking" },
   { to: "/admin/minimap",   label: "Minimap Locator", hint: "Minimap detection" },
+  { to: "/admin/tracking-lab", label: "Tracking Lab", hint: "VOD tracks.json viewer" },
 ];
 
 const systemItems: NavItem[] = [
