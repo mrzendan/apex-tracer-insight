@@ -461,8 +461,11 @@ function ZonesAdmin() {
             </div>
             {tags.map((t) => (
               <div key={t.id} className="mb-1 flex items-center gap-2 rounded-sm border border-border bg-surface px-2 py-1.5">
-                <input type="color" value={t.color} onChange={(e) => recolorTag(t.id, e.target.value)}
-                  className="h-5 w-5 cursor-pointer rounded-sm border border-border bg-transparent" />
+                <label className="relative block h-7 w-7 shrink-0 cursor-pointer overflow-hidden rounded-sm border border-border"
+                  style={{ backgroundColor: t.color }} title={t.color}>
+                  <input type="color" value={t.color} onChange={(e) => recolorTag(t.id, e.target.value)}
+                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
+                </label>
                 <input defaultValue={t.id} onBlur={(e) => renameTag(t.id, e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
                   className="text-mono flex-1 rounded-sm bg-background px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-primary/40" />
