@@ -3,11 +3,13 @@ canonical_map: storm_point
 
 # Параметры регистрации кадра -> канонической карты
 registration:
-  detector: orb           # orb | sift
-  max_features: 1500
+  detector: sift          # orb | sift (sift сильно лучше на кросс-домене карта<->VOD)
+  max_features: 4000
+  clahe: true             # выравнивание контраста перед детекцией
+  canonical_target_w: 1600
   match_ratio: 0.75       # Lowe ratio test
   ransac_reproj_px: 5.0
-  min_inliers: 25         # ниже -> кадр помечается low_confidence
+  min_inliers: 15         # ниже -> кадр помечается low_confidence
   # ROI внутри кадра, где реально видна тактическая карта (нормализованные 0..1).
   # Если карта на весь экран -- оставь [0,0,1,1].
   roi: [0.0, 0.0, 1.0, 1.0]
