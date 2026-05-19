@@ -320,7 +320,7 @@ function HsvAdmin() {
                     ? "border-primary/50 bg-primary/10 py-2.5"
                     : "border-transparent py-1.5 hover:bg-muted"
                 }`}>
-                <span className={`shrink-0 rounded-sm ring-1 ring-border ${active ? "h-6 w-6" : "h-3 w-3"}`} style={{ backgroundColor: t.color }} />
+                <span className={`shrink-0 rounded-sm ring-1 ring-border ${active ? "h-6 w-6" : "h-3 w-3"}`} style={{ backgroundColor: teamSwatch(t.id) }} />
                 <div className="flex min-w-0 flex-1 flex-col">
                   <span className={`font-semibold ${active ? "text-sm" : "text-xs"}`}>{t.displayName}</span>
                   {active && <span className="text-mono text-[10px] uppercase text-muted-foreground">{teamSwatch(t.id)}</span>}
@@ -334,7 +334,7 @@ function HsvAdmin() {
         {/* Editor */}
         <div className="flex min-w-0 flex-1 flex-col overflow-auto p-6">
           <div className="mb-4 flex items-center gap-3">
-            <span className="h-7 w-7 rounded-sm ring-1 ring-border" style={{ backgroundColor: team.color }} />
+            <span className="h-7 w-7 rounded-sm ring-1 ring-border" style={{ backgroundColor: teamSwatch(team.id) }} />
             <h2 className="text-lg font-bold">{team.displayName}</h2>
             <span className="text-mono text-xs text-muted-foreground">preset</span>
 
@@ -449,7 +449,9 @@ function HsvAdmin() {
               <button className="rounded-sm border border-primary/50 bg-surface-2 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-primary hover:bg-primary/10">
                 Save as new profile
               </button>
-              <button className="rounded-sm bg-primary px-5 py-2 text-sm font-bold uppercase tracking-wider text-primary-foreground shadow-md hover:brightness-110">
+              <button
+                onClick={() => setSavedColors((s) => ({ ...s, [teamId]: presetCenterHex(preset) }))}
+                className="rounded-sm bg-primary px-5 py-2 text-sm font-bold uppercase tracking-wider text-primary-foreground shadow-md hover:brightness-110">
                 Save preset
               </button>
             </div>
