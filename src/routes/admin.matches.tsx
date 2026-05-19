@@ -1,7 +1,7 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { Fragment, useState } from "react";
 import { useAdminStore, setMatches, updateMatch } from "@/lib/admin-store";
-import { maps as allMaps, type MatchFull } from "@/lib/mock-match";
+import { maps as allMaps, type MatchFull, gameIdFor } from "@/lib/mock-match";
 import { TeamLogo } from "@/components/admin/TeamLogo";
 
 export const Route = createFileRoute("/admin/matches")({ component: MatchesAdmin });
@@ -166,11 +166,22 @@ function MatchesAdmin() {
                                 {mapIds.map((id, i) => {
                                   const mp = allMaps.find((x) => x.id === id);
                                   if (!mp) return null;
+                                  const gameId = gameIdFor(m.id, i);
+                                  const dur = m.gameDurations?.[i] ?? m.durationSec;
                                   return (
                                     <li key={`${id}-${i}`} className="flex items-center gap-3 rounded-sm border border-border bg-surface p-2">
                                       <span className="text-mono text-xs text-muted-foreground">#{i + 1}</span>
-                                      <img src={mp.image} alt={mp.name} className="h-10 w-14 rounded-sm object-cover" />
-                                      <div className="flex-1 text-xs font-semibold">{mp.name}</div>
+                                      <Link
+                                        to="/games/$gameId"
+                                        params={{ gameId }}
+                                        onClick={(e) => e.stopPropagation()}
+                                        title={`Open game ${i + 1}`}
+                                        className="flex flex-1 items-center gap-3 hover:opacity-80"
+                                      >
+                                        <img src={mp.image} alt={mp.name} className="h-10 w-14 rounded-sm object-cover" />
+                                        <div className="flex-1 text-xs font-semibold hover:underline">{mp.name}</div>
+                                        <span className="text-mono text-xs tabular-nums text-muted-foreground">{mm(dur)}</span>
+                                      </Link>
                                       <div className="flex flex-col gap-0.5">
                                         <button
                                           onClick={(e) => { e.stopPropagation(); if (i === 0) return; const next = [...mapIds]; [next[i - 1], next[i]] = [next[i], next[i - 1]]; updateMatch(m.id, { mapIds: next, mapId: next[0] }); }}
