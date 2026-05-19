@@ -164,9 +164,9 @@ function MatchesAdmin() {
                 <th className="px-3 py-2 w-[120px]">ID</th>
                 <th className="px-3 py-2">Match</th>
                 <th className="px-3 py-2">Tournament</th>
-                <th className="px-3 py-2">Map</th>
+                <th className="px-3 py-2 w-[140px]">Map</th>
                 <th className="px-3 py-2 w-[110px]">Status</th>
-                <th className="px-3 py-2 w-[220px]">Readiness</th>
+                <th className="px-3 py-2 w-[660px]">Readiness</th>
                 <th className="px-3 py-2 w-[200px] text-right">
                   <div className="flex items-center justify-end gap-2">
                     <span>Actions</span>
@@ -257,7 +257,7 @@ function MatchesAdmin() {
                             </div>
 
                             {tab === "overview" && (
-                              <div className="grid gap-4 md:grid-cols-[260px_1fr]">
+                              <div className="grid gap-4 md:grid-cols-[360px_1fr]">
                                 <div className="hud-panel p-3">
                                   <div className="label-eyebrow mb-2 text-xs">Summary</div>
                                   <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-xs">
