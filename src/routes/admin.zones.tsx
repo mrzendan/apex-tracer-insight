@@ -452,7 +452,7 @@ function ZonesAdmin() {
 
         </div>
 
-        <aside className="w-[340px] shrink-0 border-l border-border bg-surface p-3">
+        <aside className="w-[340px] shrink-0 overflow-y-auto border-l border-border bg-surface p-3">
           <section className="mb-3 rounded-sm border border-border bg-surface-2 p-2.5">
             <div className="mb-2 flex items-center justify-between">
               <div className="label-eyebrow">Tags ({tags.length})</div>
