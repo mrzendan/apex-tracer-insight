@@ -1,0 +1,13 @@
+{
+  "name": "broken_moon",
+  "image": "broken_moon.png",
+  "canonical_size": [2048, 2048],
+  "world_bounds": { "x": [0, 2048], "y": [0, 2048] },
+  "calibration_points": [
+    { "canonical_px": [0, 0],       "world": [0, 0] },
+    { "canonical_px": [2048, 0],    "world": [2048, 0] },
+    { "canonical_px": [2048, 2048], "world": [2048, 2048] },
+    { "canonical_px": [0, 2048],    "world": [0, 2048] }
+  ],
+  "_note": "Положи рядом broken_moon.png (полная карта без оверлеев) и пересчитай calibration_points."
+}
