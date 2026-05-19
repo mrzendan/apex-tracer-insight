@@ -54,7 +54,7 @@ function ZonesAdmin() {
   const [sel, setSel] = useState<string | null>(zones[0]?.id ?? null);
   const [meta, setMeta] = useState<Record<string, ZoneMeta>>({});
   const [snap, setSnap] = useState(true);
-  const [gridSize, setGridSize] = useState<10 | 20>(20);
+  const [gridSize, setGridSize] = useState<5 | 10 | 20>(20);
   const [showGrid, setShowGrid] = useState(true);
   const [showSafe, setShowSafe] = useState(false);
   // Zoom & pan inside the stage
