@@ -43,14 +43,28 @@ function StatusBadge({ s }: { s: MatchStatus }) {
 }
 
 function Indicator({ label, state }: { label: string; state: "ok" | "missing" | "pending" }) {
-  const ch = state === "ok" ? "✓" : state === "pending" ? "…" : "—";
-  const cls = state === "ok" ? "text-emerald-400" : state === "pending" ? "text-amber-400" : "text-muted-foreground";
+  const cls =
+    state === "ok"
+      ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
+      : state === "pending"
+      ? "border-amber-500/40 bg-amber-500/10 text-amber-400"
+      : "border-border bg-surface-2 text-muted-foreground";
+  const tag = state === "ok" ? "ready" : state === "pending" ? "partial" : "missing";
   return (
-    <span className="inline-flex items-center gap-1 text-xs uppercase tracking-wider text-muted-foreground" title={`${label}: ${state}`}>
-      {label} <span className={`text-mono ${cls}`}>{ch}</span>
+    <span
+      className={`inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wider ${cls}`}
+      title={`${label}: ${state}`}
+    >
+      <span>{label}</span>
+      <span className="opacity-70">·</span>
+      <span>{tag}</span>
     </span>
   );
 }
+
+const APEX_PLACEMENT_PTS = [12, 9, 7, 5, 4, 3, 3, 2, 2, 2, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0];
+const teamPoints = (t: { placement: number; kills: number }) =>
+  (APEX_PLACEMENT_PTS[t.placement - 1] ?? 0) + t.kills;
 
 function deriveMapStatus(matchId: string, mapId: string, idx: number): MatchStatus {
   const h = hashStr(`${matchId}:${mapId}:${idx}`) % 10;
