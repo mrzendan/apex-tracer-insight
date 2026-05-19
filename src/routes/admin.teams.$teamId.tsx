@@ -8,7 +8,10 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 
 export const Route = createFileRoute("/admin/teams/$teamId")({ component: TeamDetail });
 
-type Mode = "all" | "year" | "tournaments";
+type Mode = "all" | "year" | "tournaments" | "range";
+type RangeKey = "7d" | "30d" | "90d" | "180d" | "365d";
+const RANGE_DAYS: Record<RangeKey, number> = { "7d": 7, "30d": 30, "90d": 90, "180d": 180, "365d": 365 };
+const RANGE_LABEL: Record<RangeKey, string> = { "7d": "Week", "30d": "Month", "90d": "3 mo", "180d": "6 mo", "365d": "12 mo" };
 
 /** Deterministic per-match date derived from tournament window + match index. */
 function matchDateTime(match: MatchFull, tourStart?: string, tourEnd?: string, indexInTour = 0) {
@@ -68,18 +71,27 @@ function TeamDetail() {
   const [mode, setMode] = useState<Mode>("all");
   const [year, setYear] = useState<number>(allYears[0] ?? 6);
   const [selectedTours, setSelectedTours] = useState<string[]>([]);
+  const [range, setRange] = useState<RangeKey>("30d");
 
   const filteredRows = useMemo(() => {
     if (mode === "year") return teamRows.filter((r) => r.tour?.year === year);
     if (mode === "tournaments") return teamRows.filter((r) => selectedTours.includes(r.match.tournamentId));
+    if (mode === "range") {
+      const cutoff = today - RANGE_DAYS[range] * 86400000;
+      return teamRows.filter((r) => r.date && r.date.getTime() >= cutoff && r.date.getTime() <= today);
+    }
     return teamRows;
-  }, [teamRows, mode, year, selectedTours]);
+  }, [teamRows, mode, year, selectedTours, range]);
 
   const filteredTournaments = useMemo(() => {
     if (mode === "year") return teamTournaments.filter((t) => t.year === year);
     if (mode === "tournaments") return teamTournaments.filter((t) => selectedTours.includes(t.id));
+    if (mode === "range") {
+      const ids = new Set(filteredRows.map((r) => r.match.tournamentId));
+      return teamTournaments.filter((t) => ids.has(t.id));
+    }
     return teamTournaments;
-  }, [teamTournaments, mode, year, selectedTours]);
+  }, [teamTournaments, mode, year, selectedTours, filteredRows]);
 
   // Per-map deterministic placement sampler (1..20) — stable per (mapId, matchId, teamId).
   function pseudoPlacement(mapId: string, matchId: string): number {
@@ -148,7 +160,7 @@ function TeamDetail() {
     return filteredRows
       .filter((r) => r.date)
       .sort((a, b) => a.date!.getTime() - b.date!.getTime())
-      .slice(-20)
+      .slice(-30)
       .map((r) => {
         const ids = r.match.mapIds ?? [r.match.mapId];
         const placements = ids.map((id) => pseudoPlacement(id, r.match.id));
@@ -209,50 +221,8 @@ function TeamDetail() {
           title={team.liquipediaUrl ? "Open Liquipedia page" : "Search team on Liquipedia"}
           className="ml-2 inline-flex items-center gap-1 rounded-sm border border-primary/40 bg-primary/10 px-2 py-1 text-xs uppercase tracking-wider text-primary hover:bg-primary/20"
         >
-          Liquipedia ↗{!team.liquipediaUrl && <span className="ml-1 opacity-60">(search)</span>}
+          Liquipedia
         </a>
-        {/* ---- Admin actions ---- */}
-        <div className="ml-auto flex items-center gap-1.5">
-          <button
-            onClick={() => setEditing({ ...team })}
-            className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted"
-          >
-            Edit team
-          </button>
-          <ColorSwatch team={team} />
-          <Popover>
-            <PopoverTrigger asChild>
-              <button className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted">
-                Add to tournament ▾
-              </button>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="max-h-80 w-72 overflow-auto p-1">
-              {missingTournaments.length === 0 ? (
-                <div className="px-2 py-3 text-center text-xs text-muted-foreground">In every tournament</div>
-              ) : (
-                missingTournaments.map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => addToTournament(t.id)}
-                    className="block w-full rounded-sm px-2 py-1.5 text-left text-xs hover:bg-muted"
-                  >
-                    <div className="truncate font-semibold">{t.name}</div>
-                    <div className="text-mono text-xs text-muted-foreground">{t.startDate} → {t.endDate}</div>
-                  </button>
-                ))
-              )}
-            </PopoverContent>
-          </Popover>
-          {latestMatch && (
-            <Link
-              to={"/admin/matches/$matchId" as "/admin/matches"}
-              params={{ matchId: latestMatch.id } as never}
-              className="rounded-sm border border-primary/40 bg-primary/10 px-2 py-1 text-xs uppercase tracking-wider text-primary hover:bg-primary/20"
-            >
-              Open in Match Viewer ↗
-            </Link>
-          )}
-        </div>
       </header>
       <div className="flex-1 overflow-auto p-6">
         <div className="hud-panel mb-4 p-3">
@@ -318,7 +288,49 @@ function TeamDetail() {
                 )}
               </PopoverContent>
             </Popover>
-            <span className="ml-auto text-xs text-muted-foreground">{filteredRows.length} matches in period</span>
+            <div className="flex items-center gap-1 border-l border-border pl-3 ml-1">
+              {(Object.keys(RANGE_LABEL) as RangeKey[]).map((k) => (
+                <button
+                  key={k}
+                  onClick={() => { setMode("range"); setRange(k); }}
+                  className={`rounded-sm border px-2 py-1 text-xs uppercase tracking-wider ${mode === "range" && range === k ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface hover:bg-muted"}`}
+                >
+                  {RANGE_LABEL[k]}
+                </button>
+              ))}
+            </div>
+            <span className="text-xs text-muted-foreground">{filteredRows.length} matches</span>
+            <div className="ml-auto flex items-center gap-1.5">
+              <button
+                onClick={() => setEditing({ ...team })}
+                className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted"
+              >
+                Edit team
+              </button>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted">
+                    Add to tournament ▾
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="max-h-80 w-72 overflow-auto p-1">
+                  {missingTournaments.length === 0 ? (
+                    <div className="px-2 py-3 text-center text-xs text-muted-foreground">In every tournament</div>
+                  ) : (
+                    missingTournaments.map((t) => (
+                      <button
+                        key={t.id}
+                        onClick={() => addToTournament(t.id)}
+                        className="block w-full rounded-sm px-2 py-1.5 text-left text-xs hover:bg-muted"
+                      >
+                        <div className="truncate font-semibold">{t.name}</div>
+                        <div className="text-mono text-xs text-muted-foreground">{t.startDate} → {t.endDate}</div>
+                      </button>
+                    ))
+                  )}
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
         </div>
 
@@ -405,6 +417,7 @@ function TeamDetail() {
             title="Placement over time"
             subtitle="lower is better · inverted"
             values={formPoints.map((p) => p.placement)}
+            dates={formPoints.map((p) => p.date)}
             invert
             min={1}
             max={20}
@@ -415,6 +428,7 @@ function TeamDetail() {
             title="Kills over time"
             subtitle="per match"
             values={formPoints.map((p) => p.kills)}
+            dates={formPoints.map((p) => p.date)}
             min={0}
             color="rgb(245 158 11)"
             formatVal={(v) => `${v.toFixed(0)}`}
@@ -423,6 +437,7 @@ function TeamDetail() {
             title="Top 5 rate"
             subtitle="rolling 5-game window · %"
             values={top5Rate}
+            dates={formPoints.map((p) => p.date)}
             min={0}
             max={100}
             color="rgb(16 185 129)"
@@ -509,6 +524,7 @@ function Sparkline({
   title,
   subtitle,
   values,
+  dates,
   min,
   max,
   invert,
@@ -518,6 +534,7 @@ function Sparkline({
   title: string;
   subtitle?: string;
   values: number[];
+  dates?: (Date | null)[];
   min?: number;
   max?: number;
   invert?: boolean;
@@ -525,8 +542,9 @@ function Sparkline({
   formatVal: (v: number) => string;
 }) {
   const w = 320;
-  const h = 80;
-  const pad = 6;
+  const h = 110;
+  const pad = 8;
+  const padBottom = 18;
   const lo = min ?? Math.min(...values, 0);
   const hi = max ?? Math.max(...values, 1);
   const span = Math.max(1e-6, hi - lo);
@@ -538,12 +556,26 @@ function Sparkline({
   const points = values.map((v, i) => {
     const x = pad + (i / Math.max(1, values.length - 1)) * (w - pad * 2);
     const norm = (v - lo) / span;
-    const y = invert ? pad + norm * (h - pad * 2) : h - pad - norm * (h - pad * 2);
+    const inner = h - pad - padBottom;
+    const y = invert ? pad + norm * (inner - pad) : pad + inner - norm * (inner - pad);
     return [x, y] as const;
   });
   const path = points.length
     ? points.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`).join(" ")
     : "";
+  // Peak index — for inverted metrics, peak = smallest value (best); else largest.
+  let peakIdx = -1;
+  if (values.length >= 2) {
+    let best = values[0];
+    peakIdx = 0;
+    for (let i = 1; i < values.length; i++) {
+      if (invert ? values[i] < best : values[i] > best) { best = values[i]; peakIdx = i; }
+    }
+  }
+  const fmtShort = (d: Date | null | undefined) =>
+    d ? d.toLocaleDateString(undefined, { day: "2-digit", month: "short" }) : "";
+  const firstDate = dates?.[0];
+  const lastDate = dates?.[dates.length - 1];
   return (
     <div className="rounded-sm border border-border bg-surface-2/40 p-3">
       <div className="flex items-baseline justify-between gap-2">
@@ -566,11 +598,36 @@ function Sparkline({
         {values.length === 0 ? (
           <div className="rounded-sm border border-dashed border-border px-2 py-4 text-center text-xs text-muted-foreground">No data</div>
         ) : (
-          <svg viewBox={`0 0 ${w} ${h}`} className="h-20 w-full">
+          <svg viewBox={`0 0 ${w} ${h}`} className="h-28 w-full overflow-visible">
             <path d={path} fill="none" stroke={color} strokeWidth="1.5" />
             {points.map(([x, y], i) => (
               <circle key={i} cx={x} cy={y} r={i === points.length - 1 ? 2.5 : 1.5} fill={color} />
             ))}
+            {peakIdx >= 0 && points[peakIdx] && (
+              <g>
+                <circle cx={points[peakIdx][0]} cy={points[peakIdx][1]} r={3.5} fill="none" stroke={color} strokeWidth="1.2" />
+                <text
+                  x={points[peakIdx][0]}
+                  y={Math.max(10, points[peakIdx][1] - 6)}
+                  textAnchor="middle"
+                  fontSize="9"
+                  fill="currentColor"
+                  className="text-foreground"
+                >
+                  {formatVal(values[peakIdx])}{dates?.[peakIdx] ? ` · ${fmtShort(dates[peakIdx])}` : ""}
+                </text>
+              </g>
+            )}
+            {dates && firstDate && (
+              <text x={pad} y={h - 4} fontSize="9" fill="currentColor" className="text-muted-foreground">
+                {fmtShort(firstDate)}
+              </text>
+            )}
+            {dates && lastDate && (
+              <text x={w - pad} y={h - 4} fontSize="9" textAnchor="end" fill="currentColor" className="text-muted-foreground">
+                {fmtShort(lastDate)}
+              </text>
+            )}
           </svg>
         )}
       </div>
