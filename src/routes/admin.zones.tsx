@@ -452,41 +452,33 @@ function ZonesAdmin() {
         </div>
 
         <aside className="w-[340px] shrink-0 border-l border-border bg-surface p-3 overflow-y-auto">
+          <section className="mb-3 rounded-sm border border-border bg-surface-2 p-2.5">
+            <div className="mb-2 flex items-center justify-between">
+              <div className="label-eyebrow">Tags ({tags.length})</div>
+              <button onClick={addTag}
+                className="rounded-sm border border-border bg-surface px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:bg-muted hover:text-foreground">
+                + Add
+              </button>
+            </div>
+            {tags.map((t) => (
+              <div key={t.id} className="mb-1 flex items-center gap-2 rounded-sm border border-border bg-surface px-2 py-1.5">
+                <input type="color" value={t.color} onChange={(e) => recolorTag(t.id, e.target.value)}
+                  className="h-5 w-5 cursor-pointer rounded-sm border border-border bg-transparent" />
+                <input defaultValue={t.id} onBlur={(e) => renameTag(t.id, e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                  className="text-mono flex-1 rounded-sm bg-background px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-primary/40" />
+                <button onClick={() => deleteTag(t.id)} disabled={tags.length <= 1} title="Delete tag"
+                  className="grid h-6 w-6 place-items-center rounded-sm text-muted-foreground hover:bg-destructive/20 hover:text-destructive disabled:opacity-30">
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ))}
+          </section>
+
           <div className="mb-2 flex items-center justify-between">
             <div className="label-eyebrow">Zones ({zones.length})</div>
-            <div className="flex items-center gap-1">
-              <button onClick={() => setTagsOpen((v) => !v)}
-                className={`rounded-sm border border-border px-2 py-1 text-xs font-semibold uppercase tracking-wider hover:bg-muted ${tagsOpen ? "bg-primary text-primary-foreground" : "bg-surface-2 text-muted-foreground"}`}>
-                Tags ({tags.length})
-              </button>
-              <button onClick={addZone} className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs font-semibold hover:bg-muted">+ Add</button>
-            </div>
+            <button onClick={addZone} className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs font-semibold hover:bg-muted">+ Add</button>
           </div>
-          {tagsOpen && (
-            <div className="mb-3 rounded-sm border border-border bg-surface-2 p-2.5">
-              <div className="mb-2 flex items-center justify-between">
-                <div className="label-eyebrow">Edit tags</div>
-                <button onClick={() => setTagsOpen(false)} className="grid h-6 w-6 place-items-center rounded-sm hover:bg-muted"><X className="h-3.5 w-3.5" /></button>
-              </div>
-              {tags.map((t) => (
-                <div key={t.id} className="mb-1 flex items-center gap-2 rounded-sm border border-border bg-surface px-2 py-1.5">
-                  <input type="color" value={t.color} onChange={(e) => recolorTag(t.id, e.target.value)}
-                    className="h-5 w-5 cursor-pointer rounded-sm border border-border bg-transparent" />
-                  <input defaultValue={t.id} onBlur={(e) => renameTag(t.id, e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-                    className="text-mono flex-1 rounded-sm bg-background px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-primary/40" />
-                  <button onClick={() => deleteTag(t.id)} disabled={tags.length <= 1} title="Delete tag"
-                    className="grid h-6 w-6 place-items-center rounded-sm text-muted-foreground hover:bg-destructive/20 hover:text-destructive disabled:opacity-30">
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              ))}
-              <button onClick={addTag}
-                className="mt-2 w-full rounded-sm border border-dashed border-border bg-surface px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:bg-muted hover:text-foreground">
-                + Add tag
-              </button>
-            </div>
-          )}
           {zones.map((z) => {
             const m = getMeta(z.id);
             const c = tagColor(z.tag);
