@@ -115,18 +115,33 @@ def main():
                                    args.fine, args.threshold)
                 if exact is not None:
                     cut_frame, from_pan, to_pan = exact
+                    # второй проход: шаг 1 в окне ±fine, ищем настоящий межкадровый скачок
+                    pinned = pinpoint_cut(cap, reg, cut_frame, args.fine, args.threshold)
+                    if pinned is None:
+                        print(f"    -> отброшено: в окне ±{args.fine} нет межкадрового скачка "
+                              f">{args.threshold/2:.0f}px (это был плавный pan)")
+                        prev_idx = curr_idx
+                        prev_pan = curr_pan
+                        prev_inl = curr_inl
+                        curr_idx += args.coarse
+                        continue
+                    cut_frame, from_pan, to_pan, jump_delta = pinned
                     ev = {
                         "frame": int(cut_frame),
                         "t": round(cut_frame / fps, 3),
                         "from_pan": [round(from_pan[0], 1), round(from_pan[1], 1)],
                         "to_pan": [round(to_pan[0], 1), round(to_pan[1], 1)],
                         "delta": round(dist(from_pan, to_pan), 1),
+                        "jump_delta": round(jump_delta, 1),
                     }
                     events.append(ev)
-                    print(f"    -> cut at frame {cut_frame} (t={ev['t']}s, Δ={ev['delta']}px)")
+                    print(f"    -> cut at frame {cut_frame} (t={ev['t']}s, "
+                          f"Δ={ev['delta']}px, jump={ev['jump_delta']}px между соседними)")
                     # рисуем overlay со стрелкой
                     draw_cut_overlay(overlay_base.copy(), from_pan, to_pan, reg.scale,
                                      args.out / f"overlay_cut_{cut_frame}.png", ev)
+                    # сохраняем 4 видеокадра вокруг cut'а
+                    dump_context_frames(cap, cut_frame, args.out)
                 else:
                     print(f"    -> не смог уточнить (регистрация в окне нестабильна)")
 
