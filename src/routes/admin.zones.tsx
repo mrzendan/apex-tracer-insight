@@ -346,12 +346,6 @@ function ZonesAdmin() {
           <input type="checkbox" checked={showSafe} onChange={(e) => setShowSafe(e.target.checked)} />
           <span className="font-semibold uppercase tracking-wider text-muted-foreground">Safe frame</span>
         </label>
-        <div className="ml-auto">
-          <button onClick={() => setTagsOpen((v) => !v)}
-            className="rounded-sm border border-border bg-surface px-2 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:bg-muted hover:text-foreground">
-            Manage tags ({tags.length})
-          </button>
-        </div>
       </div>
 
       <div className="flex min-h-0 flex-1">
