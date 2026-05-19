@@ -780,6 +780,9 @@ function VideoPreview(props: {
   showCameraBbox: boolean;
   videoLoaded: "loading" | "loaded" | "error";
   syncMapVideo: boolean;
+  overlays?: VideoOverlays;
+  onOverlaysChange?: (v: VideoOverlays) => void;
+  onOpenSourceSettings?: () => void;
 }) {
   const loadTone =
     props.videoLoaded === "loaded" ? "text-emerald-400"
@@ -789,6 +792,10 @@ function VideoPreview(props: {
     props.videoLoaded === "loaded" ? "video loaded"
       : props.videoLoaded === "error" ? "no video"
       : "loading";
+  const hasVideo = !!props.videoUrl && props.videoLoaded !== "error";
+  const ov = props.overlays ?? { showCrop: true, showHud: false, showDetected: true, showMinimap: false };
+  const toggleOv = (k: keyof VideoOverlays) =>
+    props.onOverlaysChange?.({ ...ov, [k]: !ov[k] });
   return (
     <div className="hud-panel relative flex min-h-0 flex-col overflow-hidden bg-black">
       <div className="flex items-center justify-between border-b border-border bg-surface px-3 py-1.5">
@@ -801,9 +808,34 @@ function VideoPreview(props: {
           <span>{fmt(props.time)} / {fmt(props.duration)}</span>
         </div>
       </div>
+      {props.onOverlaysChange && (
+        <div className="flex flex-wrap items-center gap-1 border-b border-border bg-surface/60 px-2 py-1">
+          <ToggleBtn active={ov.showCrop} onClick={() => toggleOv("showCrop")}>Show crop</ToggleBtn>
+          <ToggleBtn active={ov.showHud} onClick={() => toggleOv("showHud")}>Show HUD zones</ToggleBtn>
+          <ToggleBtn active={ov.showDetected} onClick={() => toggleOv("showDetected")}>Show detected frame</ToggleBtn>
+          <ToggleBtn active={ov.showMinimap} onClick={() => toggleOv("showMinimap")}>Show minimap crop</ToggleBtn>
+        </div>
+      )}
       <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-black p-2">
+        {!hasVideo ? (
+          <div className="flex max-w-md flex-col items-center gap-3 text-center">
+            <div className="rounded-full border border-border bg-surface-2 px-3 py-1 text-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+              ● no video
+            </div>
+            <div className="text-sm font-semibold text-foreground">Видео не загружено</div>
+            <div className="text-xs text-muted-foreground">
+              Укажите Video URL или загрузите файл в настройках Source.
+            </div>
+            {props.onOpenSourceSettings && (
+              <button onClick={props.onOpenSourceSettings}
+                className="mt-1 rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">
+                Open Source Settings
+              </button>
+            )}
+          </div>
+        ) : (
         <div
-          className="relative overflow-hidden border border-primary/40 bg-black"
+          className={`relative overflow-hidden bg-black ${ov.showCrop ? "border border-primary/40" : ""}`}
           style={{ aspectRatio: `${props.visibleAspect}`, maxWidth: "100%", maxHeight: "100%", width: "auto", height: "100%" }}
         >
           <video
@@ -819,10 +851,24 @@ function VideoPreview(props: {
             }}
             playsInline preload="metadata" crossOrigin="anonymous"
           />
-          {props.showCameraBbox && (
+          {props.showCameraBbox && ov.showDetected && (
             <div className="pointer-events-none absolute inset-0 border-2 border-dashed border-emerald-400/70" />
           )}
+          {ov.showHud && (
+            <>
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-[12%] border-b border-amber-400/40 bg-amber-400/5" />
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[14%] border-t border-amber-400/40 bg-amber-400/5" />
+              <div className="pointer-events-none absolute left-1 top-1 text-[10px] font-semibold uppercase tracking-wider text-amber-400/80">HUD top</div>
+              <div className="pointer-events-none absolute bottom-1 left-1 text-[10px] font-semibold uppercase tracking-wider text-amber-400/80">HUD bottom</div>
+            </>
+          )}
+          {ov.showMinimap && (
+            <div className="pointer-events-none absolute right-2 top-2 h-[18%] w-[14%] border border-cyan-400/60 bg-cyan-400/5">
+              <div className="absolute left-1 top-0.5 text-[9px] font-semibold uppercase tracking-wider text-cyan-300">minimap</div>
+            </div>
+          )}
         </div>
+        )}
       </div>
     </div>
   );
