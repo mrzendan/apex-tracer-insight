@@ -114,6 +114,25 @@ const defaultPresets: Preset[] = [
   },
 ];
 
+const PRESET_DESCRIPTIONS: Record<string, string> = {
+  "Step zoom":       "Для трансляций со ступенчатым зумом. Меньше сглаживания zoom, быстрая реакция на резкие изменения масштаба.",
+  "Smooth observer": "Для плавной камеры наблюдателя. Сильное сглаживание, меньше шума, но возможна задержка.",
+  "Fast camera":     "Для быстрых перемещений. Высокая чувствительность и скорость реакции, выше риск шума.",
+  "Low noise":       "Для шумного видео или нестабильного трека. Сильная фильтрация скачков, меньше ложных движений.",
+  "Custom":          "Ручные настройки оператора.",
+};
+
+const METRIC_HINTS = {
+  trackingQ:     "Интегральная оценка качества: 100 − штрафы за джампы, потерянные кадры и low-confidence. ≥80 — хорошо, 60–80 — приемлемо, <60 — пересчитать.",
+  jumpEvents:    "Количество событий резкого смещения камеры между кадрами (> jump threshold). Меньше — лучше.",
+  lostFrames:    "Кадры с уверенностью ниже порога подряд > lost frame threshold. Меньше — лучше.",
+  avgConfidence: "Средняя уверенность распознавания позиции камеры по всем кадрам. Ближе к 1 — лучше.",
+} as const;
+
+const SPLIT_VIEW_PURPOSE =
+  "Слева — реальная трансляция (crop). Справа — то, что система считает видимой областью на карте. " +
+  "Сравнивайте: совпадает ли движение, не уезжает ли bbox, корректен ли zoom, нет ли скачков и потерь.";
+
 type ViewMode = "overview" | "graphs" | "settings" | "debug";
 type SplitOpts = {
   syncMapVideo: boolean;
@@ -653,10 +672,10 @@ function QualityBar({ quality, preset, isDirty, prevQuality }: {
   const prev = prevQuality;
   return (
     <div className="flex shrink-0 items-center gap-6 border-b border-border bg-surface-2 px-6 py-2">
-      <Stat label="Tracking quality" value={`${quality.trackingQ}%`} valueClass={tone} after={delta(quality.trackingQ, prev?.trackingQ, true)} />
-      <Stat label="Jump events" value={quality.jumpEvents.toString()} after={delta(quality.jumpEvents, prev?.jumpEvents, false, 0, true)} />
-      <Stat label="Lost frames" value={quality.lostFrames.toString()} after={delta(quality.lostFrames, prev?.lostFrames, false, 0, true)} />
-      <Stat label="Avg confidence" value={quality.avgConfidence.toFixed(2)} after={delta(quality.avgConfidence, prev?.avgConfidence, false, 2)} />
+      <Stat label="Tracking quality" hint={METRIC_HINTS.trackingQ} value={`${quality.trackingQ}%`} valueClass={tone} after={delta(quality.trackingQ, prev?.trackingQ, true)} />
+      <Stat label="Jump events" hint={METRIC_HINTS.jumpEvents} value={quality.jumpEvents.toString()} after={delta(quality.jumpEvents, prev?.jumpEvents, false, 0, true)} />
+      <Stat label="Lost frames" hint={METRIC_HINTS.lostFrames} value={quality.lostFrames.toString()} after={delta(quality.lostFrames, prev?.lostFrames, false, 0, true)} />
+      <Stat label="Avg confidence" hint={METRIC_HINTS.avgConfidence} value={quality.avgConfidence.toFixed(2)} after={delta(quality.avgConfidence, prev?.avgConfidence, false, 2)} />
       <div className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
         {isDirty && (
           <span className="rounded-sm border border-amber-400/40 bg-amber-400/10 px-2 py-0.5 font-semibold uppercase tracking-wider text-amber-400">
@@ -672,10 +691,12 @@ function QualityBar({ quality, preset, isDirty, prevQuality }: {
   );
 }
 
-function Stat({ label, value, valueClass = "", after }: { label: string; value: string; valueClass?: string; after?: React.ReactNode }) {
+function Stat({ label, value, valueClass = "", after, hint }: { label: string; value: string; valueClass?: string; after?: React.ReactNode; hint?: string }) {
   return (
     <div className="flex items-baseline gap-2">
-      <span className="label-eyebrow text-xs">{label}</span>
+      <span className="label-eyebrow text-xs" title={hint}>
+        {label}{hint && <span className="ml-1 cursor-help text-muted-foreground/60">ⓘ</span>}
+      </span>
       <span className={`text-mono text-sm font-semibold ${valueClass}`}>{value}{after}</span>
     </div>
   );
@@ -700,6 +721,10 @@ function OverviewTab(props: {
     <>
       <SplitControls opts={props.splitOpts} onChange={props.setSplitOpts}
         onReset={props.onResetViewport} onFit={props.onFitMap} />
+      <div className="shrink-0 border-b border-border bg-surface-2/60 px-3 py-1.5 text-[11px] leading-snug text-muted-foreground">
+        <span className="label-eyebrow mr-2 text-[10px] text-foreground">Split view</span>
+        {SPLIT_VIEW_PURPOSE}
+      </div>
       <div className="grid min-h-0 flex-1 grid-cols-2 gap-3 p-3">
         {props.videoPreview}
         {props.mapPreview}
@@ -1316,6 +1341,12 @@ function OverviewPanel(props: Parameters<typeof RightPanel>[0]) {
             className="w-full rounded-sm border border-border bg-background px-2 py-1.5 text-xs">
             {props.presets.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
+          {PRESET_DESCRIPTIONS[props.active.name] && (
+            <div className="mt-1.5 rounded-sm border border-border bg-surface px-2 py-1.5 text-[11px] leading-snug text-muted-foreground">
+              {PRESET_DESCRIPTIONS[props.active.name]}
+            </div>
+          )}
+          <PresetPipeline isDirty={props.isDirty} hasPrev={!!prev} />
         </Field>
         <SliderField label="Smoothing" value={draft.smoothing} min={0} max={1} step={0.01}
           hint={HINTS.smoothing} warn={getWarn("smoothing", draft.smoothing)}
@@ -1513,6 +1544,13 @@ function SettingsPanel(props: Parameters<typeof RightPanel>[0]) {
             </button>
           ))}
         </div>
+        {PRESET_DESCRIPTIONS[props.active.name] && (
+          <div className="mb-2 rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-[11px] leading-snug text-muted-foreground">
+            <span className="label-eyebrow mr-1 text-[10px] text-foreground">{props.active.name}</span>
+            {PRESET_DESCRIPTIONS[props.active.name]}
+          </div>
+        )}
+        <PresetPipeline isDirty={props.isDirty} hasPrev={!!props.prevQuality} />
         <PresetActions {...props} />
         <div className="mt-2 grid grid-cols-3 gap-1.5">
           <button onClick={props.onDuplicatePreset}
@@ -1532,6 +1570,39 @@ function DebugPanel(props: Parameters<typeof RightPanel>[0]) {
   const copy = (s: string) => navigator.clipboard?.writeText(s);
   return (
     <div className="space-y-3 p-3">
+      <Section title="Tracker pipeline">
+        <ul className="text-mono space-y-1 text-[11px]">
+          {[
+            { k: "ingest",   l: "Video ingest",        s: props.committed.videoUrl ? "ok" : "idle" },
+            { k: "crop",     l: "Crop & rescale",      s: "ok" },
+            { k: "detect",   l: "Frame detection",     s: "ok" },
+            { k: "score",    l: "Candidate scoring",   s: props.quality.avgConfidence < 0.5 ? "warn" : "ok" },
+            { k: "smooth",   l: "EMA smoothing",       s: "ok" },
+            { k: "jump",     l: "Jump detection",      s: props.quality.jumpEvents > 5 ? "warn" : "ok" },
+            { k: "output",   l: "Camera track output", s: "ok" },
+          ].map((row) => (
+            <li key={row.k} className="flex items-center justify-between gap-2">
+              <span className="text-muted-foreground">{row.l}</span>
+              <span className={
+                row.s === "ok" ? "text-emerald-400" :
+                row.s === "warn" ? "text-amber-400" :
+                "text-muted-foreground"
+              }>● {row.s}</span>
+            </li>
+          ))}
+        </ul>
+      </Section>
+
+      <Section title="Processing stats">
+        <dl className="text-mono grid grid-cols-2 gap-y-1 text-xs">
+          <dt className="text-muted-foreground">total frames</dt>
+          <dd>{Math.max(60, Math.round((props.time || 1) * props.committed.frameRate)).toString()}</dd>
+          <dt className="text-muted-foreground">sample step</dt><dd>{props.committed.sampleStep}</dd>
+          <dt className="text-muted-foreground">fps in</dt><dd>{props.committed.frameRate}</dd>
+          <dt className="text-muted-foreground">ema window</dt><dd>{props.committed.ema}</dd>
+        </dl>
+      </Section>
+
       <Section title="Debug mode">
         <CheckField label="Debug mode enabled" checked={props.draft.debugMode}
           onChange={(v) => props.patchDraft({ debugMode: v })} />
@@ -1640,6 +1711,27 @@ function PresetActions(props: {
         className="rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">Save as…</button>
       <button onClick={props.onResetDraftToActive} title="Вернуть значения текущего пресета"
         className="rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">Reset</button>
+    </div>
+  );
+}
+
+/* Visual pipeline showing the preset workflow: select → edit → apply → recalc → save */
+function PresetPipeline({ isDirty, hasPrev }: { isDirty: boolean; hasPrev: boolean }) {
+  const steps = [
+    { k: "select", label: "Select", on: true },
+    { k: "edit",   label: "Edit",   on: isDirty },
+    { k: "apply",  label: "Apply",  on: hasPrev || !isDirty },
+    { k: "recalc", label: "Recalc", on: hasPrev },
+    { k: "save",   label: "Save",   on: false },
+  ];
+  return (
+    <div className="mt-2 flex items-center gap-1 rounded-sm border border-border bg-surface px-1.5 py-1 text-[9px] font-semibold uppercase tracking-wider">
+      {steps.map((s, i) => (
+        <span key={s.k} className="flex items-center gap-1">
+          <span className={s.on ? "text-primary" : "text-muted-foreground/50"}>{s.label}</span>
+          {i < steps.length - 1 && <span className="text-muted-foreground/40">→</span>}
+        </span>
+      ))}
     </div>
   );
 }
