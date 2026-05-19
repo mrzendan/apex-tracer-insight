@@ -1599,7 +1599,7 @@ function DebugPanel(props: Parameters<typeof RightPanel>[0]) {
           <dd>{Math.max(60, Math.round((props.time || 1) * props.committed.frameRate)).toString()}</dd>
           <dt className="text-muted-foreground">sample step</dt><dd>{props.committed.sampleStep}</dd>
           <dt className="text-muted-foreground">fps in</dt><dd>{props.committed.frameRate}</dd>
-          <dt className="text-muted-foreground">vp size</dt><dd>{props.viewport.size.toFixed(3)}</dd>
+          <dt className="text-muted-foreground">ema window</dt><dd>{props.committed.ema}</dd>
         </dl>
       </Section>
 
