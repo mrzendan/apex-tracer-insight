@@ -21,9 +21,10 @@ function genToken() {
 }
 
 const CreateInput = z.object({
-  email: z.string().email().max(255),
+  email: z.string().email().max(255).optional().nullable(),
   role: z.enum(["user", "operator", "administrator"]),
   expires_in_days: z.number().int().min(1).max(30).default(7),
+  max_uses: z.number().int().min(1).max(1000).default(1),
 });
 
 export const createInvite = createServerFn({ method: "POST" })
@@ -38,10 +39,11 @@ export const createInvite = createServerFn({ method: "POST" })
     const { data: row, error } = await supabaseAdmin
       .from("invites")
       .insert({
-        email: data.email,
+        email: data.email ?? null,
         role: data.role,
         token,
         expires_at,
+        max_uses: data.max_uses,
         created_by: context.userId,
       })
       .select()
@@ -81,19 +83,25 @@ export const lookupInvite = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { data: row, error } = await supabaseAdmin
       .from("invites")
-      .select("id, email, role, expires_at, used_at")
+      .select("id, email, role, expires_at, used_at, max_uses, uses_count")
       .eq("token", data.token)
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!row) return { status: "invalid" as const };
-    if (row.used_at) return { status: "used" as const };
+    if ((row.uses_count ?? 0) >= (row.max_uses ?? 1)) return { status: "used" as const };
     if (new Date(row.expires_at).getTime() < Date.now())
       return { status: "expired" as const };
-    return { status: "ok" as const, email: row.email, role: row.role };
+    return {
+      status: "ok" as const,
+      email: row.email ?? null,
+      role: row.role,
+      remaining: (row.max_uses ?? 1) - (row.uses_count ?? 0),
+    };
   });
 
 const AcceptInput = z.object({
   token: z.string().min(16).max(128),
+  email: z.string().email().max(255),
   password: z.string().min(8).max(128),
   display_name: z.string().min(1).max(120).optional(),
 });
@@ -108,12 +116,19 @@ export const acceptInvite = createServerFn({ method: "POST" })
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!row) throw new Error("Invalid invite token.");
-    if (row.used_at) throw new Error("This invite has already been used.");
+    if ((row.uses_count ?? 0) >= (row.max_uses ?? 1))
+      throw new Error("This invite has reached its usage limit.");
     if (new Date(row.expires_at).getTime() < Date.now())
       throw new Error("This invite has expired.");
 
+    // If invite was issued for a specific email, enforce it
+    const acceptEmail = row.email ?? data.email;
+    if (row.email && row.email.toLowerCase() !== data.email.toLowerCase()) {
+      throw new Error("This invite link is bound to a different email address.");
+    }
+
     const { data: created, error: cErr } = await supabaseAdmin.auth.admin.createUser({
-      email: row.email,
+      email: acceptEmail,
       password: data.password,
       email_confirm: true,
       user_metadata: data.display_name ? { display_name: data.display_name } : undefined,
@@ -128,10 +143,15 @@ export const acceptInvite = createServerFn({ method: "POST" })
       if (rErr) throw new Error(rErr.message);
     }
 
+    const newCount = (row.uses_count ?? 0) + 1;
+    const isFull = newCount >= (row.max_uses ?? 1);
     await supabaseAdmin
       .from("invites")
-      .update({ used_at: new Date().toISOString() })
+      .update({
+        uses_count: newCount,
+        used_at: isFull ? new Date().toISOString() : row.used_at,
+      })
       .eq("id", row.id);
 
-    return { ok: true, email: row.email };
+    return { ok: true, email: acceptEmail };
   });

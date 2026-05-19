@@ -18,32 +18,38 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string
-          email: string
+          email: string | null
           expires_at: string
           id: string
+          max_uses: number
           role: Database["public"]["Enums"]["app_role"]
           token: string
           used_at: string | null
+          uses_count: number
         }
         Insert: {
           created_at?: string
           created_by: string
-          email: string
+          email?: string | null
           expires_at?: string
           id?: string
+          max_uses?: number
           role?: Database["public"]["Enums"]["app_role"]
           token: string
           used_at?: string | null
+          uses_count?: number
         }
         Update: {
           created_at?: string
           created_by?: string
-          email?: string
+          email?: string | null
           expires_at?: string
           id?: string
+          max_uses?: number
           role?: Database["public"]["Enums"]["app_role"]
           token?: string
           used_at?: string | null
+          uses_count?: number
         }
         Relationships: []
       }

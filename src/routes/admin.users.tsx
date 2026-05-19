@@ -35,7 +35,6 @@ function UsersPage() {
   const create = useServerFn(createUserAccount);
   const setRole = useServerFn(setUserRole);
   const del = useServerFn(deleteUserAccount);
-  const [tab, setTab] = useState<"accounts" | "invites">("accounts");
 
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
@@ -127,18 +126,8 @@ function UsersPage() {
     <div className="flex h-full flex-col overflow-auto">
       <header className="flex h-14 shrink-0 items-center border-b border-border bg-surface px-6">
         <h1 className="text-sm font-bold uppercase tracking-wider">Users</h1>
-        <div className="ml-6 flex gap-1">
-          <TabBtn active={tab === "accounts"} onClick={() => setTab("accounts")}>
-            Accounts
-          </TabBtn>
-          <TabBtn active={tab === "invites"} onClick={() => setTab("invites")}>
-            Invites
-          </TabBtn>
-        </div>
-        <div className="ml-auto label-eyebrow text-xs">Administrator only</div>
       </header>
 
-      {tab === "accounts" && (
       <div className="space-y-6 p-6">
         <section className="hud-panel p-4">
           <h2 className="label-eyebrow mb-3">Create account</h2>
@@ -256,10 +245,9 @@ function UsersPage() {
             </table>
           </div>
         </section>
-      </div>
-      )}
 
-      {tab === "invites" && <InvitesTab />}
+        <InvitesTab />
+      </div>
     </div>
   );
 }
@@ -273,29 +261,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function TabBtn({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`rounded-sm px-3 py-1 text-xs font-bold uppercase tracking-wider transition-colors ${
-        active
-          ? "bg-primary text-primary-foreground"
-          : "text-muted-foreground hover:bg-surface-2 hover:text-foreground"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
 type InviteRow = {
   id: string;
   email: string;
@@ -304,6 +269,8 @@ type InviteRow = {
   expires_at: string;
   used_at: string | null;
   created_at: string;
+  max_uses?: number;
+  uses_count?: number;
 };
 
 function InvitesTab() {
@@ -313,9 +280,9 @@ function InvitesTab() {
   const [rows, setRows] = useState<InviteRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [email, setEmail] = useState("");
   const [role, setRole] = useState<AppRole>("user");
   const [days, setDays] = useState(7);
+  const [maxUses, setMaxUses] = useState(1);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
 
@@ -341,10 +308,10 @@ function InvitesTab() {
     setBusy(true);
     setError(null);
     try {
-      await invCreate({ data: { email, role, expires_in_days: days } });
-      setEmail("");
+      await invCreate({ data: { role, expires_in_days: days, max_uses: maxUses } });
       setRole("user");
       setDays(7);
+      setMaxUses(1);
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed");
@@ -379,26 +346,22 @@ function InvitesTab() {
   }
 
   function statusOf(r: InviteRow): { label: string; cls: string } {
-    if (r.used_at) return { label: "Used", cls: "text-muted-foreground" };
+    const used = r.uses_count ?? 0;
+    const max = r.max_uses ?? 1;
+    if (used >= max) return { label: "Used up", cls: "text-muted-foreground" };
     if (new Date(r.expires_at).getTime() < Date.now())
       return { label: "Expired", cls: "text-destructive" };
     return { label: "Active", cls: "text-primary" };
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
       <section className="hud-panel p-4">
         <h2 className="label-eyebrow mb-3">Create invite link</h2>
+        <p className="mb-3 text-xs text-muted-foreground">
+          Anyone with this link can self-register up to the configured number of times. They choose their own email and password.
+        </p>
         <form onSubmit={onCreate} className="grid gap-3 md:grid-cols-5">
-          <Field label="Email">
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="h-9 w-full rounded-sm border border-border bg-surface-2 px-2 text-xs outline-none focus:border-primary"
-            />
-          </Field>
           <Field label="Role">
             <select
               value={role}
@@ -409,6 +372,16 @@ function InvitesTab() {
               <option value="operator">Operator</option>
               <option value="administrator">Administrator</option>
             </select>
+          </Field>
+          <Field label="Max uses">
+            <input
+              type="number"
+              min={1}
+              max={1000}
+              value={maxUses}
+              onChange={(e) => setMaxUses(Number(e.target.value) || 1)}
+              className="h-9 w-full rounded-sm border border-border bg-surface-2 px-2 text-xs outline-none focus:border-primary"
+            />
           </Field>
           <Field label="Expires (days)">
             <input
@@ -448,8 +421,8 @@ function InvitesTab() {
           <table className="w-full text-xs">
             <thead className="bg-surface-2 text-left label-eyebrow text-xs">
               <tr>
-                <th className="px-3 py-2">Email</th>
                 <th className="px-3 py-2">Role</th>
+                <th className="px-3 py-2">Uses</th>
                 <th className="px-3 py-2">Status</th>
                 <th className="px-3 py-2">Expires</th>
                 <th className="px-3 py-2">Link</th>
@@ -461,8 +434,10 @@ function InvitesTab() {
                 const s = statusOf(r);
                 return (
                   <tr key={r.id} className="border-t border-border">
-                    <td className="px-3 py-2 font-mono text-xs">{r.email}</td>
                     <td className="px-3 py-2">{r.role}</td>
+                    <td className="px-3 py-2 text-mono">
+                      {(r.uses_count ?? 0)} / {(r.max_uses ?? 1)}
+                    </td>
                     <td className={`px-3 py-2 font-bold ${s.cls}`}>{s.label}</td>
                     <td className="px-3 py-2 text-muted-foreground">
                       {new Date(r.expires_at).toLocaleString()}
@@ -470,7 +445,7 @@ function InvitesTab() {
                     <td className="px-3 py-2">
                       <button
                         onClick={() => copyLink(r.token)}
-                        disabled={!!r.used_at}
+                        disabled={(r.uses_count ?? 0) >= (r.max_uses ?? 1)}
                         className="rounded-sm border border-border px-2 py-1 text-xs uppercase tracking-wider hover:bg-surface-2 disabled:opacity-40"
                       >
                         {copied === r.token ? "Copied!" : "Copy link"}
