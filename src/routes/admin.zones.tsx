@@ -208,7 +208,14 @@ function ZonesAdmin() {
 
   // Preview crop: max box keeping zone's aspect ratio (no fixed-frame distortion).
   const cropBox = (zw: number, zh: number) => {
-    const MAX_W = 80, MAX_H = 56;
+    const MAX_W = 100, MAX_H = 64;
+    const r = zw / zh;
+    let w = MAX_W, h = MAX_W / r;
+    if (h > MAX_H) { h = MAX_H; w = MAX_H * r; }
+    return { w: Math.round(w), h: Math.round(h) };
+  };
+  const cropBoxBig = (zw: number, zh: number) => {
+    const MAX_W = 320, MAX_H = 180;
     const r = zw / zh;
     let w = MAX_W, h = MAX_W / r;
     if (h > MAX_H) { h = MAX_H; w = MAX_H * r; }
