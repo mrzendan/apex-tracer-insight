@@ -592,6 +592,31 @@ function ZonesAdmin() {
           Preset: {builtin?.label ?? custom?.label ?? "—"} · Snap {snap ? `${gridSize}px` : "off"}
         </div>
       </div>
+      {hover && typeof document !== "undefined" && createPortal(
+        (() => {
+          const z = hover.z;
+          const big = cropBoxBig(z.w, z.h);
+          const c = tagColor(z.tag);
+          return (
+            <div
+              className="pointer-events-none fixed z-[1000] -translate-y-1/2 rounded-sm border border-border bg-surface p-1 shadow-2xl"
+              style={{ top: hover.top, left: hover.left - big.w - 12 }}
+            >
+              <div className="relative overflow-hidden rounded-sm bg-background" style={{ width: big.w, height: big.h }}>
+                <div className="absolute inset-0" style={{
+                  backgroundImage: `url(${bg})`,
+                  backgroundSize: `${(big.w * W) / z.w}px ${(big.h * H) / z.h}px`,
+                  backgroundPosition: `-${(z.x * big.w) / z.w}px -${(z.y * big.h) / z.h}px`,
+                  backgroundRepeat: "no-repeat",
+                }} />
+                <div className="absolute inset-0" style={{ boxShadow: `inset 0 0 0 2px ${c}` }} />
+              </div>
+              <div className="text-mono mt-1 px-1 text-xs uppercase text-muted-foreground">{z.name} · {z.w}×{z.h}</div>
+            </div>
+          );
+        })(),
+        document.body,
+      )}
     </div>
   );
 }
