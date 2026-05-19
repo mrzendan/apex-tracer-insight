@@ -421,12 +421,6 @@ function ProcessesAdmin() {
           <h1 className="text-sm font-bold uppercase tracking-wider">Processes</h1>
           <span className="text-xs text-muted-foreground">· operator control center</span>
         </div>
-        <button
-          onClick={() => draft()}
-          className="rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110"
-        >
-          + New process
-        </button>
       </header>
 
       <div className="flex flex-1 overflow-hidden">
