@@ -25,6 +25,8 @@ $ErrorActionPreference = "Stop"
 chcp 65001 > $null
 $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$env:PYTHONIOENCODING = "utf-8"
+$env:PYTHONUTF8 = "1"
 
 # 1. Найти корень репо (там, где .git)
 $repo = (git rev-parse --show-toplevel).Trim()
