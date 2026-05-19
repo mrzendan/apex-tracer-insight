@@ -1,6 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { maps as allMaps, teams as seedTeams } from "@/lib/mock-match";
+import {
+  maps as allMaps,
+  teams as seedTeams,
+  generateTrajectory,
+  ringPhases,
+  events as seedEvents,
+  type RingPhase,
+} from "@/lib/mock-match";
 import { useAdminStore } from "@/lib/admin-store";
 import { getSlotColor } from "@/lib/team-colors";
 
@@ -37,6 +44,19 @@ type Preset = {
 
 const SRC_W = 1920;
 const SRC_H = 1080;
+
+/** Same ring segmentation as match analytics: each phase splits into CD + Closing. */
+const RING_CLOSE_FRACTION = 0.4;
+type RingSegment = { phaseIndex: number; kind: "CD" | "Closing"; startSec: number; endSec: number };
+const ringSegments: RingSegment[] = ringPhases.flatMap((p, i) => {
+  const dur = p.endSec - p.startSec;
+  const closeStart = p.startSec + dur * (1 - RING_CLOSE_FRACTION);
+  return [
+    { phaseIndex: i, kind: "CD",      startSec: p.startSec, endSec: closeStart } as RingSegment,
+    { phaseIndex: i, kind: "Closing", startSec: closeStart, endSec: p.endSec }    as RingSegment,
+  ];
+});
+const GAME_DURATION_SEC = ringPhases[ringPhases.length - 1].endSec;
 
 const baseSettings: TrackingSettings = {
   smoothing: 0.55, deadzone: 18, responseSpeed: 0.45, maxSpeed: 60,
@@ -233,31 +253,67 @@ function CameraAdmin() {
     return { trackingQ, jumpEvents, lostFrames: Math.max(0, lostFrames), avgConfidence };
   }, [settings, events]);
 
-  const teamPositions = useMemo(() => {
-    const t = time;
-    return seedTeams.slice(0, 12).map((tm, i) => {
-      const a = (i / 12) * Math.PI * 2 + t * 0.08;
-      const r = 0.18 + ((i * 37) % 17) / 100 + Math.sin(t * 0.4 + i) * 0.04;
-      return {
-        id: tm.id, tag: tm.tag, color: tm.color,
-        x: 0.5 + Math.cos(a) * r, y: 0.5 + Math.sin(a) * r,
-      };
-    });
-  }, [time]);
+  /** Map the camera's video time onto the match game's 1480s timeline so ring + trajectory logic match analytics. */
+  const gameTime = useMemo(
+    () => (duration > 0 ? (time / duration) * GAME_DURATION_SEC : 0),
+    [time, duration],
+  );
 
-  const rings = useMemo(() => {
-    const t = duration > 0 ? Math.max(0, Math.min(1, time / duration)) : 0;
-    const drift = (k: number) => ({
-      cx: 0.5 + Math.sin(t * 1.6 + k) * 0.08 * (1 - t),
-      cy: 0.5 + Math.cos(t * 1.3 + k) * 0.08 * (1 - t),
+  /** Trajectories pre-generated once for all 20 teams over the full game span. */
+  const trajectories = useMemo(
+    () => Object.fromEntries(seedTeams.map((t, i) => [t.id, generateTrajectory(i + 7, GAME_DURATION_SEC)])),
+    [],
+  );
+
+  /** Death times derived from wipe events (+ placement fallback) — same as match analytics. */
+  const teamByTag = useMemo(() => new Map(seedTeams.map((t) => [t.tag, t])), []);
+  const deathTimes = useMemo<Record<string, number>>(() => {
+    const out: Record<string, number> = {};
+    for (const e of seedEvents) {
+      if (e.type !== "wipe") continue;
+      const m = /wipes\s+([A-Za-z0-9]+)/i.exec(e.label);
+      const victim = m?.[1] ? teamByTag.get(m[1]) : undefined;
+      if (!victim) continue;
+      if (out[victim.id] === undefined || e.t < out[victim.id]) out[victim.id] = e.t;
+    }
+    for (const t of seedTeams) {
+      if (t.alive || out[t.id] !== undefined) continue;
+      const k = (seedTeams.length - t.placement + 1) / (seedTeams.length + 1);
+      out[t.id] = Math.round(GAME_DURATION_SEC * k);
+    }
+    return out;
+  }, [teamByTag]);
+
+  /** Active safe area at gameTime (CD = parked at prev ring, Closing = lerp toward target). */
+  const ring = useMemo<RingPhase>(() => {
+    const seg = ringSegments.find((s) => gameTime >= s.startSec && gameTime <= s.endSec)
+      ?? ringSegments[ringSegments.length - 1];
+    const target = ringPhases[seg.phaseIndex];
+    const prev: RingPhase = seg.phaseIndex === 0
+      ? { startSec: 0, endSec: 0, cx: 0.5, cy: 0.5, r: 0.72 }
+      : ringPhases[seg.phaseIndex - 1];
+    if (seg.kind === "CD") return prev;
+    const k = Math.max(0, Math.min(1, (gameTime - seg.startSec) / (seg.endSec - seg.startSec)));
+    return {
+      ...target,
+      cx: prev.cx + (target.cx - prev.cx) * k,
+      cy: prev.cy + (target.cy - prev.cy) * k,
+      r:  prev.r  + (target.r  - prev.r ) * k,
+    };
+  }, [gameTime]);
+
+  /** Team positions at gameTime; frozen at the moment of death. */
+  const teamPositions = useMemo(() => {
+    return seedTeams.map((tm, i) => {
+      const path = trajectories[tm.id];
+      const deathT = deathTimes[tm.id];
+      const isDead = deathT !== undefined && gameTime >= deathT;
+      const effT = isDead ? deathT! : gameTime;
+      let head = path[0];
+      for (const p of path) { if (p.t > effT) break; head = p; }
+      return { id: tm.id, tag: tm.tag, slotIdx: i, x: head.x, y: head.y, isDead };
     });
-    return [
-      { ...drift(0.3), r: 0.48 - 0.10 * t, color: "#22d3ee", label: "Ring 1" },
-      { ...drift(1.7), r: 0.34 - 0.18 * t, color: "#f59e0b", label: "Ring 2" },
-      { ...drift(2.9), r: 0.22 - 0.18 * t, color: "#ef4444", label: "Ring 3" },
-      { ...drift(4.1), r: 0.12 - 0.10 * t, color: "#a855f7", label: "Ring 4" },
-    ].filter((r) => r.r > 0.015);
-  }, [time, duration]);
+  }, [trajectories, gameTime, deathTimes]);
 
   // Viewport drag on map (disabled when locked)
   const mapRef = useRef<HTMLDivElement | null>(null);
