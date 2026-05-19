@@ -139,6 +139,16 @@ function TeamDetail() {
         <button onClick={() => navigate({ to: "/admin/teams" })} className="text-mono rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted">← Teams</button>
         <TeamLogo team={team} size={28} />
         <h1 className="text-sm font-bold uppercase tracking-wider">{team.tag} · {team.name}</h1>
+        {team.liquipediaUrl && (
+          <a
+            href={team.liquipediaUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="ml-2 inline-flex items-center gap-1 rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs uppercase tracking-wider hover:bg-muted"
+          >
+            Liquipedia ↗
+          </a>
+        )}
       </header>
       <div className="flex-1 overflow-auto p-6">
         <div className="hud-panel mb-4 p-3">
