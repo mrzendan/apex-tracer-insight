@@ -99,7 +99,8 @@ def main():
     print(f"[info] видео: {total} кадров, {fps:.2f} fps. Сканируем [{start_frame}, {end_frame}) шагом {args.coarse}.")
 
     events: list[dict] = []
-    gray_zone: list[dict] = []
+    hud_events: list[dict] = []   # большой pixel_diff, но Δpan ≈ 0 → killcam/zoom/HUD
+    gray_zone: list[dict] = []    # средний pixel_diff, неоднозначно
     overlay_base = cv2.cvtColor(reg.map_small, cv2.COLOR_GRAY2BGR)
 
     prev_idx = start_frame
@@ -143,26 +144,47 @@ def main():
                 print(f"    -> отброшено: pixel-diff < 5 (шум регистрации)")
             else:
                 cut_frame, from_pan, to_pan, pixel_diff, status = pinned
+                delta = dist(from_pan, to_pan) if (from_pan != (0.0, 0.0) and to_pan != (0.0, 0.0)) else None
+                pans_ok = (from_pan != (0.0, 0.0) and to_pan != (0.0, 0.0))
                 ev = {
                     "frame": int(cut_frame),
                     "t": round(cut_frame / fps, 3),
                     "from_pan": [round(from_pan[0], 1), round(from_pan[1], 1)],
                     "to_pan": [round(to_pan[0], 1), round(to_pan[1], 1)],
-                    "delta": round(dist(from_pan, to_pan), 1),
+                    "delta": round(delta, 1) if delta is not None else None,
                     "pixel_diff": round(pixel_diff, 2),
-                    "status": status,
                 }
-                if status == "accepted":
+                # классификация: настоящий cut = камера перепрыгнула
+                #   - оба pan'а валидны: требуем Δpan ≥ 100 + pixel_diff ≥ 10
+                #   - регистрация упала на одной стороне: доверяем только pixel_diff ≥ 15
+                #   - маленький Δpan + большой diff → HUD/zoom/killcam (не cut)
+                #   - средний diff (5..10) → серая зона
+                if pans_ok:
+                    if delta >= 100 and pixel_diff >= 10:
+                        classify = "cut"
+                    elif pixel_diff >= 10:
+                        classify = "hud"      # картинка изменилась, камера на месте
+                    else:
+                        classify = "gray"
+                else:
+                    classify = "cut" if pixel_diff >= 15 else "gray"
+
+                ev["classify"] = classify
+                if classify == "cut":
                     events.append(ev)
                     print(f"    -> CUT at frame {cut_frame} (t={ev['t']}s, "
                           f"Δpan={ev['delta']}px, pixel_diff={ev['pixel_diff']})")
                     draw_cut_overlay(overlay_base.copy(), from_pan, to_pan, reg.scale,
                                      args.out / f"overlay_cut_{cut_frame}.png", ev)
                     dump_context_frames(cap, cut_frame, args.out)
+                elif classify == "hud":
+                    hud_events.append(ev)
+                    print(f"    -> HUD at frame {cut_frame} (Δpan={ev['delta']}px, "
+                          f"diff={ev['pixel_diff']}) — не cut, картинка поменялась без движения")
                 else:
                     gray_zone.append(ev)
-                    print(f"    -> GRAY at frame {cut_frame} (pixel_diff={ev['pixel_diff']}) — "
-                          f"под подозрением, см. gray_zone в cuts.json")
+                    print(f"    -> GRAY at frame {cut_frame} (Δpan={ev['delta']}, "
+                          f"diff={ev['pixel_diff']}) — под подозрением")
                     dump_context_frames(cap, cut_frame, args.out)
 
         prev_idx = curr_idx
@@ -182,16 +204,24 @@ def main():
         "fine": args.fine,
         "threshold": args.threshold,
         "events": events,
+        "hud_events": hud_events,
         "gray_zone": gray_zone,
     }, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    lines = [f"[ok] найдено cut'ов: {len(events)}, серая зона: {len(gray_zone)}  (за {time.time() - t0:.1f}s)"]
+    lines = [f"[ok] cut'ов: {len(events)}, HUD-событий: {len(hud_events)}, "
+             f"серая зона: {len(gray_zone)}  (за {time.time() - t0:.1f}s)"]
     for ev in events:
         lines.append(f"  frame {ev['frame']:>7} t={ev['t']:>7.2f}s  Δ={ev['delta']:>6.1f}px  "
                      f"{ev['from_pan']} -> {ev['to_pan']}")
+    if hud_events:
+        lines.append("")
+        lines.append(f"[hud] картинка менялась без движения камеры (zoom/killcam/overlay):")
+        for ev in hud_events:
+            lines.append(f"  frame {ev['frame']:>7} t={ev['t']:>7.2f}s  Δ={ev['delta']:>5.1f}px  "
+                         f"diff={ev['pixel_diff']:>5.2f}")
     if gray_zone:
         lines.append("")
-        lines.append(f"[gray] подозрительные (5 <= diff < 10), глянь видеокадры:")
+        lines.append(f"[gray] подозрительные, глянь видеокадры:")
         for ev in gray_zone:
             lines.append(f"  frame {ev['frame']:>7} t={ev['t']:>7.2f}s  diff={ev['pixel_diff']:>5.2f}")
     summary = "\n".join(lines)
