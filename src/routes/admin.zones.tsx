@@ -532,10 +532,27 @@ function ZonesAdmin() {
           )}
 
           <div className="mb-2 flex items-center justify-between">
-            <div className="label-eyebrow">Zones ({zones.length})</div>
+            <div className="label-eyebrow">Zones ({zones.filter((z) => !hiddenTags.has(z.tag)).length})</div>
             <button onClick={addZone} className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs font-semibold hover:bg-muted">+ Add</button>
           </div>
-          {zones.map((z) => {
+          <div className="mb-2 flex flex-wrap gap-1">
+            {tags.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setHiddenTags((prev) => {
+                  const next = new Set(prev);
+                  if (next.has(t.id)) next.delete(t.id); else next.add(t.id);
+                  return next;
+                })}
+                className={`flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider transition-colors ${
+                  hiddenTags.has(t.id) ? "border-border/50 bg-surface text-muted-foreground/50 line-through" : "border-border bg-surface-2 text-foreground"
+                }`}>
+                <span className="inline-block h-2 w-2 rounded-sm" style={{ backgroundColor: t.color, opacity: hiddenTags.has(t.id) ? 0.3 : 1 }} />
+                {t.id}
+              </button>
+            ))}
+          </div>
+          {zones.filter((z) => !hiddenTags.has(z.tag)).map((z) => {
             const m = getMeta(z.id);
             const c = tagColor(z.tag);
             const cb = cropBox(z.w, z.h);
