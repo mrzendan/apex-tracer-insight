@@ -93,7 +93,7 @@ function TeamsAdmin() {
                 className={
                   "rounded-sm px-2 py-1 text-xs font-semibold uppercase tracking-wider " +
                   (statusFilter === s
-                    ? "border border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
+                    ? "bg-primary/15 text-primary"
                     : "bg-surface text-muted-foreground hover:text-foreground")
                 }
               >
@@ -232,7 +232,7 @@ function TeamDialog({ row, isNew, onChange, onCancel, onSave }: {
                     "rounded-sm px-3 py-1 text-xs font-semibold uppercase tracking-wider " +
                     (status === s
                       ? s === "active"
-                        ? "border border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
+                      ? "bg-primary/15 text-primary"
                         : "border border-border bg-muted text-foreground"
                       : "bg-surface text-muted-foreground hover:text-foreground")
                   }
