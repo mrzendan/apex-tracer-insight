@@ -221,7 +221,6 @@ function ZonesAdmin() {
     });
   };
   const onWheel = (e: React.WheelEvent) => {
-    if (!(e.ctrlKey || e.metaKey)) return; // require modifier so page scroll still works
     e.preventDefault();
     const rect = stageRef.current!.getBoundingClientRect();
     zoomAt(e.deltaY < 0 ? 1.15 : 1 / 1.15, e.clientX - rect.left, e.clientY - rect.top);
@@ -347,12 +346,6 @@ function ZonesAdmin() {
           <input type="checkbox" checked={showSafe} onChange={(e) => setShowSafe(e.target.checked)} />
           <span className="font-semibold uppercase tracking-wider text-muted-foreground">Safe frame</span>
         </label>
-        <div className="ml-auto">
-          <button onClick={() => setTagsOpen((v) => !v)}
-            className="rounded-sm border border-border bg-surface px-2 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:bg-muted hover:text-foreground">
-            Manage tags ({tags.length})
-          </button>
-        </div>
       </div>
 
       <div className="flex min-h-0 flex-1">
@@ -459,15 +452,27 @@ function ZonesAdmin() {
             </div>
           </div>
 
-          {/* Tag manager popover */}
+        </div>
+
+        <aside className="w-[340px] shrink-0 border-l border-border bg-surface p-3 overflow-y-auto">
+          <div className="mb-2 flex items-center justify-between">
+            <div className="label-eyebrow">Zones ({zones.length})</div>
+            <div className="flex items-center gap-1">
+              <button onClick={() => setTagsOpen((v) => !v)}
+                className={`rounded-sm border border-border px-2 py-1 text-xs font-semibold uppercase tracking-wider hover:bg-muted ${tagsOpen ? "bg-primary text-primary-foreground" : "bg-surface-2 text-muted-foreground"}`}>
+                Tags ({tags.length})
+              </button>
+              <button onClick={addZone} className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs font-semibold hover:bg-muted">+ Add</button>
+            </div>
+          </div>
           {tagsOpen && (
-            <div className="absolute right-4 top-2 z-10 w-72 rounded-sm border border-border bg-surface p-3 shadow-xl">
+            <div className="mb-3 rounded-sm border border-border bg-surface-2 p-2.5">
               <div className="mb-2 flex items-center justify-between">
-                <div className="label-eyebrow">Tags</div>
+                <div className="label-eyebrow">Edit tags</div>
                 <button onClick={() => setTagsOpen(false)} className="grid h-6 w-6 place-items-center rounded-sm hover:bg-muted"><X className="h-3.5 w-3.5" /></button>
               </div>
               {tags.map((t) => (
-                <div key={t.id} className="mb-1 flex items-center gap-2 rounded-sm border border-border bg-surface-2 px-2 py-1.5">
+                <div key={t.id} className="mb-1 flex items-center gap-2 rounded-sm border border-border bg-surface px-2 py-1.5">
                   <input type="color" value={t.color} onChange={(e) => recolorTag(t.id, e.target.value)}
                     className="h-5 w-5 cursor-pointer rounded-sm border border-border bg-transparent" />
                   <input defaultValue={t.id} onBlur={(e) => renameTag(t.id, e.target.value)}
@@ -480,18 +485,11 @@ function ZonesAdmin() {
                 </div>
               ))}
               <button onClick={addTag}
-                className="mt-2 w-full rounded-sm border border-dashed border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:bg-muted hover:text-foreground">
+                className="mt-2 w-full rounded-sm border border-dashed border-border bg-surface px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:bg-muted hover:text-foreground">
                 + Add tag
               </button>
             </div>
           )}
-        </div>
-
-        <aside className="w-[340px] shrink-0 border-l border-border bg-surface p-3 overflow-y-auto">
-          <div className="mb-2 flex items-center justify-between">
-            <div className="label-eyebrow">Zones ({zones.length})</div>
-            <button onClick={addZone} className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs font-semibold hover:bg-muted">+ Add</button>
-          </div>
           {zones.map((z) => {
             const m = getMeta(z.id);
             const c = tagColor(z.tag);
