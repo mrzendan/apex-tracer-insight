@@ -692,6 +692,9 @@ function OverviewTab(props: {
   time: number; duration: number; playing: boolean;
   onSeek: (t: number) => void; onTogglePlay: () => void;
   events: TrackEvent[];
+  eventFilters: EventFilters; setEventFilters: (v: EventFilters) => void;
+  onSelectEvent: (e: TrackEvent | null) => void;
+  selectedEvent: TrackEvent | null;
 }) {
   return (
     <>
@@ -702,7 +705,9 @@ function OverviewTab(props: {
         {props.mapPreview}
       </div>
       <Timeline time={props.time} duration={props.duration} playing={props.playing}
-        onTogglePlay={props.onTogglePlay} onSeek={props.onSeek} events={props.events} />
+        onTogglePlay={props.onTogglePlay} onSeek={props.onSeek} events={props.events}
+        eventFilters={props.eventFilters} setEventFilters={props.setEventFilters}
+        onSelectEvent={props.onSelectEvent} selectedEvent={props.selectedEvent} />
     </>
   );
 }
@@ -737,12 +742,31 @@ function ToggleBtn({ active, onClick, children }: { active: boolean; onClick: ()
   );
 }
 
-function Timeline({ time, duration, playing, onTogglePlay, onSeek, events }: {
+function Timeline({ time, duration, playing, onTogglePlay, onSeek, events, eventFilters, setEventFilters, onSelectEvent, selectedEvent }: {
   time: number; duration: number; playing: boolean;
   onTogglePlay: () => void; onSeek: (t: number) => void; events: TrackEvent[];
+  eventFilters?: EventFilters; setEventFilters?: (v: EventFilters) => void;
+  onSelectEvent?: (e: TrackEvent | null) => void;
+  selectedEvent?: TrackEvent | null;
 }) {
+  const toggleFilter = (k: TrackEvent["kind"]) =>
+    eventFilters && setEventFilters && setEventFilters({ ...eventFilters, [k]: !eventFilters[k] });
   return (
     <div className="shrink-0 border-t border-border bg-surface px-3 py-2">
+      {eventFilters && setEventFilters && (
+        <div className="mb-1.5 flex flex-wrap items-center gap-1">
+          <span className="label-eyebrow mr-1 text-[10px]">Layers</span>
+          {(Object.keys(eventFilters) as Array<TrackEvent["kind"]>).map((k) => (
+            <button key={k} onClick={() => toggleFilter(k)}
+              className={`flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider transition-colors ${
+                eventFilters[k] ? "border-border bg-surface-2 text-foreground" : "border-border/50 bg-surface-2/40 text-muted-foreground/60 line-through"
+              }`}>
+              <span className="inline-block h-2 w-2 rounded-sm" style={{ background: eventColor[k] }} />
+              {k}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="flex items-center gap-3">
         <button onClick={onTogglePlay} className="rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">
           {playing ? "Pause" : "Play"}
@@ -751,10 +775,11 @@ function Timeline({ time, duration, playing, onTogglePlay, onSeek, events }: {
         <div className="relative flex-1">
           <input type="range" min={0} max={duration} step={0.05} value={time}
             onChange={(e) => onSeek(Number(e.target.value))} className="w-full accent-primary" />
-          <div className="pointer-events-none absolute inset-x-0 -bottom-1 h-1">
+          <div className="absolute inset-x-0 -bottom-2 h-3">
             {events.map((ev, i) => (
-              <span key={i}
-                className="absolute top-0 h-1 w-0.5"
+              <button key={i}
+                onClick={(e) => { e.stopPropagation(); onSelectEvent?.(ev); onSeek(ev.t); }}
+                className={`absolute top-0 h-3 w-1 cursor-pointer rounded-sm transition-transform hover:scale-y-110 ${selectedEvent === ev ? "ring-1 ring-white" : ""}`}
                 style={{ left: `${(ev.t / Math.max(duration, 0.001)) * 100}%`, background: eventColor[ev.kind] }}
                 title={`${ev.label} · ${fmt(ev.t)}`}
               />
@@ -763,6 +788,14 @@ function Timeline({ time, duration, playing, onTogglePlay, onSeek, events }: {
         </div>
         <span className="text-mono text-xs text-muted-foreground">{fmt(duration)}</span>
       </div>
+      {selectedEvent && (
+        <div className="mt-1.5 flex items-center gap-3 rounded-sm border border-border bg-surface-2 px-2 py-1 text-[11px]">
+          <span className="text-mono text-muted-foreground">{fmt(selectedEvent.t)}</span>
+          <span className="font-semibold" style={{ color: eventColor[selectedEvent.kind] }}>{selectedEvent.label}</span>
+          <span className="ml-auto text-muted-foreground">click marker → seek + map sync</span>
+          <button onClick={() => onSelectEvent?.(null)} className="text-muted-foreground hover:text-foreground">×</button>
+        </div>
+      )}
     </div>
   );
 }
