@@ -110,7 +110,6 @@ function MatchesAdmin() {
                   .map((id) => teams.find((t) => t.id === id))
                   .filter(Boolean) as typeof teams;
                 const topTeams = [...matchTeams].sort((a, b) => a.placement - b.placement).slice(0, 3);
-                const totalMapSec = mapIds.length * m.durationSec;
                 const mm = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
                 return (
                   <Fragment key={m.id}>
