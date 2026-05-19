@@ -6,6 +6,8 @@ import {
   type Tournament,
   type TournamentType,
   type TournamentRegion,
+  type TournamentStatus,
+  type TournamentStage,
   type MatchFull,
 } from "@/lib/mock-match";
 import { useAdminStore, type AnalysisProcess } from "@/lib/admin-store";
@@ -16,6 +18,16 @@ export const Route = createFileRoute("/admin/tournaments")({ component: Tourname
 const TYPES: TournamentType[] = ["LAN", "Online", "Qualifier"];
 const REGIONS: TournamentRegion[] = ["EMEA", "APAC", "North America", "South America"];
 const YEARS = [1, 2, 3, 4, 5, 6];
+const STATUSES: TournamentStatus[] = ["draft", "upcoming", "active", "finished", "archived"];
+const STAGES: TournamentStage[] = ["Regular Season", "Playoffs", "Finals", "Qualifier", "Group Stage"];
+const SPLITS = ["1", "2", "3"];
+
+/** ALGS-style points for placement. */
+function placementPoints(p: number): number {
+  if (p <= 0) return 0;
+  const table = [12, 9, 7, 5, 4, 3, 3, 2, 2, 2, 1, 1, 1, 1, 1];
+  return table[p - 1] ?? 0;
+}
 
 function fmt(d: string) {
   const [y, m, day] = d.split("-");
@@ -25,12 +37,12 @@ function fmtRange(a: string, b: string) {
   return `${fmt(a)}–${fmt(b)}`;
 }
 
-type TournamentStatus = "draft" | "upcoming" | "active" | "finished";
 const statusStyle: Record<TournamentStatus, string> = {
   draft:    "border-border bg-surface-2 text-muted-foreground",
   upcoming: "border-primary/40 bg-primary/10 text-primary",
   active:   "border-amber-500/40 bg-amber-500/10 text-amber-400",
   finished: "border-emerald-500/40 bg-emerald-500/10 text-emerald-400",
+  archived: "border-border bg-surface-2 text-muted-foreground/70",
 };
 function StatusBadge({ s }: { s: TournamentStatus }) {
   return (
@@ -59,6 +71,7 @@ function Indicator({ label, state, valueLabel }: { label: string; state: "ok" | 
 }
 
 function deriveStatus(t: Tournament, tMatches: MatchFull[]): TournamentStatus {
+  if (t.status) return t.status;
   if (tMatches.length === 0) return "draft";
   const today = new Date().toISOString().slice(0, 10);
   if (today < t.startDate) return "upcoming";
@@ -80,7 +93,7 @@ function fmtRelative(ts: number): string {
   return `${d}d ago`;
 }
 
-type TabKey = "overview" | "matches" | "teams" | "maps" | "settings";
+type TabKey = "overview" | "matches" | "teams" | "maps";
 
 function TournamentsAdmin() {
   const { matches: allMatches, teams: allTeams, processes } = useAdminStore();
