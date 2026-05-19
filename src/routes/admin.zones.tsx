@@ -4,7 +4,7 @@ import { Eye, EyeOff, Lock, Unlock, Pencil, Copy, RotateCcw, AlignCenter, Files,
 import vodBg from "@/assets/hsv-samples/worlds-edge.png";
 import cameraBg from "@/assets/zones-samples/camera.png";
 import { useAdminStore, setZones as setZonesStore, type Zone, type ZoneMode } from "@/lib/admin-store";
-import { ActionBtn, Field, NumField } from "./admin.zones.parts";
+import { ActionBtn, Field, NumField } from "@/components/admin/zones-parts";
 
 export const Route = createFileRoute("/admin/zones")({ component: ZonesAdmin });
 
