@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import {
   useAdminStore,
   addProcess,
@@ -15,7 +15,12 @@ import { maps as allMaps, type Team, type MatchFull } from "@/lib/mock-match";
 import { Progress } from "@/components/ui/progress";
 import { TeamLogo } from "@/components/admin/TeamLogo";
 
-export const Route = createFileRoute("/admin/processes")({ component: ProcessesAdmin });
+export const Route = createFileRoute("/admin/processes")({
+  component: ProcessesAdmin,
+  validateSearch: (s: Record<string, unknown>) => ({
+    matchId: typeof s.matchId === "string" ? s.matchId : undefined,
+  }),
+});
 
 const STATUS_COLORS: Record<AnalysisProcess["status"], string> = {
   draft: "bg-muted text-foreground/80",
@@ -172,6 +177,8 @@ function ProcessesAdmin() {
   const [editing, setEditing] = useState<AnalysisProcess | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<AnalysisProcess["status"] | "all">("all");
+  const search = Route.useSearch();
+  const handledMatchRef = useRef<string | null>(null);
 
   const statusCounts = useMemo(() => {
     const c: Record<AnalysisProcess["status"], number> = {
@@ -219,6 +226,24 @@ function ProcessesAdmin() {
   const duplicate = editing
     ? processes.some((p) => p.matchId === editing.matchId && p.id !== editing.id && p.pov === editing.pov)
     : false;
+
+  useEffect(() => {
+    const mid = search.matchId;
+    if (!mid || handledMatchRef.current === mid) return;
+    const match = matches.find((m) => m.id === mid);
+    if (!match) return;
+    handledMatchRef.current = mid;
+    const existing = processes.find((p) => p.matchId === mid);
+    if (existing) {
+      setExpanded(existing.id);
+      setStatusFilter("all");
+      requestAnimationFrame(() => {
+        document.getElementById(`process-${existing.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    } else {
+      draft({ tournamentId: match.tournamentId, matchId: mid });
+    }
+  }, [search.matchId, processes, matches]);
 
   const save = (run: boolean) => {
     if (!editing) return;
@@ -341,7 +366,7 @@ function ProcessesAdmin() {
                 const isOpen = expanded === p.id;
                 return (
                   <Fragment key={p.id}>
-                  <tr className="border-b border-border">
+                  <tr id={`process-${p.id}`} className="border-b border-border scroll-mt-20">
                     <td className="px-3 py-2 text-xs">
                       <span className="rounded-sm border border-border bg-background px-1.5 py-0.5 text-mono uppercase">{p.pov} POV</span>
                       {p.live && <span className="ml-1 rounded-sm bg-destructive px-1.5 py-0.5 text-xs font-bold text-destructive-foreground">LIVE</span>}
