@@ -1341,6 +1341,12 @@ function OverviewPanel(props: Parameters<typeof RightPanel>[0]) {
             className="w-full rounded-sm border border-border bg-background px-2 py-1.5 text-xs">
             {props.presets.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
+          {PRESET_DESCRIPTIONS[props.active.name] && (
+            <div className="mt-1.5 rounded-sm border border-border bg-surface px-2 py-1.5 text-[11px] leading-snug text-muted-foreground">
+              {PRESET_DESCRIPTIONS[props.active.name]}
+            </div>
+          )}
+          <PresetPipeline isDirty={props.isDirty} hasPrev={!!prev} />
         </Field>
         <SliderField label="Smoothing" value={draft.smoothing} min={0} max={1} step={0.01}
           hint={HINTS.smoothing} warn={getWarn("smoothing", draft.smoothing)}
