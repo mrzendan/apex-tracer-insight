@@ -453,6 +453,45 @@ function ZonesAdmin() {
         </div>
 
         <aside className="w-[340px] shrink-0 overflow-y-auto border-l border-border bg-surface p-3">
+          {selZone && (
+            <div className="mb-3 rounded-sm border border-border bg-surface-2 p-2.5">
+              <div className="label-eyebrow mb-2">Edit</div>
+              <Field label="Name" value={selZone.name} onChange={(v) => update(selZone.id, { name: v })} />
+              <label className="mb-2 block">
+                <span className="label-eyebrow mb-1 block text-xs">Tag</span>
+                <select value={selZone.tag} onChange={(e) => update(selZone.id, { tag: e.target.value as Zone["tag"] })}
+                  className="w-full rounded-sm border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary/60">
+                  {tags.map((t) => <option key={t.id} value={t.id}>{t.id}</option>)}
+                </select>
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <NumField label="X" value={selZone.x} onChange={(v) => update(selZone.id, { x: snapVal(v) })} />
+                <NumField label="Y" value={selZone.y} onChange={(v) => update(selZone.id, { y: snapVal(v) })} />
+                <NumField label="W" value={selZone.w} onChange={(v) => update(selZone.id, { w: snapVal(v) })} />
+                <NumField label="H" value={selZone.h} onChange={(v) => update(selZone.id, { h: snapVal(v) })} />
+              </div>
+              <div className="mt-2 grid grid-cols-4 gap-1">
+                <ActionBtn icon={<Copy className="h-3 w-3" />} label="Copy" onClick={() => copyCoords(selZone)} />
+                <ActionBtn icon={<RotateCcw className="h-3 w-3" />} label="Reset" onClick={() => resetZone(selZone)} />
+                <ActionBtn icon={<AlignCenter className="h-3 w-3" />} label="Center" onClick={() => centerZone(selZone)} />
+                <ActionBtn icon={<Files className="h-3 w-3" />} label="Dup" onClick={() => duplicateZone(selZone)} />
+              </div>
+              <button
+                onClick={() => {
+                  if (typeof navigator !== "undefined" && navigator.clipboard) {
+                    navigator.clipboard.writeText(JSON.stringify(zones, null, 2)).catch(() => {});
+                  }
+                }}
+                className="mt-3 w-full rounded-sm bg-primary px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">
+                Save
+              </button>
+              <button onClick={() => removeZone(selZone.id)}
+                className="mt-2 w-full rounded-sm border border-destructive/40 bg-destructive/10 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-destructive hover:bg-destructive/20">
+                Delete zone
+              </button>
+            </div>
+          )}
+
           <section className="mb-3 rounded-sm border border-border bg-surface-2 p-2.5">
             <div className="mb-2 flex items-center justify-between">
               <div className="label-eyebrow">Tags ({tags.length})</div>
@@ -537,45 +576,6 @@ function ZonesAdmin() {
             );
           })}
 
-          {selZone && (
-            <div className="mt-4 border-t border-border pt-3">
-              <div className="label-eyebrow mb-2">Edit</div>
-              <Field label="Name" value={selZone.name} onChange={(v) => update(selZone.id, { name: v })} />
-              <label className="mb-2 block">
-                <span className="label-eyebrow mb-1 block text-xs">Tag</span>
-                <select value={selZone.tag} onChange={(e) => update(selZone.id, { tag: e.target.value as Zone["tag"] })}
-                  className="w-full rounded-sm border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary/60">
-                  {tags.map((t) => <option key={t.id} value={t.id}>{t.id}</option>)}
-                </select>
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                <NumField label="X" value={selZone.x} onChange={(v) => update(selZone.id, { x: snapVal(v) })} />
-                <NumField label="Y" value={selZone.y} onChange={(v) => update(selZone.id, { y: snapVal(v) })} />
-                <NumField label="W" value={selZone.w} onChange={(v) => update(selZone.id, { w: snapVal(v) })} />
-                <NumField label="H" value={selZone.h} onChange={(v) => update(selZone.id, { h: snapVal(v) })} />
-              </div>
-              <div className="mt-2 grid grid-cols-4 gap-1">
-                <ActionBtn icon={<Copy className="h-3 w-3" />} label="Copy" onClick={() => copyCoords(selZone)} />
-                <ActionBtn icon={<RotateCcw className="h-3 w-3" />} label="Reset" onClick={() => resetZone(selZone)} />
-                <ActionBtn icon={<AlignCenter className="h-3 w-3" />} label="Center" onClick={() => centerZone(selZone)} />
-                <ActionBtn icon={<Files className="h-3 w-3" />} label="Dup" onClick={() => duplicateZone(selZone)} />
-              </div>
-              <button
-                onClick={() => {
-                  // Persist current preset zones (built-in already writes to store on every edit; this is an explicit confirmation)
-                  if (typeof navigator !== "undefined" && navigator.clipboard) {
-                    navigator.clipboard.writeText(JSON.stringify(zones, null, 2)).catch(() => {});
-                  }
-                }}
-                className="mt-3 w-full rounded-sm bg-primary px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">
-                Save
-              </button>
-              <button onClick={() => removeZone(selZone.id)}
-                className="mt-2 w-full rounded-sm border border-destructive/40 bg-destructive/10 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-destructive hover:bg-destructive/20">
-                Delete zone
-              </button>
-            </div>
-          )}
         </aside>
       </div>
 
