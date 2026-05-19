@@ -1270,8 +1270,10 @@ function RightPanel(props: {
   onDuplicatePreset: () => void;
   onDeletePreset: () => void;
   onResetToDefault: () => void;
+  onResetDraftToActive: () => void;
   isDirty: boolean;
   quality: { trackingQ: number; jumpEvents: number; lostFrames: number; avgConfidence: number };
+  prevQuality?: QualityMetrics | null;
   problems: TrackEvent[];
   onSeek: (t: number) => void;
   draft: TrackingSettings; patchDraft: (p: Partial<TrackingSettings>) => void;
@@ -1281,6 +1283,7 @@ function RightPanel(props: {
   selectedEvent: TrackEvent | null;
   selectedDebugFile: string; setSelectedDebugFile: (v: string) => void;
   time: number;
+  eventFilters: EventFilters; setEventFilters: (v: EventFilters) => void;
 }) {
   const wide = props.viewMode === "settings";
   return (
