@@ -323,14 +323,13 @@ function EditDialog({ row, isNew, onChange, onCancel, onSave }: {
                   <button
                     key={k}
                     onClick={() => toggle(k)}
-                    className={`flex items-center justify-between rounded-sm border px-2 py-1.5 text-xs ${
+                    className={`flex items-center justify-center rounded-sm border px-2 py-1.5 text-xs ${
                       on
                         ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
                         : "border-border bg-surface text-muted-foreground hover:bg-muted"
                     }`}
                   >
                     <span className="font-semibold uppercase tracking-wider">{CONFIG_LABEL[k]}</span>
-                    <span>{on ? "✓" : "—"}</span>
                   </button>
                 );
               })}
