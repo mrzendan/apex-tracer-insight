@@ -1537,12 +1537,25 @@ function DebugPanel(props: Parameters<typeof RightPanel>[0]) {
           onChange={(v) => props.patchDraft({ debugMode: v })} />
         <CheckField label="Save debug frames" checked={props.draft.saveDebugFrames}
           onChange={(v) => props.patchDraft({ saveDebugFrames: v })} />
-        <UpdateActions onUpdate={props.onUpdateCommit} onSaveAs={props.onSaveAs} isDirty={props.isDirty} />
+        <PresetActions {...props} />
       </Section>
 
       <Section title="Selected timestamp">
         <div className="text-mono text-xs">
           {fmt(props.time)} · frame {Math.round(props.time * props.committed.frameRate)}
+        </div>
+      </Section>
+
+      <Section title="Event filters">
+        <div className="flex flex-wrap gap-1">
+          {(Object.keys(props.eventFilters) as Array<TrackEvent["kind"]>).map((k) => (
+            <button key={k} onClick={() => props.setEventFilters({ ...props.eventFilters, [k]: !props.eventFilters[k] })}
+              className={`flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider transition-colors ${
+                props.eventFilters[k] ? "border-border bg-surface-2 text-foreground" : "border-border/50 bg-surface-2/40 text-muted-foreground/60 line-through"
+              }`}>
+              <span className="inline-block h-2 w-2 rounded-sm" style={{ background: eventColor[k] }} />{k}
+            </button>
+          ))}
         </div>
       </Section>
 
