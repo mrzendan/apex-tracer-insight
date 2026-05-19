@@ -44,11 +44,22 @@ def register_frame(cap, reg: FrameRegistrar, idx: int):
     if not ok:
         return None, 0, None
     H, inliers = reg.register(frame)
+    # сохраняем последний прочитанный кадр для pixel-diff на coarse-шаге
+    register_frame.last_frame = frame
+    register_frame.last_idx = idx
     if H is None or inliers < max(8, reg.min_inliers // 3):
         return None, inliers, frame
     fh, fw = frame.shape[:2]
     pan = map_point(H, (fw / 2, fh / 2))
     return pan, inliers, frame
+
+
+def roi_gray_256(frame, roi):
+    """ROI-кроп, grayscale, ресайз 256x256 — для быстрого pixel-diff."""
+    h, w = frame.shape[:2]
+    x0, y0, x1, y1 = int(roi[0] * w), int(roi[1] * h), int(roi[2] * w), int(roi[3] * h)
+    gray = cv2.cvtColor(frame[y0:y1, x0:x1], cv2.COLOR_BGR2GRAY)
+    return cv2.resize(gray, (256, 256))
 
 
 def dist(a, b) -> float:
@@ -60,10 +71,12 @@ def main():
     ap.add_argument("--video", required=True, type=Path)
     ap.add_argument("--config", required=True, type=Path)
     ap.add_argument("--out", required=True, type=Path)
-    ap.add_argument("--coarse", type=int, default=600, help="грубый шаг (кадров)")
+    ap.add_argument("--coarse", type=int, default=300, help="грубый шаг (кадров)")
     ap.add_argument("--fine", type=int, default=10, help="шаг отката для уточнения")
     ap.add_argument("--threshold", type=float, default=90.0,
                     help="Δpan на канонической карте, выше которого считаем cut'ом (px)")
+    ap.add_argument("--coarse-diff", type=float, default=20.0, dest="coarse_diff",
+                    help="доп. триггер на coarse: pixel-diff в ROI между coarse-кадрами")
     ap.add_argument("--start", type=float, default=0.0, help="старт в секундах")
     ap.add_argument("--end", type=float, default=-1.0, help="конец в секундах (-1 = до конца)")
     args = ap.parse_args()
@@ -90,6 +103,8 @@ def main():
 
     prev_idx = start_frame
     prev_pan, prev_inl, _ = register_frame(cap, reg, prev_idx)
+    prev_gray = roi_gray_256(register_frame.last_frame, reg.roi) \
+        if getattr(register_frame, "last_frame", None) is not None else None
     if prev_pan is None:
         print(f"[warn] стартовый кадр {prev_idx} не регистрируется (inliers={prev_inl}). Иду дальше.")
     t0 = time.time()
@@ -97,35 +112,37 @@ def main():
     curr_idx = prev_idx + args.coarse
     while curr_idx < end_frame:
         curr_pan, curr_inl, _ = register_frame(cap, reg, curr_idx)
-        if curr_pan is None:
-            print(f"  [skip] frame {curr_idx}: регистрация провалена (inliers={curr_inl})")
-            prev_idx = curr_idx
-            prev_pan = None
-            curr_idx += args.coarse
-            continue
+        curr_gray = roi_gray_256(register_frame.last_frame, reg.roi) \
+            if getattr(register_frame, "last_frame", None) is not None else None
 
-        if prev_pan is not None:
-            d = dist(prev_pan, curr_pan)
-            mark = "  CUT" if d > args.threshold else "  ok"
-            print(f"  [coarse] {prev_idx:>7} -> {curr_idx:>7}: Δpan={d:>6.1f}px (inl {prev_inl}->{curr_inl}){mark}")
+        # триггеры: SIFT Δpan ИЛИ pixel-diff ROI
+        trig_pan = (prev_pan is not None and curr_pan is not None
+                    and dist(prev_pan, curr_pan) > args.threshold)
+        coarse_diff = (float(np.mean(cv2.absdiff(prev_gray, curr_gray)))
+                       if prev_gray is not None and curr_gray is not None else 0.0)
+        trig_diff = coarse_diff > args.coarse_diff
 
-            if d > args.threshold:
+        d_pan_str = f"{dist(prev_pan, curr_pan):>6.1f}" if (prev_pan is not None and curr_pan is not None) else "  n/a"
+        mark = "  CUT?" if (trig_pan or trig_diff) else "  ok"
+        print(f"  [coarse] {prev_idx:>7} -> {curr_idx:>7}: Δpan={d_pan_str}px "
+              f"diff={coarse_diff:>5.2f} (inl {prev_inl}->{curr_inl}){mark}")
+
+        if trig_pan or trig_diff:
+            # для refine нужны pan'ы; если один из них None — берём центр окна как приближение
+            approx_cut = (prev_idx + curr_idx) // 2
+            if trig_pan:
                 # уточняем линейным откатом с шагом fine
                 exact = refine_cut(cap, reg, prev_idx, prev_pan, curr_idx, curr_pan,
                                    args.fine, args.threshold)
                 if exact is not None:
-                    cut_frame, from_pan, to_pan = exact
+                    approx_cut = exact[0]
                     # второй проход: шаг 1 в окне ±fine, ищем настоящий межкадровый скачок
-                    pinned = pinpoint_cut(cap, reg, cut_frame, args.fine, args.threshold)
-                    if pinned is None:
+            pinned = pinpoint_cut(cap, reg, approx_cut, args.fine, args.threshold)
+            if pinned is None:
                         print(f"    -> отброшено: в окне ±{args.fine} нет межкадрового скачка "
                               f">{args.threshold/2:.0f}px (это был плавный pan)")
-                        prev_idx = curr_idx
-                        prev_pan = curr_pan
-                        prev_inl = curr_inl
-                        curr_idx += args.coarse
-                        continue
-                    cut_frame, from_pan, to_pan, pixel_diff = pinned
+            else:
+                cut_frame, from_pan, to_pan, pixel_diff = pinned
                     ev = {
                         "frame": int(cut_frame),
                         "t": round(cut_frame / fps, 3),
@@ -142,12 +159,11 @@ def main():
                                      args.out / f"overlay_cut_{cut_frame}.png", ev)
                     # сохраняем 4 видеокадра вокруг cut'а
                     dump_context_frames(cap, cut_frame, args.out)
-                else:
-                    print(f"    -> не смог уточнить (регистрация в окне нестабильна)")
 
         prev_idx = curr_idx
         prev_pan = curr_pan
         prev_inl = curr_inl
+        prev_gray = curr_gray
         curr_idx += args.coarse
 
     cap.release()
