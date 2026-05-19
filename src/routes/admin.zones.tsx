@@ -331,8 +331,8 @@ function ZonesAdmin() {
           <span className="font-semibold uppercase tracking-wider text-muted-foreground">Snap to grid</span>
         </label>
         <div className="flex rounded-sm border border-border bg-surface p-0.5">
-          {[10, 20].map((g) => (
-            <button key={g} onClick={() => setGridSize(g as 10 | 20)}
+          {[5, 10, 20].map((g) => (
+            <button key={g} onClick={() => setGridSize(g as 5 | 10 | 20)}
               className={`px-2 py-0.5 text-xs font-semibold ${gridSize === g ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
               {g}px
             </button>
