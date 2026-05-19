@@ -396,7 +396,7 @@ function ZonesAdmin() {
                 const active = z.id === sel;
                 const locked = getMeta(z.id).locked;
                 const c = tagColor(z.tag);
-                const handle = 22;
+                 const handle = 12 / zoom;
                 const handles: { m: "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw"; cx: number; cy: number; cur: string }[] = [
                   { m: "nw", cx: z.x,         cy: z.y,         cur: "nwse-resize" },
                   { m: "ne", cx: z.x + z.w,   cy: z.y,         cur: "nesw-resize" },
@@ -411,22 +411,22 @@ function ZonesAdmin() {
                 const strokeOpacity = active ? 1 : 0.45;
                 return (
                   <g key={z.id} opacity={active ? 1 : 0.75}>
-                    <rect x={z.x} y={z.y} width={z.w} height={z.h}
+                     <rect x={z.x} y={z.y} width={z.w} height={z.h}
                       fill={`${c}${fillOpacity}`} stroke={c} strokeOpacity={strokeOpacity}
-                      strokeWidth={active ? 4 : 2} strokeDasharray={locked ? "8 6" : undefined}
+                      strokeWidth={(active ? 3 : 1.5) / zoom} strokeDasharray={locked ? `${8/zoom} ${6/zoom}` : undefined}
                       style={{ cursor: locked ? "not-allowed" : "move" }}
                       onPointerDown={(e) => onPointerDown(e, z, "move")} />
                     {active && (
                       <>
-                        <rect x={z.x} y={z.y - 32} width={Math.max(160, z.name.length * 11 + 90)} height={28} fill={c}
+                        <rect x={z.x} y={z.y - 28/zoom} width={Math.max(160, z.name.length * 11 + 90) / zoom} height={24/zoom} fill={c}
                           style={{ cursor: locked ? "not-allowed" : "move" }}
                           onPointerDown={(e) => onPointerDown(e, z, "move")} />
-                        <text x={z.x + 8} y={z.y - 11} fontSize={16} fontWeight={800} fill="#0a0a0a" fontFamily="Manrope, sans-serif" pointerEvents="none">
+                        <text x={z.x + 8/zoom} y={z.y - 10/zoom} fontSize={14/zoom} fontWeight={800} fill="#0a0a0a" fontFamily="Manrope, sans-serif" pointerEvents="none">
                           {z.name} · {z.tag}{locked ? " · locked" : ""}
                         </text>
                         {!locked && handles.map((h) => (
                           <rect key={h.m} x={h.cx - handle/2} y={h.cy - handle/2} width={handle} height={handle}
-                            fill="#0a0a0a" stroke={c} strokeWidth={3} style={{ cursor: h.cur }}
+                            fill="#0a0a0a" stroke={c} strokeWidth={1.5/zoom} style={{ cursor: h.cur }}
                             onPointerDown={(e) => onPointerDown(e, z, h.m)} />
                         ))}
                       </>
@@ -435,6 +435,27 @@ function ZonesAdmin() {
                 );
               })}
             </svg>
+          </div>
+          </div>
+
+          {/* Zoom controls */}
+          <div className="absolute bottom-3 left-3 z-10 flex items-center gap-1 rounded-sm border border-border bg-surface/95 p-1 backdrop-blur">
+            <button onClick={() => zoomAt(1 / 1.25)} title="Zoom out" className="grid h-7 w-7 place-items-center rounded-sm text-muted-foreground hover:bg-muted hover:text-foreground">
+              <ZoomOut className="h-3.5 w-3.5" />
+            </button>
+            <button onClick={resetView} className="text-mono px-2 py-1 text-xs font-semibold text-muted-foreground hover:text-foreground" title="Reset view (100%)">
+              {Math.round(zoom * 100)}%
+            </button>
+            <button onClick={() => zoomAt(1.25)} title="Zoom in" className="grid h-7 w-7 place-items-center rounded-sm text-muted-foreground hover:bg-muted hover:text-foreground">
+              <ZoomIn className="h-3.5 w-3.5" />
+            </button>
+            <div className="mx-1 h-5 w-px bg-border" />
+            <button onClick={resetView} title="Fit" className="grid h-7 w-7 place-items-center rounded-sm text-muted-foreground hover:bg-muted hover:text-foreground">
+              <Maximize2 className="h-3.5 w-3.5" />
+            </button>
+            <div className={`flex items-center gap-1 rounded-sm px-2 py-1 text-xs uppercase tracking-wider ${spaceDown ? "bg-primary/20 text-primary" : "text-muted-foreground"}`} title="Hold Space or middle-click to pan">
+              <Hand className="h-3 w-3" /> Pan
+            </div>
           </div>
 
           {/* Tag manager popover */}
