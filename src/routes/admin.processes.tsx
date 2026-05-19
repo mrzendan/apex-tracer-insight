@@ -965,3 +965,209 @@ function ProgressCell({ value }: { value: number }) {
     </div>
   );
 }
+
+/* =========================================================================
+   New helpers: progress mini, status actions, detail panel, needs attention
+   ========================================================================= */
+
+type FilterKey = "all" | "suggested" | "queued" | "running" | "done" | "failed" | "needs_review" | "draft";
+
+function ProgressMini({
+  status, prog,
+}: {
+  status: AnalysisProcess["status"];
+  prog: { pct: number; etaSec: number | null; framesDone: number; framesTotal: number };
+}) {
+  if (status === "draft") return <span className="text-mono text-xs text-muted-foreground">—</span>;
+  if (status === "queued") return <span className="text-mono text-xs text-primary">queued…</span>;
+  if (status === "failed") return <span className="text-mono text-xs text-destructive">stopped</span>;
+  return (
+    <div>
+      <div className="flex items-baseline justify-between">
+        <span className="text-mono text-xs font-semibold">{prog.pct}%</span>
+        <span className="text-mono text-[10px] text-muted-foreground">
+          {prog.framesDone} / {prog.framesTotal}f
+        </span>
+      </div>
+      <Progress value={prog.pct} className="h-1 mt-0.5" />
+      {status === "running" && prog.etaSec !== null && (
+        <div className="text-mono text-[10px] text-muted-foreground">ETA {mmss(prog.etaSec)}</div>
+      )}
+    </div>
+  );
+}
+
+function StatusActions({ process, onAction }: { process: AnalysisProcess; onAction: (a: string) => void }) {
+  const btn = (label: string, action: string, tone: "primary" | "muted" | "destructive" = "muted") => (
+    <button
+      key={action}
+      onClick={() => onAction(action)}
+      className={`rounded-sm px-1.5 py-0.5 text-xs hover:underline ${
+        tone === "primary" ? "text-primary" : tone === "destructive" ? "text-destructive" : "text-foreground/80"
+      }`}
+    >{label}</button>
+  );
+  switch (process.status) {
+    case "draft":
+      return <div className="flex justify-end gap-1">{btn("Start", "start", "primary")}{btn("Edit", "edit")}{btn("Delete", "delete", "destructive")}</div>;
+    case "queued":
+      return <div className="flex justify-end gap-1">{btn("Cancel", "cancel", "destructive")}</div>;
+    case "running":
+      return <div className="flex justify-end gap-1">{btn("Open live", "open", "primary")}{btn("Stop", "stop", "destructive")}</div>;
+    case "done":
+      if (process.needsReview) {
+        return <div className="flex justify-end gap-1">{btn("Open review", "review", "primary")}{btn("Re-run", "rerun")}</div>;
+      }
+      return <div className="flex justify-end gap-1">{btn("Open", "open", "primary")}{btn("Debug", "debug")}{btn("Re-run", "rerun")}</div>;
+    case "failed":
+      return <div className="flex justify-end gap-1">{btn("Error", "error", "destructive")}{btn("Retry", "retry", "primary")}{btn("Delete", "delete", "destructive")}</div>;
+    default:
+      return null;
+  }
+}
+
+function NeedsAttention({
+  suggestionsCount, failedCount, needsReviewCount, runningCount, onJump,
+}: {
+  suggestionsCount: number; failedCount: number; needsReviewCount: number; runningCount: number;
+  onJump: (f: FilterKey) => void;
+}) {
+  const items: { label: string; count: number; tone: string; filter: FilterKey }[] = [];
+  if (suggestionsCount) items.push({ label: `${suggestionsCount} matches without analysis`, count: suggestionsCount, tone: "text-primary", filter: "suggested" });
+  if (failedCount) items.push({ label: `${failedCount} failed job${failedCount > 1 ? "s" : ""}`, count: failedCount, tone: "text-destructive", filter: "failed" });
+  if (needsReviewCount) items.push({ label: `${needsReviewCount} low-confidence result${needsReviewCount > 1 ? "s" : ""}`, count: needsReviewCount, tone: "text-warning", filter: "needs_review" });
+  if (runningCount) items.push({ label: `${runningCount} running`, count: runningCount, tone: "text-warning", filter: "running" });
+  if (!items.length) return null;
+  return (
+    <section className="hud-panel border-l-2 border-l-warning/60 p-4">
+      <div className="mb-2 flex items-center justify-between">
+        <h2 className="label-eyebrow">Needs attention</h2>
+        <span className="text-mono text-xs text-muted-foreground">{items.length}</span>
+      </div>
+      <ul className="grid grid-cols-1 gap-1.5 md:grid-cols-2 xl:grid-cols-4">
+        {items.map((it) => (
+          <li key={it.filter}>
+            <button onClick={() => onJump(it.filter)} className="w-full rounded-sm border border-border bg-surface-2 px-3 py-2 text-left text-xs hover:border-primary/40">
+              <span className={`text-mono mr-2 font-bold ${it.tone}`}>● {it.count}</span>
+              <span>{it.label}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function ProcessDetailPanel({
+  process, match, tournament, team, onClose, onAction,
+}: {
+  process: AnalysisProcess;
+  match?: MatchFull;
+  tournament?: { id: string; name: string };
+  team?: Team | null;
+  onClose: () => void;
+  onAction: (a: string) => void;
+}) {
+  const prog = deriveProgress(process);
+  const firstMap = process.maps[0] ? allMaps.find((x) => x.id === process.maps[0].mapId) : null;
+  return (
+    <aside className="w-[360px] shrink-0 overflow-auto border-l border-border bg-surface">
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-surface px-4 py-3">
+        <div>
+          <div className="label-eyebrow text-xs">Process details</div>
+          <div className="text-xs font-semibold">{KIND_LABELS[process.kind ?? "minimap"]}</div>
+        </div>
+        <button onClick={onClose} className="text-xs text-muted-foreground hover:text-foreground">✕</button>
+      </div>
+
+      <div className="space-y-3 p-4">
+        <DetailSection title="Identification">
+          <Kv k="Job ID" v={<span className="text-mono">{process.id}</span>} />
+          <Kv k="Type" v={KIND_LABELS[process.kind ?? "minimap"]} />
+          <Kv k="Status" v={<span className={`rounded-sm px-1.5 py-0.5 text-xs uppercase ${STATUS_COLORS[process.status]}`}>{process.status}</span>} />
+          {process.needsReview && <Kv k="Flag" v={<span className="text-warning">needs review</span>} />}
+        </DetailSection>
+
+        <DetailSection title="Context">
+          <Kv k="Tournament" v={tournament?.name ?? process.tournamentId} />
+          <Kv k="Match" v={match?.name ?? process.matchId} />
+          <Kv k="POV" v={process.pov === "team" ? (team?.name ?? "—") : "Map POV"} />
+          <Kv k="Map" v={firstMap?.name ?? "—"} />
+          {process.live && <Kv k="Live" v={<span className="text-destructive">● LIVE</span>} />}
+        </DetailSection>
+
+        <DetailSection title="Source video">
+          <div className="text-mono text-[11px] break-all text-muted-foreground">{process.streamUrl || "—"}</div>
+          {process.videoTitle && <div className="mt-1 text-xs">{process.videoTitle}</div>}
+          {process.videoChannel && <div className="text-[10px] text-muted-foreground">{process.videoChannel}</div>}
+        </DetailSection>
+
+        <DetailSection title="Progress">
+          <ProgressMini status={process.status} prog={prog} />
+          <div className="mt-2 grid grid-cols-2 gap-y-1 text-xs">
+            <span className="text-muted-foreground">Started</span><span className="text-mono">{relTime(process.startedAt)}</span>
+            <span className="text-muted-foreground">Finished</span><span className="text-mono">{relTime(process.finishedAt)}</span>
+            <span className="text-muted-foreground">Duration</span><span className="text-mono">{durationLabel(process.startedAt, process.finishedAt)}</span>
+            <span className="text-muted-foreground">Frames</span><span className="text-mono">{prog.framesTotal}</span>
+          </div>
+        </DetailSection>
+
+        <DetailSection title="Settings">
+          <Kv k="Preset" v={process.preset ?? "Default"} />
+          <Kv k="Frame step" v={(process.frameStep ?? 2).toString()} />
+          <Kv k="Debug mode" v={process.debugMode ? "on" : "off"} />
+        </DetailSection>
+
+        <DetailSection title="Quality">
+          {process.qualityScore !== undefined ? (
+            <div className={`text-mono text-2xl font-bold ${process.qualityScore >= 80 ? "text-success" : process.qualityScore >= 60 ? "text-warning" : "text-destructive"}`}>
+              {process.qualityScore}%
+            </div>
+          ) : <div className="text-xs text-muted-foreground">No quality score yet.</div>}
+        </DetailSection>
+
+        <DetailSection title="Result files">
+          <ul className="text-mono space-y-1 text-[11px]">
+            {["result.json", "camera_track.json", "trajectory_map.jpg", "debug_video.mp4"].map((f) => (
+              <li key={f} className="flex items-center justify-between">
+                <span className="text-muted-foreground">/tmp/tracker/{f}</span>
+                <button className="text-primary hover:underline">Open</button>
+              </li>
+            ))}
+          </ul>
+        </DetailSection>
+
+        {process.errorMessage && (
+          <DetailSection title="Error log">
+            <pre className="text-mono whitespace-pre-wrap rounded-sm border border-destructive/40 bg-destructive/10 p-2 text-[11px] text-destructive">{process.errorMessage}</pre>
+          </DetailSection>
+        )}
+
+        <div className="grid grid-cols-2 gap-1.5">
+          <button onClick={() => onAction("open")} className="rounded-sm bg-primary px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">Open result</button>
+          <button onClick={() => onAction("debug")} className="rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">Open debug</button>
+          <button onClick={() => onAction("download")} className="rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">Download JSON</button>
+          <button onClick={() => onAction("rerun")} className="rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">Retry</button>
+          <button onClick={() => onAction("delete")} className="col-span-2 rounded-sm border border-destructive/40 bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-destructive hover:bg-destructive/10">Delete</button>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+function DetailSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-sm border border-border bg-surface-2">
+      <div className="border-b border-border px-3 py-1.5"><span className="label-eyebrow text-xs">{title}</span></div>
+      <div className="space-y-1 p-3 text-xs">{children}</div>
+    </div>
+  );
+}
+function Kv({ k, v }: { k: string; v: React.ReactNode }) {
+  return (
+    <div className="flex items-baseline justify-between gap-2">
+      <span className="text-muted-foreground">{k}</span>
+      <span className="text-right">{v}</span>
+    </div>
+  );
+}
