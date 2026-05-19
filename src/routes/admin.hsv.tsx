@@ -160,6 +160,7 @@ function HsvAdmin() {
   const previewRef = useRef<HTMLCanvasElement>(null);
   const maskRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
   const [imgReady, setImgReady] = useState(false);
 
   useEffect(() => {
