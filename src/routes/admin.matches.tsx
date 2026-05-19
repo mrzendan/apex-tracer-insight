@@ -185,7 +185,7 @@ function MatchesAdmin() {
                 const matchTeams = (m.teamIds ?? teams.map((t) => t.id))
                   .map((id) => teams.find((t) => t.id === id))
                   .filter(Boolean) as typeof teams;
-                const topTeams = [...matchTeams].sort((a, b) => a.placement - b.placement).slice(0, 3);
+                const standings = [...matchTeams].sort((a, b) => a.placement - b.placement);
                 const mm = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
                 const status = deriveMatchStatus(m);
                 const povCount = Object.values(m.teamVods ?? {}).filter(Boolean).length;
@@ -257,12 +257,12 @@ function MatchesAdmin() {
                             </div>
 
                             {tab === "overview" && (
-                              <div className="grid gap-4 md:grid-cols-3">
-                                <div className="hud-panel p-3 md:col-span-2">
+                              <div className="grid gap-4 md:grid-cols-[260px_1fr]">
+                                <div className="hud-panel p-3">
                                   <div className="label-eyebrow mb-2 text-xs">Summary</div>
-                                  <dl className="grid grid-cols-2 gap-y-1.5 text-xs">
+                                  <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-xs">
                                     <dt className="text-muted-foreground">Status</dt><dd><StatusBadge s={status} /></dd>
-                                    <dt className="text-muted-foreground">Tournament</dt><dd>{tournament?.name ?? "—"}</dd>
+                                    <dt className="text-muted-foreground">Tournament</dt><dd className="truncate">{tournament?.name ?? "—"}</dd>
                                     <dt className="text-muted-foreground">Maps</dt><dd className="text-mono tabular-nums">{mapIds.length}</dd>
                                     <dt className="text-muted-foreground">Teams</dt><dd className="text-mono tabular-nums">{matchTeams.length}</dd>
                                     <dt className="text-muted-foreground">POV VODs</dt><dd className="text-mono tabular-nums">{povCount} / {matchTeams.length}</dd>
@@ -270,15 +270,15 @@ function MatchesAdmin() {
                                   </dl>
                                 </div>
                                 <div className="hud-panel p-3">
-                                  <div className="label-eyebrow mb-2 text-xs">Top 3 teams</div>
-                                  <ol className="space-y-1.5">
-                                    {topTeams.map((t, i) => (
+                                  <div className="label-eyebrow mb-2 text-xs">Standings ({standings.length})</div>
+                                  <ol className="grid grid-cols-1 gap-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+                                    {standings.map((t) => (
                                       <li key={t.id}>
-                                        <Link to="/admin/teams/$teamId" params={{ teamId: t.id }} className="flex items-center gap-2 rounded-sm border border-border bg-surface px-2 py-1.5 text-xs hover:bg-muted">
-                                          <span className="w-5 text-mono text-xs text-muted-foreground">#{i + 1}</span>
-                                          <TeamLogo team={t} size={22} />
+                                        <Link to="/admin/teams/$teamId" params={{ teamId: t.id }} className="flex items-center gap-2 rounded-sm border border-border bg-surface px-2 py-1 text-xs hover:bg-muted">
+                                          <span className="w-6 text-mono text-xs text-muted-foreground">#{t.placement}</span>
+                                          <TeamLogo team={t} size={20} />
                                           <span className="flex-1 truncate font-semibold">{t.tag} · {t.name}</span>
-                                          <span className="text-mono text-xs tabular-nums text-muted-foreground">{t.kills}K</span>
+                                          <span className="text-mono text-xs tabular-nums text-muted-foreground">{teamPoints(t)} pts</span>
                                         </Link>
                                       </li>
                                     ))}
@@ -405,6 +405,16 @@ function MatchesAdmin() {
                                     placeholder="https://youtube.com/watch?v=..."
                                     className="w-full rounded-sm border border-border bg-background px-2 py-1.5 text-sm text-mono"
                                   />
+                                </div>
+                                <div className="hud-panel p-3">
+                                  <div className="label-eyebrow mb-2 text-xs">Map VOD (common)</div>
+                                  <input
+                                    value={m.mapVodCommon ?? ""}
+                                    onChange={(e) => updateMatch(m.id, { mapVodCommon: e.target.value })}
+                                    placeholder="https://youtube.com/watch?v=..."
+                                    className="w-full rounded-sm border border-border bg-background px-2 py-1.5 text-sm text-mono"
+                                  />
+                                  <div className="mt-1 text-xs text-muted-foreground">Single VOD used as fallback for all maps below.</div>
                                 </div>
                                 <div className="hud-panel p-3">
                                   <div className="label-eyebrow mb-2 text-xs">Map VODs ({mapIds.length})</div>
