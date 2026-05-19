@@ -211,13 +211,16 @@ def main():
     lines = [f"[ok] cut'ов: {len(events)}, HUD-событий: {len(hud_events)}, "
              f"серая зона: {len(gray_zone)}  (за {time.time() - t0:.1f}s)"]
     for ev in events:
-        lines.append(f"  frame {ev['frame']:>7} t={ev['t']:>7.2f}s  Δ={ev['delta']:>6.1f}px  "
+        d_str = f"{ev['delta']:>6.1f}" if ev['delta'] is not None else "   n/a"
+        lines.append(f"  frame {ev['frame']:>7} t={ev['t']:>7.2f}s  Δ={d_str}px  "
+                     f"diff={ev['pixel_diff']:>5.2f}  "
                      f"{ev['from_pan']} -> {ev['to_pan']}")
     if hud_events:
         lines.append("")
         lines.append(f"[hud] картинка менялась без движения камеры (zoom/killcam/overlay):")
         for ev in hud_events:
-            lines.append(f"  frame {ev['frame']:>7} t={ev['t']:>7.2f}s  Δ={ev['delta']:>5.1f}px  "
+            d_str = f"{ev['delta']:>5.1f}" if ev['delta'] is not None else "  n/a"
+            lines.append(f"  frame {ev['frame']:>7} t={ev['t']:>7.2f}s  Δ={d_str}px  "
                          f"diff={ev['pixel_diff']:>5.2f}")
     if gray_zone:
         lines.append("")
