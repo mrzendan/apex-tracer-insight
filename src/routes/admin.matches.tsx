@@ -69,15 +69,14 @@ function MatchesAdmin() {
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-surface px-6">
-        <h1 className="text-sm font-bold uppercase tracking-wider">Matches</h1>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
+          <h1 className="text-sm font-bold uppercase tracking-wider">Matches</h1>
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search matches…"
             className="w-64 rounded-sm border border-border bg-background px-2 py-1.5 text-xs"
           />
-          <button onClick={startCreate} className="rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">+ New</button>
         </div>
       </header>
       <div className="flex-1 overflow-auto p-6">
@@ -92,7 +91,14 @@ function MatchesAdmin() {
                 <th className="px-3 py-2">Map</th>
                 <th className="px-3 py-2 w-[100px] text-right">Duration</th>
                 <th className="px-3 py-2 w-[180px]">VOD link</th>
-                <th className="px-3 py-2 w-[160px] text-right">Actions</th>
+                <th className="px-3 py-2 w-[200px] text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    <span>Actions</span>
+                    <button onClick={startCreate} className="rounded-sm bg-primary px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">
+                      + Add
+                    </button>
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody>
