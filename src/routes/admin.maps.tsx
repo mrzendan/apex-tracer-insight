@@ -20,13 +20,15 @@ function MapsAdmin() {
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-surface px-6">
-        <h1 className="text-sm font-bold uppercase tracking-wider">Maps</h1>
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search maps…"
-          className="w-64 rounded-sm border border-border bg-background px-2 py-1.5 text-xs"
-        />
+        <div className="flex items-center gap-4">
+          <h1 className="text-sm font-bold uppercase tracking-wider">Maps</h1>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search maps…"
+            className="w-64 rounded-sm border border-border bg-background px-2 py-1.5 text-xs"
+          />
+        </div>
       </header>
       <div className="flex-1 overflow-auto p-6">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
