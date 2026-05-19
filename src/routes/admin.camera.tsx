@@ -1307,6 +1307,7 @@ function RightPanel(props: {
 /* ---- Overview right panel ---- */
 function OverviewPanel(props: Parameters<typeof RightPanel>[0]) {
   const { draft, patchDraft } = props;
+  const prev = props.prevQuality;
   return (
     <div className="space-y-3 p-3">
       <Section title="Quick tuning">
@@ -1317,14 +1318,18 @@ function OverviewPanel(props: Parameters<typeof RightPanel>[0]) {
           </select>
         </Field>
         <SliderField label="Smoothing" value={draft.smoothing} min={0} max={1} step={0.01}
+          hint={HINTS.smoothing} warn={getWarn("smoothing", draft.smoothing)}
           onChange={(v) => patchDraft({ smoothing: v })} />
         <SliderField label="Response speed" value={draft.responseSpeed} min={0} max={1} step={0.01}
+          hint={HINTS.responseSpeed} warn={getWarn("responseSpeed", draft.responseSpeed)}
           onChange={(v) => patchDraft({ responseSpeed: v })} />
         <NumField label="Deadzone (px)" value={draft.deadzone} min={0} max={200} step={1}
+          hint={HINTS.deadzone} warn={getWarn("deadzone", draft.deadzone)}
           onChange={(v) => patchDraft({ deadzone: v })} />
         <NumField label="Max speed (px/frame)" value={draft.maxSpeed} min={1} max={500} step={1}
+          hint={HINTS.maxSpeed} warn={getWarn("maxSpeed", draft.maxSpeed)}
           onChange={(v) => patchDraft({ maxSpeed: v })} />
-        <UpdateActions onUpdate={props.onUpdateCommit} onSaveAs={props.onSaveAs} isDirty={props.isDirty} />
+        <PresetActions {...props} />
       </Section>
 
       <Section title="Tracking health">
@@ -1335,6 +1340,21 @@ function OverviewPanel(props: Parameters<typeof RightPanel>[0]) {
           <Row k="Avg confidence" v={props.quality.avgConfidence.toFixed(2)} />
           <Row k="Current mode" v={props.committed.stepZoomEnabled ? "Step zoom" : "Smooth zoom"} />
         </div>
+      </Section>
+
+      <Section title="Compare with previous">
+        {prev ? (
+          <div className="text-mono space-y-1 text-xs">
+            <CompareRow k="Tracking quality" cur={`${props.quality.trackingQ}%`} prev={`${prev.trackingQ}%`} delta={props.quality.trackingQ - prev.trackingQ} suffix="%" />
+            <CompareRow k="Jump events" cur={props.quality.jumpEvents.toString()} prev={prev.jumpEvents.toString()} delta={props.quality.jumpEvents - prev.jumpEvents} lowerBetter />
+            <CompareRow k="Lost frames" cur={props.quality.lostFrames.toString()} prev={prev.lostFrames.toString()} delta={props.quality.lostFrames - prev.lostFrames} lowerBetter />
+            <CompareRow k="Avg confidence" cur={props.quality.avgConfidence.toFixed(2)} prev={prev.avgConfidence.toFixed(2)} delta={props.quality.avgConfidence - prev.avgConfidence} decimals={2} />
+          </div>
+        ) : (
+          <div className="text-xs text-muted-foreground">
+            Нет предыдущего снимка. Нажмите <span className="text-foreground">Apply</span>, измените настройки и нажмите ещё раз — здесь появится сравнение.
+          </div>
+        )}
       </Section>
 
       <Section title={`Problems detected (${props.problems.length})`}>
