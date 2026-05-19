@@ -91,8 +91,8 @@ function MapsAdmin() {
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-surface px-6 pr-[360px]">
-        <div className="flex items-center gap-4">
+      <header className="flex h-14 shrink-0 items-center border-b border-border bg-surface px-6 pr-[360px]">
+        <div className="flex items-center gap-3">
           <h1 className="text-sm font-bold uppercase tracking-wider">Maps</h1>
           <input
             value={query}
@@ -100,8 +100,6 @@ function MapsAdmin() {
             placeholder="Search maps…"
             className="w-64 rounded-sm border border-border bg-background px-2 py-1.5 text-xs"
           />
-        </div>
-        <div className="flex items-center gap-2">
           <div className="inline-flex overflow-hidden rounded-sm border border-border">
             {(["grid", "table"] as ViewMode[]).map((v) => (
               <button
