@@ -544,8 +544,8 @@ function Sparkline({
   const w = 300;
   const h = 100;
   const padX = 0;
-  const padTop = 6;
-  const padBottom = 14;
+  const padTop = 12;
+  const padBottom = 16;
   const lo = min ?? Math.min(...values, 0);
   const hi = max ?? Math.max(...values, 1);
   const span = Math.max(1e-6, hi - lo);
@@ -589,8 +589,7 @@ function Sparkline({
 
   const fmtShort = (d: Date | null | undefined) =>
     d ? d.toLocaleDateString(undefined, { day: "2-digit", month: "short" }) : "";
-  const firstDate = dates?.[0];
-  const lastDate = dates?.[dates.length - 1];
+  const labelStep = Math.max(1, Math.ceil(values.length / 8));
 
   return (
     <div className="flex h-[260px] flex-col overflow-hidden rounded-sm border border-border bg-surface-2/40">
@@ -658,25 +657,46 @@ function Sparkline({
                   />
                 );
               })}
-              {/* Peak label */}
-              {peakIdx >= 0 && points[peakIdx] && (
-                <text
-                  x={points[peakIdx][0]}
-                  y={Math.max(8, points[peakIdx][1] - 5)}
-                  textAnchor="middle"
-                  fontSize="7"
-                  fill="currentColor"
-                  className="text-foreground"
-                >
-                  {formatVal(values[peakIdx])}{dates?.[peakIdx] ? ` · ${fmtShort(dates[peakIdx])}` : ""}
-                </text>
-              )}
+              {/* Per-point value labels (above each point) */}
+              {points.map(([x, y], i) => {
+                if (i % labelStep !== 0 && i !== points.length - 1 && i !== peakIdx) return null;
+                const isPeak = i === peakIdx;
+                const anchor = i === 0 ? "start" : i === points.length - 1 ? "end" : "middle";
+                return (
+                  <text
+                    key={`v${i}`}
+                    x={x}
+                    y={Math.max(7, y - 5)}
+                    textAnchor={anchor}
+                    fontSize="7"
+                    fill="currentColor"
+                    className={isPeak ? "text-foreground font-bold" : "text-muted-foreground"}
+                  >
+                    {formatVal(values[i])}
+                  </text>
+                );
+              })}
+              {/* Per-point date labels (below chart) */}
+              {points.map(([x], i) => {
+                if (i % labelStep !== 0 && i !== points.length - 1) return null;
+                const d = dates?.[i];
+                if (!d) return null;
+                const anchor = i === 0 ? "start" : i === points.length - 1 ? "end" : "middle";
+                return (
+                  <text
+                    key={`d${i}`}
+                    x={x}
+                    y={h - 4}
+                    textAnchor={anchor}
+                    fontSize="7"
+                    fill="currentColor"
+                    className="text-muted-foreground"
+                  >
+                    {fmtShort(d)}
+                  </text>
+                );
+              })}
             </svg>
-            {/* X-axis dates */}
-            <div className="pointer-events-none absolute bottom-0 left-4 right-4 flex justify-between text-mono text-[8px] uppercase text-muted-foreground">
-              <span>{fmtShort(firstDate)}</span>
-              <span>{fmtShort(lastDate)}</span>
-            </div>
           </>
         )}
       </div>
