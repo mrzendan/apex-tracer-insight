@@ -59,6 +59,33 @@ def map_bounds_from_zones(
     return None
 
 
+def zoom_correction_from_zones(zones_path: Path, zone_sel: str) -> dict[str, Any] | None:
+    """Опциональная компенсация зума плавающей карты.
+    Формула: canonical = pivot + (detected - pivot) / zoom.
+    """
+    data = json.loads(zones_path.read_text(encoding="utf-8"))
+    sel = zone_sel.strip().lower()
+    for z in (data.get("zones") or []):
+        if z.get("id", "").lower() == sel or z.get("name", "").lower() == sel:
+            cfg = z.get("map_zoom_correction")
+            return cfg if isinstance(cfg, dict) else None
+    return None
+
+
+def apply_zoom_correction(
+    cx: float, cy: float, r: float, ring_n: int, cfg: dict[str, Any] | None,
+) -> tuple[float, float, float, float] | None:
+    if not cfg:
+        return None
+    pivot = cfg.get("pivot") or [0.5, 0.5]
+    px, py = float(pivot[0]), float(pivot[1])
+    per_ring = cfg.get("per_ring") or {}
+    zoom = float(per_ring.get(str(ring_n), cfg.get("default_zoom", 1.0)))
+    if zoom <= 0:
+        return None
+    return (px + (cx - px) / zoom, py + (cy - py) / zoom, r / zoom, zoom)
+
+
 def load_cut_segments(
     path: Path | None,
 ) -> tuple[list[float], list[tuple[float, float]]]:
