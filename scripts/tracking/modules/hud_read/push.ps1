@@ -9,6 +9,8 @@ param(
   [string]$TessCmd = "",
   [int]$OverlayEvery = 1,
   [int]$CropFirstN = 3,
+  [int]$StaticConfirm = 3,
+  [int]$StaticMaxFrames = 8,
   [string]$Out = "scripts/tracking/modules/hud_read/reports",
   [switch]$NoPush
 )
@@ -33,6 +35,8 @@ $argsList = @(
   "--ocr-lang", $OcrLang,
   "--overlay-every", $OverlayEvery,
   "--crop-first-n", $CropFirstN,
+  "--static-confirm", $StaticConfirm,
+  "--static-max-frames", $StaticMaxFrames,
   "--out", $Out
 )
 if ($TessCmd) { $argsList += @("--tess-cmd", $TessCmd) }
