@@ -66,6 +66,9 @@ powershell -ExecutionPolicy Bypass -File scripts\tracking\modules\hud_read\run.p
 |-------------------|--------|-------------------------------------------|
 | `-Video`          | —      | путь к mp4 (обязательно)                  |
 | `-Zones`          | см. выше | экспорт зон                             |
+| `-Mode`           | forward | `forward` / `scout` / `two-pass`         |
+| `-ReverseStep`    | 1800   | шаг обратного разведчика (≈60с @30fps)    |
+| `-RefineBudget`   | 6      | проб бинпоиска на каждый вылет            |
 | `-FrameStep`      | 600    | шаг по кадрам                             |
 | `-StartSec`       | 0      | начало окна (сек)                         |
 | `-EndSec`         | 0      | конец окна, 0 = до конца                  |
@@ -84,6 +87,24 @@ powershell -ExecutionPolicy Bypass -File scripts\tracking\modules\hud_read\run.p
   больше не OCR-ятся каждый кадр: после `StaticConfirm` совпадений (или
   `StaticMaxFrames` попыток) значение фиксируется и переиспользуется до
   конца прогона. Это резко ускоряет проход по VOD.
+- **Режимы прохода:**
+  - `forward` (дефолт) — обычный шаг от начала к концу, читает все зоны.
+  - `scout` — обратный разведчик. Идёт от конца к началу шагом
+    `ReverseStep`, читает только зоны `team_*/eliminated`, для каждой
+    команды находит окно `[последний жив, первый мёртв]`, после чего
+    бинпоиском (`RefineBudget` проб) уточняет точный кадр вылета.
+    Результат → `eliminations.json`. Самый быстрый способ получить
+    тайминги вылетов на длинном VOD.
+  - `two-pass` — сначала `scout`, потом обычный forward, но окно
+    сужается до момента, когда самая ранняя команда ещё была жива
+    (отсекаются преамбула/нарезки между матчами).
+- **OCR-кеш по dHash:** каждый кроп хешируется (8×8 dHash), и если кадр
+  визуально совпал с предыдущим (`pts` не сменился, `name` тот же) —
+  Tesseract не вызывается, переиспользуется прошлый результат. На
+  длинных VOD даёт 50–80% хитов.
+- **Калибровка PSM/полярности:** на первой успешной комбинации
+  `(psm, threshold polarity)` для каждой зоны фиксируется победитель;
+  дальше Tesseract вызывается только с ним (экономия x3–x6 на зону).
 - `FrameStep` 600 = ~10 секунд при 60fps. HUD меняется редко, можно
   увеличить, чтобы быстрее пройти весь VOD.
 - Если `report.txt` показывает много `EMPTY/MISALIGNED` для конкретного
@@ -95,6 +116,8 @@ powershell -ExecutionPolicy Bypass -File scripts\tracking\modules\hud_read\run.p
 
 - `hud_timeline.json` — снапшоты по кадрам:
   `{frame, t, hud:{...}, teams:[{slot, name, pts, eliminated, logo, hero_1..3}]}`.
+- `eliminations.json` (`-Mode scout`/`two-pass`) — `{slot: {f_first_dead,
+  t_first_dead, f_last_alive, t_last_alive}}` после бинпоиска.
 - `report.txt` — таблица: на каждую пару `(tag, name)` — % распознавания,
   % успешного парсинга, подсказка (`OK / TIGHTEN / EMPTY/MISALIGNED /
   STATIC?`) и примеры значений.

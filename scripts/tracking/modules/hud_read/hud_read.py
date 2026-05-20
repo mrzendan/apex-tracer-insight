@@ -12,7 +12,7 @@ import sys
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import cv2
 import numpy as np
@@ -51,6 +51,15 @@ RE_RING = re.compile(r"RING\s*(\d+).*?(CLOSING|COUNTDOWN|CLOSED|OPEN)", re.I)
 RE_INT = re.compile(r"-?\d+")
 RE_ELIM = re.compile(r"ELIMIN", re.I)
 _OCR_ERRORS_SEEN: set[str] = set()
+
+# Глобальные кеши, работают на протяжении всего прогона.
+# Кеш OCR по (tag, name, dhash(crop)) → последнее распарсенное value.
+_OCR_CACHE: dict[tuple[str, str, str], Any] = {}
+_OCR_CACHE_HITS = 0
+_OCR_CACHE_MISS = 0
+# Калибровка: после первой удачной комбинации (psm_idx, prep_idx)
+# для зоны фиксируем «победителя» и больше не перебираем варианты.
+_OCR_CALIB: dict[tuple[str, str], tuple[int, int]] = {}
 
 
 # ── helpers ──────────────────────────────────────────────────────────
@@ -106,7 +115,8 @@ def preprocess_for_ocr(crop: np.ndarray) -> np.ndarray:
     return pad(th1), pad(th2)
 
 
-def ocr(crop: np.ndarray, lang: str, digits_only: bool, alnum_only: bool = False) -> str:
+def ocr(crop: np.ndarray, lang: str, digits_only: bool, alnum_only: bool = False,
+        calib_key: Optional[tuple[str, str]] = None) -> str:
     if pytesseract is None or crop.size == 0:
         return ""
     preps = preprocess_for_ocr(crop)
@@ -120,10 +130,29 @@ def ocr(crop: np.ndarray, lang: str, digits_only: bool, alnum_only: bool = False
         # через парсер аргументов, и такие символы на Windows дают "No closing quotation".
         whitelist = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     # Пробуем несколько PSM и берём непустой/самый длинный результат.
+    # Если для этой зоны уже зафиксирована «победившая» комбинация —
+    # используем только её (экономия x3–x6 на вызовах tesseract).
     psms = (7, 8, 6) if not digits_only else (8, 7, 10)
+    locked = _OCR_CALIB.get(calib_key) if calib_key is not None else None
+    if locked is not None:
+        psm_i, prep_i = locked
+        try:
+            prep = preps[prep_i]
+            psm = psms[psm_i]
+            cfg = f"--psm {psm} --oem 1"
+            if whitelist:
+                cfg += f" -c tessedit_char_whitelist={whitelist}"
+            return pytesseract.image_to_string(prep, lang=lang, config=cfg).strip()
+        except Exception as e:  # pragma: no cover
+            msg = str(e)
+            if msg not in _OCR_ERRORS_SEEN:
+                _OCR_ERRORS_SEEN.add(msg)
+                print(f"[hud_read] tesseract error: {msg}", file=sys.stderr)
+            return ""
     best = ""
-    for prep in preps:
-        for psm in psms:
+    best_combo: Optional[tuple[int, int]] = None
+    for prep_i, prep in enumerate(preps):
+        for psm_i, psm in enumerate(psms):
             cfg = f"--psm {psm} --oem 1"
             if whitelist:
                 cfg += f" -c tessedit_char_whitelist={whitelist}"
@@ -137,6 +166,9 @@ def ocr(crop: np.ndarray, lang: str, digits_only: bool, alnum_only: bool = False
                 return ""
             if len(txt) > len(best):
                 best = txt
+                best_combo = (psm_i, prep_i)
+    if calib_key is not None and best and best_combo is not None:
+        _OCR_CALIB[calib_key] = best_combo
     return best
 
 
@@ -221,11 +253,146 @@ def draw_overlay(frame: np.ndarray, zones_scaled: list[dict], values: dict[str, 
     return out
 
 
+# ── scout (reverse) ──────────────────────────────────────────────────
+def read_frame(cap: cv2.VideoCapture, f: int) -> np.ndarray | None:
+    cap.set(cv2.CAP_PROP_POS_FRAMES, max(0, f))
+    ok, frame = cap.read()
+    return frame if ok else None
+
+
+def is_eliminated_at(cap: cv2.VideoCapture, f: int, zone: dict, lang: str) -> bool | None:
+    """True/False — определён ли elim в кадре, None — кадр не прочитался."""
+    frame = read_frame(cap, f)
+    if frame is None:
+        return None
+    x, y, w, h = zone["x"], zone["y"], zone["w"], zone["h"]
+    crop = frame[y:y + h, x:x + w]
+    if crop.size == 0:
+        return None
+    txt = ocr(crop, lang, digits_only=False, alnum_only=True,
+              calib_key=(zone["tag"], zone["name"]))
+    return bool(RE_ELIM.search(txt))
+
+
+def scout_eliminations(cap: cv2.VideoCapture, zones_scaled: list[dict],
+                       start_f: int, end_f: int, fps: float,
+                       reverse_step: int, lang: str,
+                       refine_budget: int = 6) -> dict[int, dict[str, Any]]:
+    """Идёт от end_f к start_f крупным шагом, читает только elim-зоны
+    у каждой команды. Возвращает {slot: {t_last_alive, f_first_dead, t_first_dead, ...}}.
+    Затем для каждой команды бинпоиском уточняет точный кадр перехода."""
+    elim_zones: dict[int, dict] = {}
+    for z in zones_scaled:
+        slot = team_slot(z["tag"])
+        if slot is not None and z["name"] == "eliminated":
+            elim_zones[slot] = z
+    if not elim_zones:
+        print("[hud_read][scout] zones 'eliminated' не найдены — нечего сканировать")
+        return {}
+
+    print(f"[hud_read][scout] reverse pass: {len(elim_zones)} teams, "
+          f"step={reverse_step} frames ({reverse_step/fps:.1f}s)")
+
+    # state[slot] = {"f_first_dead": int|None, "f_last_alive": int|None}
+    state: dict[int, dict[str, Any]] = {
+        s: {"f_first_dead": None, "f_last_alive": None} for s in elim_zones
+    }
+
+    total_iters = max(1, (end_f - start_f) // reverse_step + 1)
+    pbar = tqdm(total=total_iters, unit="f", desc="scout-rev", dynamic_ncols=True)
+    f = end_f - 1
+    while f >= start_f:
+        frame = read_frame(cap, f)
+        if frame is None:
+            f -= reverse_step
+            pbar.update(1)
+            continue
+        alive_count = 0
+        dead_count = 0
+        for slot, z in elim_zones.items():
+            st = state[slot]
+            # если уже знаем и f_last_alive, и f_first_dead — пропускаем
+            if st["f_last_alive"] is not None:
+                continue
+            x, y, w, h = z["x"], z["y"], z["w"], z["h"]
+            crop = frame[y:y + h, x:x + w]
+            txt = ocr(crop, lang, digits_only=False, alnum_only=True,
+                      calib_key=(z["tag"], z["name"]))
+            is_dead = bool(RE_ELIM.search(txt))
+            if is_dead:
+                if st["f_first_dead"] is None or f < st["f_first_dead"]:
+                    st["f_first_dead"] = f
+                dead_count += 1
+            else:
+                # первая встреча "жив" при движении назад = верхняя граница окна
+                if st["f_last_alive"] is None:
+                    st["f_last_alive"] = f
+                alive_count += 1
+        tqdm.write(f"scout f{f:>7} t={f/fps:6.1f}s  alive={alive_count} dead={dead_count} "
+                   f"resolved={sum(1 for s in state.values() if s['f_last_alive'] is not None)}/"
+                   f"{len(state)}")
+        pbar.update(1)
+        # все команды локализованы — выходим
+        if all(s["f_last_alive"] is not None or s["f_first_dead"] is None
+               for s in state.values()):
+            # есть команды, у которых f_first_dead тоже None (не вылетали) — это норм
+            pass
+        if all(s["f_last_alive"] is not None for s in state.values()):
+            break
+        f -= reverse_step
+    pbar.close()
+
+    # ── refine: бинпоиск точного кадра перехода alive→dead ──────────
+    print(f"[hud_read][scout] refine windows (budget={refine_budget} per team)")
+    for slot, st in state.items():
+        lo = st["f_last_alive"]
+        hi = st["f_first_dead"]
+        if lo is None or hi is None or hi <= lo + 1:
+            continue
+        z = elim_zones[slot]
+        steps = 0
+        while hi - lo > 1 and steps < refine_budget:
+            mid = (lo + hi) // 2
+            v = is_eliminated_at(cap, mid, z, lang)
+            if v is None:
+                break
+            if v:
+                hi = mid
+            else:
+                lo = mid
+            steps += 1
+        st["f_first_dead"] = hi
+        st["f_last_alive"] = lo
+        tqdm.write(f"  team {slot:>2}: elim at f~{hi} t~{hi/fps:.1f}s "
+                   f"(window ±{(hi-lo)} frames, {steps} probes)")
+
+    # привести к человеку
+    result: dict[int, dict[str, Any]] = {}
+    for slot, st in sorted(state.items()):
+        f_dead = st["f_first_dead"]
+        result[slot] = {
+            "f_first_dead": f_dead,
+            "t_first_dead": round(f_dead / fps, 2) if f_dead is not None else None,
+            "f_last_alive": st["f_last_alive"],
+            "t_last_alive": round(st["f_last_alive"] / fps, 2)
+                             if st["f_last_alive"] is not None else None,
+        }
+    return result
+
+
 # ── main loop ────────────────────────────────────────────────────────
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--video", required=True, type=Path)
     ap.add_argument("--zones", type=Path, default=None)
+    ap.add_argument("--mode", choices=("forward", "scout", "two-pass"),
+                    default="forward",
+                    help="forward = обычный проход; scout = только обратный поиск "
+                         "таймингов вылетов; two-pass = scout + forward")
+    ap.add_argument("--reverse-step", type=int, default=1800,
+                    help="Шаг обратного разведчика (кадров). 1800@30fps ≈ 60с")
+    ap.add_argument("--refine-budget", type=int, default=6,
+                    help="Сколько проб бинпоиска тратить на уточнение каждого вылета")
     ap.add_argument("--frame-step", type=int, default=600)
     ap.add_argument("--start-sec", type=float, default=0.0)
     ap.add_argument("--end-sec", type=float, default=0.0)
@@ -274,6 +441,37 @@ def main() -> int:
     start_f = int(args.start_sec * fps)
     end_f = int(args.end_sec * fps) if args.end_sec > 0 else total
     step = max(1, args.frame_step)
+
+    # ── режимы scout / two-pass ────────────────────────────────────
+    if args.mode in ("scout", "two-pass"):
+        elim = scout_eliminations(cap, zones_scaled, start_f, end_f, fps,
+                                  reverse_step=max(1, args.reverse_step),
+                                  lang=args.ocr_lang,
+                                  refine_budget=max(1, args.refine_budget))
+        (args.out / "eliminations.json").write_text(
+            json.dumps({
+                "video": str(args.video),
+                "fps": fps,
+                "mode": args.mode,
+                "reverse_step": args.reverse_step,
+                "teams": elim,
+            }, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        print(f"[hud_read][scout] eliminations.json → {args.out/'eliminations.json'}")
+        if args.mode == "scout":
+            cap.release()
+            return 0
+        # two-pass: сужаем диапазон forward-прохода до старта матча.
+        # старт = самый ранний f_last_alive (или 0).
+        earliest = min(
+            (v["f_last_alive"] for v in elim.values()
+             if v["f_last_alive"] is not None),
+            default=start_f,
+        )
+        if earliest > start_f:
+            print(f"[hud_read][two-pass] forward-окно сужено до f{earliest}+")
+            start_f = earliest
 
     timeline: list[dict[str, Any]] = []
     # stats[(tag,name)] = {"total":N,"ocr":N,"parsed":N,"values":[...], "hashes":[]}
@@ -349,12 +547,26 @@ def main() -> int:
                     val = None
             else:
                 alnum = name in ("name", "map name", "ring status")
-                txt = ocr(crop, args.ocr_lang,
-                          digits_only=(name in DIGIT_NAMES),
-                          alnum_only=alnum)
-                if txt:
-                    st["ocr"] += 1
-                val = parse_field(tag, name, txt)
+                global _OCR_CACHE_HITS, _OCR_CACHE_MISS
+                # dHash-кеш: если кроп визуально не изменился —
+                # переиспользуем последний распарсенный value.
+                crop_hash = dhash(crop) if crop.size else ""
+                cache_key = (tag, name, crop_hash)
+                if cache_key in _OCR_CACHE:
+                    val = _OCR_CACHE[cache_key]
+                    _OCR_CACHE_HITS += 1
+                    st["ocr"] += 1  # считаем как успех
+                    txt = "" if val is None else str(val)
+                else:
+                    txt = ocr(crop, args.ocr_lang,
+                              digits_only=(name in DIGIT_NAMES),
+                              alnum_only=alnum,
+                              calib_key=(tag, name))
+                    if txt:
+                        st["ocr"] += 1
+                    val = parse_field(tag, name, txt)
+                    _OCR_CACHE[cache_key] = val
+                    _OCR_CACHE_MISS += 1
                 if val is not None and val is not False:
                     st["parsed"] += 1
                 if val not in (None, "", False):
@@ -420,7 +632,9 @@ def main() -> int:
                 f"  {alive_t or '?':>2}T/{alive_p or '?':>2}P  {ring_str:<8}"
                 f"  {' '.join(top_teams)}")
         tqdm.write(line)
-        pbar.set_postfix(fps=f"{rate:.2f}", static_skip=skipped_static, refresh=False)
+        pbar.set_postfix(fps=f"{rate:.2f}", static_skip=skipped_static,
+                         ocr_cache=f"{_OCR_CACHE_HITS}/{_OCR_CACHE_HITS + _OCR_CACHE_MISS}",
+                         refresh=False)
         pbar.update(1)
 
         processed += 1
@@ -428,7 +642,11 @@ def main() -> int:
 
     pbar.close()
     cap.release()
-    print(f"[hud_read] processed={processed} static_skips={skipped_static} elapsed={time.time()-t0:.1f}s")
+    total_ocr = _OCR_CACHE_HITS + _OCR_CACHE_MISS
+    cache_pct = round(100 * _OCR_CACHE_HITS / total_ocr) if total_ocr else 0
+    print(f"[hud_read] processed={processed} static_skips={skipped_static} "
+          f"ocr_cache_hits={_OCR_CACHE_HITS}/{total_ocr} ({cache_pct}%) "
+          f"elapsed={time.time()-t0:.1f}s")
 
     # ── reports ─────────────────────────────────────────────────────
     (args.out / "hud_timeline.json").write_text(
