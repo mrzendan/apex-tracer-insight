@@ -1,14 +1,14 @@
 {
   "video": "scripts\\tracking\\game.mp4",
   "fps": 59.94005994005994,
-  "scout_step": 600,
-  "refine_budget": 0,
-  "refine_linear": 0,
-  "note": "provisional: derived from forward hud_timeline samples; re-run hud_read --rings-only for frame-accurate timings",
+  "scout_step": 300,
+  "refine_budget": 12,
+  "refine_linear": 6,
+  "ring_start_sec": 100.0,
   "transitions": [
     {
-      "f": 31234,
-      "t": 521.087,
+      "f": 22252,
+      "t": 371.238,
       "from": {
         "ring": 1,
         "state": "CLOSING"
@@ -18,12 +18,12 @@
         "state": "CLOSING"
       },
       "confidence": "low",
-      "refine_method": "timeline-derived",
-      "refine_window": 10800
+      "refine_method": "binary12+linear0",
+      "refine_window": 2
     },
     {
-      "f": 46000,
-      "t": 767.433,
+      "f": 38117,
+      "t": 635.919,
       "from": {
         "ring": 2,
         "state": "CLOSING"
@@ -33,12 +33,12 @@
         "state": "CLOSING"
       },
       "confidence": "low",
-      "refine_method": "timeline-derived",
-      "refine_window": 14766
+      "refine_method": "binary12+linear0",
+      "refine_window": 1
     },
     {
-      "f": 53200,
-      "t": 887.553,
+      "f": 47106,
+      "t": 785.885,
       "from": {
         "ring": 3,
         "state": "CLOSING"
@@ -48,12 +48,12 @@
         "state": "CLOSING"
       },
       "confidence": "low",
-      "refine_method": "timeline-derived",
-      "refine_window": 7200
+      "refine_method": "binary12+linear1",
+      "refine_window": 1
     },
     {
-      "f": 61483,
-      "t": 1025.741,
+      "f": 56098,
+      "t": 935.902,
       "from": {
         "ring": 4,
         "state": "CLOSING"
@@ -63,12 +63,12 @@
         "state": "CLOSING"
       },
       "confidence": "low",
-      "refine_method": "timeline-derived",
-      "refine_window": 8283
+      "refine_method": "binary12+linear0",
+      "refine_window": 1
     },
     {
-      "f": 68683,
-      "t": 1145.861,
+      "f": 63892,
+      "t": 1065.932,
       "from": {
         "ring": 5,
         "state": "CLOSING"
@@ -78,26 +78,17 @@
         "state": "CLOSING"
       },
       "confidence": "low",
-      "refine_method": "timeline-derived",
-      "refine_window": 7200
+      "refine_method": "binary12+linear1",
+      "refine_window": 1
     }
   ],
   "phases": [
     {
-      "ring": 1,
-      "countdown_start_f": null,
-      "t_countdown_start": null,
-      "closing_start_f": 20434,
-      "t_closing_start": 340.907,
-      "closed_f": null,
-      "t_closed": null
-    },
-    {
       "ring": 2,
       "countdown_start_f": null,
       "t_countdown_start": null,
-      "closing_start_f": 31234,
-      "t_closing_start": 521.087,
+      "closing_start_f": 22252,
+      "t_closing_start": 371.238,
       "closed_f": null,
       "t_closed": null
     },
@@ -105,8 +96,8 @@
       "ring": 3,
       "countdown_start_f": null,
       "t_countdown_start": null,
-      "closing_start_f": 46000,
-      "t_closing_start": 767.433,
+      "closing_start_f": 38117,
+      "t_closing_start": 635.919,
       "closed_f": null,
       "t_closed": null
     },
@@ -114,8 +105,8 @@
       "ring": 4,
       "countdown_start_f": null,
       "t_countdown_start": null,
-      "closing_start_f": 53200,
-      "t_closing_start": 887.553,
+      "closing_start_f": 47106,
+      "t_closing_start": 785.885,
       "closed_f": null,
       "t_closed": null
     },
@@ -123,8 +114,8 @@
       "ring": 5,
       "countdown_start_f": null,
       "t_countdown_start": null,
-      "closing_start_f": 61483,
-      "t_closing_start": 1025.741,
+      "closing_start_f": 56098,
+      "t_closing_start": 935.902,
       "closed_f": null,
       "t_closed": null
     },
@@ -132,10 +123,71 @@
       "ring": 6,
       "countdown_start_f": null,
       "t_countdown_start": null,
-      "closing_start_f": 68683,
-      "t_closing_start": 1145.861,
+      "closing_start_f": 63892,
+      "t_closing_start": 1065.932,
       "closed_f": null,
       "t_closed": null
     }
-  ]
+  ],
+  "derived": {
+    "closing_durations": [],
+    "countdown_durations": [],
+    "median_closing": null,
+    "median_countdown": null
+  },
+  "geometry": {
+    "minimap": [
+      34,
+      775,
+      300,
+      300
+    ],
+    "phases": [
+      {
+        "ring": 2,
+        "cx_norm": 0.998,
+        "cy_norm": 0.13,
+        "r_norm": 0.1329,
+        "measured_at_t": 340.99,
+        "samples": 5,
+        "geometry_confidence": "high"
+      },
+      {
+        "ring": 3,
+        "cx_norm": 0.942,
+        "cy_norm": 0.234,
+        "r_norm": 0.2717,
+        "measured_at_t": 605.67,
+        "samples": 5,
+        "geometry_confidence": "low"
+      },
+      {
+        "ring": 4,
+        "cx_norm": 0.746,
+        "cy_norm": 0.242,
+        "r_norm": 0.2029,
+        "measured_at_t": 755.63,
+        "samples": 5,
+        "geometry_confidence": "low"
+      },
+      {
+        "ring": 5,
+        "cx_norm": 0.97,
+        "cy_norm": 0.36,
+        "r_norm": 0.3317,
+        "measured_at_t": 903.17,
+        "samples": 4,
+        "geometry_confidence": "low"
+      },
+      {
+        "ring": 6,
+        "cx_norm": 0.99,
+        "cy_norm": 0.11,
+        "r_norm": 0.3561,
+        "measured_at_t": 1035.68,
+        "samples": 5,
+        "geometry_confidence": "low"
+      }
+    ]
+  }
 }
