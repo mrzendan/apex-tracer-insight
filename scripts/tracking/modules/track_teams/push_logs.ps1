@@ -60,7 +60,7 @@ if ($NoPush) {
   return
 }
 
-git add @found
+git add -f @found
 $stamp = Get-Date -Format 'yyyy-MM-dd HH:mm'
 $fileCount = $found.Count
 $kbInt = [int]$totalKb
