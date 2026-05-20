@@ -41,6 +41,24 @@ def rect_from_zones(zones_path: Path, zone_sel: str) -> tuple[int, int, int, int
     )
 
 
+def map_bounds_from_zones(
+    zones_path: Path, zone_sel: str,
+) -> tuple[int, int, int, int] | None:
+    """Опциональный блок `map_bounds_in_roi` на зоне миникарты:
+    где именно в ROI лежит канонический квадрат игровой карты.
+    Возвращает (x, y, w, h) в координатах ROI или None.
+    """
+    data = json.loads(zones_path.read_text(encoding="utf-8"))
+    sel = zone_sel.strip().lower()
+    for z in (data.get("zones") or []):
+        if z.get("id", "").lower() == sel or z.get("name", "").lower() == sel:
+            mb = z.get("map_bounds_in_roi")
+            if not mb:
+                return None
+            return (int(mb["x"]), int(mb["y"]), int(mb["w"]), int(mb["h"]))
+    return None
+
+
 def load_cut_segments(
     path: Path | None,
 ) -> tuple[list[float], list[tuple[float, float]]]:
