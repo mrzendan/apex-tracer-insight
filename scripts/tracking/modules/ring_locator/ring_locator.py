@@ -348,6 +348,15 @@ def main() -> int:
                     help="папка для дебаг-картинок (по умолч. <out>/debug)")
     ap.add_argument("--no-debug", action="store_true",
                     help="отключить запись дебаг-картинок")
+    ap.add_argument("--method", choices=("red", "grey"), default="red",
+                    help="red — измеряем уже зафиксированное (красное) кольцо "
+                         "после CLOSING; grey — старый режим по серому next-ring")
+    ap.add_argument("--post-close-window", type=float, default=12.0,
+                    help="длина окна (сек) после конца CLOSING, в котором "
+                         "ищем красное кольцо")
+    ap.add_argument("--post-close-delay", type=float, default=1.5,
+                    help="задержка (сек) после CLOSING→COUNTDOWN перед "
+                         "первым сэмплом, чтобы анимация успокоилась")
     args = ap.parse_args()
 
     if args.zones:
