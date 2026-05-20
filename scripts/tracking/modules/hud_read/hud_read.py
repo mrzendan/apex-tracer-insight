@@ -615,7 +615,7 @@ def main() -> int:
                     st["hashes"].append(hsh)
                     crop_dir = args.out / "crops" / f"{tag}__{name.replace(' ', '_')}"
                     crop_dir.mkdir(parents=True, exist_ok=True)
-                    cv2.imwrite(str(crop_dir / f"f{f:07d}.png"), crop)
+                    cv2.imwrite(str(crop_dir / f"f{chunk_prefix}{f:07d}.png"), crop)
                     per_zone_value[zid] = hsh[:8]
                     val = hsh
                 else:
@@ -653,7 +653,7 @@ def main() -> int:
                     seen_per_field[key] += 1
                     crop_dir = args.out / "crops" / f"{tag}__{name.replace(' ', '_')}"
                     crop_dir.mkdir(parents=True, exist_ok=True)
-                    cv2.imwrite(str(crop_dir / f"f{f:07d}.png"), crop)
+                    cv2.imwrite(str(crop_dir / f"f{chunk_prefix}{f:07d}.png"), crop)
 
             # Голосование для статичных полей.
             if is_static_key(tag, name):
@@ -724,12 +724,16 @@ def main() -> int:
           f"elapsed={time.time()-t0:.1f}s")
 
     # ── reports ─────────────────────────────────────────────────────
-    (args.out / "hud_timeline.json").write_text(
+    timeline_name = f"hud_timeline.{args.chunk_id}.json" if args.chunk_id else "hud_timeline.json"
+    (args.out / timeline_name).write_text(
         json.dumps({
             "video": str(args.video),
             "fps": fps,
             "frame_step": step,
             "zones_source": str(zones_path),
+            "chunk_id": args.chunk_id or None,
+            "start_frame": start_f,
+            "end_frame": end_f,
             "timeline": timeline,
         }, ensure_ascii=False, indent=2),
         encoding="utf-8",
@@ -767,7 +771,8 @@ def main() -> int:
             examples = ", ".join(str(v) for v in vals)
         lines.append(f"{tag:<10} {name:<26} {ok_pct:>4}% {parsed_pct:>7}%  {suggest:<22} {examples}")
 
-    (args.out / "report.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    report_name = f"report.{args.chunk_id}.txt" if args.chunk_id else "report.txt"
+    (args.out / report_name).write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines))
     print(f"\n[hud_read] OK → {args.out}")
     return 0
