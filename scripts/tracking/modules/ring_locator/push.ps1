@@ -3,6 +3,8 @@ param(
   [Parameter(Mandatory=$true)][string]$Rings,
   [string]$Cuts = "",
   [string]$Minimap = "34,775,300,300",
+  [string]$Zones = "",
+  [string]$MinimapZone = "camera roi",
   [string]$Out = "scripts/tracking/modules/ring_locator/reports",
   [switch]$SyncUI,
   [switch]$NoPush
@@ -22,9 +24,13 @@ $argsList = @(
   "scripts/tracking/modules/ring_locator/ring_locator.py",
   "--video", $Video,
   "--rings", $Rings,
-  "--minimap", $Minimap,
   "--out", $Out
 )
+if ($Zones) {
+  $argsList += @("--zones", $Zones, "--minimap-zone", $MinimapZone)
+} else {
+  $argsList += @("--minimap", $Minimap)
+}
 if ($Cuts) { $argsList += @("--cuts", $Cuts) }
 & python @argsList
 if ($LASTEXITCODE -ne 0) { throw "ring_locator упал (rc=$LASTEXITCODE)" }

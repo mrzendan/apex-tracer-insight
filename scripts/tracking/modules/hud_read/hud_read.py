@@ -375,6 +375,14 @@ def scout_rings(cap: cv2.VideoCapture, zones_scaled: list[dict],
             })
         prev_idx = i
 
+    # Seed: первое валидное наблюдение даёт нам фазу, которая уже шла
+    # до окна сканирования (R1 CLOSING на 1:55, если scout стартовал с t=100).
+    first_obs: tuple[int, dict] | None = None
+    for fi, si in samples:
+        if si is not None:
+            first_obs = (fi, si)
+            break
+
     print(f"[hud_read][ring-scout] coarse found {len(transitions)} transitions, "
           f"refining (binary≤{refine_budget} + linear≤{refine_linear})")
 
@@ -433,6 +441,39 @@ def scout_rings(cap: cv2.VideoCapture, zones_scaled: list[dict],
 
     # Агрегируем фазы (по ring number)
     phases_map: dict[int, dict] = {}
+    # Seed pre-window phase, если первое наблюдение не совпадает ни с одним «to».
+    if first_obs is not None:
+        f0, s0 = first_obs
+        already_seeded = any(
+            r["to"]["ring"] == s0["ring"] and r["to"]["state"] == s0["state"]
+            for r in refined
+        )
+        if not already_seeded:
+            ring_n = s0["ring"]
+            ph = phases_map.setdefault(ring_n, {
+                "ring": ring_n,
+                "countdown_start_f": None, "t_countdown_start": None,
+                "closing_start_f": None,   "t_closing_start": None,
+                "closed_f": None,          "t_closed": None,
+            })
+            field_f = {
+                "COUNTDOWN": "countdown_start_f",
+                "CLOSING":   "closing_start_f",
+                "CLOSED":    "closed_f",
+            }.get(s0["state"])
+            field_t = {
+                "COUNTDOWN": "t_countdown_start",
+                "CLOSING":   "t_closing_start",
+                "CLOSED":    "t_closed",
+            }.get(s0["state"])
+            if field_f:
+                ph[field_f] = f0
+                ph[field_t] = round(f0 / fps, 3)
+                ph["pre_window"] = True
+                tqdm.write(
+                    f"[hud_read][ring-scout] seed R{ring_n} {s0['state']}: "
+                    f"начато до окна сканирования (наблюдение в t~{f0/fps:.1f}s)"
+                )
     for r in refined:
         ring_n = r["to"]["ring"]
         state = r["to"]["state"]

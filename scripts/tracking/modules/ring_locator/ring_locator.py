@@ -28,6 +28,19 @@ def parse_rect(s: str) -> tuple[int, int, int, int]:
     return tuple(parts)  # type: ignore[return-value]
 
 
+def rect_from_zones(zones_path: Path, zone_sel: str) -> tuple[int, int, int, int]:
+    """zone_sel: либо точный id зоны, либо name (case-insensitive)."""
+    data = json.loads(zones_path.read_text(encoding="utf-8"))
+    sel = zone_sel.strip().lower()
+    for z in (data.get("zones") or []):
+        if z.get("id", "").lower() == sel or z.get("name", "").lower() == sel:
+            return (int(z["x"]), int(z["y"]), int(z["w"]), int(z["h"]))
+    raise SystemExit(
+        f"зона {zone_sel!r} не найдена в {zones_path}. "
+        f"доступно: {[z.get('name') for z in data.get('zones') or []][:10]}…"
+    )
+
+
 def load_cuts(path: Path | None) -> list[tuple[float, float]]:
     """Возвращает интервалы [t0, t1], которые надо пропускать
     (hud_events ± 0.5с, cut ± 0.5с)."""
@@ -150,10 +163,19 @@ def main() -> int:
                     help="cuts.json из find_cuts (опц.)")
     ap.add_argument("--minimap", type=str, default="34,775,300,300",
                     help="x,y,w,h миникарты в координатах оригинального видео")
+    ap.add_argument("--zones", type=Path, default=None,
+                    help="zones.vod.json — взять прямоугольник миникарты из зоны")
+    ap.add_argument("--minimap-zone", type=str, default="camera roi",
+                    help="id или name зоны миникарты в --zones (по умолч. 'camera roi')")
     ap.add_argument("--out", type=Path, default=MODULE_DIR / "reports")
     args = ap.parse_args()
 
-    minimap_rect = parse_rect(args.minimap)
+    if args.zones:
+        minimap_rect = rect_from_zones(args.zones, args.minimap_zone)
+        print(f"[ring_locator] minimap from zones[{args.minimap_zone!r}] = {minimap_rect}")
+    else:
+        minimap_rect = parse_rect(args.minimap)
+        print(f"[ring_locator] minimap (raw) = {minimap_rect}")
     rings_data = json.loads(args.rings.read_text(encoding="utf-8"))
     fps = float(rings_data.get("fps") or 30.0)
     phases = rings_data.get("phases") or []
