@@ -73,11 +73,17 @@ powershell -ExecutionPolicy Bypass -File scripts\tracking\modules\hud_read\run.p
 | `-TessCmd`        | —      | путь к tesseract.exe (Windows)            |
 | `-OverlayEvery`   | 1      | писать оверлей каждый N-й анализ кадра    |
 | `-CropFirstN`     | 3      | кропы текстовых полей для первых N кадров |
+| `-StaticConfirm`  | 3      | сколько одинаковых значений «замораживают» статичное поле |
+| `-StaticMaxFrames`| 8      | бюджет попыток на статичное поле перед мажоритарной фиксацией |
 | `-Out`            | reports| папка вывода                              |
 | `-NoPush`         | —      | без git commit/push                       |
 
 ## Тюнинг
 
+- Статичные поля (`map name`, `game number`, для каждой команды `name`/`logo`)
+  больше не OCR-ятся каждый кадр: после `StaticConfirm` совпадений (или
+  `StaticMaxFrames` попыток) значение фиксируется и переиспользуется до
+  конца прогона. Это резко ускоряет проход по VOD.
 - `FrameStep` 600 = ~10 секунд при 60fps. HUD меняется редко, можно
   увеличить, чтобы быстрее пройти весь VOD.
 - Если `report.txt` показывает много `EMPTY/MISALIGNED` для конкретного
