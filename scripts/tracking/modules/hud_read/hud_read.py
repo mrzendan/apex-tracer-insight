@@ -628,23 +628,26 @@ def _scout_rings_with_zone(cap, ring_zone, start_f, end_f, fps,
         if f_lo is None:
             # Упёрлись в t=0, значит фаза началась с самого начала видео.
             return (f_hi, "boundary")
-        # Stage A — бинпоиск границы перехода ≠target → target.
-        steps = 0
+        # Stage A — линейный скан вперёд шагом 4 кадра от f_lo до f_hi.
+        # После coarse-прохода окно невелико (≤ scout_step), а OCR на плашке
+        # шумный — бинпоиск может «промахнуться» по unknown-кадру. Мелкий
+        # форвард-скан надёжнее и даёт точность до 4 кадров (~0.07s @60fps).
         confidence = "high"
         last_unknown = False
-        while f_hi - f_lo > 1 and steps < refine_budget:
-            mid = (f_lo + f_hi) // 2
-            rs = read_ring_at(cap, mid, ring_zone, lang)
+        fine_step = 4
+        cur_fwd = f_lo + fine_step
+        while cur_fwd < f_hi:
+            rs = read_ring_at(cap, cur_fwd, ring_zone, lang)
             k = _ring_state_key(rs)
-            if k is None:
-                # пустой кадр — двигаем f_lo (ещё нет плашки/перехода)
-                f_lo = mid
+            if k == target:
+                f_hi = cur_fwd
+                break
+            elif k is None:
                 last_unknown = True
-            elif k == target:
-                f_hi = mid
+                # пустой кадр — продолжаем, не сдвигая f_lo агрессивно
             else:
-                f_lo = mid
-            steps += 1
+                f_lo = cur_fwd
+            cur_fwd += fine_step
         # Stage B — линейный доводчик до кадровой точности.
         linear_used = 0
         while f_hi - f_lo > 1 and linear_used < refine_linear:
