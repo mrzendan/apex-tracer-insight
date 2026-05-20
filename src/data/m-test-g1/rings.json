@@ -187,5 +187,69 @@
     "countdown_durations": [],
     "median_closing": null,
     "median_countdown": null
+  },
+  "geometry": {
+    "minimap": [
+      437,
+      45,
+      1050,
+      1030
+    ],
+    "phases": [
+      {
+        "ring": 1,
+        "cx_norm": 0.3914,
+        "cy_norm": 0.3885,
+        "r_norm": 0.3112,
+        "measured_at_t": 100.6,
+        "samples": 5,
+        "geometry_confidence": "high"
+      },
+      {
+        "ring": 2,
+        "cx_norm": 0.42,
+        "cy_norm": 0.3874,
+        "r_norm": 0.3578,
+        "measured_at_t": 500.6,
+        "samples": 5,
+        "geometry_confidence": "low"
+      },
+      {
+        "ring": 3,
+        "cx_norm": 0.3949,
+        "cy_norm": 0.2988,
+        "r_norm": 0.2702,
+        "measured_at_t": 725.12,
+        "samples": 5,
+        "geometry_confidence": "high"
+      },
+      {
+        "ring": 4,
+        "cx_norm": 0.3103,
+        "cy_norm": 0.4643,
+        "r_norm": 0.2019,
+        "measured_at_t": 870.62,
+        "samples": 5,
+        "geometry_confidence": "low"
+      },
+      {
+        "ring": 5,
+        "cx_norm": 0.3537,
+        "cy_norm": 0.4235,
+        "r_norm": 0.2291,
+        "measured_at_t": 1000.68,
+        "samples": 5,
+        "geometry_confidence": "low"
+      },
+      {
+        "ring": 6,
+        "cx_norm": 0.6349,
+        "cy_norm": 0.3035,
+        "r_norm": 0.1878,
+        "measured_at_t": 1120.68,
+        "samples": 5,
+        "geometry_confidence": "low"
+      }
+    ]
   }
 }
