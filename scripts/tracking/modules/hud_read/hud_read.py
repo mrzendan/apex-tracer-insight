@@ -772,6 +772,10 @@ def main() -> int:
                     help="Бюджет бинпоиска ring-перехода")
     ap.add_argument("--ring-refine-linear", type=int, default=4,
                     help="Линейный доводчик ring-перехода")
+    ap.add_argument("--ring-debug-sec", type=float, default=0.0,
+                    help="Каждые N секунд сохранять PNG-скриншот зоны "
+                         "'ring status' с распарсенным state в reports/ring_debug/. "
+                         "0 = выключено. Типично: 30.")
     ap.add_argument("--reverse-step", type=int, default=1800,
                     help="Шаг обратного разведчика (кадров). 1800@30fps ≈ 60с")
     ap.add_argument("--refine-budget", type=int, default=10,
