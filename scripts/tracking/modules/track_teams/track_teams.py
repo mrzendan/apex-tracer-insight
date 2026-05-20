@@ -80,6 +80,61 @@ def parse_teams(cfg: dict) -> list[TeamCfg]:
     return out
 
 
+def _hex_to_hsv_center(hex_str: str) -> tuple[int, int, int]:
+    h = hex_str.lstrip("#")
+    r = int(h[0:2], 16); g = int(h[2:4], 16); b = int(h[4:6], 16)
+    px = np.uint8([[[b, g, r]]])  # BGR for cv2
+    H, S, V = cv2.cvtColor(px, cv2.COLOR_BGR2HSV)[0, 0]
+    return int(H), int(S), int(V)
+
+
+def teams_from_anchors(path: Path, h_tol: int = 10,
+                       s_min_floor: int = 60, v_min_floor: int = 60,
+                       s_drop: int = 80, v_drop: int = 80) -> list[TeamCfg]:
+    """Build TeamCfg list directly from motion_detect/reports/motion_tracks.json.
+    Each motion-detected slot becomes one team with HSV range derived from its
+    hex color (H ± h_tol, S/V wide around the source). Hue wrap is handled with
+    hsv_lower2/hsv_upper2 like the YAML 'red' team."""
+    raw = json.loads(Path(path).read_text(encoding="utf-8"))
+    results = raw.get("results", [])
+    out: list[TeamCfg] = []
+    for r in results:
+        slot = r.get("slot")
+        if slot is None:
+            continue
+        hex_str = r.get("hex", "#888888")
+        H, S, V = _hex_to_hsv_center(hex_str)
+        s_lo = max(s_min_floor, S - s_drop)
+        v_lo = max(v_min_floor, V - v_drop)
+        lo = hi = lo2 = hi2 = None
+        h_low = H - h_tol
+        h_high = H + h_tol
+        if h_low < 0:
+            lo  = np.array([0, s_lo, v_lo], dtype=np.uint8)
+            hi  = np.array([h_high, 255, 255], dtype=np.uint8)
+            lo2 = np.array([179 + h_low, s_lo, v_lo], dtype=np.uint8)
+            hi2 = np.array([179, 255, 255], dtype=np.uint8)
+        elif h_high > 179:
+            lo  = np.array([h_low, s_lo, v_lo], dtype=np.uint8)
+            hi  = np.array([179, 255, 255], dtype=np.uint8)
+            lo2 = np.array([0, s_lo, v_lo], dtype=np.uint8)
+            hi2 = np.array([h_high - 179, 255, 255], dtype=np.uint8)
+        else:
+            lo = np.array([h_low,  s_lo, v_lo], dtype=np.uint8)
+            hi = np.array([h_high, 255, 255], dtype=np.uint8)
+        slot_int = int(slot)
+        out.append(TeamCfg(
+            id=f"slot_{slot_int}",
+            name=str(r.get("team_name") or f"Team {slot_int}"),
+            hsv_lower=lo, hsv_upper=hi,
+            hsv_lower2=lo2, hsv_upper2=hi2,
+            color_hex=hex_str,
+            slot=slot_int,
+            slot_id=f"slot_{slot_int}",
+        ))
+    return out
+
+
 def fit_affine_px_to_world(points: list[dict]) -> np.ndarray:
     """Least-squares fit of 2D affine: world = A * [px; 1]. Returns 3x3."""
     src = np.array([p["canonical_px"] for p in points], dtype=np.float64)
