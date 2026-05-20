@@ -119,9 +119,14 @@ def grab_frame(cap: cv2.VideoCapture, f: int) -> np.ndarray | None:
     return frame if ok else None
 
 
-def detect_next_ring(minimap: np.ndarray) -> tuple[float, float, float] | None:
+def detect_next_ring(
+    minimap: np.ndarray,
+    return_debug: bool = False,
+):
     """Найти серую окружность следующего кольца на кропе миникарты.
-    Возвращает (cx_norm, cy_norm, r_norm) в координатах кропа [0..1].
+    По умолчанию возвращает (cx_norm, cy_norm, r_norm) в координатах
+    кропа [0..1]. Если return_debug=True — кортеж
+    (cx_norm, cy_norm, r_norm, cx_px, cy_px, r_px, mask).
     """
     if minimap.size == 0:
         return None
@@ -152,7 +157,10 @@ def detect_next_ring(minimap: np.ndarray) -> tuple[float, float, float] | None:
     if best is None:
         return None
     cx, cy, r = best
-    return (cx / w, cy / h, r / max(w, h))
+    norm = (cx / w, cy / h, r / max(w, h))
+    if return_debug:
+        return (*norm, cx, cy, r, mask)
+    return norm
 
 
 def _ring_score(mask: np.ndarray, cx: float, cy: float, r: float,
