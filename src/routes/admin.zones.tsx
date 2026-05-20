@@ -200,6 +200,57 @@ function ZonesAdmin() {
     setCustoms((cs) => cs.map((c) => ({ ...c, zones: c.zones.map((z) => (z.tag === id ? { ...z, tag: fallback as Zone["tag"] } : z)) })));
   };
 
+  // Apply pending JSON import with the chosen target.
+  // target: 'current' = active preset, 'mode' = matching builtin from payload,
+  //         'new' = create a new custom preset, 'cancel' = no-op.
+  const applyImport = (target: "current" | "mode" | "new") => {
+    if (!pendingImport) return;
+    const { zones: incoming, mode: payloadMode, presetLabel, missingTags } = pendingImport;
+
+    // Optionally add missing tags so zones don't lose their tag identity.
+    if (importAddTags && missingTags.length) {
+      setTags((ts) => {
+        const used = new Set([...ts.map((t) => t.color)]);
+        const palette = [...Object.values(DEFAULT_TAG_COLORS), ...FALLBACK_PALETTE];
+        const extra = missingTags.map((id) => {
+          const preferred = DEFAULT_TAG_COLORS[id];
+          const color = preferred ?? palette.find((c) => !used.has(c)) ?? FALLBACK_PALETTE[0];
+          used.add(color);
+          return { id, color };
+        });
+        return [...ts, ...extra];
+      });
+    } else {
+      // Remap unknown tags to first available tag so import doesn't silently drop them.
+      const fallback = tags[0]?.id ?? "team";
+      incoming.forEach((z) => {
+        if (missingTags.includes(z.tag)) z.tag = fallback as Zone["tag"];
+      });
+    }
+
+    if (target === "new") {
+      const id = newId("p");
+      const next: CustomPreset = {
+        id,
+        label: presetLabel || `Imported ${customs.length + 1}`,
+        mode: payloadMode ?? "vod",
+        zones: incoming,
+      };
+      setCustoms((cs) => [...cs, next]);
+      setActiveId(id);
+      setSel(incoming[0]?.id ?? null);
+    } else if (target === "mode" && payloadMode) {
+      // Apply to matching builtin without switching active tab.
+      setZonesStore(payloadMode, incoming);
+    } else {
+      // 'current'
+      setZones(incoming);
+      setSel(incoming[0]?.id ?? null);
+    }
+
+    setPendingImport(null);
+  };
+
   const toSvg = (clientX: number, clientY: number) => {
     const svg = svgRef.current;
     if (!svg) return { x: 0, y: 0 };
