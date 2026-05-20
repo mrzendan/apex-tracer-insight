@@ -5,7 +5,7 @@ import {
   maps,
   matches,
   matchSeedExtras,
-  teams,
+  teams as defaultTeams,
   generateTrajectory,
   ringPhases as defaultRingPhases,
   events as defaultEvents,
@@ -93,6 +93,7 @@ export function MatchViewer({ initialGameId }: { initialGameId?: string }) {
   const game = games[Math.min(gameIndex, games.length - 1)] ?? games[0];
   const apexMap = maps.find((m) => m.id === game.mapId)!;
   const _override = gameDataOverrides[game.id];
+  const teams: Team[] = _override?.teams?.length ? _override.teams : defaultTeams;
   const ringPhases: RingPhase[] = _override?.ringPhases?.length ? _override.ringPhases : defaultRingPhases;
   const events: GameEvent[] = _override?.events?.length ? _override.events : defaultEvents;
   const durationSec = _override?.durationSec ?? game.durationSec;
@@ -378,7 +379,7 @@ export function MatchViewer({ initialGameId }: { initialGameId?: string }) {
           />
           <div className="min-h-0 flex-1 overflow-y-auto p-2 scrollbar-slim">
             {[...teams].sort((a, b) => a.placement - b.placement).map((t) => (
-              <TeamRow key={t.id} team={t} active={selectedTeams.has(t.id)} hovered={hoverTeam === t.id}
+              <TeamRow key={t.id} team={t} slotIndex={teams.indexOf(t)} active={selectedTeams.has(t.id)} hovered={hoverTeam === t.id}
                 onToggle={() => toggleTeam(t.id)}
                 onHover={(v) => setHoverTeam(v ? t.id : null)}
                 logoSize={teamLogoSize} compact={teamCompact}
@@ -427,6 +428,7 @@ export function MatchViewer({ initialGameId }: { initialGameId?: string }) {
             focusRequest={focusRequest}
             onEventClick={handleEventClick}
             ringPhases={ringPhases}
+            teams={teams}
           />
 
           <Timeline time={time} duration={durationSec} playing={playing} speed={speed}
@@ -618,13 +620,13 @@ function PanelHeader({ title, subtitle }: { title: string; subtitle?: React.Reac
   );
 }
 
-function TeamRow({ team, active, hovered, onToggle, onHover, logoSize = 20, compact = false, alive }: {
-  team: Team; active: boolean; hovered: boolean; onToggle: () => void; onHover: (v: boolean) => void;
+function TeamRow({ team, slotIndex, active, hovered, onToggle, onHover, logoSize = 20, compact = false, alive }: {
+  team: Team; slotIndex: number; active: boolean; hovered: boolean; onToggle: () => void; onHover: (v: boolean) => void;
   logoSize?: number; compact?: boolean;
   /** Live alive override; falls back to the static `team.alive` flag. */
   alive?: boolean;
 }) {
-  const slotColor = getSlotColor(teams.indexOf(team));
+  const slotColor = getSlotColor(slotIndex);
   const nameSize = Math.max(12, Math.min(18, Math.round(logoSize * 0.6)));
   const isAlive = alive ?? team.alive;
   if (compact) {
@@ -729,7 +731,7 @@ function MapCanvas({
   time, ring, trajectories, dwellsByTeam, cfg, onCfg, showConfig, setShowConfig,
   selectedTeams, hoverTeam, showTrails, showLabels,
   mapImage, mapName, aliveTeams, totalKills, duration, deathTimes, ringIndex, ringCount, controls,
-  focusRequest, onEventClick, ringPhases,
+  focusRequest, onEventClick, ringPhases, teams,
 }: {
   time: number; ring: RingPhase | null;
   trajectories: Record<string, { t: number; x: number; y: number }[]>;
@@ -753,6 +755,7 @@ function MapCanvas({
   focusRequest: { x: number; y: number; token: number } | null;
   onEventClick: (e: GameEvent) => void;
   ringPhases: RingPhase[];
+  teams: Team[];
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const ringSegments = useMemo(() => buildRingSegments(ringPhases), [ringPhases]);

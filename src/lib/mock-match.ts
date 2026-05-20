@@ -290,12 +290,14 @@ import {
   testGameRingPhases,
   testGameEvents,
   testGameDurationSec,
+  testGameTeams,
 } from "./test-game-data";
 
 export type GameDataOverride = {
   ringPhases?: RingPhase[];
   events?: GameEvent[];
   durationSec?: number;
+  teams?: Team[];
 };
 
 export const gameDataOverrides: Record<string, GameDataOverride> = {
@@ -303,5 +305,6 @@ export const gameDataOverrides: Record<string, GameDataOverride> = {
     ringPhases: testGameRingPhases,
     events: testGameEvents,
     durationSec: testGameDurationSec,
+    teams: testGameTeams,
   },
 };
