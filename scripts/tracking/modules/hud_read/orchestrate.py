@@ -47,34 +47,27 @@ def spawn(args_list: list[str], chunk_id: str, log_lines: list[str]) -> subproce
 
 
 def stream_until_done(procs: list[tuple[str, subprocess.Popen]]) -> int:
-    """Читает stdout всех процессов параллельно, печатает с префиксом [wN].
-    Возвращает 0 если все ОК, иначе ненулевой код."""
-    import selectors
-    sel = selectors.DefaultSelector()
+    """Читает stdout всех процессов параллельно (поток на воркер,
+    кроссплатформенно). Печатает с префиксом [wN]."""
+    import threading
+    lock = threading.Lock()
+
+    def reader(cid: str, p: subprocess.Popen) -> None:
+        assert p.stdout is not None
+        for line in p.stdout:
+            with lock:
+                sys.stdout.write(f"[w{cid}] {line}")
+                sys.stdout.flush()
+
+    threads = []
     for cid, p in procs:
-        if p.stdout is not None:
-            sel.register(p.stdout, selectors.EVENT_READ, cid)
-    alive = {cid for cid, _ in procs}
-    while alive:
-        for key, _ in sel.select(timeout=0.5):
-            line = key.fileobj.readline()
-            if not line:
-                sel.unregister(key.fileobj)
-                alive.discard(key.data)
-                continue
-            sys.stdout.write(f"[w{key.data}] {line}")
-        # проверим завершившиеся
-        for cid, p in procs:
-            if p.poll() is not None and cid in alive:
-                # дочитаем хвост
-                if p.stdout:
-                    for line in p.stdout:
-                        sys.stdout.write(f"[w{cid}] {line}")
-                    try:
-                        sel.unregister(p.stdout)
-                    except (KeyError, ValueError):
-                        pass
-                alive.discard(cid)
+        t = threading.Thread(target=reader, args=(cid, p), daemon=True)
+        t.start()
+        threads.append(t)
+    for _, p in procs:
+        p.wait()
+    for t in threads:
+        t.join(timeout=2.0)
     codes = [p.returncode for _, p in procs]
     bad = [c for c in codes if c != 0]
     return bad[0] if bad else 0
