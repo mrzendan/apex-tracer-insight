@@ -198,57 +198,87 @@
     "phases": [
       {
         "ring": 1,
-        "cx_norm": 0.3914,
+        "cx_norm": 0.3926,
         "cy_norm": 0.3885,
         "r_norm": 0.3112,
         "measured_at_t": 100.6,
-        "samples": 5,
-        "geometry_confidence": "high"
+        "samples": 3,
+        "geometry_confidence": "high",
+        "pov_window": [
+          85.85,
+          115.35
+        ],
+        "pov_subwindows_total": 1
       },
       {
         "ring": 2,
-        "cx_norm": 0.42,
-        "cy_norm": 0.3874,
-        "r_norm": 0.3578,
+        "cx_norm": 0.484,
+        "cy_norm": 0.2918,
+        "r_norm": 0.2748,
         "measured_at_t": 500.6,
-        "samples": 5,
-        "geometry_confidence": "low"
+        "samples": 3,
+        "geometry_confidence": "low",
+        "pov_window": [
+          485.85,
+          515.35
+        ],
+        "pov_subwindows_total": 1
       },
       {
         "ring": 3,
         "cx_norm": 0.3949,
         "cy_norm": 0.2988,
-        "r_norm": 0.2702,
+        "r_norm": 0.2701,
         "measured_at_t": 725.12,
-        "samples": 5,
-        "geometry_confidence": "high"
+        "samples": 3,
+        "geometry_confidence": "low",
+        "pov_window": [
+          710.37,
+          739.87
+        ],
+        "pov_subwindows_total": 1
       },
       {
         "ring": 4,
         "cx_norm": 0.3103,
-        "cy_norm": 0.4643,
-        "r_norm": 0.2019,
+        "cy_norm": 0.4631,
+        "r_norm": 0.202,
         "measured_at_t": 870.62,
-        "samples": 5,
-        "geometry_confidence": "low"
+        "samples": 3,
+        "geometry_confidence": "low",
+        "pov_window": [
+          855.87,
+          885.37
+        ],
+        "pov_subwindows_total": 1
       },
       {
         "ring": 5,
         "cx_norm": 0.3537,
-        "cy_norm": 0.4235,
-        "r_norm": 0.2291,
+        "cy_norm": 0.4258,
+        "r_norm": 0.2284,
         "measured_at_t": 1000.68,
-        "samples": 5,
-        "geometry_confidence": "low"
+        "samples": 3,
+        "geometry_confidence": "low",
+        "pov_window": [
+          985.93,
+          1015.43
+        ],
+        "pov_subwindows_total": 1
       },
       {
         "ring": 6,
-        "cx_norm": 0.6349,
-        "cy_norm": 0.3035,
-        "r_norm": 0.1878,
+        "cx_norm": 0.2234,
+        "cy_norm": 0.0064,
+        "r_norm": 0.1893,
         "measured_at_t": 1120.68,
-        "samples": 5,
-        "geometry_confidence": "low"
+        "samples": 3,
+        "geometry_confidence": "low",
+        "pov_window": [
+          1105.93,
+          1135.43
+        ],
+        "pov_subwindows_total": 1
       }
     ]
   }
