@@ -284,3 +284,24 @@ export const events: GameEvent[] = [
   { t: 1210, type: "wipe",    team: "TSM", label: "TSM wipes MV" },
   { t: 1211, type: "endgame",              label: "Game ended" },
 ];
+
+// ── Override pipeline для реальных данных ────────────────────────────
+import {
+  testGameRingPhases,
+  testGameEvents,
+  testGameDurationSec,
+} from "./test-game-data";
+
+export type GameDataOverride = {
+  ringPhases?: RingPhase[];
+  events?: GameEvent[];
+  durationSec?: number;
+};
+
+export const gameDataOverrides: Record<string, GameDataOverride> = {
+  "m-test-g1": {
+    ringPhases: testGameRingPhases,
+    events: testGameEvents,
+    durationSec: testGameDurationSec,
+  },
+};
