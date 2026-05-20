@@ -5,7 +5,7 @@
 import elimRaw from "@/data/m-test-g1/eliminations.json";
 import ringsRaw from "@/data/m-test-g1/rings.json";
 import slotToTagRaw from "@/data/m-test-g1/slot-to-tag.json";
-import type { GameEvent, RingPhase } from "./mock-match";
+import type { GameEvent, RingPhase, Team } from "./mock-match";
 
 type ElimTeam = {
   f_first_dead: number | null;
@@ -106,4 +106,42 @@ export const testGameEvents: GameEvent[] = (() => {
     label: "Game ended",
   });
   return out.sort((a, b) => a.t - b.t);
+})();
+
+/** Палитра цветов для команд из реального матча. */
+const TEAM_PALETTE = [
+  "#ff5b12", "#22c4f5", "#ffd23f", "#e879f9", "#a78bfa",
+  "#fb923c", "#60a5fa", "#f87171", "#86efac", "#38bdf8",
+  "#34d399", "#facc15", "#fca5a5", "#fde68a", "#22d3ee",
+  "#f472b6", "#84cc16", "#c084fc", "#fb7185", "#5eead4",
+];
+
+export const testGameTeams: Team[] = (() => {
+  const slots = Object.keys(elim.teams).sort((a, b) => Number(a) - Number(b));
+  // Placement: команда жива → 1; иначе чем позже погибли, тем выше место.
+  const ranked = [...slots].sort((a, b) => {
+    const ta = elim.teams[a].t_first_dead;
+    const tb = elim.teams[b].t_first_dead;
+    if (ta == null && tb == null) return 0;
+    if (ta == null) return -1;
+    if (tb == null) return 1;
+    return tb - ta;
+  });
+  const placementBySlot = new Map<string, number>();
+  ranked.forEach((slot, i) => placementBySlot.set(slot, i + 1));
+
+  return slots.map((slot, idx) => {
+    const tag = slotToTag[slot] ?? `T${slot}`;
+    const dead = elim.teams[slot].t_first_dead != null;
+    return {
+      id: `t-test-${slot}`,
+      tag,
+      name: tag,
+      color: TEAM_PALETTE[idx % TEAM_PALETTE.length],
+      players: [],
+      placement: placementBySlot.get(slot) ?? Number(slot),
+      kills: 0,
+      alive: !dead,
+    } satisfies Team;
+  });
 })();
