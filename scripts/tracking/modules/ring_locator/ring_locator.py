@@ -41,22 +41,51 @@ def rect_from_zones(zones_path: Path, zone_sel: str) -> tuple[int, int, int, int
     )
 
 
-def load_cuts(path: Path | None) -> list[tuple[float, float]]:
-    """Возвращает интервалы [t0, t1], которые надо пропускать
-    (hud_events ± 0.5с, cut ± 0.5с)."""
+def load_cut_segments(
+    path: Path | None,
+) -> tuple[list[float], list[tuple[float, float]]]:
+    """Читает cuts.json и возвращает:
+    - cut_ts: моменты «жёстких» POV-катов (границы непрерывных POV-сегментов);
+    - hud_bad: интервалы ±0.5с вокруг hud_events (камера на месте,
+      но картинка дрожит — кадры использовать нельзя).
+    """
     if not path or not path.exists():
-        return []
+        return [], []
     data = json.loads(path.read_text(encoding="utf-8"))
-    bad: list[tuple[float, float]] = []
+    cut_ts: list[float] = []
     for ev in (data.get("events") or []):
         t = ev.get("t")
         if t is not None:
-            bad.append((t - 1.0, t + 1.0))
+            cut_ts.append(float(t))
+    cut_ts.sort()
+    hud_bad: list[tuple[float, float]] = []
     for ev in (data.get("hud_events") or []):
         t = ev.get("t")
         if t is not None:
-            bad.append((t - 0.5, t + 0.5))
-    return bad
+            hud_bad.append((float(t) - 0.5, float(t) + 0.5))
+    return cut_ts, hud_bad
+
+
+def pov_subwindows(
+    t_lo: float, t_hi: float, cut_ts: list[float], min_len: float = 2.0,
+) -> list[tuple[float, float]]:
+    """Режет окно [t_lo, t_hi] границами cut_ts. Возвращает под-окна
+    длиной ≥ min_len. Каждое под-окно — один непрерывный POV-сегмент."""
+    if t_hi <= t_lo:
+        return []
+    cuts_in = [t for t in cut_ts if t_lo < t < t_hi]
+    # Добавляем небольшой запас вокруг каждого ката (POV переключился),
+    # чтобы случайно не подхватить пограничный кадр.
+    pad = 0.5
+    points = [t_lo] + [
+        x for t in cuts_in for x in (t - pad, t + pad)
+    ] + [t_hi]
+    out: list[tuple[float, float]] = []
+    for i in range(0, len(points) - 1, 2):
+        a, b = points[i], points[i + 1]
+        if b - a >= min_len:
+            out.append((a, b))
+    return out
 
 
 def is_bad_time(t: float, bad: list[tuple[float, float]]) -> bool:
