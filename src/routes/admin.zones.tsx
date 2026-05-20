@@ -448,7 +448,6 @@ function ZonesAdmin() {
                     + Add
                   </button>
                 </div>
-                {tags.map((t) => (
                 {(() => {
                   const nonTeam = tags.filter((t) => !isTeamTag(t.id));
                   const teamTags = tags
