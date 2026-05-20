@@ -291,6 +291,7 @@ import {
   testGameEvents,
   testGameDurationSec,
   testGameTeams,
+  testGameTrajectories,
 } from "./test-game-data";
 
 export type GameDataOverride = {
@@ -298,6 +299,7 @@ export type GameDataOverride = {
   events?: GameEvent[];
   durationSec?: number;
   teams?: Team[];
+  trajectories?: Record<string, { t: number; x: number; y: number }[]>;
 };
 
 export const gameDataOverrides: Record<string, GameDataOverride> = {
@@ -306,5 +308,6 @@ export const gameDataOverrides: Record<string, GameDataOverride> = {
     events: testGameEvents,
     durationSec: testGameDurationSec,
     teams: testGameTeams,
+    trajectories: testGameTrajectories,
   },
 };
