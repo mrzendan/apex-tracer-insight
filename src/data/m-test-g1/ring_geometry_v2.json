@@ -1,0 +1,83 @@
+{
+  "video": "scripts\\tracking\\game.mp4",
+  "fps": 59.94005994005994,
+  "canonical": "storm_point",
+  "canonical_size": [
+    2048,
+    2048
+  ],
+  "camera_roi": [
+    437,
+    45,
+    1050,
+    1030
+  ],
+  "phases": [
+    {
+      "ring": 1,
+      "cx_canon_px": 802.0,
+      "cy_canon_px": 842.7,
+      "r_canon_px": 626.6,
+      "cx_canon_norm": 0.39161,
+      "cy_canon_norm": 0.41149,
+      "r_canon_norm": 0.30597,
+      "canonical_size": [
+        2048,
+        2048
+      ],
+      "samples": 4,
+      "spread_px": 0.2,
+      "rel_spread": 0.0,
+      "geometry_confidence": "high",
+      "measured_at_t": 393.44,
+      "pov_window": [
+        387.44,
+        399.44
+      ]
+    },
+    {
+      "ring": 2,
+      "cx_canon_px": 743.1,
+      "cy_canon_px": 528.3,
+      "r_canon_px": 303.5,
+      "cx_canon_norm": 0.36286,
+      "cy_canon_norm": 0.25798,
+      "r_canon_norm": 0.14817,
+      "canonical_size": [
+        2048,
+        2048
+      ],
+      "samples": 4,
+      "spread_px": 0.4,
+      "rel_spread": 0.001,
+      "geometry_confidence": "high",
+      "measured_at_t": 643.42,
+      "pov_window": [
+        637.42,
+        649.42
+      ]
+    },
+    {
+      "ring": 3,
+      "cx_canon_px": 687.1,
+      "cy_canon_px": 400.1,
+      "r_canon_px": 161.8,
+      "cx_canon_norm": 0.33551,
+      "cy_canon_norm": 0.19539,
+      "r_canon_norm": 0.07899,
+      "canonical_size": [
+        2048,
+        2048
+      ],
+      "samples": 2,
+      "spread_px": 0.1,
+      "rel_spread": 0.001,
+      "geometry_confidence": "medium",
+      "measured_at_t": 800.06,
+      "pov_window": [
+        791.66,
+        803.66
+      ]
+    }
+  ]
+}
