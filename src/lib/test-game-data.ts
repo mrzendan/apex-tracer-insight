@@ -23,13 +23,24 @@ type RingPhaseRaw = {
   closed_f: number | null;
   t_closed: number | null;
 };
-type RingsFile = { fps: number; phases: RingPhaseRaw[] };
+type RingGeomPhase = {
+  ring: number;
+  cx_norm: number | null;
+  cy_norm: number | null;
+  r_norm: number | null;
+  geometry_confidence?: string;
+};
+type RingsFile = {
+  fps: number;
+  phases: RingPhaseRaw[];
+  geometry?: { phases?: RingGeomPhase[] };
+};
 
 const elim = elimRaw as unknown as ElimFile;
 const rings = ringsRaw as unknown as RingsFile;
 const slotToTag = slotToTagRaw as unknown as Record<string, string>;
 
-/** Геометрия колец — пока mock (нужен minimap-locator для реальной). */
+/** Геометрия колец — fallback mock, если ring_locator ещё не отработал. */
 const RING_OFFSETS: { fx: number; fy: number }[] = [
   { fx: 0.0,  fy: 0.0  },
   { fx: 0.35, fy: -0.2 },
@@ -48,19 +59,31 @@ export const testGameDurationSec: number = Math.ceil(
 );
 
 export const testGameRingPhases: RingPhase[] = (() => {
-  // Соберём опорные тайминги начала закрытия каждой фазы.
   const closing = rings.phases
     .filter((p) => p.t_closing_start != null)
     .sort((a, b) => (a.ring - b.ring));
 
   if (closing.length === 0) return [];
 
-  // startSec фазы N = t_closing_start фазы N-1 (или 0 для первой).
-  // endSec фазы N = t_closing_start фазы N+1 (или duration для последней).
+  // Если есть реальная геометрия из ring_locator — берём её, иначе
+  // падаем на mock RING_OFFSETS, чтобы хоть что-то рисовать.
+  const geomByRing = new Map<number, RingGeomPhase>();
+  for (const g of rings.geometry?.phases ?? []) {
+    if (g.cx_norm != null && g.cy_norm != null && g.r_norm != null) {
+      geomByRing.set(g.ring, g);
+    }
+  }
+
   const out: RingPhase[] = [];
   let cx = 0.5, cy = 0.5, r = 0.46;
   for (let i = 0; i < closing.length; i++) {
-    if (i > 0) {
+    const ringN = closing[i].ring;
+    const real = geomByRing.get(ringN);
+    if (real) {
+      cx = real.cx_norm!;
+      cy = real.cy_norm!;
+      r = real.r_norm!;
+    } else if (i > 0) {
       const parent = out[i - 1];
       const off = RING_OFFSETS[i] ?? { fx: 0, fy: 0 };
       r = parent.r / 2;
