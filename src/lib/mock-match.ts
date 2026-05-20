@@ -103,6 +103,7 @@ export function matchDurationSec(match: Pick<MatchFull, "id" | "mapId" | "mapIds
 }
 
 export const tournaments: Tournament[] = [
+  { id: "test-tournament", name: "Test турнир",                  startDate: "2026-05-01", endDate: "2026-05-31", year: 6, type: "Online",    region: "EMEA", description: "Реальные данные из hud_read pipeline" },
   { id: "algs-2026-split-1", name: "ALGS 2026 — Split 1 Playoffs", startDate: "2026-02-14", endDate: "2026-02-18", year: 6, type: "LAN",       region: "North America" },
   { id: "esl-pro-league-12", name: "ESL Apex Pro League S12",      startDate: "2026-03-02", endDate: "2026-03-29", year: 6, type: "Online",    region: "EMEA" },
   { id: "scrims-eu-week-4",  name: "EU Pro Scrims — Week 4",       startDate: "2026-04-06", endDate: "2026-04-10", year: 6, type: "Qualifier", region: "EMEA" },
@@ -121,6 +122,8 @@ export const maps: ApexMap[] = [
 ];
 
 export const matches: Match[] = [
+  // Test = единственный матч с реальными данными hud_read (см. src/data/m-test-g1/).
+  { id: "m-test", name: "Test матч", tournamentId: "test-tournament", mapId: "storm-point", durationSec: 1174 },
   // Match = серия игр (карт) внутри турнира. mapId/durationSec — это первая игра (для обратной совместимости),
   // полный список игр живёт в MatchExtras.mapIds (см. admin-store / getGames()).
   { id: "m-001", name: "Match Day 1", tournamentId: "algs-2026-split-1", mapId: "worlds-edge", durationSec: 1320 },
@@ -133,6 +136,7 @@ export const matches: Match[] = [
  * Применяется через admin-store. Длительности по каждой game — gameDurations.
  */
 export const matchSeedExtras: Record<string, Pick<MatchExtras, "mapIds" | "gameDurations">> = {
+  "m-test": { mapIds: ["storm-point"],                              gameDurations: [1174] },
   "m-001": { mapIds: ["worlds-edge", "storm-point"],                 gameDurations: [1320, 1480] },
   "m-002": { mapIds: ["broken-moon", "e-district"],                  gameDurations: [1190, 1260] },
   "m-003": { mapIds: ["olympus", "kings-canyon"],                    gameDurations: [1400, 1320] },
@@ -280,3 +284,24 @@ export const events: GameEvent[] = [
   { t: 1210, type: "wipe",    team: "TSM", label: "TSM wipes MV" },
   { t: 1211, type: "endgame",              label: "Game ended" },
 ];
+
+// ── Override pipeline для реальных данных ────────────────────────────
+import {
+  testGameRingPhases,
+  testGameEvents,
+  testGameDurationSec,
+} from "./test-game-data";
+
+export type GameDataOverride = {
+  ringPhases?: RingPhase[];
+  events?: GameEvent[];
+  durationSec?: number;
+};
+
+export const gameDataOverrides: Record<string, GameDataOverride> = {
+  "m-test-g1": {
+    ringPhases: testGameRingPhases,
+    events: testGameEvents,
+    durationSec: testGameDurationSec,
+  },
+};

@@ -1,118 +1,159 @@
-## Что улучшаем
+# План: точные тайминги колец + визуализация Test-матча
 
-1. **Точность вылетов** — сейчас бинпоиск в scout даёт окно ≈ `reverse_step / 2^refine_budget`. При `1800 / 2^6 ≈ 28 кадров` (≈0.5с при 60fps). Хочется кадровой точности.
-2. **Скорость forward-прохода** — параллелим по кадровым блокам отдельными процессами.
-
----
-
-## Часть 1. Повышение точности вылетов (scout/refine)
-
-### 1.1 Двухступенчатый refine
-Вместо одного `refine_budget=6`:
-
-- **Stage A (бинпоиск, как сейчас):** `refine_budget` поднимаем до 10 → окно `1800/1024 ≈ 2 кадра`. Это +4 OCR-вызова на команду (≈ +80 OCR на матч → секунды).
-- **Stage B (линейный «доводчик»):** после бинпоиска идём от `f_last_alive` вперёд шагом 1 максимум `--refine-linear` кадров (по умолчанию 4) и фиксируем точный кадр перехода `alive → dead`. Кадровая точность гарантирована.
-
-Итого ≤ ~14 OCR-вызовов на команду в refine-стадии. На 20 командах ≈ 280 — несколько секунд.
-
-### 1.2 Опциональный «откат и уменьшение шага» (--refine-rollback)
-Альтернативный режим, который ты описал словами: после первого определения окна делаем второй проход scout-стилем с меньшим шагом (например, 60 кадров) внутри окна `[f_last_alive - margin, f_first_dead + margin]`. Полезно, если eliminated мерцает (анимации HUD).
-
-Делается флагом `--refine-rollback <step>`. По умолчанию выключен — линейного доводчика хватает.
-
-### 1.3 Sanity-check
-- Если в `f_first_dead` зона возвращается в `alive` в течение N кадров — это шум HUD; откатываем флаг и продолжаем поиск дальше.
-- Логируем в `eliminations.json` поле `refine_method: "binary+linear"` и итоговую ширину окна (для прозрачности).
-
-### CLI / push.ps1
-- `-RefineBudget` дефолт **10** (было 6).
-- `-RefineLinear` дефолт **4** (новый).
-- `-RefineRollback` дефолт **0** (off).
+Две связанные части — серверная (улучшаем точность поиска кольца) и фронтовая (выводим результаты hud_read как реальный матч в UI).
 
 ---
 
-## Часть 2. Параллелизация forward по блокам
+## Часть 1. Высокоточный поиск таймингов кольца (Ring scout)
 
-### 2.1 Архитектура
+Сейчас `ring_status` парсится только когда forward-проход случайно попадает на кадр с подсказкой "RING N CLOSING" (в текущем прогоне это ~32% кадров). Шаг 600 кадров (~10с) грубо ловит, **в какой фазе мы находимся**, но не **когда именно** была смена ring N → ring N+1. Применим тот же приём, что и для eliminations: разведка большим шагом + бинпоиск + линейный доводчик.
 
-```text
-push.ps1
-  └── orchestrator (Python, новый: hud_read_run.py или флаг --workers N)
-        ├── scout pass (1 процесс, как сейчас)         → eliminations.json
-        ├── split [start_f .. end_f] на N кадровых блоков
-        ├── spawn N процессов hud_read.py --mode forward
-        │     --start-frame Fi --end-frame Fj
-        │     --out reports/_chunk_i
-        │     --chunk-id i
-        └── merge: reports/_chunk_*/hud_timeline.json → reports/hud_timeline.json
-              + объединить report.txt (агрегация %)
-              + перенести overlays/crops с префиксом chunk-id
+### Алгоритм (новая функция `scout_rings` в `hud_read.py`)
+
+1. **Coarse pass** — идём вперёд от `start_f` шагом `--ring-scout-step` (по умолчанию 600 кадров ≈10с). На каждом кадре читаем зону `ring_status`, получаем `(ring_n, state)` (где state ∈ CLOSING/COUNTDOWN/CLOSED/OPEN). Запоминаем последний наблюдавшийся `(ring_n, state)`.
+2. **Detect transition** — как только видим переход `ring_n → ring_n+1` или `state X → state Y` внутри одной фазы (например `CLOSING → COUNTDOWN`), фиксируем интервал `[f_prev, f_curr]`.
+3. **Stage A — binary search** в окне `[f_prev, f_curr]`, бюджет `--ring-refine-budget` (по умолчанию 10) → окно ~600/1024 < 1 кадра.
+4. **Stage B — linear refiner** ± `--ring-refine-linear` (по умолчанию 4) кадра вокруг кандидата → гарантированная кадровая точность транзишена.
+5. **Sanity check** — если внутри окна OCR дал противоречивые ответы (мерцание HUD/анимация перехода), отметить событие `confidence: "low"` и записать оба соседних кадра.
+
+### Что писать в `reports/rings.json`
+
+```json
+{
+  "video": "...",
+  "fps": 59.94,
+  "scout_step": 600,
+  "refine_budget": 10,
+  "refine_linear": 4,
+  "transitions": [
+    { "f": 5400, "t": 90.09, "from": {"ring":0,"state":"COUNTDOWN"},
+      "to":   {"ring":1,"state":"CLOSING"}, "confidence":"high",
+      "refine_method":"binary8+linear1", "refine_window":1 },
+    { "f": 12060, "t": 201.20, "from":{"ring":1,"state":"CLOSING"},
+      "to":  {"ring":1,"state":"COUNTDOWN"}, "confidence":"high",
+      "refine_method":"binary7+linear2", "refine_window":1 }
+  ],
+  "phases": [
+    { "ring": 1, "countdown_start_f": null, "closing_start_f": 5400,
+      "closed_f": 12060, "t_closing_start": 90.09, "t_closed": 201.20 },
+    { "ring": 2, "countdown_start_f": 12060, "closing_start_f": 14250, ... }
+  ]
+}
 ```
 
-### 2.2 Что меняем в `hud_read.py`
-- Новые аргументы: `--start-frame`, `--end-frame` (точные кадры; имеют приоритет над `--start-sec`/`--end-sec`).
-- Новый аргумент `--chunk-id` (строка): добавляется в имена файлов `overlays/hud_<chunk>_<frame>.jpg` и `crops/<tag>__<name>/<chunk>_<frame>.png`, чтобы не перетирали друг друга.
-- Worker не запускает scout сам — получает готовый `eliminations.json` через `--eliminations <path>` и сам обрезает свою область интереса (если команда вылетела до начала чанка — её зоны можно пропускать).
-- tqdm с `position=chunk_id` и `desc=f"chunk{i}"` — несколько баров одновременно.
+`phases[]` — агрегат поверх `transitions[]`, уже готовый под фронтовой `RingPhase`.
 
-### 2.3 Оркестратор
-Новый файл `scripts/tracking/modules/hud_read/orchestrate.py`:
+### CLI и push.ps1
+Новые параметры в `hud_read.py`:
+- `--ring-scout-step` (def 600)
+- `--ring-refine-budget` (def 10)
+- `--ring-refine-linear` (def 4)
+- Режим `--mode rings-only` для отдельного быстрого прогона.
 
-- Считает `total_frames`, делит на `N` равных блоков (N = `--workers`, по умолчанию `os.cpu_count() // 2`, минимум 2).
-- Через `subprocess.Popen` запускает `python hud_read.py --mode forward ...` для каждого блока.
-- Читает stdout/stderr воркеров с префиксами `[w{i}]`.
-- После всех `wait()` — merge:
-  - `hud_timeline.json`: конкатенация снапшотов, сортировка по `frame`.
-  - `report.txt`: пересчёт % по объединённому набору (один проход агрегации).
-  - `overlays/` и `crops/`: воркеры писали в свои подпапки `_chunk_i/`, мерджер переносит наверх (имена уже уникальные за счёт `--chunk-id`).
-- Гарантирует, что границы блоков перекрываются на 1 шаг (`frame_step`), чтоб никакой кадр не потерялся.
+В `push.ps1` добавляем `-RingScoutStep`, `-RingRefineBudget`, `-RingRefineLinear`. В режиме `two-pass` рейтинг рассчитывается автоматически после scout эл-ций.
 
-### 2.4 Что НЕ параллелим
-- Scout (он и так быстрый: ~1 минута на матч).
-- Статические поля (`map name`, `game number`, team `name`/`logo`) — каждый воркер фиксирует независимо; в мерджере берём моду по чанкам.
-
-### CLI / push.ps1
-- `-Workers <N>`: число параллельных процессов. По умолчанию 0 = не параллелить (текущее поведение).
-- `-Mode two-pass-parallel`: scout + параллельный forward.
-
-### 2.5 Подводные камни
-- **Windows + Tesseract**: `pytesseract` спавнит `tesseract.exe` для каждой OCR-команды. N=4 воркеров → 4× процессы tesseract одновременно. CPU-bound, отлично распараллеливается. Memory ~150 MB / воркер.
-- **VideoCapture seek**: каждый воркер делает `set(POS_FRAMES, start_f)` один раз и читает подряд → нормально.
-- **dHash-кеш и калибровка PSM**: у каждого процесса свои; первые кадры каждого чанка прогреваются заново. Терпимо, можно позже добавить shared-cache через файл.
-- **Логи в консоль**: смешанные stdout от N воркеров — пишем с префиксом `[wN]`, tqdm в `position=N`.
+### Скорость
+- Coarse pass от 0 до конца с step=600 при 70k кадров → ~120 OCR-проб.
+- На каждый transition (обычно 5–10 за матч): 10 binary + 4 linear ≈ 14 OCR.
+- Итого +200–300 OCR-вызовов на матч ≈ +30–60с.
 
 ---
 
-## Часть 3. Что НЕ делаем сейчас (опционально на будущее)
+## Часть 2. Test-турнир / Test-матч / Game 1 на главной + синхронизация данных
 
-- PyAV вместо OpenCV для seek — даст ещё прирост на длинных VOD, но добавляет зависимость.
-- Shared OCR-cache между воркерами через SQLite/файл — усложнение ради 5-10% выигрыша.
-- GPU-ускорение Tesseract — не поддерживается.
+### 2.1 Seed данных
+Добавить в `src/lib/mock-match.ts`:
+
+- В `tournaments[]`:
+  ```ts
+  { id: "test-tournament", name: "Test турнир", startDate: "2026-05-01",
+    endDate: "2026-05-31", year: 6, type: "Online", region: "EMEA" }
+  ```
+- В `matches[]`:
+  ```ts
+  { id: "m-test", name: "Test матч", tournamentId: "test-tournament",
+    mapId: "storm-point", durationSec: 1174 }
+  ```
+- В `matchSeedExtras`:
+  ```ts
+  "m-test": { mapIds: ["storm-point"], gameDurations: [1174] }
+  ```
+  (1174с ≈ длина игры из hud_read: `t_last_alive` = 1173.96)
+
+- В `processingFor()` (`src/routes/index.tsx`) добавить явный override для `m-test`: `{ trajectory: "missing", rings: "ready", events: "ready" }` — чтобы карточка матча на главной сразу подсвечивала, какие пайплайны реально готовы по реальным данным.
+
+### 2.2 Перенос реальных данных в публичную папку
+
+Скопировать (через сборку) во время dev:
+```
+public/data/m-test-g1/
+  eliminations.json   ← из scripts/.../reports/eliminations.json
+  rings.json          ← из новой части 1
+  hud_timeline.json   ← из scripts/.../reports/hud_timeline.json (опционально)
+```
+
+Версионируем через git (файлы небольшие). Простой ручной шаг — копирование. Альтернатива: статический импорт через `import elim from "@/data/m-test-g1/eliminations.json"`, тогда положим в `src/data/m-test-g1/`. **Предпочтительно**: статический импорт — типизация, нет fetch-задержек.
+
+### 2.3 Гидрация MatchViewer реальными данными
+
+В `src/lib/mock-match.ts` добавить helper:
+```ts
+export type GameDataOverride = {
+  ringPhases?: RingPhase[];
+  events?: GameEvent[];
+  durationSec?: number;
+};
+export const gameDataOverrides: Record<string, GameDataOverride> = {
+  "m-test-g1": loadTestGame1(),
+};
+```
+`loadTestGame1()` читает импортированные `eliminations.json` + `rings.json` и конвертирует:
+
+- **rings.json → RingPhase[]**: каждая фаза становится `{ startSec, endSec, cx, cy, r }`. Геометрию (cx/cy/r) пока берём из текущего `buildRingPhases` (без миникарт-локатора), но **тайминги** — реальные из `phases[].t_closing_start`/`t_closed`.
+- **eliminations.json → GameEvent[]**: каждая команда с `t_first_dead != null` → `{ t, type: "wipe", team: <slot→tag>, label: "Team X eliminated" }`. Sort by t.
+
+В `MatchViewer`:
+- В местах, где сейчас используется `ringPhases` и `events`, заменить на `gameDataOverrides[game.id]?.ringPhases ?? ringPhases` и аналогично для events.
+- `durationSec` — взять из override, если есть.
+
+Для слотов 1–20 в `eliminations.json` нужен маппинг slot→team tag. Возьмём из `hud_timeline.json` (там есть `teams[].name` и `slot`). Заранее закодируем как `slotToTag.json` в `src/data/m-test-g1/` (одна разовая операция, см. ниже).
+
+### 2.4 Главная страница
+- `featured` теперь будет выбирать m-test (если его `overall === "ready"`) или явно через приоритет `m-test`. Добавим: `const ready = matches.find(m => m.id === "m-test") ?? matches.find(...)`.
+- В `recentMatches` он попадёт автоматически.
+
+### 2.5 Скрипт синхронизации
+Добавить `scripts/tracking/modules/hud_read/sync_to_ui.py`:
+- читает `reports/eliminations.json` + `reports/rings.json` + `reports/hud_timeline.json`
+- пишет в `src/data/m-test-g1/`: те же три файла + сгенерированный `slot-to-tag.json`
+- запускается из `push.ps1` опцией `-SyncUI`.
 
 ---
 
-## Технические детали реализации
+## Что НЕ делаем сейчас
+- Геометрию колец (cx/cy/r) реальную — для неё нужен minimap-locator. Сейчас оставляем мок-геометрию, заменяем только тайминги.
+- Реальные траектории команд — это отдельный пайплайн `track_teams`.
+- БД/Supabase — данные читаем статически из репозитория. Когда пайплайн станет регулярным, перенесём в storage.
 
-**Файлы, которые поменяем:**
-- `scripts/tracking/modules/hud_read/hud_read.py`
-  - в `scout_eliminations`: после бинпоиска добавить линейный доводчик (Stage B) и опциональный rollback (Stage C). Сохранять `refine_window_width`, `refine_method`.
-  - принять `--start-frame`, `--end-frame`, `--chunk-id`, `--eliminations` (read-only для воркеров).
-  - оверлеи и кропы писать с префиксом `chunk-id` если он задан.
-- `scripts/tracking/modules/hud_read/orchestrate.py` (новый) — оркестратор для параллельного forward + merge.
-- `scripts/tracking/modules/hud_read/push.ps1`
-  - параметры `-RefineBudget` (дефолт 10), `-RefineLinear` (дефолт 4), `-RefineRollback` (дефолт 0), `-Workers` (дефолт 0).
-  - если `-Workers > 0` — зовём `orchestrate.py`, иначе старый путь `hud_read.py`.
-- `scripts/tracking/modules/hud_read/README.md` — раздел «Точность» (двухступенчатый refine) и «Параллелизация» (как `-Workers` делит блоки и что мерджится).
+---
 
-**Что НЕ трогаем:**
-- Формат `hud_timeline.json` (только дополняется).
-- UI/zones/admin.
-- Логику OCR и кешей — расширяем точечно.
+## Файлы, которые будут изменены / созданы
+
+**Бэкенд (Python):**
+- `scripts/tracking/modules/hud_read/hud_read.py` — `scout_rings()`, новые CLI-флаги, режим `rings-only`
+- `scripts/tracking/modules/hud_read/push.ps1` — параметры + опция `-SyncUI`
+- `scripts/tracking/modules/hud_read/sync_to_ui.py` — **new**
+- `scripts/tracking/modules/hud_read/README.md` — секция Ring scout
+
+**Фронт:**
+- `src/lib/mock-match.ts` — Test-турнир/матч + `gameDataOverrides`
+- `src/data/m-test-g1/{eliminations,rings,hud_timeline,slot-to-tag}.json` — **new**
+- `src/routes/index.tsx` — приоритет m-test в featured + правка `processingFor` override
+- `src/components/MatchViewer.tsx` — подмена `ringPhases`/`events` через `gameDataOverrides`
 
 ---
 
 ## Открытые вопросы
-
-1. **`-Workers` по умолчанию = 0 (off) или auto = `cpu_count/2`?** Безопаснее off, чтобы пользователь явно решал.
-2. **Linear refine после бинпоиска** — включаем всегда или флагом? Предлагаю всегда (стоит копейки).
-3. **Rollback-режим (-RefineRollback)** оставляем как опцию или не делаем сейчас? Скорее всего не нужен, если linear-доводчик работает.
+1. **Имена команд по слотам** для Test-матча — берём напрямую из `hud_timeline.json` (`teams[].name`: ELTE, FREE, FXI, NIPC, …) или сгенерировать `T1..T20`? Я предлагаю первый вариант — это реальные команды из видео.
+2. **Featured-карточка** — m-test всегда featured или только когда нет других "ready"? Предлагаю всегда (это единственный матч с реальными данными).
+3. **rings-only** как отдельный режим или всегда часть `two-pass`? Предлагаю встроить в `two-pass` + оставить `rings-only` для быстрой переразведки.

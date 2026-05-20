@@ -7,8 +7,9 @@ import {
   matchSeedExtras,
   teams,
   generateTrajectory,
-  ringPhases,
-  events,
+  ringPhases as defaultRingPhases,
+  events as defaultEvents,
+  gameDataOverrides,
   getGames,
   parseGameId,
   type Team,
@@ -53,14 +54,16 @@ function matchesFilter(e: GameEvent, f: EventFilter) {
 /** Split each ring phase into CD (waiting) and Closing windows. */
 const RING_CLOSE_FRACTION = 0.4;
 type RingSegment = { phaseIndex: number; kind: "CD" | "Closing"; startSec: number; endSec: number };
-const ringSegments: RingSegment[] = ringPhases.flatMap((p, i) => {
-  const dur = p.endSec - p.startSec;
-  const closeStart = p.startSec + dur * (1 - RING_CLOSE_FRACTION);
-  return [
-    { phaseIndex: i, kind: "CD",      startSec: p.startSec, endSec: closeStart } as RingSegment,
-    { phaseIndex: i, kind: "Closing", startSec: closeStart, endSec: p.endSec }    as RingSegment,
-  ];
-});
+function buildRingSegments(phases: RingPhase[]): RingSegment[] {
+  return phases.flatMap((p, i) => {
+    const dur = p.endSec - p.startSec;
+    const closeStart = p.startSec + dur * (1 - RING_CLOSE_FRACTION);
+    return [
+      { phaseIndex: i, kind: "CD",      startSec: p.startSec, endSec: closeStart } as RingSegment,
+      { phaseIndex: i, kind: "Closing", startSec: closeStart, endSec: p.endSec }    as RingSegment,
+    ];
+  });
+}
 
 export function MatchViewer({ initialGameId }: { initialGameId?: string }) {
   const initial = (() => {
@@ -89,7 +92,11 @@ export function MatchViewer({ initialGameId }: { initialGameId?: string }) {
   const games = useMemo(() => getGames(matchEnriched), [matchEnriched]);
   const game = games[Math.min(gameIndex, games.length - 1)] ?? games[0];
   const apexMap = maps.find((m) => m.id === game.mapId)!;
-  const durationSec = game.durationSec;
+  const _override = gameDataOverrides[game.id];
+  const ringPhases: RingPhase[] = _override?.ringPhases?.length ? _override.ringPhases : defaultRingPhases;
+  const events: GameEvent[] = _override?.events?.length ? _override.events : defaultEvents;
+  const durationSec = _override?.durationSec ?? game.durationSec;
+  const ringSegments = useMemo(() => buildRingSegments(ringPhases), [ringPhases]);
 
   const [time, setTime] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -720,7 +727,7 @@ function MapCanvas({
   time, ring, trajectories, dwellsByTeam, cfg, onCfg, showConfig, setShowConfig,
   selectedTeams, hoverTeam, showTrails, showLabels,
   mapImage, mapName, aliveTeams, totalKills, duration, deathTimes, ringIndex, ringCount, controls,
-  focusRequest, onEventClick,
+  focusRequest, onEventClick, ringPhases,
 }: {
   time: number; ring: RingPhase | null;
   trajectories: Record<string, { t: number; x: number; y: number }[]>;
@@ -743,6 +750,7 @@ function MapCanvas({
   };
   focusRequest: { x: number; y: number; token: number } | null;
   onEventClick: (e: GameEvent) => void;
+  ringPhases: RingPhase[];
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [view, setView] = useState({ scale: 1, tx: 0, ty: 0 });
