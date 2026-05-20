@@ -332,7 +332,14 @@ def scout_rings(cap: cv2.VideoCapture, zones_scaled: list[dict],
                 scout_step: int, lang: str,
                 refine_budget: int = 10,
                 refine_linear: int = 4) -> dict[str, Any]:
-    """Coarse forward-pass + бинпоиск + линейный доводчик границ ring-фаз."""
+    """Coarse forward-pass + find-then-rollback для каждого ring.
+
+    Алгоритм: проходим вперёд крупным шагом, фиксируем все samples;
+    затем для каждого ring N, у которого видели CLOSING, откатываемся
+    назад чтобы найти точный t_closing_start[N] (граница ≠CLOSING(N) →
+    CLOSING(N)) и t_countdown_start[N] (граница ≠COUNTDOWN(N) →
+    COUNTDOWN(N)). Не требует знать тайминги колец заранее.
+    """
     ring_zone = next(
         (z for z in zones_scaled if z["tag"] == "hud" and z["name"] == "ring status"),
         None,
@@ -358,141 +365,125 @@ def scout_rings(cap: cv2.VideoCapture, zones_scaled: list[dict],
         f += scout_step
     pbar.close()
 
-    # Найдём transitions между соседними непустыми samples с разными ключами.
-    transitions: list[dict] = []
-    prev_idx = None
-    for i, (fi, si) in enumerate(samples):
-        if si is None:
-            continue
-        if prev_idx is None:
-            prev_idx = i
-            continue
-        fp, sp = samples[prev_idx]
-        if _ring_state_key(si) != _ring_state_key(sp):
-            transitions.append({
-                "from": sp, "to": si,
-                "f_lo": fp, "f_hi": fi,
-            })
-        prev_idx = i
-
-    # Seed: первое валидное наблюдение даёт нам фазу, которая уже шла
-    # до окна сканирования (R1 CLOSING на 1:55, если scout стартовал с t=100).
-    first_obs: tuple[int, dict] | None = None
+    # Для каждого ring N собираем все samples, где видели его в этом state.
+    # earliest_by[(N, STATE)] = минимальный кадр, на котором мы это видели.
+    # latest_other_by[(N, STATE)] = максимальный кадр ДО earliest_by,
+    #     где видели НЕ (N, STATE) (или None/другой ring/state).
+    earliest_by: dict[tuple[int, str], int] = {}
     for fi, si in samples:
-        if si is not None:
-            first_obs = (fi, si)
-            break
+        if not si:
+            continue
+        key = (si["ring"], si["state"])
+        if key not in earliest_by or fi < earliest_by[key]:
+            earliest_by[key] = fi
 
-    print(f"[hud_read][ring-scout] coarse found {len(transitions)} transitions, "
-          f"refining (binary≤{refine_budget} + linear≤{refine_linear})")
-
-    refined: list[dict] = []
-    for t in transitions:
-        lo, hi = t["f_lo"], t["f_hi"]
-        from_key = _ring_state_key(t["from"])
-        to_key = _ring_state_key(t["to"])
-        # Stage A — бинпоиск
+    def _rollback_start(target_ring: int, target_state: str,
+                        f_hi_known: int) -> tuple[int | None, str]:
+        """Найти кадр f, где впервые наблюдается (target_ring, target_state).
+        Идём назад от f_hi_known шагом scout_step, пока state == target.
+        Затем бинпоиск + линейный доводчик в окне [f_lo, f_hi].
+        Возвращает (f_start, confidence)."""
+        target = (target_ring, target_state)
+        # f_hi: подтверждённый кадр target. f_lo: ищем.
+        f_hi = f_hi_known
+        f_lo: int | None = None
+        cur = f_hi - scout_step
+        max_back_iters = max(1, (f_hi_known // scout_step) + 2)
+        iters = 0
+        while cur >= 0 and iters < max_back_iters:
+            rs = read_ring_at(cap, cur, ring_zone, lang)
+            k = _ring_state_key(rs)
+            if k == target:
+                f_hi = cur
+            else:
+                f_lo = cur
+                break
+            cur -= scout_step
+            iters += 1
+        if f_lo is None:
+            # Упёрлись в t=0, значит фаза началась с самого начала видео.
+            return (f_hi, "boundary")
+        # Stage A — бинпоиск границы перехода ≠target → target.
         steps = 0
         confidence = "high"
-        while hi - lo > 1 and steps < refine_budget:
-            mid = (lo + hi) // 2
+        last_unknown = False
+        while f_hi - f_lo > 1 and steps < refine_budget:
+            mid = (f_lo + f_hi) // 2
             rs = read_ring_at(cap, mid, ring_zone, lang)
             k = _ring_state_key(rs)
             if k is None:
-                # неопределённый кадр — двигаем hi и понижаем доверие
-                hi = mid
-                confidence = "low"
-            elif k == from_key:
-                lo = mid
-            elif k == to_key:
-                hi = mid
+                # пустой кадр — двигаем f_lo (ещё нет плашки/перехода)
+                f_lo = mid
+                last_unknown = True
+            elif k == target:
+                f_hi = mid
             else:
-                # промежуточное состояние — считаем «уже после» и понижаем доверие
-                hi = mid
-                confidence = "low"
+                f_lo = mid
             steps += 1
-        # Stage B — линейный доводчик
+        # Stage B — линейный доводчик до кадровой точности.
         linear_used = 0
-        while hi - lo > 1 and linear_used < refine_linear:
-            cur = lo + 1
-            rs = read_ring_at(cap, cur, ring_zone, lang)
+        while f_hi - f_lo > 1 and linear_used < refine_linear:
+            cur2 = f_lo + 1
+            rs = read_ring_at(cap, cur2, ring_zone, lang)
             k = _ring_state_key(rs)
             if k is None:
-                break
-            if k == from_key:
-                lo = cur
+                f_lo = cur2
+                last_unknown = True
+            elif k == target:
+                f_hi = cur2
             else:
-                hi = cur
+                f_lo = cur2
             linear_used += 1
-        refined.append({
-            "f": hi,
-            "t": round(hi / fps, 3),
-            "from": t["from"],
-            "to": t["to"],
-            "confidence": confidence,
-            "refine_method": f"binary{steps}+linear{linear_used}",
-            "refine_window": hi - lo,
-        })
-        tqdm.write(
-            f"  R{t['from']['ring']}{t['from']['state'][:3]}"
-            f"→R{t['to']['ring']}{t['to']['state'][:3]}: "
-            f"f~{hi} t~{hi/fps:.2f}s window={hi-lo} ({confidence})"
-        )
+        if last_unknown:
+            confidence = "medium"
+        return (f_hi, confidence)
 
-    # Агрегируем фазы (по ring number)
+    # Список (ring, state, f_observed) для rollback. Только CLOSING/COUNTDOWN/CLOSED.
+    rings_to_resolve = sorted(
+        {r for (r, _s) in earliest_by.keys()}
+    )
+    print(f"[hud_read][ring-scout] coarse found rings: {rings_to_resolve} "
+          f"(rollback budget binary≤{refine_budget} + linear≤{refine_linear})")
+
     phases_map: dict[int, dict] = {}
-    # Seed pre-window phase, если первое наблюдение не совпадает ни с одним «to».
-    if first_obs is not None:
-        f0, s0 = first_obs
-        already_seeded = any(
-            r["to"]["ring"] == s0["ring"] and r["to"]["state"] == s0["state"]
-            for r in refined
-        )
-        if not already_seeded:
-            ring_n = s0["ring"]
-            ph = phases_map.setdefault(ring_n, {
-                "ring": ring_n,
-                "countdown_start_f": None, "t_countdown_start": None,
-                "closing_start_f": None,   "t_closing_start": None,
-                "closed_f": None,          "t_closed": None,
-            })
-            field_f = {
-                "COUNTDOWN": "countdown_start_f",
-                "CLOSING":   "closing_start_f",
-                "CLOSED":    "closed_f",
-            }.get(s0["state"])
-            field_t = {
-                "COUNTDOWN": "t_countdown_start",
-                "CLOSING":   "t_closing_start",
-                "CLOSED":    "t_closed",
-            }.get(s0["state"])
-            if field_f:
-                ph[field_f] = f0
-                ph[field_t] = round(f0 / fps, 3)
-                ph["pre_window"] = True
-                tqdm.write(
-                    f"[hud_read][ring-scout] seed R{ring_n} {s0['state']}: "
-                    f"начато до окна сканирования (наблюдение в t~{f0/fps:.1f}s)"
-                )
-    for r in refined:
-        ring_n = r["to"]["ring"]
-        state = r["to"]["state"]
-        phases_map.setdefault(ring_n, {
+    transitions: list[dict] = []
+    for ring_n in rings_to_resolve:
+        ph = phases_map.setdefault(ring_n, {
             "ring": ring_n,
             "countdown_start_f": None, "t_countdown_start": None,
             "closing_start_f": None,   "t_closing_start": None,
             "closed_f": None,          "t_closed": None,
         })
-        ph = phases_map[ring_n]
-        if state == "COUNTDOWN" and ph["countdown_start_f"] is None:
-            ph["countdown_start_f"] = r["f"]; ph["t_countdown_start"] = r["t"]
-        elif state == "CLOSING" and ph["closing_start_f"] is None:
-            ph["closing_start_f"] = r["f"]; ph["t_closing_start"] = r["t"]
-        elif state == "CLOSED" and ph["closed_f"] is None:
-            ph["closed_f"] = r["f"]; ph["t_closed"] = r["t"]
+        for state, field_f, field_t in (
+            ("COUNTDOWN", "countdown_start_f", "t_countdown_start"),
+            ("CLOSING",   "closing_start_f",   "t_closing_start"),
+            ("CLOSED",    "closed_f",          "t_closed"),
+        ):
+            f_obs = earliest_by.get((ring_n, state))
+            if f_obs is None:
+                continue
+            f_start, conf = _rollback_start(ring_n, state, f_obs)
+            if f_start is None:
+                continue
+            ph[field_f] = f_start
+            ph[field_t] = round(f_start / fps, 3)
+            if conf != "high":
+                ph.setdefault("confidence", {})[state] = conf
+            transitions.append({
+                "f": f_start,
+                "t": round(f_start / fps, 3),
+                "to": {"ring": ring_n, "state": state},
+                "confidence": conf,
+                "refine_method": "rollback",
+            })
+            tqdm.write(
+                f"  R{ring_n} {state}: f={f_start} t={f_start/fps:.2f}s "
+                f"(obs@t={f_obs/fps:.1f}s) {conf}"
+            )
+
     phases = [phases_map[k] for k in sorted(phases_map)]
     derived = _derive_ring_constants(phases, fps)
-    return {"transitions": refined, "phases": phases, "derived": derived}
+    return {"transitions": transitions, "phases": phases, "derived": derived}
 
 
 def _derive_ring_constants(phases: list[dict], fps: float) -> dict:
