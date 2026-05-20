@@ -21,7 +21,6 @@ import { TeamLogo } from "@/components/admin/TeamLogo";
 import { getSlotColor } from "@/lib/team-colors";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { DensityToggle } from "@/components/DensityToggle";
-import { RingDebugOverlay } from "@/components/RingDebugOverlay";
 import { Users, Swords, Skull, ShieldAlert, Package, Circle, Flag } from "lucide-react";
 import damageIcon from "@/assets/icons/damage.svg";
 
@@ -992,7 +991,6 @@ function MapCanvas({
             })}
 
           </svg>
-          <RingDebugOverlay matchId={matchId} scale={view.scale} />
         </div>
       </div>
 
