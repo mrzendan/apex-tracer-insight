@@ -51,6 +51,9 @@ RE_RING = re.compile(r"RING\s*(\d+).*?(CLOSING|COUNTDOWN|CLOSED|OPEN)", re.I)
 # Раздельные «половинки» для случаев, когда OCR-плашки путает символы
 # (CLOS1NG, OOUNTDOWN и т.п.) и единый regex не срабатывает.
 RE_RING_NUM = re.compile(r"R[I1L]NG\s*([1-9])", re.I)
+# В Apex HUD во время COUNTDOWN буквального слова "COUNTDOWN" нет —
+# отображается "RING N IN M:SS". Детектим таймер MM:SS / M:SS.
+RE_RING_TIMER = re.compile(r"\b\d{1,2}\s*[:.]\s*\d{2}\b")
 RING_STATES = ("CLOSING", "COUNTDOWN", "CLOSED", "OPEN")
 RE_INT = re.compile(r"-?\d+")
 RE_ELIM = re.compile(r"ELIMIN", re.I)
@@ -301,24 +304,31 @@ def read_ring_at(cap: cv2.VideoCapture, f: int, zone: dict,
     if not txt:
         return None
     up = txt.upper()
-    # 1) сначала единый regex (когда OCR чистый);
-    m = RE_RING.search(up)
-    if m:
-        return {"ring": int(m.group(1)), "state": m.group(2).upper()}
-    # 2) fallback: ищем номер и состояние независимо + snap по словарю.
+    # Сначала номер кольца (CLOSING/CLOSED/COUNTDOWN все начинаются с "RING N").
     mn = RE_RING_NUM.search(up)
     if not mn:
         return None
-    state = None
-    for s in RING_STATES:
-        if s in up:
-            state = s
-            break
+    ring_n = int(mn.group(1))
+    # Приоритет состояний: CLOSED > CLOSING > COUNTDOWN (по таймеру/слову).
+    # 1) явные ключевые слова в OCR-выхлопе
+    state: str | None = None
+    if "CLOSED" in up:
+        state = "CLOSED"
+    elif "CLOSING" in up or "CLOS" in up:  # OCR любит ломать "CLOSING" → "CLOS1NG"/"CLOSNG"
+        # snap: проверим, что это именно CLOSING, а не CLOSED
+        snapped = snap_to_known(up, ["CLOSING", "CLOSED"], max_dist=2)
+        state = snapped or "CLOSING"
+    elif "COUNTDOWN" in up:
+        state = "COUNTDOWN"
+    # 2) если ничего из слов — но виден таймер MM:SS → это COUNTDOWN ("RING N IN M:SS")
+    if state is None and RE_RING_TIMER.search(up):
+        state = "COUNTDOWN"
+    # 3) последний шанс — fuzzy по словарю
     if state is None:
         state = snap_to_known(up, list(RING_STATES), max_dist=2)
     if state is None:
         return None
-    return {"ring": int(mn.group(1)), "state": state}
+    return {"ring": ring_n, "state": state}
 
 
 def _ring_state_key(rs: dict | None) -> tuple | None:
@@ -347,6 +357,72 @@ def scout_rings(cap: cv2.VideoCapture, zones_scaled: list[dict],
     if ring_zone is None:
         print("[hud_read][ring-scout] зона 'ring status' не найдена")
         return {"transitions": [], "phases": []}
+
+    return _scout_rings_with_zone(cap, ring_zone, start_f, end_f, fps,
+                                  scout_step, lang, refine_budget, refine_linear)
+
+
+def save_ring_debug_screenshots(cap: cv2.VideoCapture, zones_scaled: list[dict],
+                                start_f: int, end_f: int, fps: float,
+                                step_sec: float, out_dir: Path,
+                                lang: str) -> int:
+    """Каждые step_sec секунд сохраняет PNG с кропом зоны 'ring status'
+    + аннотацией распарсенного состояния. Полезно для глазной проверки
+    того, что зона выровнена и таймер/CLOSING читается."""
+    if step_sec <= 0:
+        return 0
+    ring_zone = next(
+        (z for z in zones_scaled if z["tag"] == "hud" and z["name"] == "ring status"),
+        None,
+    )
+    if ring_zone is None:
+        print("[hud_read][ring-debug] зона 'ring status' не найдена")
+        return 0
+    out_dir.mkdir(parents=True, exist_ok=True)
+    step_f = max(1, int(round(step_sec * fps)))
+    f = max(0, start_f)
+    saved = 0
+    pbar = tqdm(total=max(1, (end_f - f) // step_f + 1),
+                unit="shot", desc="ring-debug", dynamic_ncols=True)
+    while f < end_f:
+        frame = read_frame(cap, f)
+        if frame is None:
+            f += step_f
+            pbar.update(1)
+            continue
+        x, y, w, h = ring_zone["x"], ring_zone["y"], ring_zone["w"], ring_zone["h"]
+        crop = frame[y:y + h, x:x + w]
+        rs = read_ring_at(cap, f, ring_zone, lang) if crop.size else None
+        # Аннотация: t, state — пишем над кропом.
+        label_state = (f"R{rs['ring']} {rs['state']}" if rs else "—")
+        t_sec = f / fps
+        label = f"f={f} t={t_sec:.1f}s  {label_state}"
+        # Увеличиваем кроп x2 для читаемости, добавляем верхнюю полосу под текст.
+        if crop.size:
+            big = cv2.resize(crop, (max(1, crop.shape[1] * 2),
+                                    max(1, crop.shape[0] * 2)),
+                             interpolation=cv2.INTER_NEAREST)
+        else:
+            big = np.zeros((40, 200, 3), dtype=np.uint8)
+        bar = np.zeros((28, big.shape[1], 3), dtype=np.uint8)
+        cv2.putText(bar, label, (6, 20), cv2.FONT_HERSHEY_SIMPLEX,
+                    0.55, (0, 220, 255), 1, cv2.LINE_AA)
+        out_img = np.vstack([bar, big])
+        mm = int(t_sec // 60)
+        ss = int(t_sec - mm * 60)
+        fname = f"ring_t{mm:03d}m{ss:02d}s_f{f:07d}.png"
+        cv2.imwrite(str(out_dir / fname), out_img)
+        saved += 1
+        pbar.update(1)
+        f += step_f
+    pbar.close()
+    print(f"[hud_read][ring-debug] saved {saved} screenshots → {out_dir}")
+    return saved
+
+
+def _scout_rings_with_zone(cap, ring_zone, start_f, end_f, fps,
+                           scout_step, lang, refine_budget, refine_linear):
+    """Внутренняя реализация scout_rings — вынесена, чтобы не дублировать поиск зоны."""
 
     print(f"[hud_read][ring-scout] coarse pass: step={scout_step} "
           f"frames ({scout_step/fps:.1f}s)")
@@ -696,6 +772,10 @@ def main() -> int:
                     help="Бюджет бинпоиска ring-перехода")
     ap.add_argument("--ring-refine-linear", type=int, default=4,
                     help="Линейный доводчик ring-перехода")
+    ap.add_argument("--ring-debug-sec", type=float, default=0.0,
+                    help="Каждые N секунд сохранять PNG-скриншот зоны "
+                         "'ring status' с распарсенным state в reports/ring_debug/. "
+                         "0 = выключено. Типично: 30.")
     ap.add_argument("--reverse-step", type=int, default=1800,
                     help="Шаг обратного разведчика (кадров). 1800@30fps ≈ 60с")
     ap.add_argument("--refine-budget", type=int, default=10,
@@ -770,6 +850,13 @@ def main() -> int:
     # rings-only — короткий путь
     if args.rings_only:
         rs_start = max(start_f, int(args.ring_start_sec * fps))
+        if args.ring_debug_sec > 0:
+            save_ring_debug_screenshots(
+                cap, zones_scaled, rs_start, end_f, fps,
+                step_sec=args.ring_debug_sec,
+                out_dir=args.out / "ring_debug",
+                lang=args.ocr_lang,
+            )
         ring_res = scout_rings(
             cap, zones_scaled, rs_start, end_f, fps,
             scout_step=max(1, args.ring_scout_step),
@@ -794,6 +881,14 @@ def main() -> int:
         return 0
 
     if args.mode in ("scout", "two-pass"):
+        if args.ring_debug_sec > 0:
+            rs_start_dbg = max(start_f, int(args.ring_start_sec * fps))
+            save_ring_debug_screenshots(
+                cap, zones_scaled, rs_start_dbg, end_f, fps,
+                step_sec=args.ring_debug_sec,
+                out_dir=args.out / "ring_debug",
+                lang=args.ocr_lang,
+            )
         elim = scout_eliminations(cap, zones_scaled, start_f, end_f, fps,
                                   reverse_step=max(1, args.reverse_step),
                                   lang=args.ocr_lang,
