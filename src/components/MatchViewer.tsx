@@ -727,7 +727,7 @@ function MapCanvas({
   time, ring, trajectories, dwellsByTeam, cfg, onCfg, showConfig, setShowConfig,
   selectedTeams, hoverTeam, showTrails, showLabels,
   mapImage, mapName, aliveTeams, totalKills, duration, deathTimes, ringIndex, ringCount, controls,
-  focusRequest, onEventClick,
+  focusRequest, onEventClick, ringPhases,
 }: {
   time: number; ring: RingPhase | null;
   trajectories: Record<string, { t: number; x: number; y: number }[]>;
@@ -750,6 +750,7 @@ function MapCanvas({
   };
   focusRequest: { x: number; y: number; token: number } | null;
   onEventClick: (e: GameEvent) => void;
+  ringPhases: RingPhase[];
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [view, setView] = useState({ scale: 1, tx: 0, ty: 0 });
