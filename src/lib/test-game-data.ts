@@ -51,6 +51,9 @@ const elim = elimRaw as unknown as ElimFile;
 const rings = ringsRaw as unknown as RingsFile;
 const slotToTag = slotToTagRaw as unknown as Record<string, string>;
 
+/** Сырая геометрия для дебаг-оверлея (?debug=1). */
+export const testGameRingGeometry = rings.geometry ?? null;
+
 /** Длительность игры — последний наблюдавшийся "жив". */
 export const testGameDurationSec: number = Math.ceil(
   Object.values(elim.teams).reduce(
