@@ -35,6 +35,10 @@ type RingGeomPhase = {
   cx_map_norm?: number | null;
   cy_map_norm?: number | null;
   r_map_norm?: number | null;
+  cx_zoom_norm?: number | null;
+  cy_zoom_norm?: number | null;
+  r_zoom_norm?: number | null;
+  map_zoom?: number | null;
   geometry_confidence?: string;
 };
 type RingsFile = {
@@ -86,9 +90,9 @@ export const testGameRingPhases: RingPhase[] = (() => {
     let cx: number, cy: number, r: number;
     let source: "real" | "inherited";
     if (real) {
-      cx = real.cx_norm!;
-      cy = real.cy_norm!;
-      r = real.r_norm!;
+      cx = real.cx_zoom_norm ?? real.cx_map_norm ?? real.cx_norm!;
+      cy = real.cy_zoom_norm ?? real.cy_map_norm ?? real.cy_norm!;
+      r = real.r_zoom_norm ?? real.r_map_norm ?? real.r_norm!;
       source = "real";
       lastReal = { cx, cy, r };
     } else if (lastReal) {
