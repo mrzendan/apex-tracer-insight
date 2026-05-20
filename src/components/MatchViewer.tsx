@@ -57,7 +57,7 @@ type RingSegment = { phaseIndex: number; kind: "CD" | "Closing"; startSec: numbe
 function buildRingSegments(phases: RingPhase[]): RingSegment[] {
   return phases.flatMap((p, i) => {
     const dur = p.endSec - p.startSec;
-    const closeStart = p.startSec + dur * (1 - RING_CLOSE_FRACTION);
+    const closeStart = p.closingStartSec ?? (p.startSec + dur * (1 - RING_CLOSE_FRACTION));
     return [
       { phaseIndex: i, kind: "CD",      startSec: p.startSec, endSec: closeStart } as RingSegment,
       { phaseIndex: i, kind: "Closing", startSec: closeStart, endSec: p.endSec }    as RingSegment,
