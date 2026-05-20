@@ -5,7 +5,7 @@ import {
   maps,
   matches,
   matchSeedExtras,
-  teams,
+  teams as defaultTeams,
   generateTrajectory,
   ringPhases as defaultRingPhases,
   events as defaultEvents,
@@ -93,6 +93,7 @@ export function MatchViewer({ initialGameId }: { initialGameId?: string }) {
   const game = games[Math.min(gameIndex, games.length - 1)] ?? games[0];
   const apexMap = maps.find((m) => m.id === game.mapId)!;
   const _override = gameDataOverrides[game.id];
+  const teams: Team[] = _override?.teams?.length ? _override.teams : defaultTeams;
   const ringPhases: RingPhase[] = _override?.ringPhases?.length ? _override.ringPhases : defaultRingPhases;
   const events: GameEvent[] = _override?.events?.length ? _override.events : defaultEvents;
   const durationSec = _override?.durationSec ?? game.durationSec;
