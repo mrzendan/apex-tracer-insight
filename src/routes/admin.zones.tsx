@@ -449,21 +449,44 @@ function ZonesAdmin() {
                   </button>
                 </div>
                 {tags.map((t) => (
-                  <div key={t.id} className="mb-1 flex items-center gap-2 rounded-sm border border-border bg-surface px-2 py-1.5">
-                    <label className="relative block h-2.5 w-2.5 shrink-0 cursor-pointer overflow-hidden rounded-sm"
-                      style={{ backgroundColor: t.color }} title={t.color}>
-                      <input type="color" value={t.color} onChange={(e) => recolorTag(t.id, e.target.value)}
-                        className="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
-                    </label>
-                    <input defaultValue={t.id} onBlur={(e) => renameTag(t.id, e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-                      className="text-mono min-w-0 flex-1 rounded-sm bg-background px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-primary/40" />
-                    <button onClick={() => deleteTag(t.id)} disabled={tags.length <= 1} title="Delete tag"
-                      className="grid h-6 w-6 place-items-center rounded-sm text-muted-foreground hover:bg-destructive/20 hover:text-destructive disabled:opacity-30">
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                ))}
+                {(() => {
+                  const nonTeam = tags.filter((t) => !isTeamTag(t.id));
+                  const teamTags = tags
+                    .filter((t) => isTeamTag(t.id))
+                    .sort((a, b) => Number(a.id.slice(5)) - Number(b.id.slice(5)));
+                  const renderRow = (t: { id: string; color: string }) => (
+                    <div key={t.id} className="mb-1 flex items-center gap-2 rounded-sm border border-border bg-surface px-2 py-1.5">
+                      <label className="relative block h-2.5 w-2.5 shrink-0 cursor-pointer overflow-hidden rounded-sm"
+                        style={{ backgroundColor: t.color }} title={t.color}>
+                        <input type="color" value={t.color} onChange={(e) => recolorTag(t.id, e.target.value)}
+                          className="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
+                      </label>
+                      <input defaultValue={t.id} onBlur={(e) => renameTag(t.id, e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                        className="text-mono min-w-0 flex-1 rounded-sm bg-background px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-primary/40" />
+                      <button onClick={() => deleteTag(t.id)} disabled={tags.length <= 1} title="Delete tag"
+                        className="grid h-6 w-6 place-items-center rounded-sm text-muted-foreground hover:bg-destructive/20 hover:text-destructive disabled:opacity-30">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  );
+                  return (
+                    <>
+                      {nonTeam.map(renderRow)}
+                      {teamTags.length > 0 && (
+                        <>
+                          <button
+                            onClick={() => setTeamsCollapsed((v) => !v)}
+                            className="mt-1 mb-1 flex w-full items-center justify-between rounded-sm border border-border bg-surface px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground">
+                            <span>Teams ({teamTags.length})</span>
+                            <span>{teamsCollapsed ? "▸" : "▾"}</span>
+                          </button>
+                          {!teamsCollapsed && teamTags.map(renderRow)}
+                        </>
+                      )}
+                    </>
+                  );
+                })()}
               </section>
             </>
           )}
