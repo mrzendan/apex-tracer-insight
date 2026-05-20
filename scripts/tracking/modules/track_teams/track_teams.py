@@ -80,6 +80,61 @@ def parse_teams(cfg: dict) -> list[TeamCfg]:
     return out
 
 
+def _hex_to_hsv_center(hex_str: str) -> tuple[int, int, int]:
+    h = hex_str.lstrip("#")
+    r = int(h[0:2], 16); g = int(h[2:4], 16); b = int(h[4:6], 16)
+    px = np.uint8([[[b, g, r]]])  # BGR for cv2
+    H, S, V = cv2.cvtColor(px, cv2.COLOR_BGR2HSV)[0, 0]
+    return int(H), int(S), int(V)
+
+
+def teams_from_anchors(path: Path, h_tol: int = 10,
+                       s_min_floor: int = 60, v_min_floor: int = 60,
+                       s_drop: int = 80, v_drop: int = 80) -> list[TeamCfg]:
+    """Build TeamCfg list directly from motion_detect/reports/motion_tracks.json.
+    Each motion-detected slot becomes one team with HSV range derived from its
+    hex color (H ± h_tol, S/V wide around the source). Hue wrap is handled with
+    hsv_lower2/hsv_upper2 like the YAML 'red' team."""
+    raw = json.loads(Path(path).read_text(encoding="utf-8"))
+    results = raw.get("results", [])
+    out: list[TeamCfg] = []
+    for r in results:
+        slot = r.get("slot")
+        if slot is None:
+            continue
+        hex_str = r.get("hex", "#888888")
+        H, S, V = _hex_to_hsv_center(hex_str)
+        s_lo = max(s_min_floor, S - s_drop)
+        v_lo = max(v_min_floor, V - v_drop)
+        lo = hi = lo2 = hi2 = None
+        h_low = H - h_tol
+        h_high = H + h_tol
+        if h_low < 0:
+            lo  = np.array([0, s_lo, v_lo], dtype=np.uint8)
+            hi  = np.array([h_high, 255, 255], dtype=np.uint8)
+            lo2 = np.array([179 + h_low, s_lo, v_lo], dtype=np.uint8)
+            hi2 = np.array([179, 255, 255], dtype=np.uint8)
+        elif h_high > 179:
+            lo  = np.array([h_low, s_lo, v_lo], dtype=np.uint8)
+            hi  = np.array([179, 255, 255], dtype=np.uint8)
+            lo2 = np.array([0, s_lo, v_lo], dtype=np.uint8)
+            hi2 = np.array([h_high - 179, 255, 255], dtype=np.uint8)
+        else:
+            lo = np.array([h_low,  s_lo, v_lo], dtype=np.uint8)
+            hi = np.array([h_high, 255, 255], dtype=np.uint8)
+        slot_int = int(slot)
+        out.append(TeamCfg(
+            id=f"slot_{slot_int}",
+            name=str(r.get("team_name") or f"Team {slot_int}"),
+            hsv_lower=lo, hsv_upper=hi,
+            hsv_lower2=lo2, hsv_upper2=hi2,
+            color_hex=hex_str,
+            slot=slot_int,
+            slot_id=f"slot_{slot_int}",
+        ))
+    return out
+
+
 def fit_affine_px_to_world(points: list[dict]) -> np.ndarray:
     """Least-squares fit of 2D affine: world = A * [px; 1]. Returns 3x3."""
     src = np.array([p["canonical_px"] for p in points], dtype=np.float64)
@@ -476,9 +531,22 @@ def main():
         print(f"[err] не нашёл видео: {args.video}", file=sys.stderr); sys.exit(2)
 
     cfg = load_config(args.config)
-    teams = parse_teams(cfg)
+    # anchors path (CLI overrides config); if present, derive 20 teams from it
+    # and ignore YAML 'teams:' — this matches motion_detect's per-slot palette.
+    anchors_path = args.anchors
+    if anchors_path is None and cfg.get("anchors_file"):
+        anchors_path = (args.config.parent / cfg["anchors_file"]).resolve()
+
+    teams: list[TeamCfg] = []
+    if anchors_path and Path(anchors_path).exists():
+        teams = teams_from_anchors(Path(anchors_path))
+        print(f"[info] teams: {len(teams)} auto-generated from anchors ({anchors_path})")
     if not teams:
-        print("[err] в config не описано ни одной команды", file=sys.stderr); sys.exit(2)
+        teams = parse_teams(cfg)
+        if anchors_path:
+            print(f"[warn] anchors file {anchors_path} unusable — fell back to YAML teams ({len(teams)})")
+    if not teams:
+        print("[err] в config не описано ни одной команды и нет --anchors", file=sys.stderr); sys.exit(2)
     canonical_dir = (args.config.parent / "canonical_maps").resolve()
     if not canonical_dir.exists():
         canonical_dir = (Path(__file__).resolve().parents[2] / "shared" / "canonical_maps").resolve()
@@ -486,10 +554,6 @@ def main():
     reg = FrameRegistrar(cmap, cfg.get("registration", {}))
     det_cfg = cfg.get("detection", {})
     trk = WorldTracker(cfg.get("tracking", {}))
-    # anchors (motion_detect)
-    anchors_path = args.anchors
-    if anchors_path is None and cfg.get("anchors_file"):
-        anchors_path = (args.config.parent / cfg["anchors_file"]).resolve()
     anchors_map: dict[str, dict] = {}
     if anchors_path:
         mini_affine = load_minimap_affine(cmap.name, canonical_dir)

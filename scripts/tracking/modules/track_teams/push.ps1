@@ -23,8 +23,19 @@ if ($Anchors -and (Test-Path $Anchors)) {
 } else {
   Write-Host "[track_teams] no anchors file (looked at: $Anchors) — стартую без motion-якорей" -ForegroundColor Yellow
 }
-& python scripts/tracking/modules/track_teams/track_teams.py @args
-if ($LASTEXITCODE -ne 0) { throw "track_teams.py упал" }
+$logPath = Join-Path (Split-Path $Out -Parent) "run.log"
+New-Item -ItemType Directory -Force -Path (Split-Path $logPath -Parent) | Out-Null
+$prevEAP = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
+& python scripts/tracking/modules/track_teams/track_teams.py @args 2>&1 |
+  ForEach-Object { "$_" } | Tee-Object -FilePath $logPath
+$code = $LASTEXITCODE
+$ErrorActionPreference = $prevEAP
+if ($code -ne 0) {
+  Write-Host "[track_teams] упал (exit=$code). Хвост лога:" -ForegroundColor Red
+  Get-Content $logPath -Tail 40
+  throw "track_teams.py упал"
+}
 if ($NoPush) { return }
 git add (Split-Path $Out -Parent)
 git commit -m "track_teams: run $(Get-Date -Format 'yyyy-MM-dd HH:mm')" | Out-Null
