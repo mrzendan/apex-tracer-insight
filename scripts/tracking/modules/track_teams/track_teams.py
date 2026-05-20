@@ -468,6 +468,8 @@ def main():
     ap.add_argument("--end", type=float, default=-1.0)
     ap.add_argument("--preview", type=Path, default=None)
     ap.add_argument("--debug-frame", type=int, default=None)
+    ap.add_argument("--anchors", type=Path, default=None,
+                    help="motion_detect/reports/motion_tracks.json для инициализации треков")
     args = ap.parse_args()
 
     if not args.video.exists():
@@ -484,6 +486,16 @@ def main():
     reg = FrameRegistrar(cmap, cfg.get("registration", {}))
     det_cfg = cfg.get("detection", {})
     trk = WorldTracker(cfg.get("tracking", {}))
+    # anchors (motion_detect)
+    anchors_path = args.anchors
+    if anchors_path is None and cfg.get("anchors_file"):
+        anchors_path = (args.config.parent / cfg["anchors_file"]).resolve()
+    anchors_map: dict[str, dict] = {}
+    if anchors_path:
+        mini_affine = load_minimap_affine(cmap.name, canonical_dir)
+        anchors_map = load_anchors(Path(anchors_path), teams, mini_affine, cmap)
+        trk.set_anchors(anchors_map)
+        print(f"[info] anchors: {sum(1 for a in anchors_map.values() if a.get('conf') in ('HIGH','MED'))} HIGH/MED, {sum(1 for a in anchors_map.values() if a.get('conf') == 'LOW')} LOW")
     frame_step = int(args.frame_step or cfg.get("frame_step", 3))
 
     cap = cv2.VideoCapture(str(args.video))
@@ -516,8 +528,21 @@ def main():
         "canonical_size": [int(cmap.size[0]), int(cmap.size[1])],
         "world_bounds": cmap.world_bounds,
         "teams": [{"id": t.id, "name": t.name, "color": t.color_hex} for t in teams],
+        "slots": [
+            {
+                "slot_id": t.slot_id or t.id,
+                "slot": t.slot,
+                "team_id": t.id,
+                "name": t.name,
+                "color": t.color_hex,
+                "anchor_conf": (anchors_map.get(t.id, {}) or {}).get("conf", "MISS"),
+                "anchor_world": (lambda a: [round(a[0], 2), round(a[1], 2)] if a else None)(
+                    (anchors_map.get(t.id, {}) or {}).get("world")),
+                "wiped_at_t": None,
+            } for t in teams
+        ],
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
-        "schema_version": 1,
+        "schema_version": 2,
     }
     fout.write('{"meta":'); json.dump(meta, fout, ensure_ascii=False); fout.write(',"frames":[')
     first = True
@@ -574,7 +599,8 @@ def main():
                         "angle_world_deg": angle_world,
                         "score": b["score"],
                     })
-                trk.step(world_dets)
+                t_now = (frame_idx - start_frame) / fps
+                trk.step(world_dets, t_now)
                 tracks_world = []
                 # обогатим snapshot последними измеренными canonical_px / frame_px (для рендера)
                 snap = trk.snapshot()
@@ -596,6 +622,8 @@ def main():
                 "camera": cam,
                 "tracks": tracks_world,
             }
+            if H is not None and trk.new_wipes:
+                record["wipes"] = trk.new_wipes
             if not first:
                 fout.write(",")
             json.dump(record, fout, ensure_ascii=False)
