@@ -291,49 +291,12 @@ def read_ring_at(cap: cv2.VideoCapture, f: int, zone: dict,
     crop = frame[y:y + h, x:x + w]
     if crop.size == 0:
         return None
-    # Плашка кольца Apex: КРАСНЫЙ текст ("RING N CLOSING / IN m:ss / CLOSED")
-    # на светлом/прозрачном фоне. Раньше маска искала белые пиксели — это
-    # ловило фон, а не текст, поэтому OCR падал и COUNTDOWN не находился.
-    # Теперь изолируем красные пиксели по двум диапазонам H.
-    hsv = cv2.cvtColor(crop, cv2.COLOR_BGR2HSV)
-    red1 = cv2.inRange(hsv, (0, 120, 80), (12, 255, 255))
-    red2 = cv2.inRange(hsv, (168, 120, 80), (179, 255, 255))
-    red = cv2.bitwise_or(red1, red2)
-    # Резерв на случай светлой COUNTDOWN-плашки/смены палитры — белый текст.
-    white = cv2.inRange(hsv, (0, 0, 200), (179, 70, 255))
-    candidates = []
-    if red.mean() >= 1.5:
-        candidates.append(red)
-    if white.mean() >= 1.5 and abs(white.mean() - red.mean()) > 1.0:
-        # Используем белую только если она НЕ просто фон (не доминирует
-        # сильно — плашка иначе была бы вся белая).
-        if white.mean() < 60:
-            candidates.append(white)
-    if not candidates:
-        return None
-
-    def _ocr_mask(mask: np.ndarray) -> str:
-        h0, w0 = mask.shape[:2]
-        scale = max(2, int(round(64 / max(1, h0))))
-        big = cv2.resize(mask, (w0 * scale, h0 * scale),
-                         interpolation=cv2.INTER_CUBIC)
-        # После resize маска уже не строго бинарная — порог + инвертирование,
-        # чтобы текст стал чёрным на белом фоне (как любит tesseract).
-        _, big = cv2.threshold(big, 80, 255, cv2.THRESH_BINARY)
-        inv = cv2.bitwise_not(big)
-        inv_bgr = cv2.cvtColor(inv, cv2.COLOR_GRAY2BGR)
-        return ocr(inv_bgr, lang, digits_only=False, alnum_only=True,
-                   calib_key=(zone["tag"], zone["name"]))
-
-    txt = ""
-    for m in candidates:
-        t = _ocr_mask(m)
-        # Выбираем тот OCR-выхлоп, где сразу видна "RING N".
-        if RE_RING_NUM.search(t.upper()):
-            txt = t
-            break
-        if len(t) > len(txt):
-            txt = t
+    # Никаких цветовых масок: читаем плашку как обычный текст.
+    # Готовим несколько grayscale-вариантов (Otsu + инверсия + adaptive),
+    # на upscale ×3, и прогоняем каждый через tesseract с whitelist,
+    # включающим ':' и '.', иначе таймер "M:SS" никогда не распарсится
+    # (а без него состояние COUNTDOWN не определяется).
+    txt = _ocr_ring_text(crop, lang)
     if not txt:
         return None
     up = txt.upper()
@@ -362,6 +325,64 @@ def read_ring_at(cap: cv2.VideoCapture, f: int, zone: dict,
     if state is None:
         return None
     return {"ring": ring_n, "state": state}
+
+
+def _ocr_ring_text(crop: np.ndarray, lang: str) -> str:
+    """Чисто-текстовый OCR для плашки кольца. Возвращает лучший вариант,
+    в котором видно ``RING N`` (если такого нет — самый длинный)."""
+    if pytesseract is None or crop.size == 0:
+        return ""
+    h0, w0 = crop.shape[:2]
+    scale = max(2, int(round(96 / max(1, h0))))  # ~96px высоты строки
+    big = cv2.resize(crop, (w0 * scale, h0 * scale),
+                     interpolation=cv2.INTER_CUBIC)
+    gray = cv2.cvtColor(big, cv2.COLOR_BGR2GRAY) if big.ndim == 3 else big
+    # Лёгкое сглаживание против JPEG-шума плашки.
+    gray = cv2.bilateralFilter(gray, 5, 40, 40)
+
+    variants: list[np.ndarray] = []
+    # 1) Otsu прямой (тёмный текст на светлом)
+    _, v1 = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    variants.append(v1)
+    # 2) Otsu инвертированный (светлый текст на тёмном)
+    variants.append(cv2.bitwise_not(v1))
+    # 3) Adaptive mean — устойчив к неоднородному фону игры под плашкой
+    v3 = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C,
+                               cv2.THRESH_BINARY, 31, 10)
+    variants.append(v3)
+    variants.append(cv2.bitwise_not(v3))
+
+    pad = lambda im: cv2.copyMakeBorder(im, 12, 12, 12, 12,
+                                        cv2.BORDER_CONSTANT, value=255)
+    # ВАЖНО: в whitelist обязательно ':' и '.' для таймера M:SS,
+    # иначе COUNTDOWN не распознать.
+    whitelist = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:."
+    cfg_base = f"--oem 1 -c tessedit_char_whitelist={whitelist}"
+    best = ""
+    for v in variants:
+        prep = pad(v)
+        for psm in (7, 6, 11):
+            cfg = f"--psm {psm} {cfg_base}"
+            try:
+                t = pytesseract.image_to_string(prep, lang=lang,
+                                                config=cfg).strip()
+            except Exception as e:  # pragma: no cover
+                msg = str(e)
+                if msg not in _OCR_ERRORS_SEEN:
+                    _OCR_ERRORS_SEEN.add(msg)
+                    print(f"[hud_read] tesseract error: {msg}",
+                          file=sys.stderr)
+                return ""
+            up = t.upper()
+            # Идеальный исход — видно номер кольца, возвращаем сразу.
+            if RE_RING_NUM.search(up) and (
+                RE_RING_TIMER.search(up)
+                or "CLOSING" in up or "CLOSED" in up or "COUNT" in up
+            ):
+                return t
+            if len(t) > len(best):
+                best = t
+    return best
 
 
 def _ring_state_key(rs: dict | None) -> tuple | None:
