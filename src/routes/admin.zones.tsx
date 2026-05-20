@@ -3,17 +3,30 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Eye, EyeOff, Lock, Unlock, Pencil, Copy, RotateCcw, AlignCenter, Files, Plus, Trash2, Check, ZoomIn, ZoomOut, Maximize2, Hand } from "lucide-react";
 import vodBg from "@/assets/hsv-samples/worlds-edge.png";
+import vodBg2 from "@/assets/zones-samples/vod-stream-2.png";
 import cameraBg from "@/assets/zones-samples/camera.png";
 import { useAdminStore, setZones as setZonesStore, type Zone, type ZoneMode } from "@/lib/admin-store";
 import { ActionBtn, Field, NumField } from "@/components/admin/zones-parts";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
+import { SLOT_COLORS } from "@/lib/team-colors";
 
 export const Route = createFileRoute("/admin/zones")({ component: ZonesAdmin });
 
-type BuiltinPreset = "vod" | "camera";
+type BuiltinPreset = "vod" | "vod2" | "camera";
 type CustomPreset = { id: string; label: string; mode: ZoneMode; zones: Zone[] };
 
 const BUILTIN: { id: BuiltinPreset; label: string; mode: ZoneMode }[] = [
   { id: "vod",    label: "VOD Stream", mode: "vod" },
+  { id: "vod2",   label: "VOD Stream 2", mode: "vod2" },
   { id: "camera", label: "Player Cam", mode: "camera" },
 ];
 
@@ -24,8 +37,12 @@ const DEFAULT_TAG_COLORS: Record<string, string> = {
   minimap:  "#ff8a00",
   timer:    "#facc15",
   map_name: "#34d399",
+  hud:      "#38bdf8",
+  ...Object.fromEntries(SLOT_COLORS.map((c, i) => [`team_${i + 1}`, c])),
 };
 const FALLBACK_PALETTE = ["#f472b6", "#fb7185", "#60a5fa", "#4ade80", "#fbbf24", "#c084fc", "#f87171", "#2dd4bf"];
+
+const isTeamTag = (id: string) => /^team_\d+$/.test(id);
 
 let _idc = 0;
 const newId = (p = "z") => `${p}-${Date.now().toString(36)}-${_idc++}`;
@@ -75,7 +92,7 @@ function ZonesAdmin() {
   >(null);
 
   const W = 1920, H = 1080;
-  const bg = mode === "vod" ? vodBg : cameraBg;
+  const bg = mode === "vod" ? vodBg : mode === "vod2" ? vodBg2 : cameraBg;
   const selZone = zones.find((z) => z.id === sel);
 
   const setZones = (next: Zone[] | ((zs: Zone[]) => Zone[])) => {
@@ -83,6 +100,18 @@ function ZonesAdmin() {
     if (builtin) setZonesStore(builtin.mode, computed);
     else if (custom) setCustoms((cs) => cs.map((c) => (c.id === custom.id ? { ...c, zones: computed } : c)));
   };
+
+  // ── Import dialog state ──────────────────────────────────────────────
+  type PendingImport = {
+    zones: Zone[];
+    mode: ZoneMode | null;       // mode из payload, если был
+    presetLabel: string | null;  // label из payload, если был
+    missingTags: string[];       // теги из файла, которых ещё нет
+  };
+  const [pendingImport, setPendingImport] = useState<PendingImport | null>(null);
+  const [importAddTags, setImportAddTags] = useState(true);
+  // Свёрнутость группы тегов команд
+  const [teamsCollapsed, setTeamsCollapsed] = useState(true);
 
   const choosePreset = (id: string) => {
     setActiveId(id);
@@ -153,7 +182,7 @@ function ZonesAdmin() {
     if (tags.some((t) => t.id === clean)) return;
     setTags((ts) => ts.map((t) => (t.id === oldId ? { ...t, id: clean } : t)));
     // Update zones using old tag (only mutate built-in ones via store; custom via state)
-    (["vod", "camera"] as ZoneMode[]).forEach((m) => {
+    (["vod", "vod2", "camera"] as ZoneMode[]).forEach((m) => {
       const next = store.zones[m].map((z) => (z.tag === oldId ? { ...z, tag: clean as Zone["tag"] } : z));
       setZonesStore(m, next);
     });
@@ -164,11 +193,62 @@ function ZonesAdmin() {
     if (tags.length <= 1) return;
     const fallback = tags.find((t) => t.id !== id)!.id;
     setTags((ts) => ts.filter((t) => t.id !== id));
-    (["vod", "camera"] as ZoneMode[]).forEach((m) => {
+    (["vod", "vod2", "camera"] as ZoneMode[]).forEach((m) => {
       const next = store.zones[m].map((z) => (z.tag === id ? { ...z, tag: fallback as Zone["tag"] } : z));
       setZonesStore(m, next);
     });
     setCustoms((cs) => cs.map((c) => ({ ...c, zones: c.zones.map((z) => (z.tag === id ? { ...z, tag: fallback as Zone["tag"] } : z)) })));
+  };
+
+  // Apply pending JSON import with the chosen target.
+  // target: 'current' = active preset, 'mode' = matching builtin from payload,
+  //         'new' = create a new custom preset, 'cancel' = no-op.
+  const applyImport = (target: "current" | "mode" | "new") => {
+    if (!pendingImport) return;
+    const { zones: incoming, mode: payloadMode, presetLabel, missingTags } = pendingImport;
+
+    // Optionally add missing tags so zones don't lose their tag identity.
+    if (importAddTags && missingTags.length) {
+      setTags((ts) => {
+        const used = new Set([...ts.map((t) => t.color)]);
+        const palette = [...Object.values(DEFAULT_TAG_COLORS), ...FALLBACK_PALETTE];
+        const extra = missingTags.map((id) => {
+          const preferred = DEFAULT_TAG_COLORS[id];
+          const color = preferred ?? palette.find((c) => !used.has(c)) ?? FALLBACK_PALETTE[0];
+          used.add(color);
+          return { id, color };
+        });
+        return [...ts, ...extra];
+      });
+    } else {
+      // Remap unknown tags to first available tag so import doesn't silently drop them.
+      const fallback = tags[0]?.id ?? "team";
+      incoming.forEach((z) => {
+        if (missingTags.includes(z.tag)) z.tag = fallback as Zone["tag"];
+      });
+    }
+
+    if (target === "new") {
+      const id = newId("p");
+      const next: CustomPreset = {
+        id,
+        label: presetLabel || `Imported ${customs.length + 1}`,
+        mode: payloadMode ?? "vod",
+        zones: incoming,
+      };
+      setCustoms((cs) => [...cs, next]);
+      setActiveId(id);
+      setSel(incoming[0]?.id ?? null);
+    } else if (target === "mode" && payloadMode) {
+      // Apply to matching builtin without switching active tab.
+      setZonesStore(payloadMode, incoming);
+    } else {
+      // 'current'
+      setZones(incoming);
+      setSel(incoming[0]?.id ?? null);
+    }
+
+    setPendingImport(null);
   };
 
   const toSvg = (clientX: number, clientY: number) => {
@@ -368,22 +448,44 @@ function ZonesAdmin() {
                     + Add
                   </button>
                 </div>
-                {tags.map((t) => (
-                  <div key={t.id} className="mb-1 flex items-center gap-2 rounded-sm border border-border bg-surface px-2 py-1.5">
-                    <label className="relative block h-2.5 w-2.5 shrink-0 cursor-pointer overflow-hidden rounded-sm"
-                      style={{ backgroundColor: t.color }} title={t.color}>
-                      <input type="color" value={t.color} onChange={(e) => recolorTag(t.id, e.target.value)}
-                        className="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
-                    </label>
-                    <input defaultValue={t.id} onBlur={(e) => renameTag(t.id, e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-                      className="text-mono min-w-0 flex-1 rounded-sm bg-background px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-primary/40" />
-                    <button onClick={() => deleteTag(t.id)} disabled={tags.length <= 1} title="Delete tag"
-                      className="grid h-6 w-6 place-items-center rounded-sm text-muted-foreground hover:bg-destructive/20 hover:text-destructive disabled:opacity-30">
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                ))}
+                {(() => {
+                  const nonTeam = tags.filter((t) => !isTeamTag(t.id));
+                  const teamTags = tags
+                    .filter((t) => isTeamTag(t.id))
+                    .sort((a, b) => Number(a.id.slice(5)) - Number(b.id.slice(5)));
+                  const renderRow = (t: { id: string; color: string }) => (
+                    <div key={t.id} className="mb-1 flex items-center gap-2 rounded-sm border border-border bg-surface px-2 py-1.5">
+                      <label className="relative block h-2.5 w-2.5 shrink-0 cursor-pointer overflow-hidden rounded-sm"
+                        style={{ backgroundColor: t.color }} title={t.color}>
+                        <input type="color" value={t.color} onChange={(e) => recolorTag(t.id, e.target.value)}
+                          className="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
+                      </label>
+                      <input defaultValue={t.id} onBlur={(e) => renameTag(t.id, e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                        className="text-mono min-w-0 flex-1 rounded-sm bg-background px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-primary/40" />
+                      <button onClick={() => deleteTag(t.id)} disabled={tags.length <= 1} title="Delete tag"
+                        className="grid h-6 w-6 place-items-center rounded-sm text-muted-foreground hover:bg-destructive/20 hover:text-destructive disabled:opacity-30">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  );
+                  return (
+                    <>
+                      {nonTeam.map(renderRow)}
+                      {teamTags.length > 0 && (
+                        <>
+                          <button
+                            onClick={() => setTeamsCollapsed((v) => !v)}
+                            className="mt-1 mb-1 flex w-full items-center justify-between rounded-sm border border-border bg-surface px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground">
+                            <span>Teams ({teamTags.length})</span>
+                            <span>{teamsCollapsed ? "▸" : "▾"}</span>
+                          </button>
+                          {!teamsCollapsed && teamTags.map(renderRow)}
+                        </>
+                      )}
+                    </>
+                  );
+                })()}
               </section>
             </>
           )}
@@ -562,9 +664,19 @@ function ZonesAdmin() {
                         tag: (z.tag || tags[0]?.id || "team") as Zone["tag"],
                         x: z.x, y: z.y, w: z.w, h: z.h,
                       }));
-                    setZones(cleaned);
-                    setSel(cleaned[0]?.id ?? null);
-                    alert(`Imported ${cleaned.length} zone${cleaned.length === 1 ? "" : "s"}`);
+                    const payloadMode = (data?.mode === "vod" || data?.mode === "vod2" || data?.mode === "camera")
+                      ? (data.mode as ZoneMode)
+                      : null;
+                    const payloadLabel = typeof data?.label === "string" ? data.label : null;
+                    const known = new Set(tags.map((t) => t.id));
+                    const missing = Array.from(new Set(cleaned.map((z) => z.tag))).filter((t) => !known.has(t));
+                    setImportAddTags(true);
+                    setPendingImport({
+                      zones: cleaned,
+                      mode: payloadMode,
+                      presetLabel: payloadLabel,
+                      missingTags: missing,
+                    });
                   } catch (err) {
                     alert(`Import failed: ${(err as Error).message}`);
                   }
@@ -680,6 +792,47 @@ function ZonesAdmin() {
         })(),
         document.body,
       )}
+
+      <AlertDialog open={!!pendingImport} onOpenChange={(o) => !o && setPendingImport(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Import zones — where?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-xs">
+                <div>
+                  <span className="text-mono font-semibold">{pendingImport?.zones.length ?? 0}</span> zones from file
+                  {pendingImport?.mode && (
+                    <> · source mode <span className="text-mono font-semibold">{pendingImport.mode}</span></>
+                  )}
+                  {pendingImport?.presetLabel && (
+                    <> · label <span className="text-mono font-semibold">{pendingImport.presetLabel}</span></>
+                  )}
+                </div>
+                {pendingImport?.missingTags.length ? (
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" checked={importAddTags} onChange={(e) => setImportAddTags(e.target.checked)} />
+                    <span>Add {pendingImport.missingTags.length} missing tag{pendingImport.missingTags.length === 1 ? "" : "s"}: <span className="text-mono">{pendingImport.missingTags.join(", ")}</span></span>
+                  </label>
+                ) : null}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex flex-wrap gap-2">
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => applyImport("current")}>
+              Replace current preset
+            </AlertDialogAction>
+            {pendingImport?.mode && pendingImport.mode !== mode && (
+              <AlertDialogAction onClick={() => applyImport("mode")}>
+                Apply to {pendingImport.mode} (без переключения)
+              </AlertDialogAction>
+            )}
+            <AlertDialogAction onClick={() => applyImport("new")}>
+              Create new custom preset
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
