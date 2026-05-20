@@ -264,19 +264,35 @@ def main() -> int:
     ap.add_argument("--minimap-zone", type=str, default="camera roi",
                     help="id или name зоны миникарты в --zones (по умолч. 'camera roi')")
     ap.add_argument("--out", type=Path, default=MODULE_DIR / "reports")
+    ap.add_argument("--debug-dir", type=Path, default=None,
+                    help="папка для дебаг-картинок (по умолч. <out>/debug)")
+    ap.add_argument("--no-debug", action="store_true",
+                    help="отключить запись дебаг-картинок")
     args = ap.parse_args()
 
     if args.zones:
         minimap_rect = rect_from_zones(args.zones, args.minimap_zone)
         print(f"[ring_locator] minimap from zones[{args.minimap_zone!r}] = {minimap_rect}")
+        map_bounds = map_bounds_from_zones(args.zones, args.minimap_zone)
+        if map_bounds:
+            print(f"[ring_locator] map_bounds_in_roi = {map_bounds}")
     else:
         minimap_rect = parse_rect(args.minimap)
         print(f"[ring_locator] minimap (raw) = {minimap_rect}")
+        map_bounds = None
     rings_data = json.loads(args.rings.read_text(encoding="utf-8"))
     fps = float(rings_data.get("fps") or 30.0)
     phases = rings_data.get("phases") or []
     derived = rings_data.get("derived") or {}
     median_countdown = derived.get("median_countdown")
+    debug_dir: Path | None = None
+    if not args.no_debug:
+        debug_dir = args.debug_dir or (args.out / "debug")
+        debug_dir.mkdir(parents=True, exist_ok=True)
+        # очистим прошлые ring_*.* — чтобы старые кольца не путали
+        for p in debug_dir.glob("ring*"):
+            try: p.unlink()
+            except OSError: pass
     if not phases:
         print("[ring_locator] phases[] пуст — нечего измерять")
         args.out.mkdir(parents=True, exist_ok=True)
