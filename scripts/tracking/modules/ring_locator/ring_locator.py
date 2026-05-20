@@ -378,6 +378,17 @@ def main() -> int:
     phases = rings_data.get("phases") or []
     derived = rings_data.get("derived") or {}
     median_countdown = derived.get("median_countdown")
+    transitions = rings_data.get("transitions") or []
+    # t_countdown_start[N] — момент CLOSING(N-1)→COUNTDOWN(N). После него
+    # ring N-1 уже зафиксировано красной окружностью.
+    countdown_start_by_ring: dict[int, float] = {}
+    for tr in transitions:
+        to = tr.get("to") or {}
+        if to.get("state") == "COUNTDOWN" and to.get("ring") is not None \
+           and tr.get("t") is not None:
+            countdown_start_by_ring.setdefault(int(to["ring"]), float(tr["t"]))
+    # Длительность видео (для последнего кольца).
+    video_duration: float | None = None
     debug_dir: Path | None = None
     if not args.no_debug:
         debug_dir = args.debug_dir or (args.out / "debug")
@@ -405,28 +416,49 @@ def main() -> int:
     cap = cv2.VideoCapture(str(args.video))
     if not cap.isOpened():
         raise SystemExit(f"не открылся видеофайл: {args.video}")
+    total_frames = cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0
+    if total_frames > 0 and fps > 0:
+        video_duration = float(total_frames) / fps
 
     phases_by_ring = {p["ring"]: p for p in phases}
     out_phases: list[dict[str, Any]] = []
     prev_geom: tuple[float, float, float] | None = None
+
+    detector = detect_closed_red_ring if args.method == "red" else detect_next_ring
+    print(f"[ring_locator] method={args.method} "
+          f"(post_close_delay={args.post_close_delay:.1f}s, "
+          f"window={args.post_close_window:.1f}s)")
 
     for ring_n in sorted(phases_by_ring):
         p = phases_by_ring[ring_n]
         t_close = p.get("t_closing_start")
         if t_close is None:
             continue
-        # Окно: между t_closed предыдущей фазы (=COUNTDOWN текущей)
-        # и t_closing_start текущей. Для R1 «предыдущей» нет —
-        # используем median_countdown из derived (или 30s fallback).
-        prev = phases_by_ring.get(ring_n - 1)
-        if prev and prev.get("t_closed") is not None:
-            t_lo = prev["t_closed"]
+        if args.method == "red":
+            # Окно после CLOSING(N)→COUNTDOWN(N+1): красная окружность
+            # стоит на месте и помечает реальную границу зоны N.
+            t_anchor = countdown_start_by_ring.get(ring_n + 1)
+            if t_anchor is None:
+                # Последнее кольцо: COUNTDOWN(N+1) не существует.
+                # Берём конец видео минус запас.
+                end = video_duration if video_duration else (t_close + 120.0)
+                t_lo = t_close + args.post_close_delay + 30.0
+                t_hi = max(t_lo + 1.0, end - 2.0)
+            else:
+                t_lo = t_anchor + args.post_close_delay
+                t_hi = t_lo + args.post_close_window
         else:
-            window = median_countdown if median_countdown else 30.0
-            t_lo = max(0.0, t_close - float(window))
-        t_hi = t_close - 0.5
+            # legacy: серое next-ring внутри COUNTDOWN текущей фазы.
+            prev = phases_by_ring.get(ring_n - 1)
+            if prev and prev.get("t_closed") is not None:
+                t_lo = prev["t_closed"]
+            else:
+                window = median_countdown if median_countdown else 30.0
+                t_lo = max(0.0, t_close - float(window))
+            t_hi = t_close - 0.5
         samples, chosen, n_sub = sample_phase(
             cap, minimap_rect, t_lo, t_hi, fps, cut_ts, hud_bad,
+            detector=detector,
         )
         if not samples:
             print(f"[ring_locator] R{ring_n}: нет валидных сэмплов "
