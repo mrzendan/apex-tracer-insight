@@ -655,6 +655,23 @@ def main():
             preview_writer.release()
         fout.write("]}")
         fout.close()
+    # sidecar: финальные wiped_at_t per slot (мета пишется стримом до накопления wipes)
+    slots_final = []
+    for t in teams:
+        tr = trk.tracks.get(t.id)
+        slots_final.append({
+            "slot_id": t.slot_id or t.id,
+            "slot": t.slot,
+            "team_id": t.id,
+            "name": t.name,
+            "color": t.color_hex,
+            "anchor_conf": (anchors_map.get(t.id, {}) or {}).get("conf", "MISS"),
+            "wiped_at_t": (tr.wiped_at_t if tr is not None else None),
+        })
+    (out_path.parent / (out_path.stem + ".slots.json")).write_text(
+        json.dumps({"slots": slots_final}, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
     print(f"[ok] processed {processed} frames -> {out_path}")
 
 
