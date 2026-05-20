@@ -85,8 +85,11 @@
                 "canonical_px": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
                 "frame_px": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
                 "angle_world_deg": { "type": "number" },
-                "state": { "type": "string", "enum": ["alive", "low_conf", "lost"] },
-                "confidence": { "type": "number" }
+                "state": { "type": "string", "enum": ["tracked", "hold", "low_conf", "lost", "alive", "init"] },
+                "state_reason": { "type": "string" },
+                "mask_mode": { "type": "string", "enum": ["hsv+lab", "hsv_only_fallback"] },
+                "confidence": { "type": "number" },
+                "score": { "type": "number" }
               }
             }
           },

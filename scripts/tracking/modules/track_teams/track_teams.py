@@ -44,6 +44,13 @@ class TeamCfg:
     color_hex: str = "#ffffff"
     slot: Optional[int] = None       # 1..20, matches motion_detect/hsv_presets
     slot_id: Optional[str] = None    # canonical "slot_<N>"; falls back to id
+    # LAB range derived from HSV range (filled lazily by SlotTracker).
+    lab_lower: Optional[np.ndarray] = None
+    lab_upper: Optional[np.ndarray] = None
+    # Per-slot detection overrides (None → fall back to global det_cfg).
+    min_area: Optional[float] = None
+    max_area: Optional[float] = None
+    morph_kernel: Optional[int] = None
 
 
 @dataclass
@@ -271,6 +278,31 @@ def map_point(H: np.ndarray, pt_xy: tuple[float, float]) -> tuple[float, float]:
     return float(w[0] / w[2]), float(w[1] / w[2])
 
 
+# ------------------------- HSV → LAB helper ------------------------------
+
+def _hsv_to_lab_pixel(hsv: tuple[int, int, int]) -> np.ndarray:
+    px = np.array([[[hsv[0], hsv[1], hsv[2]]]], dtype=np.uint8)
+    bgr = cv2.cvtColor(px, cv2.COLOR_HSV2BGR)
+    lab = cv2.cvtColor(bgr, cv2.COLOR_BGR2LAB)
+    return lab[0, 0].astype(np.int16)
+
+
+def build_lab_range_from_hsv(lo: np.ndarray, hi: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Approximate LAB range from HSV bounds, expanded on A/B for shadows/compression."""
+    lo_lab = _hsv_to_lab_pixel((int(lo[0]), int(lo[1]), int(lo[2])))
+    hi_lab = _hsv_to_lab_pixel((int(hi[0]), int(hi[1]), int(hi[2])))
+    l_min = int(max(0, min(lo_lab[0], hi_lab[0]) - 20))
+    l_max = int(min(255, max(lo_lab[0], hi_lab[0]) + 20))
+    a_min = int(max(0, min(lo_lab[1], hi_lab[1]) - 28))
+    a_max = int(min(255, max(lo_lab[1], hi_lab[1]) + 28))
+    b_min = int(max(0, min(lo_lab[2], hi_lab[2]) - 28))
+    b_max = int(min(255, max(lo_lab[2], hi_lab[2]) + 28))
+    return (
+        np.array([l_min, a_min, b_min], dtype=np.uint8),
+        np.array([l_max, a_max, b_max], dtype=np.uint8),
+    )
+
+
 # --------------------- Anchors (from motion_detect) ----------------------
 
 def load_minimap_affine(map_name: str, base_dir: Path) -> Optional[np.ndarray]:
@@ -381,6 +413,234 @@ def detect_team_blobs(frame_bgr: np.ndarray, teams: list[TeamCfg], det_cfg: dict
 
 
 # ------------------------------ Tracker ----------------------------------
+
+# Per-slot local tracker (inspired by apex-stats SimpleArrowTracker, simplified
+# because we already work in world coords via homography).
+
+class SlotTracker:
+    """Локальный трекер одного слота: ищет плашку в ROI кадра вокруг
+    последней проекции своей канонической позиции.
+
+    Состояние хранится в canonical_px (потому что кадр двигается, а карта — нет).
+    """
+
+    def __init__(self, team: TeamCfg, slot_cfg: dict, init_canonical_px: Optional[tuple[float, float]]):
+        self.team = team
+        self.canonical_px: Optional[tuple[float, float]] = init_canonical_px
+        self.last_frame_px: Optional[tuple[float, float]] = None
+        # ROI / detection
+        self.roi_size: int = int(slot_cfg.get("roi_size", 220))
+        self.min_roi: int = int(slot_cfg.get("min_roi", 120))
+        self.max_roi_expand_px: int = int(slot_cfg.get("max_roi_expand_px", 400))
+        self.roi_expand_step_px: int = int(slot_cfg.get("roi_expand_step_px", 100))
+        self.roi_expand_px: int = 0
+        self.min_area: float = float(team.min_area if team.min_area is not None else slot_cfg.get("min_area_px", 40))
+        self.max_area: float = float(team.max_area if team.max_area is not None else slot_cfg.get("max_area_px", 2400))
+        self.morph_kernel: int = int(team.morph_kernel if team.morph_kernel is not None else slot_cfg.get("morph_kernel", 5))
+        # Stabilisation
+        self.center_deadzone_px: float = float(slot_cfg.get("center_deadzone_px", 2.0))
+        self.max_center_step_px: float = float(slot_cfg.get("max_center_step_px", 24.0))
+        self.center_smoothing_alpha: float = float(slot_cfg.get("center_smoothing_alpha", 0.35))
+        # Anti-jump
+        self.jump_switch_threshold_px: float = float(slot_cfg.get("jump_switch_threshold_px", 30.0))
+        self.switch_confirm_frames: int = int(slot_cfg.get("switch_confirm_frames", 3))
+        self.pending_canon: Optional[tuple[float, float]] = None
+        self.pending_hits: int = 0
+        # Telemetry
+        self.state: str = "init"
+        self.state_reason: str = "init"
+        self.mask_mode: str = "hsv+lab"
+        self.confidence: float = 1.0
+        self.consecutive_detections: int = 0
+        self.lost_frames: int = 0
+        self.last_score: float = 0.0
+        # LAB range (built once)
+        if team.lab_lower is None:
+            team.lab_lower, team.lab_upper = build_lab_range_from_hsv(team.hsv_lower, team.hsv_upper)
+
+    # ---- mask & detection ------------------------------------------------
+    def _color_mask(self, roi_bgr: np.ndarray) -> np.ndarray:
+        hsv = cv2.cvtColor(roi_bgr, cv2.COLOR_BGR2HSV)
+        m_hsv = cv2.inRange(hsv, self.team.hsv_lower, self.team.hsv_upper)
+        if self.team.hsv_lower2 is not None and self.team.hsv_upper2 is not None:
+            m_hsv |= cv2.inRange(hsv, self.team.hsv_lower2, self.team.hsv_upper2)
+        lab = cv2.cvtColor(roi_bgr, cv2.COLOR_BGR2LAB)
+        m_lab = cv2.inRange(lab, self.team.lab_lower, self.team.lab_upper)
+        mask = cv2.bitwise_and(m_hsv, m_lab)
+        self.mask_mode = "hsv+lab"
+        if cv2.countNonZero(mask) < 8:
+            mask = m_hsv
+            self.mask_mode = "hsv_only_fallback"
+        k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (self.morph_kernel, self.morph_kernel))
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, k)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, k)
+        return mask
+
+    def _effective_roi_size(self) -> int:
+        base = self.roi_size + self.roi_expand_px
+        # «Захват»: уменьшаем ROI после серии успешных детекций
+        if self.consecutive_detections > 15:
+            base = max(int(self.roi_size * 0.4), self.min_roi) + self.roi_expand_px
+        return max(base, self.min_roi)
+
+    def _find_in_roi(self, roi_bgr: np.ndarray, target_local: tuple[float, float]) -> Optional[tuple[int, int, int, int, float]]:
+        if roi_bgr.size == 0:
+            self.state_reason = "roi_empty"
+            return None
+        mask = self._color_mask(roi_bgr)
+        cnts, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        if not cnts:
+            self.state_reason = "mask_too_sparse"
+            return None
+        cand = []
+        for c in cnts:
+            area = cv2.contourArea(c)
+            if area < self.min_area or area > self.max_area:
+                continue
+            x, y, w, h = cv2.boundingRect(c)
+            if w < 3 or h < 3:
+                continue
+            aspect = w / max(1.0, h)
+            fill = area / max(1.0, float(w * h))
+            if not (0.4 <= aspect <= 12.0 and fill >= 0.18):
+                continue
+            cand.append((x, y, w, h, float(area)))
+        if not cand:
+            self.state_reason = "shape_reject"
+            return None
+        # Score: area + proximity to expected (last) center
+        max_area = max(c[4] for c in cand)
+        tx, ty = target_local
+        roi_h = roi_bgr.shape[0]
+        best = None
+        best_score = -1e9
+        for x, y, w, h, area in cand:
+            cx = x + w / 2.0
+            cy = y + h / 2.0
+            dist = math.hypot(cx - tx, cy - ty)
+            area_score = area / max(1e-6, max_area)
+            dist_penalty = dist / max(1.0, float(roi_h))
+            score = area_score * 1.0 - dist_penalty * 0.6
+            if score > best_score:
+                best_score = score
+                best = (x, y, w, h, area)
+        self.last_score = float(max(0.0, min(1.0, best_score)))
+        return best
+
+    # ---- main update -----------------------------------------------------
+    def update(self, frame_bgr: np.ndarray, H: np.ndarray) -> Optional[dict]:
+        """Run one frame. Returns dict with canonical_px / frame_px / state, or None if untrackable yet."""
+        if self.canonical_px is None:
+            self.state = "lost"
+            self.state_reason = "no_anchor"
+            return None
+        # Project canonical → frame via H_inv to find ROI center.
+        try:
+            H_inv = np.linalg.inv(H)
+        except np.linalg.LinAlgError:
+            self.state = "lost"
+            self.state_reason = "H_singular"
+            return None
+        fx, fy = map_point(H_inv, self.canonical_px)
+        fh, fw = frame_bgr.shape[:2]
+        if not (0 <= fx < fw and 0 <= fy < fh):
+            self.state = "lost"
+            self.state_reason = "out_of_frame"
+            self.lost_frames += 1
+            self._on_miss()
+            return self._snapshot()
+        rs = self._effective_roi_size()
+        x0 = max(0, int(fx - rs // 2))
+        y0 = max(0, int(fy - rs // 2))
+        x1 = min(fw, x0 + rs)
+        y1 = min(fh, y0 + rs)
+        roi = frame_bgr[y0:y1, x0:x1]
+        target_local = (fx - x0, fy - y0)
+        det = self._find_in_roi(roi, target_local)
+        if det is None:
+            self._on_miss()
+            return self._snapshot()
+        x, y, w, h, area = det
+        # Frame-pixel center of the detected blob
+        det_fx = x0 + x + w / 2.0
+        det_fy = y0 + y + h / 2.0
+        # Project back to canonical
+        cand_cx, cand_cy = map_point(H, (det_fx, det_fy))
+        # Anti-jump confirmation in canonical space
+        last_cx, last_cy = self.canonical_px
+        jump = math.hypot(cand_cx - last_cx, cand_cy - last_cy)
+        if jump > self.jump_switch_threshold_px and self.consecutive_detections > 0:
+            if self.pending_canon is not None:
+                pd = math.hypot(cand_cx - self.pending_canon[0], cand_cy - self.pending_canon[1])
+                if pd <= 8.0:
+                    self.pending_hits += 1
+                else:
+                    self.pending_canon = (cand_cx, cand_cy)
+                    self.pending_hits = 1
+            else:
+                self.pending_canon = (cand_cx, cand_cy)
+                self.pending_hits = 1
+            if self.pending_hits < self.switch_confirm_frames:
+                # Hold previous position; don't commit jump yet.
+                self.state = "hold"
+                self.state_reason = f"switch_wait_{self.pending_hits}/{self.switch_confirm_frames}"
+                self.confidence = max(0.35, self.confidence * 0.92)
+                self.last_frame_px = (fx, fy)
+                return self._snapshot()
+            else:
+                self.pending_canon = None
+                self.pending_hits = 0
+                self.state_reason = "switch_confirmed"
+        else:
+            self.pending_canon = None
+            self.pending_hits = 0
+
+        # Smooth with deadzone + max-step clamp (in canonical_px).
+        dx = cand_cx - last_cx
+        dy = cand_cy - last_cy
+        dist = math.hypot(dx, dy)
+        if dist > self.center_deadzone_px:
+            if dist > self.max_center_step_px:
+                scale = self.max_center_step_px / max(1e-6, dist)
+                dx *= scale
+                dy *= scale
+            new_cx = last_cx + dx * self.center_smoothing_alpha
+            new_cy = last_cy + dy * self.center_smoothing_alpha
+            self.canonical_px = (new_cx, new_cy)
+        self.last_frame_px = (det_fx, det_fy)
+        self.state = "tracked"
+        if self.state_reason != "switch_confirmed":
+            self.state_reason = "detected"
+        self.confidence = min(1.0, self.confidence * 0.6 + 0.4 + 0.0)
+        self.consecutive_detections += 1
+        self.lost_frames = 0
+        # Gradually shrink expanded ROI back.
+        self.roi_expand_px = max(0, self.roi_expand_px - 20)
+        return self._snapshot()
+
+    def _on_miss(self) -> None:
+        self.lost_frames += 1
+        self.consecutive_detections = 0
+        self.confidence = max(0.1, self.confidence - 0.07)
+        if self.lost_frames > 5:
+            # Slowly expand ROI to recover.
+            self.roi_expand_px = min(self.max_roi_expand_px, self.roi_expand_px + self.roi_expand_step_px)
+        if self.state != "lost":
+            self.state = "low_conf"
+
+    def _snapshot(self) -> dict:
+        return {
+            "team_id": self.team.id,
+            "slot_id": self.team.slot_id or self.team.id,
+            "canonical_px": [round(self.canonical_px[0], 1), round(self.canonical_px[1], 1)] if self.canonical_px else None,
+            "frame_px": [round(self.last_frame_px[0], 1), round(self.last_frame_px[1], 1)] if self.last_frame_px else None,
+            "state": self.state,
+            "state_reason": self.state_reason,
+            "mask_mode": self.mask_mode,
+            "confidence": round(float(self.confidence), 3),
+            "score": round(float(self.last_score), 3),
+        }
+
 
 @dataclass
 class Track:
@@ -562,6 +822,19 @@ def main():
         print(f"[info] anchors: {sum(1 for a in anchors_map.values() if a.get('conf') in ('HIGH','MED'))} HIGH/MED, {sum(1 for a in anchors_map.values() if a.get('conf') == 'LOW')} LOW")
     frame_step = int(args.frame_step or cfg.get("frame_step", 3))
 
+    # Per-slot local trackers (the actual detection workhorse). They seed from
+    # motion_detect anchors when available and project canonical → frame each step.
+    slot_cfg = dict(det_cfg)  # inherit min/max area, morph_kernel as defaults
+    slot_cfg.update(cfg.get("slot_tracker", {}) or {})
+    slot_trackers: dict[str, SlotTracker] = {}
+    for t in teams:
+        a = anchors_map.get(t.id, {}) or {}
+        init_canon = None
+        if a.get("canonical_px") is not None:
+            init_canon = (float(a["canonical_px"][0]), float(a["canonical_px"][1]))
+        slot_trackers[t.id] = SlotTracker(t, slot_cfg, init_canon)
+    print(f"[info] slot trackers: {sum(1 for s in slot_trackers.values() if s.canonical_px is not None)}/{len(slot_trackers)} seeded with canonical anchor")
+
     cap = cv2.VideoCapture(str(args.video))
     if not cap.isOpened():
         print("[err] cv2 не открыл видео", file=sys.stderr); sys.exit(2)
@@ -641,44 +914,43 @@ def main():
                     "rotation_deg": round(decomp["rotation_deg"], 2),
                     "pan_canonical": [round(cx_can, 1), round(cy_can, 1)],
                 }
-                blobs = detect_team_blobs(frame, teams, det_cfg)
-                world_dets = []
-                for b in blobs:
-                    cx_c, cy_c = map_point(H, b["frame_px"])
-                    wx, wy = map_point(cmap.px_to_world, (cx_c, cy_c))
-                    angle_world = None
-                    if b["angle_frame_deg"] is not None:
-                        # повернуть единичный вектор стрелки через H и измерить угол на карте
-                        a = math.radians(b["angle_frame_deg"])
-                        p0 = b["frame_px"]
-                        p1 = (p0[0] + 10 * math.cos(a), p0[1] + 10 * math.sin(a))
-                        cx1, cy1 = map_point(H, p1)
-                        wx1, wy1 = map_point(cmap.px_to_world, (cx1, cy1))
-                        angle_world = math.degrees(math.atan2(wy1 - wy, wx1 - wx))
-                    world_dets.append({
-                        "team_id": b["team_id"],
-                        "frame_px": [round(b["frame_px"][0], 1), round(b["frame_px"][1], 1)],
-                        "canonical_px": [round(cx_c, 1), round(cy_c, 1)],
-                        "world": [wx, wy],
-                        "angle_world_deg": angle_world,
-                        "score": b["score"],
-                    })
+                # ---- Per-slot local detection in frame ROI ---------------
                 t_now = (frame_idx - start_frame) / fps
-                trk.step(world_dets, t_now)
+                world_dets: list[dict] = []
+                slot_snaps: list[dict] = []
+                for t in teams:
+                    st = slot_trackers[t.id]
+                    snap = st.update(frame, H)
+                    if snap is None:
+                        continue
+                    slot_snaps.append(snap)
+                    if st.canonical_px is not None and st.state in ("tracked", "hold", "low_conf"):
+                        wx, wy = map_point(cmap.px_to_world, st.canonical_px)
+                        world_dets.append({
+                            "team_id": t.id,
+                            "world": (wx, wy),
+                            "score": st.last_score,
+                            "angle_world_deg": None,
+                        })
+                # WorldTracker остаётся только для wipe-логики (длительное отсутствие).
+                # Feed it only confirmed (tracked) detections to avoid wipe-resets on hold.
+                tracked_dets = [d for d in world_dets if any(
+                    s["team_id"] == d["team_id"] and s["state"] == "tracked" for s in slot_snaps
+                )]
+                trk.step(tracked_dets, t_now)
+                # Merge WorldTracker wipe state with slot snapshots.
+                wipe_states = {tr.team_id: tr for tr in trk.tracks.values()}
                 tracks_world = []
-                # обогатим snapshot последними измеренными canonical_px / frame_px (для рендера)
-                snap = trk.snapshot()
-                last_meas = {}
-                for d in world_dets:
-                    cur = last_meas.get(d["team_id"])
-                    if cur is None or d.get("score", 0) > cur.get("score", 0):
-                        last_meas[d["team_id"]] = d
-                for s in snap:
-                    meas = last_meas.get(s["team_id"])
-                    if meas is not None:
-                        s["canonical_px"] = meas["canonical_px"]
-                        s["frame_px"] = meas["frame_px"]
-                    tracks_world.append(s)
+                for snap in slot_snaps:
+                    tr = wipe_states.get(snap["team_id"])
+                    if tr is not None and tr.wiped_at_t is not None:
+                        snap["state"] = "lost"
+                        snap["state_reason"] = f"wiped@{tr.wiped_at_t}"
+                    # world coord (from current canonical)
+                    if snap.get("canonical_px") is not None:
+                        wx, wy = map_point(cmap.px_to_world, snap["canonical_px"])
+                        snap["world"] = [round(wx, 2), round(wy, 2)]
+                    tracks_world.append(snap)
 
             record = {
                 "t": round((frame_idx - start_frame) / fps, 3),
@@ -698,8 +970,10 @@ def main():
                 for s in tracks_world:
                     if "frame_px" not in s:
                         continue
+                    if s.get("frame_px") is None:
+                        continue
                     x, y = s["frame_px"]
-                    color = (0, 255, 0) if s["state"] == "alive" else (0, 200, 255)
+                    color = (0, 255, 0) if s.get("state") == "tracked" else (0, 200, 255)
                     cv2.circle(vis, (int(x), int(y)), 10, color, 2)
                     cv2.putText(vis, s["team_id"], (int(x) + 12, int(y)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
                 preview_writer.write(vis)
