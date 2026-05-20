@@ -6,6 +6,7 @@ import elimRaw from "@/data/m-test-g1/eliminations.json";
 import ringsRaw from "@/data/m-test-g1/rings.json";
 import ringsV2Raw from "@/data/m-test-g1/ring_geometry_v2.json";
 import slotToTagRaw from "@/data/m-test-g1/slot-to-tag.json";
+import tracksRaw from "@/data/m-test-g1/tracks.json";
 import type { GameEvent, RingPhase, Team } from "./mock-match";
 
 type ElimTeam = {
@@ -47,6 +48,23 @@ const rings = ringsRaw as unknown as RingsFile;
 const ringsV2 = ringsV2Raw as unknown as RingsV2File;
 const slotToTag = slotToTagRaw as unknown as Record<string, string>;
 
+// ── Tracks (track_teams pipeline) ───────────────────────────────────
+type TrackPoint = {
+  team_id: string;
+  world: [number, number];
+  state: string;
+  confidence: number;
+};
+type TrackFrame = { t: number; frame: number; tracks: TrackPoint[] };
+type TracksFile = {
+  meta: {
+    canonical_size: [number, number];
+    world_bounds: { x: [number, number]; y: [number, number] };
+  };
+  frames: TrackFrame[];
+};
+const tracks = tracksRaw as unknown as TracksFile;
+
 /** Длительность игры — последний наблюдавшийся "жив". */
 export const testGameDurationSec: number = Math.ceil(
   Object.values(elim.teams).reduce(
@@ -54,6 +72,28 @@ export const testGameDurationSec: number = Math.ceil(
     0,
   ),
 );
+
+/** Реальные траектории команд (нормализованные 0..1 от canonical-карты).
+ *  Ключ — team.id из testGameTeams (`t-test-${slot_number}`). */
+export const testGameTrajectories: Record<string, { t: number; x: number; y: number }[]> = (() => {
+  const [W, H] = tracks.meta.canonical_size ?? [2048, 2048];
+  const out: Record<string, { t: number; x: number; y: number }[]> = {};
+  for (const fr of tracks.frames) {
+    for (const tr of fr.tracks) {
+      // slot_1 -> t-test-1
+      const slotNum = tr.team_id.replace(/^slot_/, "");
+      const key = `t-test-${slotNum}`;
+      const x = tr.world[0] / W;
+      const y = tr.world[1] / H;
+      if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+      (out[key] ??= []).push({ t: fr.t, x, y });
+    }
+  }
+  for (const k of Object.keys(out)) {
+    out[k].sort((a, b) => a.t - b.t);
+  }
+  return out;
+})();
 
 export const testGameRingPhases: RingPhase[] = (() => {
   const closing = rings.phases

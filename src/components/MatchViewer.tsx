@@ -120,9 +120,20 @@ export function MatchViewer({ initialGameId }: { initialGameId?: string }) {
     dwellRadius: 0.04,  // normalized
   });
 
+  const overrideTrajectories = _override?.trajectories;
   const trajectories = useMemo(
-    () => Object.fromEntries(teams.map((t, i) => [t.id, generateTrajectory(i + 7, durationSec)])),
-    [durationSec],
+    () => {
+      if (overrideTrajectories) {
+        // Для команд без реальных треков — пустой массив, отрисуется только если есть точки.
+        return Object.fromEntries(
+          teams.map((t) => [t.id, overrideTrajectories[t.id] ?? []]),
+        );
+      }
+      return Object.fromEntries(
+        teams.map((t, i) => [t.id, generateTrajectory(i + 7, durationSec)]),
+      );
+    },
+    [overrideTrajectories, teams, durationSec],
   );
 
   /** Detect dwell clusters per team: contiguous windows of >= dwellWindow seconds
