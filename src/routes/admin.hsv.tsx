@@ -1,6 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { teams } from "@/lib/mock-match";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import worldsEdgeSample from "@/assets/hsv-samples/worlds-edge.png";
 import stormPointSample from "@/assets/hsv-samples/storm-point.png";
 import eDistrictSample from "@/assets/hsv-samples/e-district.png";
@@ -135,6 +145,12 @@ function HsvAdmin() {
   const [maskStats, setMaskStats] = useState<{ detected: number; total: number; overlapPct: number }>({
     detected: 0, total: 1, overlapPct: 0,
   });
+
+  type PendingImport = {
+    sourceFrame: string;
+    rows: Array<{ id?: string; slot?: number; hex?: string; h?: Range3; s?: Range3; v?: Range3 }>;
+  };
+  const [pendingImport, setPendingImport] = useState<PendingImport | null>(null);
 
   const team = teamList.find((t) => t.id === teamId)!;
   const frame = frames.find((f) => f.id === frameId) ?? frames[0];
@@ -305,6 +321,26 @@ function HsvAdmin() {
   else if (detectedPct > 12) { status = { label: "too wide", tone: "bad" }; noise = "high"; }
   else if (detectedPct > 6) { status = { label: "noisy", tone: "warn" }; noise = "medium"; }
   if (maskStats.overlapPct > 25) status = { label: "conflicts", tone: "bad" };
+
+  const applyImport = (rows: PendingImport["rows"], targetFrame: string, switchTo: boolean) => {
+    const nextPresets: Record<string, Preset> = { ...presets };
+    const nextColors: Record<string, string> = { ...savedColors };
+    let n = 0;
+    rows.forEach((row, i) => {
+      const tid = row.id ?? teamList[(row.slot ?? i + 1) - 1]?.id;
+      if (!tid) return;
+      if (row.h && row.s && row.v) {
+        nextPresets[presetKey(tid, targetFrame)] = { h: row.h, s: row.s, v: row.v };
+      }
+      if (row.hex) nextColors[presetKey(tid, targetFrame)] = row.hex;
+      n++;
+    });
+    setPresets(nextPresets);
+    setSavedColors(nextColors);
+    if (switchTo && frames.some((fr) => fr.id === targetFrame)) setFrameId(targetFrame);
+    setPendingImport(null);
+    alert(`Imported ${n} team preset${n === 1 ? "" : "s"} for frame "${targetFrame}"`);
+  };
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
@@ -514,25 +550,14 @@ function HsvAdmin() {
                   if (!f) return;
                   try {
                     const data = JSON.parse(await f.text());
-                    const targetFrame: string = data.frame ?? frame.id;
+                    const sourceFrame: string = data.frame ?? frame.id;
                     const arr: Array<{ id?: string; slot?: number; hex?: string; h?: Range3; s?: Range3; v?: Range3 }> =
                       Array.isArray(data) ? data : data.teams ?? [];
-                    const nextPresets: Record<string, Preset> = { ...presets };
-                    const nextColors: Record<string, string> = { ...savedColors };
-                    let n = 0;
-                    arr.forEach((row, i) => {
-                      const tid = row.id ?? teamList[(row.slot ?? i + 1) - 1]?.id;
-                      if (!tid) return;
-                      if (row.h && row.s && row.v) {
-                        nextPresets[presetKey(tid, targetFrame)] = { h: row.h, s: row.s, v: row.v };
-                      }
-                      if (row.hex) nextColors[presetKey(tid, targetFrame)] = row.hex;
-                      n++;
-                    });
-                    setPresets(nextPresets);
-                    setSavedColors(nextColors);
-                    if (frames.some((fr) => fr.id === targetFrame)) setFrameId(targetFrame);
-                    alert(`Imported ${n} team preset${n === 1 ? "" : "s"} for frame "${targetFrame}"`);
+                    if (sourceFrame && sourceFrame !== frame.id) {
+                      setPendingImport({ sourceFrame, rows: arr });
+                    } else {
+                      applyImport(arr, frame.id, false);
+                    }
                   } catch (err) {
                     alert(`Import failed: ${(err as Error).message}`);
                   }
@@ -565,6 +590,46 @@ mask  = cv2.inRange(hsv, lower, upper)`}
           </div>
         </div>
       </div>
+
+      <AlertDialog open={!!pendingImport} onOpenChange={(o) => !o && setPendingImport(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Import preset to which map?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The file was saved for frame{" "}
+              <span className="text-mono font-semibold">
+                {pendingImport?.sourceFrame}
+              </span>
+              , but the current frame is{" "}
+              <span className="text-mono font-semibold">{frame.id}</span>. Where
+              should these HSV ranges be applied?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() =>
+                pendingImport &&
+                applyImport(pendingImport.rows, frame.id, false)
+              }
+            >
+              Import to current ({frame.id})
+            </AlertDialogAction>
+            <AlertDialogAction
+              onClick={() =>
+                pendingImport &&
+                applyImport(
+                  pendingImport.rows,
+                  pendingImport.sourceFrame,
+                  true,
+                )
+              }
+            >
+              Switch to {pendingImport?.sourceFrame}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
