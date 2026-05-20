@@ -44,6 +44,13 @@ class TeamCfg:
     color_hex: str = "#ffffff"
     slot: Optional[int] = None       # 1..20, matches motion_detect/hsv_presets
     slot_id: Optional[str] = None    # canonical "slot_<N>"; falls back to id
+    # LAB range derived from HSV range (filled lazily by SlotTracker).
+    lab_lower: Optional[np.ndarray] = None
+    lab_upper: Optional[np.ndarray] = None
+    # Per-slot detection overrides (None → fall back to global det_cfg).
+    min_area: Optional[float] = None
+    max_area: Optional[float] = None
+    morph_kernel: Optional[int] = None
 
 
 @dataclass
@@ -269,6 +276,31 @@ def map_point(H: np.ndarray, pt_xy: tuple[float, float]) -> tuple[float, float]:
     v = np.array([pt_xy[0], pt_xy[1], 1.0])
     w = H @ v
     return float(w[0] / w[2]), float(w[1] / w[2])
+
+
+# ------------------------- HSV → LAB helper ------------------------------
+
+def _hsv_to_lab_pixel(hsv: tuple[int, int, int]) -> np.ndarray:
+    px = np.array([[[hsv[0], hsv[1], hsv[2]]]], dtype=np.uint8)
+    bgr = cv2.cvtColor(px, cv2.COLOR_HSV2BGR)
+    lab = cv2.cvtColor(bgr, cv2.COLOR_BGR2LAB)
+    return lab[0, 0].astype(np.int16)
+
+
+def build_lab_range_from_hsv(lo: np.ndarray, hi: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Approximate LAB range from HSV bounds, expanded on A/B for shadows/compression."""
+    lo_lab = _hsv_to_lab_pixel((int(lo[0]), int(lo[1]), int(lo[2])))
+    hi_lab = _hsv_to_lab_pixel((int(hi[0]), int(hi[1]), int(hi[2])))
+    l_min = int(max(0, min(lo_lab[0], hi_lab[0]) - 20))
+    l_max = int(min(255, max(lo_lab[0], hi_lab[0]) + 20))
+    a_min = int(max(0, min(lo_lab[1], hi_lab[1]) - 28))
+    a_max = int(min(255, max(lo_lab[1], hi_lab[1]) + 28))
+    b_min = int(max(0, min(lo_lab[2], hi_lab[2]) - 28))
+    b_max = int(min(255, max(lo_lab[2], hi_lab[2]) + 28))
+    return (
+        np.array([l_min, a_min, b_min], dtype=np.uint8),
+        np.array([l_max, a_max, b_max], dtype=np.uint8),
+    )
 
 
 # --------------------- Anchors (from motion_detect) ----------------------
