@@ -19,9 +19,13 @@ export type Polygon = {
   points: { x: number; y: number }[];
 };
 
-export type ZoneTag = "team" | "camera" | "minimap" | "timer" | "map_name";
+/**
+ * Zone tags are dynamic — теги команд (`team_1`..`team_20`), `hud`, и кастомные
+ * добавляются на лету в /admin/zones. Поэтому `tag` — обычная строка, а не enum.
+ */
+export type ZoneTag = string;
 export type Zone = { id: string; name: string; tag: ZoneTag; x: number; y: number; w: number; h: number };
-export type ZoneMode = "vod" | "camera";
+export type ZoneMode = "vod" | "vod2" | "camera";
 
 export type CustomMap = { id: string; name: string; image: string };
 
@@ -79,6 +83,7 @@ const initialVod: Zone[] = [
   { id: "v-timer",    name: "Round timer",tag: "timer",    x: 20,   y: 380,  w: 320, h: 90  },
   { id: "v-team-l",   name: "Team panel", tag: "team",     x: 20,   y: 720,  w: 540, h: 280 },
 ];
+const initialVod2: Zone[] = [];
 const initialCamera: Zone[] = [
   { id: "c-name",  name: "Player name",  tag: "camera",  x: 60,   y: 730, w: 480, h: 90 },
   { id: "c-squad", name: "Squad badge",  tag: "team",    x: 60,   y: 830, w: 480, h: 120 },
