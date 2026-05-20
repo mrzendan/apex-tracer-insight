@@ -291,15 +291,25 @@ def read_ring_at(cap: cv2.VideoCapture, f: int, zone: dict,
     crop = frame[y:y + h, x:x + w]
     if crop.size == 0:
         return None
-    # Префильтр под белый текст плашки: HSV V-канал, отсекаем тёмный фон.
-    # Если маска оказалась почти пустой — плашка не отрисована (early game).
+    # Плашка кольца Apex — стилизованный белый текст с обводкой на
+    # красном/тёмном фоне. Изолируем именно БЕЛЫЕ пиксели:
+    # низкая насыщенность (S) + высокая яркость (V). Это убирает
+    # красный фон, который при простом V>180 тоже попадал в маску.
     hsv = cv2.cvtColor(crop, cv2.COLOR_BGR2HSV)
-    v = hsv[:, :, 2]
-    _, mask = cv2.threshold(v, 180, 255, cv2.THRESH_BINARY)
-    if mask.mean() < 4:  # < ~1.5% ярких пикселей — плашки нет
+    s, v = hsv[:, :, 1], hsv[:, :, 2]
+    mask = cv2.inRange(hsv, (0, 0, 170), (179, 90, 255))
+    if mask.mean() < 3:  # плашки нет вовсе
         return None
-    bright = cv2.bitwise_and(crop, crop, mask=mask)
-    txt = ocr(bright, lang, digits_only=False, alnum_only=True,
+    # Готовим контрастный ч/б: чёрный текст на белом фоне (любит tesseract).
+    h0, w0 = crop.shape[:2]
+    scale = max(2, int(round(64 / max(1, h0))))
+    big = cv2.resize(mask, (w0 * scale, h0 * scale),
+                     interpolation=cv2.INTER_CUBIC)
+    inv = cv2.bitwise_not(big)
+    inv_bgr = cv2.cvtColor(inv, cv2.COLOR_GRAY2BGR)
+    # Передаём 3-канальное изображение, чтобы preprocess_for_ocr не
+    # пересжимал маску повторно (Otsu сам разберётся).
+    txt = ocr(inv_bgr, lang, digits_only=False, alnum_only=True,
               calib_key=(zone["tag"], zone["name"]))
     if not txt:
         return None
@@ -314,12 +324,12 @@ def read_ring_at(cap: cv2.VideoCapture, f: int, zone: dict,
     state: str | None = None
     if "CLOSED" in up:
         state = "CLOSED"
+    elif "COUNTDOWN" in up or "COUNT" in up or "NTDOWN" in up:
+        state = "COUNTDOWN"
     elif "CLOSING" in up or "CLOS" in up:  # OCR любит ломать "CLOSING" → "CLOS1NG"/"CLOSNG"
         # snap: проверим, что это именно CLOSING, а не CLOSED
         snapped = snap_to_known(up, ["CLOSING", "CLOSED"], max_dist=2)
         state = snapped or "CLOSING"
-    elif "COUNTDOWN" in up:
-        state = "COUNTDOWN"
     # 2) если ничего из слов — но виден таймер MM:SS → это COUNTDOWN ("RING N IN M:SS")
     if state is None and RE_RING_TIMER.search(up):
         state = "COUNTDOWN"
