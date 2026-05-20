@@ -42,6 +42,8 @@ class TeamCfg:
     hsv_lower2: Optional[np.ndarray] = None
     hsv_upper2: Optional[np.ndarray] = None
     color_hex: str = "#ffffff"
+    slot: Optional[int] = None       # 1..20, matches motion_detect/hsv_presets
+    slot_id: Optional[str] = None    # canonical "slot_<N>"; falls back to id
 
 
 @dataclass
@@ -62,6 +64,8 @@ def parse_teams(cfg: dict) -> list[TeamCfg]:
     out = []
     palette = ["#ef4444", "#3b82f6", "#eab308", "#22c55e", "#a855f7", "#ec4899", "#06b6d4", "#f97316"]
     for i, t in enumerate(cfg.get("teams", [])):
+        slot = t.get("slot")
+        slot_id = t.get("slot_id") or (f"slot_{int(slot)}" if slot is not None else str(t["id"]))
         out.append(TeamCfg(
             id=str(t["id"]),
             name=str(t.get("name", t["id"])),
@@ -70,6 +74,8 @@ def parse_teams(cfg: dict) -> list[TeamCfg]:
             hsv_lower2=np.array(t["hsv_lower2"], dtype=np.uint8) if "hsv_lower2" in t else None,
             hsv_upper2=np.array(t["hsv_upper2"], dtype=np.uint8) if "hsv_upper2" in t else None,
             color_hex=t.get("color", palette[i % len(palette)]),
+            slot=int(slot) if slot is not None else None,
+            slot_id=slot_id,
         ))
     return out
 
