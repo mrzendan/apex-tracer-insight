@@ -755,6 +755,7 @@ function MapCanvas({
   ringPhases: RingPhase[];
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const ringSegments = useMemo(() => buildRingSegments(ringPhases), [ringPhases]);
   const [view, setView] = useState({ scale: 1, tx: 0, ty: 0 });
   const drag = useRef<{ x: number; y: number; tx: number; ty: number } | null>(null);
 
