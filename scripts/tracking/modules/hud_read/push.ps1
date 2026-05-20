@@ -7,6 +7,10 @@ param(
   [int]$RefineBudget = 10,
   [int]$RefineLinear = 4,
   [int]$RefineRollback = 0,
+  [int]$RingScoutStep = 600,
+  [int]$RingRefineBudget = 10,
+  [int]$RingRefineLinear = 4,
+  [switch]$RingsOnly,
   [int]$Workers = 0,
   [int]$FrameStep = 600,
   [double]$StartSec = 0,
@@ -18,6 +22,7 @@ param(
   [int]$StaticConfirm = 3,
   [int]$StaticMaxFrames = 8,
   [string]$Out = "scripts/tracking/modules/hud_read/reports",
+  [switch]$SyncUI,
   [switch]$NoPush
 )
 $ErrorActionPreference = "Stop"
@@ -64,6 +69,9 @@ if ($Workers -gt 0) {
     "--refine-budget", $RefineBudget,
     "--refine-linear", $RefineLinear,
     "--refine-rollback", $RefineRollback,
+    "--ring-scout-step", $RingScoutStep,
+    "--ring-refine-budget", $RingRefineBudget,
+    "--ring-refine-linear", $RingRefineLinear,
     "--frame-step", $FrameStep,
     "--start-sec", $StartSec,
     "--end-sec", $EndSec,
@@ -74,10 +82,15 @@ if ($Workers -gt 0) {
     "--static-max-frames", $StaticMaxFrames,
     "--out", $Out
   )
+  if ($RingsOnly) { $argsList += "--rings-only" }
 }
 if ($TessCmd) { $argsList += @("--tess-cmd", $TessCmd) }
 & python @argsList
 if ($LASTEXITCODE -ne 0) { throw "hud_read упал (rc=$LASTEXITCODE)" }
+if ($SyncUI) {
+  & python "scripts/tracking/modules/hud_read/sync_to_ui.py" --reports $Out
+  if ($LASTEXITCODE -ne 0) { throw "sync_to_ui упал (rc=$LASTEXITCODE)" }
+}
 if ($NoPush) { return }
 git add $Out
 git commit -m "hud_read: run $(Get-Date -Format 'yyyy-MM-dd HH:mm')" | Out-Null
