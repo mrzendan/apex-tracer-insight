@@ -221,7 +221,7 @@ export function generateTrajectory(seed: number, durationSec: number): Trajector
   return points;
 }
 
-export type RingPhase = { startSec: number; endSec: number; closingStartSec?: number; cx: number; cy: number; r: number };
+export type RingPhase = { startSec: number; endSec: number; closingStartSec?: number; cx: number; cy: number; r: number; source?: "real" | "inherited" };
 
 /**
  * Six concentric ring phases. Each child ring is half the radius of its parent

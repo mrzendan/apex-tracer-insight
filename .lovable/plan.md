@@ -1,36 +1,104 @@
+# Интеграция camera-shift (find_cuts) в ring_locator
+
 ## Проблема
 
-Нижний таймлайн в `MatchViewer` рисует сегменты `R{N} CD` и `R{N} Closing`, делая искусственный сплит каждой фазы по доле `RING_CLOSE_FRACTION = 0.4` (последние 40% фазы = Closing). Это синтетика, не привязанная к реальным `t_countdown_start` / `t_closing_start` из `rings.json`. Поэтому правая колонка (Match Feed, использует `events` с `t_closing_start`) показывает корректные моменты, а нижняя шкала — нет.
+`ring_locator` берёт до 5 сэмплов внутри окна `[t_closed[N-1] … t_closing_start[N] - 0.5s]`
+и медианит `(cx, cy, r)` на кропе HUD-миникарты. Миникарта в Apex плавающая —
+её зум/центр привязаны к POV спектируемого игрока. Если внутри окна обсервер
+переключил POV (→ настоящий `cut`) или у спектируемого изменился zoom (→ `hud_event`),
+сэмплы относятся к разным проекциям мира и медиана даёт «смещённый центр»
+и «не тот радиус». Отсюда `geometry_confidence: low` у 4 из 6 фаз.
 
-Дополнительно `testGameRingPhases` сейчас задаёт границы фазы как `[prev.t_closing_start … this.t_closing_start]`, то есть фаза N «занимает» интервал от закрытия N-1 до закрытия N. Внутри этого интервала нет данных о моменте появления плашки COUNTDOWN ring N — а именно он нужен, чтобы CD начинался в правильный момент.
+Сейчас `find_cuts` уже даёт три списка: `events` (настоящие POV-каты),
+`hud_events` (zoom/killcam/overlay), `gray_zone`. `ring_locator.load_cuts`
+их склеивает в один blacklist «плохих секунд» и просто пропускает
+кадр, если он попал в `±1s` вокруг события. Этого мало: окна между двумя
+катами могут быть достаточно длинными, чтобы взять 3+ согласованных сэмпла
+с **одной** проекции — и именно так миникарта стабильна.
 
 ## Что меняем
 
-1. **Расширить тип `RingPhase`** в `src/lib/mock-match.ts`:
-   ```ts
-   export type RingPhase = {
-     startSec: number;   // начало CD (или старт игры для R1)
-     endSec: number;     // конец Closing
-     closingStartSec?: number; // момент перехода CD → Closing
-     cx: number; cy: number; r: number;
-   };
-   ```
+### 1. `scripts/tracking/modules/ring_locator/ring_locator.py`
 
-2. **Гидрация в `src/lib/test-game-data.ts`** (`testGameRingPhases`):
-   - `startSec` = `t_countdown_start` для текущего кольца, иначе `t_closing_start` предыдущего, иначе 0 (для R1).
-   - `closingStartSec` = `t_closing_start` текущего кольца.
-   - `endSec` = `t_countdown_start` следующего кольца, иначе `t_closing_start` следующего, иначе `testGameDurationSec`.
+- Заменить `load_cuts` на `load_cut_segments`, который возвращает:
+  - `events[]` — список «жёстких» отметок (t, classify) из `cuts.json.events`
+    (это границы POV-сегментов);
+  - `hud_bad[]` — старый ±0.5s blacklist из `hud_events` (камера на месте,
+    но картинка дрожит — кадры всё равно нельзя).
+- Новый шаг `pov_subwindows(t_lo, t_hi, events, min_len=2.0)`:
+  - режет `[t_lo, t_hi]` границами `events.t`;
+  - выкидывает огрызки короче `min_len`;
+  - возвращает список под-окон, каждое — один непрерывный POV.
+- `sample_phase` принимает список под-окон, а не одно окно:
+  - в каждом семплируем до 3 кадров (исключая `hud_bad`);
+  - считаем медиану `(cx, cy, r)` **внутри** под-окна;
+  - возвращаем самое «согласованное» под-окно: минимальный
+    `max(|cx-med|) + |r-med_r|` по своим сэмплам.
+- Sanity: после выбора под-окна — старая проверка «следующий центр
+  внутри предыдущего кольца» остаётся, но теперь сравнивается уже
+  с гарантированно согласованной медианой.
+- В `ring_geometry.json` для каждой фазы добавляем:
+  - `pov_window: [t0, t1]` — какой POV-сегмент использовали;
+  - `samples_total` / `samples_used` — для дебага.
+- Лог: на каждую фазу печатаем сколько POV-сегментов попало в окно
+  и какой выбран.
 
-3. **Обновить `buildRingSegments`** в `src/components/MatchViewer.tsx`:
-   - Если `phase.closingStartSec` задан — использовать его как границу CD/Closing.
-   - Иначе оставить старый расчёт через `RING_CLOSE_FRACTION` (fallback для дефолтных моков).
+CLI остаётся тот же; `--cuts` теперь обязательно используется не только
+для blacklist, но и для нарезки POV-сегментов. Если `--cuts` не передан —
+работаем как раньше (одно окно), но печатаем warning «без cuts.json точность
+геометрии деградирует на плавающей миникарте».
 
-## Ожидаемый результат
+### 2. `scripts/tracking/modules/ring_locator/README.md`
 
-Нижняя шкала на `/games/m-test-g1` начинает каждую плашку `R{N} CD` ровно в момент `t_countdown_start` из `rings.json` и переключается на `R{N} Closing` ровно в `t_closing_start`. Совпадает с правым Match Feed.
+Дописать раздел «Почему нужен `--cuts`», описать формат `pov_window`
+в выходе и новые поля.
+
+### 3. Фронт — гард по числу колец
+
+`src/lib/test-game-data.ts`:
+
+- Текущая логика уже строит `testGameRingPhases` по `rings.phases` 1:1,
+  но мок-fallback (`RING_OFFSETS`) может выдать центр/радиус с потолка,
+  если `ring_locator` не положил геометрию. Это и выглядит как «лишние кольца».
+- Меняем поведение: если для фазы N нет ни `geometry.phases[N]`, ни
+  предыдущей реальной геометрии — фаза пропускается, а не дорисовывается
+  моком. В рантайме `testGameRingPhases.length ≤ rings.phases.length`
+  и каждое кольцо имеет источник (`real | inherited`).
+- В `RingPhase` (`src/lib/mock-match.ts`) добавляем опциональное
+  `source?: "real" | "inherited"`, чтобы дальше можно было дим/маркировать
+  кольца с низкой уверенностью на UI (опционально, не в этом ПР).
+
+`src/components/MatchViewer.tsx`: ничего не трогаем — он уже рендерит
+по одному кольцу на момент времени; уменьшение массива автоматически
+уберёт «лишние» сегменты на нижнем таймлайне.
+
+## Технические детали
+
+```text
+              t_closed[N-1]                        t_closing_start[N]
+                 │                                          │
+window:          ├──────────────────────────────────────────┤
+events[]:        │     ▲cut         ▲cut                    │
+                 │   t=A           t=B                      │
+sub-windows:     ├──A┤   ├─────B────┤   ├──────────────────┤
+                  pov0    pov1         pov2  ← выбираем тот, где
+                                              cx/r-разброс минимальный
+```
+
+`pov_subwindows` — чистая функция, легко покрыть юнит-тестом
+(если в модуле появится `tests/`, добавить кейс).
 
 ## Файлы
 
-- `src/lib/mock-match.ts` — поле `closingStartSec` в `RingPhase`.
-- `src/lib/test-game-data.ts` — заполнение нового поля и пересчёт `startSec/endSec` из реальных таймингов.
-- `src/components/MatchViewer.tsx` — `buildRingSegments` уважает `closingStartSec`.
+- `scripts/tracking/modules/ring_locator/ring_locator.py` — новая логика.
+- `scripts/tracking/modules/ring_locator/README.md` — описание.
+- `src/lib/test-game-data.ts` — убрать мок-fallback для отсутствующей геометрии.
+- `src/lib/mock-match.ts` — добавить `source` в `RingPhase` (опц.).
+
+## Что НЕ делаем
+
+- Не трогаем `find_cuts` — его выход уже достаточен.
+- Не делаем гомографию миникарты (это отдельный модуль и большая работа);
+  гипотеза: внутри одного POV миникарта стабильна, и одного выбора
+  под-окна достаточно. Если после прогона на тестовом VOD `confidence`
+  у 4–5 из 6 фаз останется `low`, тогда уже считаем гомографию HUD.

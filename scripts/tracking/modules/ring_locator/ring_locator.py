@@ -41,22 +41,51 @@ def rect_from_zones(zones_path: Path, zone_sel: str) -> tuple[int, int, int, int
     )
 
 
-def load_cuts(path: Path | None) -> list[tuple[float, float]]:
-    """Возвращает интервалы [t0, t1], которые надо пропускать
-    (hud_events ± 0.5с, cut ± 0.5с)."""
+def load_cut_segments(
+    path: Path | None,
+) -> tuple[list[float], list[tuple[float, float]]]:
+    """Читает cuts.json и возвращает:
+    - cut_ts: моменты «жёстких» POV-катов (границы непрерывных POV-сегментов);
+    - hud_bad: интервалы ±0.5с вокруг hud_events (камера на месте,
+      но картинка дрожит — кадры использовать нельзя).
+    """
     if not path or not path.exists():
-        return []
+        return [], []
     data = json.loads(path.read_text(encoding="utf-8"))
-    bad: list[tuple[float, float]] = []
+    cut_ts: list[float] = []
     for ev in (data.get("events") or []):
         t = ev.get("t")
         if t is not None:
-            bad.append((t - 1.0, t + 1.0))
+            cut_ts.append(float(t))
+    cut_ts.sort()
+    hud_bad: list[tuple[float, float]] = []
     for ev in (data.get("hud_events") or []):
         t = ev.get("t")
         if t is not None:
-            bad.append((t - 0.5, t + 0.5))
-    return bad
+            hud_bad.append((float(t) - 0.5, float(t) + 0.5))
+    return cut_ts, hud_bad
+
+
+def pov_subwindows(
+    t_lo: float, t_hi: float, cut_ts: list[float], min_len: float = 2.0,
+) -> list[tuple[float, float]]:
+    """Режет окно [t_lo, t_hi] границами cut_ts. Возвращает под-окна
+    длиной ≥ min_len. Каждое под-окно — один непрерывный POV-сегмент."""
+    if t_hi <= t_lo:
+        return []
+    cuts_in = [t for t in cut_ts if t_lo < t < t_hi]
+    # Добавляем небольшой запас вокруг каждого ката (POV переключился),
+    # чтобы случайно не подхватить пограничный кадр.
+    pad = 0.5
+    points = [t_lo] + [
+        x for t in cuts_in for x in (t - pad, t + pad)
+    ] + [t_hi]
+    out: list[tuple[float, float]] = []
+    for i in range(0, len(points) - 1, 2):
+        a, b = points[i], points[i + 1]
+        if b - a >= min_len:
+            out.append((a, b))
+    return out
 
 
 def is_bad_time(t: float, bad: list[tuple[float, float]]) -> bool:
@@ -124,11 +153,11 @@ def _ring_score(mask: np.ndarray, cx: float, cy: float, r: float,
     return hits / max(1, total)
 
 
-def sample_phase(cap: cv2.VideoCapture, minimap_rect: tuple[int, int, int, int],
-                 t_lo: float, t_hi: float, fps: float,
-                 bad: list[tuple[float, float]],
-                 max_samples: int = 5) -> list[tuple[float, float, float, float]]:
-    """Возвращает список (t, cx_norm, cy_norm, r_norm)."""
+def sample_window(cap: cv2.VideoCapture, minimap_rect: tuple[int, int, int, int],
+                  t_lo: float, t_hi: float, fps: float,
+                  hud_bad: list[tuple[float, float]],
+                  max_samples: int = 3) -> list[tuple[float, float, float, float]]:
+    """Сэмплит одно POV-окно. Возвращает список (t, cx_norm, cy_norm, r_norm)."""
     if t_hi <= t_lo:
         return []
     x, y, w, h = minimap_rect
@@ -136,7 +165,7 @@ def sample_phase(cap: cv2.VideoCapture, minimap_rect: tuple[int, int, int, int],
     for i in range(max_samples):
         alpha = (i + 1) / (max_samples + 1)
         t = t_lo + (t_hi - t_lo) * alpha
-        if is_bad_time(t, bad):
+        if is_bad_time(t, hud_bad):
             continue
         f = int(round(t * fps))
         frame = grab_frame(cap, f)
@@ -152,6 +181,47 @@ def sample_phase(cap: cv2.VideoCapture, minimap_rect: tuple[int, int, int, int],
         cx, cy, r = det
         samples.append((t, cx, cy, r))
     return samples
+
+
+def sample_phase(
+    cap: cv2.VideoCapture, minimap_rect: tuple[int, int, int, int],
+    t_lo: float, t_hi: float, fps: float,
+    cut_ts: list[float], hud_bad: list[tuple[float, float]],
+    max_samples_per_window: int = 3,
+) -> tuple[list[tuple[float, float, float, float]],
+           tuple[float, float] | None, int]:
+    """Из всех POV-под-окон [t_lo..t_hi] выбираем самое согласованное.
+    Возвращает (samples, chosen_window, total_subwindows)."""
+    subwins = pov_subwindows(t_lo, t_hi, cut_ts)
+    if not subwins:
+        # Нет ни одного сегмента ≥ min_len — берём всё окно как fallback.
+        subwins = [(t_lo, t_hi)] if t_hi > t_lo else []
+    best: tuple[list[tuple[float, float, float, float]],
+                tuple[float, float], float] | None = None
+    for win in subwins:
+        samples = sample_window(
+            cap, minimap_rect, win[0], win[1], fps, hud_bad,
+            max_samples=max_samples_per_window,
+        )
+        if len(samples) < 2:
+            # Один сэмпл нельзя оценить на согласованность — пропускаем,
+            # если есть другие варианты.
+            if best is None and samples:
+                best = (samples, win, float("inf"))
+            continue
+        med_cx = statistics.median(s[1] for s in samples)
+        med_cy = statistics.median(s[2] for s in samples)
+        med_r = statistics.median(s[3] for s in samples)
+        spread = max(
+            max(abs(s[1] - med_cx) for s in samples),
+            max(abs(s[2] - med_cy) for s in samples),
+            max(abs(s[3] - med_r) for s in samples),
+        )
+        if best is None or spread < best[2]:
+            best = (samples, win, spread)
+    if best is None:
+        return [], None, len(subwins)
+    return best[0], best[1], len(subwins)
 
 
 def main() -> int:
@@ -190,8 +260,12 @@ def main() -> int:
                        ensure_ascii=False, indent=2), encoding="utf-8")
         return 0
 
-    bad = load_cuts(args.cuts)
-    print(f"[ring_locator] cuts mask: {len(bad)} bad intervals")
+    cut_ts, hud_bad = load_cut_segments(args.cuts)
+    if args.cuts is None:
+        print("[ring_locator] WARN: --cuts не передан — на плавающей "
+              "HUD-миникарте точность геометрии деградирует")
+    print(f"[ring_locator] cuts: {len(cut_ts)} POV-границ, "
+          f"{len(hud_bad)} hud_event-интервалов")
 
     cap = cv2.VideoCapture(str(args.video))
     if not cap.isOpened():
@@ -216,10 +290,12 @@ def main() -> int:
             window = median_countdown if median_countdown else 30.0
             t_lo = max(0.0, t_close - float(window))
         t_hi = t_close - 0.5
-        samples = sample_phase(cap, minimap_rect, t_lo, t_hi, fps, bad)
+        samples, chosen, n_sub = sample_phase(
+            cap, minimap_rect, t_lo, t_hi, fps, cut_ts, hud_bad,
+        )
         if not samples:
             print(f"[ring_locator] R{ring_n}: нет валидных сэмплов "
-                  f"в окне [{t_lo:.1f}..{t_hi:.1f}]")
+                  f"в окне [{t_lo:.1f}..{t_hi:.1f}] (POV-сегментов: {n_sub})")
             out_phases.append({
                 "ring": ring_n,
                 "cx_norm": None, "cy_norm": None, "r_norm": None,
@@ -247,9 +323,12 @@ def main() -> int:
             "measured_at_t": round(t_avg, 2),
             "samples": len(samples),
             "geometry_confidence": confidence,
+            "pov_window": [round(chosen[0], 2), round(chosen[1], 2)] if chosen else None,
+            "pov_subwindows_total": n_sub,
         })
+        pov_s = f"[{chosen[0]:.1f}..{chosen[1]:.1f}]" if chosen else "n/a"
         print(f"[ring_locator] R{ring_n}: ({cx:.3f},{cy:.3f}) r={r:.3f} "
-              f"n={len(samples)} {confidence}")
+              f"n={len(samples)} {confidence} pov={pov_s} (sub={n_sub})")
 
     cap.release()
     args.out.mkdir(parents=True, exist_ok=True)

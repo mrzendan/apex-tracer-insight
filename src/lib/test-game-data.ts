@@ -40,16 +40,6 @@ const elim = elimRaw as unknown as ElimFile;
 const rings = ringsRaw as unknown as RingsFile;
 const slotToTag = slotToTagRaw as unknown as Record<string, string>;
 
-/** Геометрия колец — fallback mock, если ring_locator ещё не отработал. */
-const RING_OFFSETS: { fx: number; fy: number }[] = [
-  { fx: 0.0,  fy: 0.0  },
-  { fx: 0.35, fy: -0.2 },
-  { fx: -0.3, fy: 0.25 },
-  { fx: 0.2,  fy: 0.3  },
-  { fx: -0.25,fy: -0.15},
-  { fx: 0.15, fy: 0.1  },
-];
-
 /** Длительность игры — последний наблюдавшийся "жив". */
 export const testGameDurationSec: number = Math.ceil(
   Object.values(elim.teams).reduce(
@@ -75,20 +65,30 @@ export const testGameRingPhases: RingPhase[] = (() => {
   }
 
   const out: RingPhase[] = [];
-  let cx = 0.5, cy = 0.5, r = 0.46;
+  let lastReal: { cx: number; cy: number; r: number } | null = null;
   for (let i = 0; i < closing.length; i++) {
     const ringN = closing[i].ring;
     const real = geomByRing.get(ringN);
+    let cx: number, cy: number, r: number;
+    let source: "real" | "inherited";
     if (real) {
       cx = real.cx_norm!;
       cy = real.cy_norm!;
       r = real.r_norm!;
-    } else if (i > 0) {
-      const parent = out[i - 1];
-      const off = RING_OFFSETS[i] ?? { fx: 0, fy: 0 };
-      r = parent.r / 2;
-      cx = parent.cx + parent.r * off.fx;
-      cy = parent.cy + parent.r * off.fy;
+      source = "real";
+      lastReal = { cx, cy, r };
+    } else if (lastReal) {
+      // Нет геометрии для этой фазы — наследуем предыдущую реальную
+      // (не выдумываем смещение моком). Кольцо «стоит на месте» до
+      // следующего реального замера.
+      cx = lastReal.cx;
+      cy = lastReal.cy;
+      r = lastReal.r;
+      source = "inherited";
+    } else {
+      // До первого реального замера данных нет — фазу пропускаем,
+      // чтобы не рисовать произвольное кольцо.
+      continue;
     }
     const cur = closing[i];
     const next = closing[i + 1];
@@ -99,7 +99,7 @@ export const testGameRingPhases: RingPhase[] = (() => {
     const endSec = i === closing.length - 1
       ? testGameDurationSec
       : (next?.t_countdown_start ?? next?.t_closing_start ?? testGameDurationSec);
-    out.push({ startSec, endSec, closingStartSec, cx, cy, r });
+    out.push({ startSec, endSec, closingStartSec, cx, cy, r, source });
   }
   return out;
 })();

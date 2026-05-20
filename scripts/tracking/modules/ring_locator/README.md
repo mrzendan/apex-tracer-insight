@@ -56,7 +56,8 @@ powershell -ExecutionPolicy Bypass -File scripts\tracking\modules\ring_locator\r
   "phases": [
     { "ring": 1, "cx_norm": 0.50, "cy_norm": 0.50, "r_norm": 0.46,
       "measured_at_t": 100.0, "samples": 3,
-      "geometry_confidence": "high" }
+      "geometry_confidence": "high",
+      "pov_window": [70.2, 99.5], "pov_subwindows_total": 2 }
   ]
 }
 ```
@@ -64,10 +65,34 @@ powershell -ExecutionPolicy Bypass -File scripts\tracking\modules\ring_locator\r
 Координаты нормализованы к миникарте: (0,0) — левый верх, (1,1) —
 правый низ. Фронт умножает на размеры своего MapCanvas.
 
+## Почему нужен `--cuts`
+
+HUD-миникарта в Apex плавающая: её центр и зум привязаны к POV
+спектируемого игрока. Если внутри окна COUNTDOWN обсервер переключил
+POV (`events` в `cuts.json`), сэмплы относятся к разным проекциям мира
+и медиана `(cx, cy, r)` даёт смещённый центр / неверный радиус.
+
+`ring_locator` режет окно `[t_closed[N-1]..t_closing_start[N]-0.5]`
+границами `events.t` на под-окна непрерывного POV, сэмплит каждое
+отдельно и выбирает то, где разброс `(cx, cy, r)` между сэмплами
+минимален. `hud_events` остаются blacklist'ом отдельных кадров
+(killcam/zoom-пульс, ±0.5с) — внутри POV-окна они только пропускают
+конкретный кадр, а не отбрасывают всё окно.
+
+Поля в выводе:
+- `pov_window` — какой POV-сегмент использовали для замера;
+- `pov_subwindows_total` — сколько вообще POV-сегментов нашлось в окне.
+
+Без `--cuts` работает по-старому (одно окно) — но печатает warning,
+потому что на плавающей миникарте `geometry_confidence` массово
+уходит в `low`.
+
 ## Что дальше
 
 `sync_to_ui.py` мерджит `ring_geometry.json` в
 `src/data/m-test-g1/rings.json` (новый ключ `geometry`).
 `src/lib/test-game-data.ts` читает `geometry`, если есть — строит
-`RingPhase[]` из реальных измерений; иначе падает на mock
-`RING_OFFSETS`.
+`RingPhase[]` из реальных измерений. Фазы без реального замера
+наследуют предыдущее реальное кольцо (`source: "inherited"`) —
+мок-смещения больше не используются, чтобы на превью не появлялись
+«лишние» нарисованные кольца.
