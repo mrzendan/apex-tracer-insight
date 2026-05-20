@@ -15,11 +15,11 @@ killcam, прыжок на другой бой). Эти моменты лома�
 ## Как запустить
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\tracking\cuts.ps1 `
+powershell -ExecutionPolicy Bypass -File scripts\tracking\modules\find_cuts\push.ps1 `
   -Video scripts\tracking\video.mp4
 ```
 
-Выход складывается в `scripts/tracking/cuts_out/`:
+Выход складывается в `scripts/tracking/modules/find_cuts/reports/`:
 
 - `cuts.json` — машинно-читаемый результат (см. ниже).
 - `cuts.txt` — человекочитаемый отчёт с тремя секциями: `cuts`, `hud`, `gray`.
@@ -98,6 +98,6 @@ ring drift считаем  ⬆ только внутри одного сегме
 канонической карты — на сколько мировых метров) сместился центр ring между
 двумя моментами времени.
 
-Канонические карты (`canonical_maps/*.json` + `*.png`) понадобятся как раз
+Канонические карты (`shared/canonical_maps/*.json` + `*.png`) понадобятся как раз
 на этом следующем шаге: чтобы перевести «сдвиг кольца в пикселях кадра» в
 «сдвиг в мировых координатах конкретной карты Apex».

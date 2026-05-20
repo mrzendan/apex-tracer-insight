@@ -19,25 +19,25 @@
 |---|---|
 | `motion_detect.py` | сам детектор (Python, OpenCV) |
 | `motion.ps1` | PowerShell-обёртка: запуск + git push логов агенту |
-| `motion_out/report.txt` | таблица команд (HIGH/MED/LOW/MISS) |
-| `motion_out/motion_tracks.json` | сырые траектории, по методам |
-| `motion_out/overlays/motion_*.jpg` | start/mid/end оверлеи с траекториями и консенсус-крестами |
-| `motion_out/run.log` | stdout последнего запуска |
+| `modules/motion_detect/reports/report.txt` | таблица команд (HIGH/MED/LOW/MISS) |
+| `modules/motion_detect/reports/motion_tracks.json` | сырые траектории, по методам |
+| `modules/motion_detect/reports/overlays/motion_*.jpg` | start/mid/end оверлеи с траекториями и консенсус-крестами |
+| `modules/motion_detect/reports/run.log` | stdout последнего запуска |
 
 ## Зависимости
 
-- `cuts.json` из `cuts_out/` — чтобы не семплить кадры около камера-катов
+- `cuts.json` из `modules/find_cuts/reports/` — чтобы не семплить кадры около камера-катов
 - `hsv_presets.<map>.json` из `/admin/hsv`
 - `zones.vod.json` из `/admin/zones`, нужен тег `minimap`
 
 ## Запуск
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts/tracking/motion.ps1 `
+powershell -ExecutionPolicy Bypass -File scripts/tracking/modules/motion_detect/push.ps1 `
   -Video scripts\tracking\game.mp4
 ```
 
-Скрипт очищает `motion_out/` (кроме `.gitkeep`), запускает детектор,
+Скрипт очищает `modules/motion_detect/reports/` (кроме `.gitkeep`), запускает детектор,
 коммитит и пушит результаты — агент в Lovable получает их сразу.
 
 ### Параметры `motion.ps1`
@@ -45,7 +45,7 @@ powershell -ExecutionPolicy Bypass -File scripts/tracking/motion.ps1 `
 | Флаг | Дефолт | Что делает |
 |---|---|---|
 | `-Video` | — | путь к mp4 (обязательно) |
-| `-Cuts` | `cuts_out/cuts.json` | результат `cuts.ps1` |
+| `-Cuts` | `modules/find_cuts/reports/cuts.json` | результат `cuts.ps1` |
 | `-HsvPresets` | `configs/hsv_presets.worlds-edge.json` | HSV-пресеты карты |
 | `-Zones` | `configs/zones.vod.json` | разметка зон |
 | `-ZoneTag` | `minimap` | какой тег зон использовать |

@@ -21,9 +21,9 @@
 ## Запуск
 
 ```powershell
-python scripts/tracking/detect_teams.py `
+python scripts/tracking/modules/detect_teams/detect_teams.py `
   --video D:\path\to\game.mp4 `
-  --cuts scripts/tracking/cuts_out/cuts.json `
+  --cuts scripts/tracking/modules/find_cuts/reports/cuts.json `
   --hsv-presets D:\configs\hsv_presets.worlds-edge.json `
   --zones      D:\configs\zones.vod.json `
   --zone-tags  team,minimap `
@@ -33,14 +33,14 @@ python scripts/tracking/detect_teams.py `
 
 ## Что выдаёт
 
-- `detect_out/team_profiles.json` — для каждого слота медианные `w/h/area`
+- `modules/detect_teams/reports/team_profiles.json` — для каждого слота медианные `w/h/area`
   плашки (используется на следующем шаге для гейтинга по размеру).
-- `detect_out/detections.json` — все найденные bbox: `{frame, t, slot,
+- `modules/detect_teams/reports/detections.json` — все найденные bbox: `{frame, t, slot,
   zone, bbox_global, w, h, area}`.
-- `detect_out/slots/<NN>/*.png` — до 16 кропов на слот для глазной проверки.
-- `detect_out/frames/overlay_*.jpg` — кадры с нарисованными зонами и
+- `modules/detect_teams/reports/slots/<NN>/*.png` — до 16 кропов на слот для глазной проверки.
+- `modules/detect_teams/reports/frames/overlay_*.jpg` — кадры с нарисованными зонами и
   bbox найденных команд (цвет совпадает с hex команды).
-- `detect_out/report.txt` — текстовая таблица «slot / hex / n / w / h /
+- `modules/detect_teams/reports/report.txt` — текстовая таблица «slot / hex / n / w / h /
   area / name», видно сразу, какие команды НЕ нашлись.
 
 ## Чек-лист, если slot NOT FOUND
