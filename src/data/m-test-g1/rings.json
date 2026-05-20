@@ -1,27 +1,15 @@
 {
   "video": "scripts\\tracking\\game.mp4",
   "fps": 59.94005994005994,
-<<<<<<< HEAD
-  "scout_step": 300,
-  "refine_budget": 12,
-  "refine_linear": 6,
-  "ring_start_sec": 100.0,
-  "transitions": [
-    {
-      "f": 22252,
-      "t": 371.238,
-      "from": {
-=======
   "scout_step": 600,
   "refine_budget": 10,
   "refine_linear": 4,
   "ring_start_sec": 0.0,
   "transitions": [
     {
-      "f": 8400,
-      "t": 140.14,
+      "f": 6944,
+      "t": 115.849,
       "to": {
->>>>>>> 36619dcc4d965962c75760de99f56a9371f409d3
         "ring": 1,
         "state": "CLOSING"
       },
@@ -29,132 +17,113 @@
       "refine_method": "rollback"
     },
     {
-      "f": 31005,
-      "t": 517.267,
+      "f": 23133,
+      "t": 385.936,
+      "to": {
+        "ring": 2,
+        "state": "COUNTDOWN"
+      },
+      "confidence": "high",
+      "refine_method": "rollback"
+    },
+    {
+      "f": 30920,
+      "t": 515.849,
       "to": {
         "ring": 2,
         "state": "CLOSING"
       },
-<<<<<<< HEAD
-      "confidence": "low",
-      "refine_method": "binary12+linear0",
-      "refine_window": 2
+      "confidence": "high",
+      "refine_method": "rollback"
     },
     {
       "f": 38117,
       "t": 635.919,
-      "from": {
-        "ring": 2,
-        "state": "CLOSING"
+      "to": {
+        "ring": 3,
+        "state": "COUNTDOWN"
       },
-=======
-      "confidence": "medium",
+      "confidence": "high",
       "refine_method": "rollback"
     },
     {
-      "f": 43508,
-      "t": 725.858,
->>>>>>> 36619dcc4d965962c75760de99f56a9371f409d3
+      "f": 44378,
+      "t": 740.373,
       "to": {
         "ring": 3,
         "state": "CLOSING"
       },
-<<<<<<< HEAD
-      "confidence": "low",
-      "refine_method": "binary12+linear0",
-      "refine_window": 1
+      "confidence": "medium",
+      "refine_method": "rollback"
     },
     {
-      "f": 47106,
-      "t": 785.885,
-      "from": {
-        "ring": 3,
-        "state": "CLOSING"
+      "f": 47362,
+      "t": 790.156,
+      "to": {
+        "ring": 4,
+        "state": "COUNTDOWN"
       },
-=======
       "confidence": "medium",
       "refine_method": "rollback"
     },
     {
       "f": 53099,
       "t": 885.868,
->>>>>>> 36619dcc4d965962c75760de99f56a9371f409d3
       "to": {
         "ring": 4,
         "state": "CLOSING"
       },
-<<<<<<< HEAD
-      "confidence": "low",
-      "refine_method": "binary12+linear1",
-      "refine_window": 1
+      "confidence": "high",
+      "refine_method": "rollback"
     },
     {
       "f": 56098,
       "t": 935.902,
-      "from": {
-        "ring": 4,
-        "state": "CLOSING"
+      "to": {
+        "ring": 5,
+        "state": "COUNTDOWN"
       },
-=======
-      "confidence": "medium",
+      "confidence": "high",
       "refine_method": "rollback"
     },
     {
       "f": 60895,
       "t": 1015.932,
->>>>>>> 36619dcc4d965962c75760de99f56a9371f409d3
       "to": {
         "ring": 5,
         "state": "CLOSING"
       },
-<<<<<<< HEAD
-      "confidence": "low",
-      "refine_method": "binary12+linear0",
-      "refine_window": 1
+      "confidence": "high",
+      "refine_method": "rollback"
     },
     {
       "f": 63892,
       "t": 1065.932,
-      "from": {
-        "ring": 5,
-        "state": "CLOSING"
+      "to": {
+        "ring": 6,
+        "state": "COUNTDOWN"
       },
-=======
-      "confidence": "medium",
+      "confidence": "high",
       "refine_method": "rollback"
     },
     {
       "f": 68088,
       "t": 1135.935,
->>>>>>> 36619dcc4d965962c75760de99f56a9371f409d3
       "to": {
         "ring": 6,
         "state": "CLOSING"
       },
-<<<<<<< HEAD
-      "confidence": "low",
-      "refine_method": "binary12+linear1",
-      "refine_window": 1
-=======
-      "confidence": "medium",
+      "confidence": "high",
       "refine_method": "rollback"
->>>>>>> 36619dcc4d965962c75760de99f56a9371f409d3
     }
   ],
   "phases": [
     {
-<<<<<<< HEAD
-      "ring": 2,
-      "countdown_start_f": null,
-      "t_countdown_start": null,
-      "closing_start_f": 22252,
-      "t_closing_start": 371.238,
-=======
       "ring": 1,
       "countdown_start_f": null,
       "t_countdown_start": null,
-      "closing_start_f": 8400,
-      "t_closing_start": 140.14,
+      "closing_start_f": 6944,
+      "t_closing_start": 115.849,
       "closed_f": null,
       "t_closed": null,
       "confidence": {
@@ -163,28 +132,19 @@
     },
     {
       "ring": 2,
-      "countdown_start_f": null,
-      "t_countdown_start": null,
-      "closing_start_f": 31005,
-      "t_closing_start": 517.267,
->>>>>>> 36619dcc4d965962c75760de99f56a9371f409d3
+      "countdown_start_f": 23133,
+      "t_countdown_start": 385.936,
+      "closing_start_f": 30920,
+      "t_closing_start": 515.849,
       "closed_f": null,
-      "t_closed": null,
-      "confidence": {
-        "CLOSING": "medium"
-      }
+      "t_closed": null
     },
     {
       "ring": 3,
-      "countdown_start_f": null,
-      "t_countdown_start": null,
-<<<<<<< HEAD
-      "closing_start_f": 38117,
-      "t_closing_start": 635.919,
-=======
-      "closing_start_f": 43508,
-      "t_closing_start": 725.858,
->>>>>>> 36619dcc4d965962c75760de99f56a9371f409d3
+      "countdown_start_f": 38117,
+      "t_countdown_start": 635.919,
+      "closing_start_f": 44378,
+      "t_closing_start": 740.373,
       "closed_f": null,
       "t_closed": null,
       "confidence": {
@@ -193,54 +153,33 @@
     },
     {
       "ring": 4,
-      "countdown_start_f": null,
-      "t_countdown_start": null,
-<<<<<<< HEAD
-      "closing_start_f": 47106,
-      "t_closing_start": 785.885,
-=======
+      "countdown_start_f": 47362,
+      "t_countdown_start": 790.156,
       "closing_start_f": 53099,
       "t_closing_start": 885.868,
->>>>>>> 36619dcc4d965962c75760de99f56a9371f409d3
       "closed_f": null,
       "t_closed": null,
       "confidence": {
-        "CLOSING": "medium"
+        "COUNTDOWN": "medium"
       }
     },
     {
       "ring": 5,
-      "countdown_start_f": null,
-      "t_countdown_start": null,
-<<<<<<< HEAD
-      "closing_start_f": 56098,
-      "t_closing_start": 935.902,
-=======
+      "countdown_start_f": 56098,
+      "t_countdown_start": 935.902,
       "closing_start_f": 60895,
       "t_closing_start": 1015.932,
->>>>>>> 36619dcc4d965962c75760de99f56a9371f409d3
       "closed_f": null,
-      "t_closed": null,
-      "confidence": {
-        "CLOSING": "medium"
-      }
+      "t_closed": null
     },
     {
       "ring": 6,
-      "countdown_start_f": null,
-      "t_countdown_start": null,
-<<<<<<< HEAD
-      "closing_start_f": 63892,
-      "t_closing_start": 1065.932,
-=======
+      "countdown_start_f": 63892,
+      "t_countdown_start": 1065.932,
       "closing_start_f": 68088,
       "t_closing_start": 1135.935,
->>>>>>> 36619dcc4d965962c75760de99f56a9371f409d3
       "closed_f": null,
-      "t_closed": null,
-      "confidence": {
-        "CLOSING": "medium"
-      }
+      "t_closed": null
     }
   ],
   "derived": {
@@ -248,114 +187,5 @@
     "countdown_durations": [],
     "median_closing": null,
     "median_countdown": null
-  },
-  "geometry": {
-    "minimap": [
-<<<<<<< HEAD
-      34,
-      775,
-      300,
-      300
-    ],
-    "phases": [
-      {
-        "ring": 2,
-        "cx_norm": 0.998,
-        "cy_norm": 0.13,
-        "r_norm": 0.1329,
-        "measured_at_t": 340.99,
-=======
-      437,
-      45,
-      1050,
-      1030
-    ],
-    "phases": [
-      {
-        "ring": 1,
-        "cx_norm": 0.3914,
-        "cy_norm": 0.3885,
-        "r_norm": 0.3112,
-        "measured_at_t": 124.89,
->>>>>>> 36619dcc4d965962c75760de99f56a9371f409d3
-        "samples": 5,
-        "geometry_confidence": "high"
-      },
-      {
-<<<<<<< HEAD
-        "ring": 3,
-        "cx_norm": 0.942,
-        "cy_norm": 0.234,
-        "r_norm": 0.2717,
-        "measured_at_t": 605.67,
-=======
-        "ring": 2,
-        "cx_norm": 0.4886,
-        "cy_norm": 0.3979,
-        "r_norm": 0.2772,
-        "measured_at_t": 502.02,
-        "samples": 5,
-        "geometry_confidence": "low"
-      },
-      {
-        "ring": 3,
-        "cx_norm": 0.4223,
-        "cy_norm": 0.2685,
-        "r_norm": 0.2215,
-        "measured_at_t": 710.61,
->>>>>>> 36619dcc4d965962c75760de99f56a9371f409d3
-        "samples": 5,
-        "geometry_confidence": "low"
-      },
-      {
-        "ring": 4,
-<<<<<<< HEAD
-        "cx_norm": 0.746,
-        "cy_norm": 0.242,
-        "r_norm": 0.2029,
-        "measured_at_t": 755.63,
-=======
-        "cx_norm": 0.3103,
-        "cy_norm": 0.4643,
-        "r_norm": 0.2019,
-        "measured_at_t": 870.62,
->>>>>>> 36619dcc4d965962c75760de99f56a9371f409d3
-        "samples": 5,
-        "geometry_confidence": "low"
-      },
-      {
-        "ring": 5,
-<<<<<<< HEAD
-        "cx_norm": 0.97,
-        "cy_norm": 0.36,
-        "r_norm": 0.3317,
-        "measured_at_t": 903.17,
-        "samples": 4,
-=======
-        "cx_norm": 0.3537,
-        "cy_norm": 0.4235,
-        "r_norm": 0.2291,
-        "measured_at_t": 1000.68,
-        "samples": 5,
->>>>>>> 36619dcc4d965962c75760de99f56a9371f409d3
-        "geometry_confidence": "low"
-      },
-      {
-        "ring": 6,
-<<<<<<< HEAD
-        "cx_norm": 0.99,
-        "cy_norm": 0.11,
-        "r_norm": 0.3561,
-        "measured_at_t": 1035.68,
-=======
-        "cx_norm": 0.6349,
-        "cy_norm": 0.3035,
-        "r_norm": 0.1878,
-        "measured_at_t": 1120.68,
->>>>>>> 36619dcc4d965962c75760de99f56a9371f409d3
-        "samples": 5,
-        "geometry_confidence": "low"
-      }
-    ]
   }
 }
