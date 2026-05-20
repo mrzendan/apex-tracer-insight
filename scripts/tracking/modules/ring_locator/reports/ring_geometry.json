@@ -2,65 +2,95 @@
   "video": "scripts\\tracking\\game.mp4",
   "fps": 59.94005994005994,
   "minimap": [
-    437,
-    45,
-    1050,
-    1030
+    34,
+    775,
+    300,
+    300
   ],
   "phases": [
     {
       "ring": 1,
-      "cx_norm": 0.3914,
-      "cy_norm": 0.3885,
-      "r_norm": 0.3112,
-      "measured_at_t": 124.89,
-      "samples": 5,
-      "geometry_confidence": "high"
+      "cx_norm": 0.718,
+      "cy_norm": 0.234,
+      "r_norm": 0.2101,
+      "measured_at_t": 100.6,
+      "samples": 3,
+      "geometry_confidence": "high",
+      "pov_window": [
+        85.85,
+        115.35
+      ],
+      "pov_subwindows_total": 1
     },
     {
       "ring": 2,
-      "cx_norm": 0.4886,
-      "cy_norm": 0.3979,
-      "r_norm": 0.2772,
-      "measured_at_t": 502.02,
-      "samples": 5,
-      "geometry_confidence": "low"
+      "cx_norm": 0.522,
+      "cy_norm": 0.946,
+      "r_norm": 0.1969,
+      "measured_at_t": 500.6,
+      "samples": 3,
+      "geometry_confidence": "low",
+      "pov_window": [
+        485.85,
+        515.35
+      ],
+      "pov_subwindows_total": 1
     },
     {
       "ring": 3,
-      "cx_norm": 0.4223,
-      "cy_norm": 0.2685,
-      "r_norm": 0.2215,
-      "measured_at_t": 710.61,
-      "samples": 5,
-      "geometry_confidence": "low"
+      "cx_norm": 0.726,
+      "cy_norm": 0.214,
+      "r_norm": 0.1937,
+      "measured_at_t": 725.12,
+      "samples": 3,
+      "geometry_confidence": "low",
+      "pov_window": [
+        710.37,
+        739.87
+      ],
+      "pov_subwindows_total": 1
     },
     {
       "ring": 4,
-      "cx_norm": 0.3103,
-      "cy_norm": 0.4643,
-      "r_norm": 0.2019,
+      "cx_norm": 0.938,
+      "cy_norm": 0.89,
+      "r_norm": 0.1021,
       "measured_at_t": 870.62,
-      "samples": 5,
-      "geometry_confidence": "low"
+      "samples": 3,
+      "geometry_confidence": "low",
+      "pov_window": [
+        855.87,
+        885.37
+      ],
+      "pov_subwindows_total": 1
     },
     {
       "ring": 5,
-      "cx_norm": 0.3537,
-      "cy_norm": 0.4235,
-      "r_norm": 0.2291,
+      "cx_norm": 0.918,
+      "cy_norm": 0.174,
+      "r_norm": 0.1929,
       "measured_at_t": 1000.68,
-      "samples": 5,
-      "geometry_confidence": "low"
+      "samples": 3,
+      "geometry_confidence": "low",
+      "pov_window": [
+        985.93,
+        1015.43
+      ],
+      "pov_subwindows_total": 1
     },
     {
       "ring": 6,
-      "cx_norm": 0.6349,
-      "cy_norm": 0.3035,
-      "r_norm": 0.1878,
+      "cx_norm": 0.482,
+      "cy_norm": 0.142,
+      "r_norm": 0.2277,
       "measured_at_t": 1120.68,
-      "samples": 5,
-      "geometry_confidence": "low"
+      "samples": 3,
+      "geometry_confidence": "low",
+      "pov_window": [
+        1105.93,
+        1135.43
+      ],
+      "pov_subwindows_total": 1
     }
   ]
 }
