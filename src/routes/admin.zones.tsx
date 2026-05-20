@@ -792,6 +792,47 @@ function ZonesAdmin() {
         })(),
         document.body,
       )}
+
+      <AlertDialog open={!!pendingImport} onOpenChange={(o) => !o && setPendingImport(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Import zones — where?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-xs">
+                <div>
+                  <span className="text-mono font-semibold">{pendingImport?.zones.length ?? 0}</span> zones from file
+                  {pendingImport?.mode && (
+                    <> · source mode <span className="text-mono font-semibold">{pendingImport.mode}</span></>
+                  )}
+                  {pendingImport?.presetLabel && (
+                    <> · label <span className="text-mono font-semibold">{pendingImport.presetLabel}</span></>
+                  )}
+                </div>
+                {pendingImport?.missingTags.length ? (
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" checked={importAddTags} onChange={(e) => setImportAddTags(e.target.checked)} />
+                    <span>Add {pendingImport.missingTags.length} missing tag{pendingImport.missingTags.length === 1 ? "" : "s"}: <span className="text-mono">{pendingImport.missingTags.join(", ")}</span></span>
+                  </label>
+                ) : null}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex flex-wrap gap-2">
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => applyImport("current")}>
+              Replace current preset
+            </AlertDialogAction>
+            {pendingImport?.mode && pendingImport.mode !== mode && (
+              <AlertDialogAction onClick={() => applyImport("mode")}>
+                Apply to {pendingImport.mode} (без переключения)
+              </AlertDialogAction>
+            )}
+            <AlertDialogAction onClick={() => applyImport("new")}>
+              Create new custom preset
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
