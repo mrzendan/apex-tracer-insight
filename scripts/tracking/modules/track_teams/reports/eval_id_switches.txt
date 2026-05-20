@@ -1,0 +1,11 @@
+GT points:        5
+Coverage:         0.0%
+px error median:  None
+px error p95:     None
+ID-switches total:0
+
+      slot_3  switches=0
+      slot_4  switches=0
+      slot_6  switches=0
+     slot_19  switches=0
+     slot_20  switches=0
