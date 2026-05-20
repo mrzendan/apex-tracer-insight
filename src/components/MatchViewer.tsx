@@ -734,6 +734,7 @@ function MapCanvas({
   selectedTeams, hoverTeam, showTrails, showLabels,
   mapImage, mapName, aliveTeams, totalKills, duration, deathTimes, ringIndex, ringCount, controls,
   focusRequest, onEventClick, ringPhases, teams,
+  matchId,
 }: {
   time: number; ring: RingPhase | null;
   trajectories: Record<string, { t: number; x: number; y: number }[]>;
@@ -758,6 +759,7 @@ function MapCanvas({
   onEventClick: (e: GameEvent) => void;
   ringPhases: RingPhase[];
   teams: Team[];
+  matchId: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const ringSegments = useMemo(() => buildRingSegments(ringPhases), [ringPhases]);
