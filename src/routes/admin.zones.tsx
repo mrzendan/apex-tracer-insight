@@ -687,7 +687,44 @@ function ZonesAdmin() {
         </div>
 
         <aside className="w-[340px] shrink-0 overflow-y-auto border-l border-border bg-surface p-3">
-          {selZone && (
+          {multi && (
+            <div className="mb-3 rounded-sm border border-primary/50 bg-primary/10 p-2.5">
+              <div className="mb-2 flex items-center justify-between">
+                <div className="label-eyebrow">Multi-select · {selectedIds.size}</div>
+                <button onClick={() => { setSelSet(new Set()); }}
+                  className="rounded-sm border border-border bg-surface px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground">
+                  Clear
+                </button>
+              </div>
+              <label className="mb-2 block">
+                <span className="label-eyebrow mb-1 block text-xs">Set tag for all</span>
+                <select
+                  value=""
+                  onChange={(e) => { if (e.target.value) { bulkSetTag(e.target.value); e.target.value = ""; } }}
+                  className="w-full rounded-sm border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary/60">
+                  <option value="">— change to —</option>
+                  {tags.map((t) => <option key={t.id} value={t.id}>{t.id}</option>)}
+                </select>
+              </label>
+              <div className="grid grid-cols-3 gap-1">
+                <ActionBtn icon={<Copy className="h-3 w-3" />} label="Copy" onClick={bulkCopyJson} />
+                <ActionBtn icon={<Files className="h-3 w-3" />} label="Dup" onClick={bulkDuplicate} />
+                <ActionBtn icon={<Trash2 className="h-3 w-3" />} label="Del" onClick={bulkDelete} />
+              </div>
+              <button onClick={bulkCopyJson}
+                className="mt-3 w-full rounded-sm bg-primary px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground hover:brightness-110">
+                Save (copy JSON)
+              </button>
+              <button onClick={bulkDownload}
+                className="mt-2 w-full rounded-sm border border-border bg-surface-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-muted">
+                Download selection.json
+              </button>
+              <div className="mt-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+                Ctrl+ЛКМ — добавить / убрать
+              </div>
+            </div>
+          )}
+          {!multi && selZone && (
             <div className="mb-3 rounded-sm border border-border bg-surface-2 p-2.5">
               <div className="label-eyebrow mb-2">Edit</div>
               <Field label="Name" value={selZone.name} onChange={(v) => update(selZone.id, { name: v })} />
@@ -807,17 +844,21 @@ function ZonesAdmin() {
             const c = tagColor(z.tag);
             const cb = cropBox(z.w, z.h);
             const big = cropBoxBig(z.w, z.h);
+            const inSel = selectedIds.has(z.id);
             return (
               <div key={z.id}
                 className={`mb-1 rounded-sm border px-2 py-1.5 transition-colors ${
-                  z.id === sel ? "border-primary/40 bg-primary/10" : "border-transparent hover:bg-muted"} ${m.hidden ? "opacity-50" : ""}`}>
-                <button onClick={() => setSel(z.id)} className="mb-1 flex w-full items-center gap-1.5 text-left">
+                  z.id === sel ? "border-primary/60 bg-primary/10" : inSel ? "border-primary/30 bg-primary/5" : "border-transparent hover:bg-muted"} ${m.hidden ? "opacity-50" : ""}`}>
+                <button onClick={(e) => selectZone(z.id, e.ctrlKey || e.metaKey)} className="mb-1 flex w-full items-center gap-1.5 text-left">
+                  <input type="checkbox" readOnly checked={inSel}
+                    onClick={(e) => { e.stopPropagation(); selectZone(z.id, true); }}
+                    className="h-3 w-3 shrink-0 cursor-pointer" />
                   <span className="inline-block h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: c }} />
                   <span className="flex-1 truncate text-xs font-semibold">{z.name}</span>
                 </button>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setSel(z.id)}
+                    onClick={(e) => selectZone(z.id, e.ctrlKey || e.metaKey)}
                     onMouseEnter={(e) => {
                       const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
                       setHover({ z, top: r.top + r.height / 2, left: r.left });
