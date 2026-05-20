@@ -591,9 +591,19 @@ function ZonesAdmin() {
                         tag: (z.tag || tags[0]?.id || "team") as Zone["tag"],
                         x: z.x, y: z.y, w: z.w, h: z.h,
                       }));
-                    setZones(cleaned);
-                    setSel(cleaned[0]?.id ?? null);
-                    alert(`Imported ${cleaned.length} zone${cleaned.length === 1 ? "" : "s"}`);
+                    const payloadMode = (data?.mode === "vod" || data?.mode === "vod2" || data?.mode === "camera")
+                      ? (data.mode as ZoneMode)
+                      : null;
+                    const payloadLabel = typeof data?.label === "string" ? data.label : null;
+                    const known = new Set(tags.map((t) => t.id));
+                    const missing = Array.from(new Set(cleaned.map((z) => z.tag))).filter((t) => !known.has(t));
+                    setImportAddTags(true);
+                    setPendingImport({
+                      zones: cleaned,
+                      mode: payloadMode,
+                      presetLabel: payloadLabel,
+                      missingTags: missing,
+                    });
                   } catch (err) {
                     alert(`Import failed: ${(err as Error).message}`);
                   }
