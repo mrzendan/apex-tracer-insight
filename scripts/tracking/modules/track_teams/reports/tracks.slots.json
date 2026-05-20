@@ -7,7 +7,7 @@
       "name": "Team 1",
       "color": "#11758e",
       "anchor_conf": "MED",
-      "wiped_at_t": 1091.09
+      "wiped_at_t": 60.06
     },
     {
       "slot_id": "slot_2",
@@ -16,7 +16,7 @@
       "name": "Team 2",
       "color": "#194061",
       "anchor_conf": "LOW",
-      "wiped_at_t": 1091.09
+      "wiped_at_t": 200.2
     },
     {
       "slot_id": "slot_3",
@@ -25,7 +25,7 @@
       "name": "Team 3",
       "color": "#325bcc",
       "anchor_conf": "HIGH",
-      "wiped_at_t": null
+      "wiped_at_t": 150.15
     },
     {
       "slot_id": "slot_4",
@@ -34,7 +34,7 @@
       "name": "Team 4",
       "color": "#402d56",
       "anchor_conf": "HIGH",
-      "wiped_at_t": null
+      "wiped_at_t": 170.17
     },
     {
       "slot_id": "slot_5",
@@ -43,7 +43,7 @@
       "name": "Team 5",
       "color": "#7a4278",
       "anchor_conf": "LOW",
-      "wiped_at_t": null
+      "wiped_at_t": 160.16
     },
     {
       "slot_id": "slot_6",
@@ -52,7 +52,7 @@
       "name": "Team 6",
       "color": "#ad2f55",
       "anchor_conf": "HIGH",
-      "wiped_at_t": null
+      "wiped_at_t": 250.25
     },
     {
       "slot_id": "slot_7",
@@ -61,7 +61,7 @@
       "name": "Team 7",
       "color": "#b12f8e",
       "anchor_conf": "LOW",
-      "wiped_at_t": 810.81
+      "wiped_at_t": 80.08
     },
     {
       "slot_id": "slot_8",
@@ -70,7 +70,7 @@
       "name": "Team 8",
       "color": "#c12210",
       "anchor_conf": "MED",
-      "wiped_at_t": null
+      "wiped_at_t": 240.24
     },
     {
       "slot_id": "slot_9",
@@ -79,7 +79,7 @@
       "name": "Team 9",
       "color": "#cf512b",
       "anchor_conf": "MED",
-      "wiped_at_t": null
+      "wiped_at_t": 110.11
     },
     {
       "slot_id": "slot_10",
@@ -88,7 +88,7 @@
       "name": "Team 10",
       "color": "#742519",
       "anchor_conf": "LOW",
-      "wiped_at_t": null
+      "wiped_at_t": 110.11
     },
     {
       "slot_id": "slot_11",
@@ -97,7 +97,7 @@
       "name": "Team 11",
       "color": "#974312",
       "anchor_conf": "LOW",
-      "wiped_at_t": null
+      "wiped_at_t": 80.08
     },
     {
       "slot_id": "slot_12",
@@ -106,7 +106,7 @@
       "name": "Team 12",
       "color": "#704205",
       "anchor_conf": "HIGH",
-      "wiped_at_t": 1101.1
+      "wiped_at_t": 170.17
     },
     {
       "slot_id": "slot_13",
@@ -115,7 +115,7 @@
       "name": "Team 13",
       "color": "#b37d37",
       "anchor_conf": "MED",
-      "wiped_at_t": null
+      "wiped_at_t": 60.06
     },
     {
       "slot_id": "slot_14",
@@ -124,7 +124,7 @@
       "name": "Team 14",
       "color": "#8b6e0f",
       "anchor_conf": "LOW",
-      "wiped_at_t": null
+      "wiped_at_t": 290.29
     },
     {
       "slot_id": "slot_15",
@@ -133,7 +133,7 @@
       "name": "Team 15",
       "color": "#51530a",
       "anchor_conf": "MED",
-      "wiped_at_t": null
+      "wiped_at_t": 60.06
     },
     {
       "slot_id": "slot_16",
@@ -142,7 +142,7 @@
       "name": "Team 16",
       "color": "#484e14",
       "anchor_conf": "LOW",
-      "wiped_at_t": null
+      "wiped_at_t": 150.15
     },
     {
       "slot_id": "slot_17",
@@ -151,7 +151,7 @@
       "name": "Team 17",
       "color": "#718746",
       "anchor_conf": "LOW",
-      "wiped_at_t": null
+      "wiped_at_t": 120.12
     },
     {
       "slot_id": "slot_18",
@@ -160,7 +160,7 @@
       "name": "Team 18",
       "color": "#38773b",
       "anchor_conf": "MED",
-      "wiped_at_t": null
+      "wiped_at_t": 100.1
     },
     {
       "slot_id": "slot_19",
@@ -169,7 +169,7 @@
       "name": "Team 19",
       "color": "#2d4f1c",
       "anchor_conf": "HIGH",
-      "wiped_at_t": null
+      "wiped_at_t": 240.24
     },
     {
       "slot_id": "slot_20",
@@ -178,7 +178,7 @@
       "name": "Team 20",
       "color": "#145a47",
       "anchor_conf": "HIGH",
-      "wiped_at_t": 1091.09
+      "wiped_at_t": 110.11
     }
   ]
 }
