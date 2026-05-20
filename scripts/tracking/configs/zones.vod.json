@@ -8,16 +8,16 @@
     {
       "id": "v-minimap",
       "name": "map name",
-      "tag": "map_name",
+      "tag": "hud",
       "x": 90,
       "y": 165,
       "w": 225,
-      "h": 45
+      "h": 50
     },
     {
       "id": "v-map-name",
       "name": "game number",
-      "tag": "game_number",
+      "tag": "hud",
       "x": 70,
       "y": 60,
       "w": 285,
@@ -25,188 +25,17 @@
     },
     {
       "id": "v-timer",
-      "name": "team 1 name",
-      "tag": "team",
+      "name": "name",
+      "tag": "team_1",
       "x": 75,
       "y": 335,
-      "w": 70,
-      "h": 30
-    },
-    {
-      "id": "z-mpdm8yns-0",
-      "name": "team 2 name",
-      "tag": "team",
-      "x": 75,
-      "y": 415,
-      "w": 70,
-      "h": 30
-    },
-    {
-      "id": "z-mpdm96w8-1",
-      "name": "team 3 name",
-      "tag": "team",
-      "x": 75,
-      "y": 495,
-      "w": 70,
-      "h": 30
-    },
-    {
-      "id": "z-mpdm9fg0-2",
-      "name": "team 4 name",
-      "tag": "team",
-      "x": 75,
-      "y": 570,
-      "w": 70,
-      "h": 30
-    },
-    {
-      "id": "z-mpdm9ljn-3",
-      "name": "team 5 name",
-      "tag": "team",
-      "x": 75,
-      "y": 650,
-      "w": 70,
-      "h": 30
-    },
-    {
-      "id": "z-mpdm9tg8-4",
-      "name": "team 6 name",
-      "tag": "team",
-      "x": 75,
-      "y": 730,
-      "w": 70,
-      "h": 30
-    },
-    {
-      "id": "z-mpdm9umv-5",
-      "name": "team 7 name",
-      "tag": "team",
-      "x": 75,
-      "y": 805,
-      "w": 70,
-      "h": 30
-    },
-    {
-      "id": "z-mpdmafsg-6",
-      "name": "team 8 name",
-      "tag": "team",
-      "x": 75,
-      "y": 885,
-      "w": 70,
-      "h": 30
-    },
-    {
-      "id": "z-mpdmanaw-7",
-      "name": "team 9 name",
-      "tag": "team",
-      "x": 75,
-      "y": 960,
-      "w": 70,
-      "h": 30
-    },
-    {
-      "id": "z-mpdmauqy-8",
-      "name": "team 10 name",
-      "tag": "team",
-      "x": 75,
-      "y": 1040,
-      "w": 70,
-      "h": 30
-    },
-    {
-      "id": "z-mpdmbini-9",
-      "name": "team 11 name",
-      "tag": "team",
-      "x": 1575,
-      "y": 335,
-      "w": 70,
-      "h": 30
-    },
-    {
-      "id": "z-mpdmbsm0-10",
-      "name": "team 12 name",
-      "tag": "team",
-      "x": 1575,
-      "y": 415,
-      "w": 70,
-      "h": 30
-    },
-    {
-      "id": "z-mpdmby4h-11",
-      "name": "team 15 name",
-      "tag": "team",
-      "x": 1575,
-      "y": 650,
-      "w": 70,
-      "h": 30
-    },
-    {
-      "id": "z-mpdmck19-12",
-      "name": "team 13 name",
-      "tag": "team",
-      "x": 1575,
-      "y": 495,
-      "w": 70,
-      "h": 30
-    },
-    {
-      "id": "z-mpdmcraw-13",
-      "name": "team 14 name",
-      "tag": "team",
-      "x": 1575,
-      "y": 570,
-      "w": 70,
-      "h": 30
-    },
-    {
-      "id": "z-mpdmd4rw-14",
-      "name": "team 16 name",
-      "tag": "team",
-      "x": 1575,
-      "y": 730,
-      "w": 70,
-      "h": 25
-    },
-    {
-      "id": "z-mpdmddvw-15",
-      "name": "team 17 name",
-      "tag": "team",
-      "x": 1575,
-      "y": 810,
-      "w": 70,
-      "h": 25
-    },
-    {
-      "id": "z-mpdmdj0l-16",
-      "name": "team 18 name",
-      "tag": "team",
-      "x": 1575,
-      "y": 885,
-      "w": 70,
-      "h": 30
-    },
-    {
-      "id": "z-mpdmdqqv-17",
-      "name": "team 19 name",
-      "tag": "team",
-      "x": 1575,
-      "y": 965,
-      "w": 70,
-      "h": 30
-    },
-    {
-      "id": "z-mpdme1ms-18",
-      "name": "team 20 name",
-      "tag": "team",
-      "x": 1575,
-      "y": 1040,
       "w": 70,
       "h": 30
     },
     {
       "id": "z-mpdmg1f6-19",
       "name": "number of teams alive",
-      "tag": "match_state",
+      "tag": "hud",
       "x": 1620,
       "y": 105,
       "w": 175,
@@ -215,7 +44,7 @@
     {
       "id": "z-mpdmh7f5-20",
       "name": "number of players alive",
-      "tag": "match_state",
+      "tag": "hud",
       "x": 1620,
       "y": 185,
       "w": 175,
@@ -223,8 +52,8 @@
     },
     {
       "id": "z-mpdmi81j-21",
-      "name": "team 1 hero 1",
-      "tag": "team",
+      "name": "hero 1",
+      "tag": "team_1",
       "x": 150,
       "y": 295,
       "w": 65,
@@ -232,8 +61,8 @@
     },
     {
       "id": "z-mpdmissf-22",
-      "name": "team 1 hero 2",
-      "tag": "team",
+      "name": "hero 2",
+      "tag": "team_1",
       "x": 220,
       "y": 295,
       "w": 65,
@@ -241,8 +70,8 @@
     },
     {
       "id": "z-mpdmixnb-23",
-      "name": "team 1 hero 3",
-      "tag": "team",
+      "name": "hero 3",
+      "tag": "team_1",
       "x": 290,
       "y": 295,
       "w": 65,
@@ -250,46 +79,10 @@
     },
     {
       "id": "z-mpdmj73l-24",
-      "name": "team 1 points",
-      "tag": "team",
+      "name": "pts",
+      "tag": "team_1",
       "x": 360,
       "y": 310,
-      "w": 50,
-      "h": 50
-    },
-    {
-      "id": "z-mpdmk3u6-25",
-      "name": "team 2 hero 1 ",
-      "tag": "team",
-      "x": 150,
-      "y": 375,
-      "w": 65,
-      "h": 70
-    },
-    {
-      "id": "z-mpdmkebk-26",
-      "name": "team 2 hero 2",
-      "tag": "team",
-      "x": 220,
-      "y": 375,
-      "w": 65,
-      "h": 70
-    },
-    {
-      "id": "z-mpdmkjph-27",
-      "name": "team 2 hero 3",
-      "tag": "team",
-      "x": 290,
-      "y": 375,
-      "w": 65,
-      "h": 70
-    },
-    {
-      "id": "z-mpdmkp6g-28",
-      "name": "team 2 points",
-      "tag": "team",
-      "x": 360,
-      "y": 385,
       "w": 50,
       "h": 50
     },
@@ -297,10 +90,1243 @@
       "id": "z-mpdmsqzb-29",
       "name": "camera roi",
       "tag": "minimap",
-      "x": 435,
-      "y": 40,
+      "x": 437,
+      "y": 45,
       "w": 1050,
       "h": 1030
+    },
+    {
+      "id": "z-mpdqt6lg-1",
+      "name": "ring status",
+      "tag": "hud",
+      "x": 825,
+      "y": 1010,
+      "w": 275,
+      "h": 60
+    },
+    {
+      "id": "z-mpdqxa7k-2",
+      "name": "logo",
+      "tag": "team_1",
+      "x": 75,
+      "y": 295,
+      "w": 70,
+      "h": 45
+    },
+    {
+      "id": "z-mpdqy0hl-3",
+      "name": "eliminated",
+      "tag": "team_1",
+      "x": 145,
+      "y": 295,
+      "w": 215,
+      "h": 70
+    },
+    {
+      "id": "z-mpdqzqdp-10",
+      "name": "name",
+      "tag": "team_2",
+      "x": 73,
+      "y": 417,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdqzqdp-11",
+      "name": "hero 1",
+      "tag": "team_2",
+      "x": 148,
+      "y": 377,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdqzqdp-12",
+      "name": "hero 2",
+      "tag": "team_2",
+      "x": 218,
+      "y": 377,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdqzqdp-13",
+      "name": "hero 3",
+      "tag": "team_2",
+      "x": 288,
+      "y": 377,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdqzqdp-14",
+      "name": "pts",
+      "tag": "team_2",
+      "x": 358,
+      "y": 392,
+      "w": 50,
+      "h": 50
+    },
+    {
+      "id": "z-mpdqzqdp-15",
+      "name": "logo",
+      "tag": "team_2",
+      "x": 73,
+      "y": 377,
+      "w": 70,
+      "h": 45
+    },
+    {
+      "id": "z-mpdqzqdp-16",
+      "name": "eliminated",
+      "tag": "team_2",
+      "x": 143,
+      "y": 377,
+      "w": 215,
+      "h": 70
+    },
+    {
+      "id": "z-mpdr0q24-17",
+      "name": "name",
+      "tag": "team_3",
+      "x": 73,
+      "y": 492,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdr0q24-18",
+      "name": "hero 1",
+      "tag": "team_3",
+      "x": 148,
+      "y": 452,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdr0q24-19",
+      "name": "hero 2",
+      "tag": "team_3",
+      "x": 218,
+      "y": 452,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdr0q24-20",
+      "name": "hero 3",
+      "tag": "team_3",
+      "x": 288,
+      "y": 452,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdr0q24-21",
+      "name": "pts",
+      "tag": "team_3",
+      "x": 358,
+      "y": 467,
+      "w": 50,
+      "h": 50
+    },
+    {
+      "id": "z-mpdr0q24-22",
+      "name": "logo",
+      "tag": "team_3",
+      "x": 73,
+      "y": 452,
+      "w": 70,
+      "h": 45
+    },
+    {
+      "id": "z-mpdr0q24-23",
+      "name": "eliminated",
+      "tag": "team_3",
+      "x": 143,
+      "y": 452,
+      "w": 215,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrfid4-24",
+      "name": "name",
+      "tag": "team_4",
+      "x": 74,
+      "y": 570,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdrfid4-25",
+      "name": "hero 1",
+      "tag": "team_4",
+      "x": 149,
+      "y": 530,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrfid4-26",
+      "name": "hero 2",
+      "tag": "team_4",
+      "x": 219,
+      "y": 530,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrfid4-27",
+      "name": "hero 3",
+      "tag": "team_4",
+      "x": 289,
+      "y": 530,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrfid4-28",
+      "name": "pts",
+      "tag": "team_4",
+      "x": 359,
+      "y": 545,
+      "w": 50,
+      "h": 50
+    },
+    {
+      "id": "z-mpdrfid4-29",
+      "name": "logo",
+      "tag": "team_4",
+      "x": 74,
+      "y": 530,
+      "w": 70,
+      "h": 45
+    },
+    {
+      "id": "z-mpdrfid4-30",
+      "name": "eliminated",
+      "tag": "team_4",
+      "x": 144,
+      "y": 530,
+      "w": 215,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrhzrh-38",
+      "name": "name",
+      "tag": "team_5",
+      "x": 76,
+      "y": 651,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdrhzrh-39",
+      "name": "hero 1",
+      "tag": "team_5",
+      "x": 151,
+      "y": 611,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrhzrh-40",
+      "name": "hero 2",
+      "tag": "team_5",
+      "x": 221,
+      "y": 611,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrhzrh-41",
+      "name": "hero 3",
+      "tag": "team_5",
+      "x": 291,
+      "y": 611,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrhzrh-42",
+      "name": "pts",
+      "tag": "team_5",
+      "x": 362,
+      "y": 621,
+      "w": 50,
+      "h": 50
+    },
+    {
+      "id": "z-mpdrhzrh-43",
+      "name": "logo",
+      "tag": "team_5",
+      "x": 76,
+      "y": 611,
+      "w": 70,
+      "h": 45
+    },
+    {
+      "id": "z-mpdrhzrh-44",
+      "name": "eliminated",
+      "tag": "team_5",
+      "x": 146,
+      "y": 611,
+      "w": 215,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrie1q-45",
+      "name": "name",
+      "tag": "team_6",
+      "x": 74,
+      "y": 728,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdrie1q-46",
+      "name": "hero 1",
+      "tag": "team_6",
+      "x": 149,
+      "y": 688,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrie1q-47",
+      "name": "hero 2",
+      "tag": "team_6",
+      "x": 219,
+      "y": 688,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrie1q-48",
+      "name": "hero 3",
+      "tag": "team_6",
+      "x": 289,
+      "y": 688,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrie1q-49",
+      "name": "pts",
+      "tag": "team_6",
+      "x": 359,
+      "y": 703,
+      "w": 50,
+      "h": 50
+    },
+    {
+      "id": "z-mpdrie1q-50",
+      "name": "logo",
+      "tag": "team_6",
+      "x": 74,
+      "y": 688,
+      "w": 70,
+      "h": 45
+    },
+    {
+      "id": "z-mpdrie1q-51",
+      "name": "eliminated",
+      "tag": "team_6",
+      "x": 144,
+      "y": 688,
+      "w": 215,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrio8d-52",
+      "name": "name",
+      "tag": "team_7",
+      "x": 75,
+      "y": 804,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdrio8d-53",
+      "name": "hero 1",
+      "tag": "team_7",
+      "x": 150,
+      "y": 764,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrio8d-54",
+      "name": "hero 2",
+      "tag": "team_7",
+      "x": 220,
+      "y": 764,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrio8d-55",
+      "name": "hero 3",
+      "tag": "team_7",
+      "x": 290,
+      "y": 764,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrio8d-56",
+      "name": "pts",
+      "tag": "team_7",
+      "x": 361,
+      "y": 778,
+      "w": 50,
+      "h": 50
+    },
+    {
+      "id": "z-mpdrio8d-57",
+      "name": "logo",
+      "tag": "team_7",
+      "x": 75,
+      "y": 764,
+      "w": 70,
+      "h": 45
+    },
+    {
+      "id": "z-mpdrio8d-58",
+      "name": "eliminated",
+      "tag": "team_7",
+      "x": 145,
+      "y": 764,
+      "w": 215,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrj258-59",
+      "name": "name",
+      "tag": "team_8",
+      "x": 74,
+      "y": 883,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdrj258-60",
+      "name": "hero 1",
+      "tag": "team_8",
+      "x": 149,
+      "y": 843,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrj258-61",
+      "name": "hero 2",
+      "tag": "team_8",
+      "x": 219,
+      "y": 843,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrj258-62",
+      "name": "hero 3",
+      "tag": "team_8",
+      "x": 289,
+      "y": 843,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrj258-63",
+      "name": "pts",
+      "tag": "team_8",
+      "x": 361,
+      "y": 854,
+      "w": 50,
+      "h": 50
+    },
+    {
+      "id": "z-mpdrj258-64",
+      "name": "logo",
+      "tag": "team_8",
+      "x": 74,
+      "y": 843,
+      "w": 70,
+      "h": 45
+    },
+    {
+      "id": "z-mpdrj258-65",
+      "name": "eliminated",
+      "tag": "team_8",
+      "x": 144,
+      "y": 843,
+      "w": 215,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrji71-66",
+      "name": "name",
+      "tag": "team_9",
+      "x": 74,
+      "y": 962,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdrji71-67",
+      "name": "hero 1",
+      "tag": "team_9",
+      "x": 149,
+      "y": 922,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrji71-68",
+      "name": "hero 2",
+      "tag": "team_9",
+      "x": 219,
+      "y": 922,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrji71-69",
+      "name": "hero 3",
+      "tag": "team_9",
+      "x": 289,
+      "y": 922,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrji71-70",
+      "name": "pts",
+      "tag": "team_9",
+      "x": 361,
+      "y": 935,
+      "w": 50,
+      "h": 50
+    },
+    {
+      "id": "z-mpdrji71-71",
+      "name": "logo",
+      "tag": "team_9",
+      "x": 74,
+      "y": 922,
+      "w": 70,
+      "h": 45
+    },
+    {
+      "id": "z-mpdrji71-72",
+      "name": "eliminated",
+      "tag": "team_9",
+      "x": 144,
+      "y": 922,
+      "w": 215,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrjsv1-73",
+      "name": "name",
+      "tag": "team_10",
+      "x": 67,
+      "y": 1043,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdrjsv1-74",
+      "name": "hero 1",
+      "tag": "team_10",
+      "x": 142,
+      "y": 1003,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrjsv1-75",
+      "name": "hero 2",
+      "tag": "team_10",
+      "x": 212,
+      "y": 1003,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrjsv1-76",
+      "name": "hero 3",
+      "tag": "team_10",
+      "x": 282,
+      "y": 1003,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrjsv1-77",
+      "name": "pts",
+      "tag": "team_10",
+      "x": 361,
+      "y": 1012,
+      "w": 50,
+      "h": 50
+    },
+    {
+      "id": "z-mpdrjsv1-78",
+      "name": "logo",
+      "tag": "team_10",
+      "x": 67,
+      "y": 1003,
+      "w": 70,
+      "h": 45
+    },
+    {
+      "id": "z-mpdrjsv1-79",
+      "name": "eliminated",
+      "tag": "team_10",
+      "x": 146,
+      "y": 1001,
+      "w": 215,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrktyq-88",
+      "name": "name",
+      "tag": "team_11",
+      "x": 1574,
+      "y": 336,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdrktyq-89",
+      "name": "hero 1",
+      "tag": "team_11",
+      "x": 1642,
+      "y": 295,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrktyq-90",
+      "name": "hero 2",
+      "tag": "team_11",
+      "x": 1712,
+      "y": 295,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrktyq-91",
+      "name": "hero 3",
+      "tag": "team_11",
+      "x": 1782,
+      "y": 295,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrktyq-92",
+      "name": "pts",
+      "tag": "team_11",
+      "x": 1859,
+      "y": 306,
+      "w": 52,
+      "h": 50
+    },
+    {
+      "id": "z-mpdrktyq-93",
+      "name": "logo",
+      "tag": "team_11",
+      "x": 1574,
+      "y": 295,
+      "w": 70,
+      "h": 45
+    },
+    {
+      "id": "z-mpdrktyq-94",
+      "name": "eliminated",
+      "tag": "team_11",
+      "x": 1644,
+      "y": 295,
+      "w": 215,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrnu8g-96",
+      "name": "name",
+      "tag": "team_12",
+      "x": 1574,
+      "y": 415,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdrnu8g-97",
+      "name": "hero 1",
+      "tag": "team_12",
+      "x": 1642,
+      "y": 374,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrnu8g-98",
+      "name": "hero 2",
+      "tag": "team_12",
+      "x": 1712,
+      "y": 374,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrnu8g-99",
+      "name": "hero 3",
+      "tag": "team_12",
+      "x": 1782,
+      "y": 374,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrnu8g-100",
+      "name": "pts",
+      "tag": "team_12",
+      "x": 1858,
+      "y": 385,
+      "w": 52,
+      "h": 50
+    },
+    {
+      "id": "z-mpdrnu8g-101",
+      "name": "logo",
+      "tag": "team_12",
+      "x": 1574,
+      "y": 374,
+      "w": 70,
+      "h": 45
+    },
+    {
+      "id": "z-mpdrnu8g-102",
+      "name": "eliminated",
+      "tag": "team_12",
+      "x": 1645,
+      "y": 374,
+      "w": 215,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrote7-104",
+      "name": "name",
+      "tag": "team_13",
+      "x": 1573,
+      "y": 494,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdrote7-105",
+      "name": "hero 1",
+      "tag": "team_13",
+      "x": 1641,
+      "y": 453,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrote7-106",
+      "name": "hero 2",
+      "tag": "team_13",
+      "x": 1711,
+      "y": 453,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrote7-107",
+      "name": "hero 3",
+      "tag": "team_13",
+      "x": 1781,
+      "y": 453,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrote7-108",
+      "name": "pts",
+      "tag": "team_13",
+      "x": 1860,
+      "y": 465,
+      "w": 52,
+      "h": 50
+    },
+    {
+      "id": "z-mpdrote7-109",
+      "name": "logo",
+      "tag": "team_13",
+      "x": 1573,
+      "y": 453,
+      "w": 70,
+      "h": 45
+    },
+    {
+      "id": "z-mpdrote7-110",
+      "name": "eliminated",
+      "tag": "team_13",
+      "x": 1643,
+      "y": 453,
+      "w": 215,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrrckk-112",
+      "name": "name",
+      "tag": "team_14",
+      "x": 1572,
+      "y": 573,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdrrckk-113",
+      "name": "hero 1",
+      "tag": "team_14",
+      "x": 1640,
+      "y": 532,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrrckk-114",
+      "name": "hero 2",
+      "tag": "team_14",
+      "x": 1710,
+      "y": 532,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrrckk-115",
+      "name": "hero 3",
+      "tag": "team_14",
+      "x": 1780,
+      "y": 532,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrrckk-116",
+      "name": "pts",
+      "tag": "team_14",
+      "x": 1859,
+      "y": 542,
+      "w": 52,
+      "h": 50
+    },
+    {
+      "id": "z-mpdrrckk-117",
+      "name": "logo",
+      "tag": "team_14",
+      "x": 1572,
+      "y": 532,
+      "w": 70,
+      "h": 45
+    },
+    {
+      "id": "z-mpdrrckk-118",
+      "name": "eliminated",
+      "tag": "team_14",
+      "x": 1643,
+      "y": 532,
+      "w": 215,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrs8xf-120",
+      "name": "name",
+      "tag": "team_15",
+      "x": 1573,
+      "y": 649,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdrs8xf-121",
+      "name": "hero 1",
+      "tag": "team_15",
+      "x": 1641,
+      "y": 608,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrs8xf-122",
+      "name": "hero 2",
+      "tag": "team_15",
+      "x": 1711,
+      "y": 608,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrs8xf-123",
+      "name": "hero 3",
+      "tag": "team_15",
+      "x": 1781,
+      "y": 608,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrs8xf-124",
+      "name": "pts",
+      "tag": "team_15",
+      "x": 1860,
+      "y": 620,
+      "w": 52,
+      "h": 50
+    },
+    {
+      "id": "z-mpdrs8xf-125",
+      "name": "logo",
+      "tag": "team_15",
+      "x": 1573,
+      "y": 608,
+      "w": 70,
+      "h": 45
+    },
+    {
+      "id": "z-mpdrs8xf-126",
+      "name": "eliminated",
+      "tag": "team_15",
+      "x": 1644,
+      "y": 608,
+      "w": 215,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrsey3-128",
+      "name": "name",
+      "tag": "team_16",
+      "x": 1573,
+      "y": 727,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdrsey3-129",
+      "name": "hero 1",
+      "tag": "team_16",
+      "x": 1641,
+      "y": 686,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrsey3-130",
+      "name": "hero 2",
+      "tag": "team_16",
+      "x": 1711,
+      "y": 686,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrsey3-131",
+      "name": "hero 3",
+      "tag": "team_16",
+      "x": 1781,
+      "y": 686,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrsey3-132",
+      "name": "pts",
+      "tag": "team_16",
+      "x": 1860,
+      "y": 698,
+      "w": 52,
+      "h": 50
+    },
+    {
+      "id": "z-mpdrsey3-133",
+      "name": "logo",
+      "tag": "team_16",
+      "x": 1573,
+      "y": 686,
+      "w": 70,
+      "h": 45
+    },
+    {
+      "id": "z-mpdrsey3-134",
+      "name": "eliminated",
+      "tag": "team_16",
+      "x": 1644,
+      "y": 686,
+      "w": 215,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrsnk3-136",
+      "name": "name",
+      "tag": "team_17",
+      "x": 1574,
+      "y": 805,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdrsnk3-137",
+      "name": "hero 1",
+      "tag": "team_17",
+      "x": 1642,
+      "y": 764,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrsnk3-138",
+      "name": "hero 2",
+      "tag": "team_17",
+      "x": 1712,
+      "y": 764,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrsnk3-139",
+      "name": "hero 3",
+      "tag": "team_17",
+      "x": 1782,
+      "y": 764,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrsnk3-140",
+      "name": "pts",
+      "tag": "team_17",
+      "x": 1861,
+      "y": 776,
+      "w": 52,
+      "h": 50
+    },
+    {
+      "id": "z-mpdrsnk3-141",
+      "name": "logo",
+      "tag": "team_17",
+      "x": 1574,
+      "y": 764,
+      "w": 70,
+      "h": 45
+    },
+    {
+      "id": "z-mpdrsnk3-142",
+      "name": "eliminated",
+      "tag": "team_17",
+      "x": 1645,
+      "y": 764,
+      "w": 215,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrtap6-144",
+      "name": "name",
+      "tag": "team_18",
+      "x": 1574,
+      "y": 885,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdrtap6-145",
+      "name": "hero 1",
+      "tag": "team_18",
+      "x": 1642,
+      "y": 844,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrtap6-146",
+      "name": "hero 2",
+      "tag": "team_18",
+      "x": 1712,
+      "y": 844,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrtap6-147",
+      "name": "hero 3",
+      "tag": "team_18",
+      "x": 1782,
+      "y": 844,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrtap6-148",
+      "name": "pts",
+      "tag": "team_18",
+      "x": 1859,
+      "y": 853,
+      "w": 52,
+      "h": 50
+    },
+    {
+      "id": "z-mpdrtap6-149",
+      "name": "logo",
+      "tag": "team_18",
+      "x": 1574,
+      "y": 844,
+      "w": 70,
+      "h": 45
+    },
+    {
+      "id": "z-mpdrtap6-150",
+      "name": "eliminated",
+      "tag": "team_18",
+      "x": 1645,
+      "y": 844,
+      "w": 215,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrtjiy-152",
+      "name": "name",
+      "tag": "team_19",
+      "x": 1573,
+      "y": 962,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdrtjiy-153",
+      "name": "hero 1",
+      "tag": "team_19",
+      "x": 1641,
+      "y": 921,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrtjiy-154",
+      "name": "hero 2",
+      "tag": "team_19",
+      "x": 1711,
+      "y": 921,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrtjiy-155",
+      "name": "hero 3",
+      "tag": "team_19",
+      "x": 1781,
+      "y": 921,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrtjiy-156",
+      "name": "pts",
+      "tag": "team_19",
+      "x": 1860,
+      "y": 932,
+      "w": 52,
+      "h": 50
+    },
+    {
+      "id": "z-mpdrtjiy-157",
+      "name": "logo",
+      "tag": "team_19",
+      "x": 1573,
+      "y": 921,
+      "w": 70,
+      "h": 45
+    },
+    {
+      "id": "z-mpdrtjiy-158",
+      "name": "eliminated",
+      "tag": "team_19",
+      "x": 1644,
+      "y": 921,
+      "w": 215,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrttte-159",
+      "name": "eliminated",
+      "tag": "team_10",
+      "x": 172,
+      "y": 943,
+      "w": 215,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrttte-160",
+      "name": "name",
+      "tag": "team_20",
+      "x": 1573,
+      "y": 1043,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdrttte-161",
+      "name": "hero 1",
+      "tag": "team_20",
+      "x": 1641,
+      "y": 1002,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrttte-162",
+      "name": "hero 2",
+      "tag": "team_20",
+      "x": 1711,
+      "y": 1002,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrttte-163",
+      "name": "hero 3",
+      "tag": "team_20",
+      "x": 1781,
+      "y": 1002,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdrttte-164",
+      "name": "pts",
+      "tag": "team_20",
+      "x": 1860,
+      "y": 1011,
+      "w": 52,
+      "h": 50
+    },
+    {
+      "id": "z-mpdrttte-165",
+      "name": "logo",
+      "tag": "team_20",
+      "x": 1573,
+      "y": 1002,
+      "w": 70,
+      "h": 45
+    },
+    {
+      "id": "z-mpdrttte-166",
+      "name": "eliminated",
+      "tag": "team_20",
+      "x": 1644,
+      "y": 1002,
+      "w": 215,
+      "h": 70
     }
   ]
 }
