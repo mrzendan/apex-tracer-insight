@@ -277,7 +277,9 @@ def is_eliminated_at(cap: cv2.VideoCapture, f: int, zone: dict, lang: str) -> bo
 def scout_eliminations(cap: cv2.VideoCapture, zones_scaled: list[dict],
                        start_f: int, end_f: int, fps: float,
                        reverse_step: int, lang: str,
-                       refine_budget: int = 6) -> dict[int, dict[str, Any]]:
+                       refine_budget: int = 10,
+                       refine_linear: int = 4,
+                       refine_rollback: int = 0) -> dict[int, dict[str, Any]]:
     """Идёт от end_f к start_f крупным шагом, читает только elim-зоны
     у каждой команды. Возвращает {slot: {t_last_alive, f_first_dead, t_first_dead, ...}}.
     Затем для каждой команды бинпоиском уточняет точный кадр перехода."""
@@ -342,14 +344,19 @@ def scout_eliminations(cap: cv2.VideoCapture, zones_scaled: list[dict],
         f -= reverse_step
     pbar.close()
 
-    # ── refine: бинпоиск точного кадра перехода alive→dead ──────────
-    print(f"[hud_read][scout] refine windows (budget={refine_budget} per team)")
+    # ── refine: бинпоиск + линейный доводчик до кадровой точности ──
+    print(f"[hud_read][scout] refine windows: binary≤{refine_budget} + "
+          f"linear≤{refine_linear} per team"
+          + (f" + rollback step={refine_rollback}" if refine_rollback > 0 else ""))
     for slot, st in state.items():
         lo = st["f_last_alive"]
         hi = st["f_first_dead"]
         if lo is None or hi is None or hi <= lo + 1:
+            st["refine_method"] = "none"
+            st["refine_window"] = (hi - lo) if (lo is not None and hi is not None) else None
             continue
         z = elim_zones[slot]
+        # Stage A — бинпоиск.
         steps = 0
         while hi - lo > 1 and steps < refine_budget:
             mid = (lo + hi) // 2
@@ -361,10 +368,38 @@ def scout_eliminations(cap: cv2.VideoCapture, zones_scaled: list[dict],
             else:
                 lo = mid
             steps += 1
+        # Stage B — опциональный rollback скаут с мелким шагом
+        # внутри окна [lo, hi] (на случай мерцания HUD).
+        if refine_rollback > 0 and hi - lo > refine_rollback:
+            cur = hi - refine_rollback
+            while cur > lo:
+                v = is_eliminated_at(cap, cur, z, lang)
+                if v is None:
+                    break
+                if v:
+                    hi = cur
+                else:
+                    lo = cur
+                    break
+                cur -= refine_rollback
+        # Stage C — линейный доводчик: гарантирует кадровую точность.
+        linear_used = 0
+        while hi - lo > 1 and linear_used < refine_linear:
+            cur = lo + 1
+            v = is_eliminated_at(cap, cur, z, lang)
+            if v is None:
+                break
+            if v:
+                hi = cur
+            else:
+                lo = cur
+            linear_used += 1
         st["f_first_dead"] = hi
         st["f_last_alive"] = lo
+        st["refine_method"] = f"binary{steps}+linear{linear_used}"
+        st["refine_window"] = hi - lo
         tqdm.write(f"  team {slot:>2}: elim at f~{hi} t~{hi/fps:.1f}s "
-                   f"(window ±{(hi-lo)} frames, {steps} probes)")
+                   f"(window {hi-lo} frames, binary={steps} linear={linear_used})")
 
     # привести к человеку
     result: dict[int, dict[str, Any]] = {}
@@ -376,6 +411,8 @@ def scout_eliminations(cap: cv2.VideoCapture, zones_scaled: list[dict],
             "f_last_alive": st["f_last_alive"],
             "t_last_alive": round(st["f_last_alive"] / fps, 2)
                              if st["f_last_alive"] is not None else None,
+            "refine_method": st.get("refine_method"),
+            "refine_window": st.get("refine_window"),
         }
     return result
 
