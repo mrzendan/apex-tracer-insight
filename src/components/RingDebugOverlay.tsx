@@ -35,7 +35,7 @@ export function RingDebugOverlay({
 
   // Конвертация фазы в нормализованные [0..1] координаты квадратной карты,
   // т.е. то, что MapCanvas ожидает в RingPhase.{cx,cy,r}.
-  const project = (p: typeof geom.phases![number]) => {
+  const project = (p: NonNullable<typeof geom.phases>[number]) => {
     if (system === "map-norm") {
       if (p.cx_map_norm == null || p.cy_map_norm == null || p.r_map_norm == null) {
         return null;
