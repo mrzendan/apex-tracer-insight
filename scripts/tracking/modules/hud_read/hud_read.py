@@ -292,25 +292,38 @@ def read_ring_at(cap: cv2.VideoCapture, f: int, zone: dict,
     if crop.size == 0:
         return None
     # Плашка кольца Apex — стилизованный белый текст с обводкой на
-    # красном/тёмном фоне. Изолируем именно БЕЛЫЕ пиксели:
-    # низкая насыщенность (S) + высокая яркость (V). Это убирает
-    # красный фон, который при простом V>180 тоже попадал в маску.
+    # красном/тёмном фоне. Изолируем БЕЛЫЕ пиксели: низкая S + высокая V.
+    # У R1 фон может быть нейтральным, поэтому если строгая маска даёт
+    # мало пикселей — пробуем «мягкую» и берём лучший OCR.
     hsv = cv2.cvtColor(crop, cv2.COLOR_BGR2HSV)
-    s, v = hsv[:, :, 1], hsv[:, :, 2]
-    mask = cv2.inRange(hsv, (0, 0, 170), (179, 90, 255))
-    if mask.mean() < 3:  # плашки нет вовсе
+    strict = cv2.inRange(hsv, (0, 0, 170), (179, 90, 255))
+    if strict.mean() < 1.5:
         return None
-    # Готовим контрастный ч/б: чёрный текст на белом фоне (любит tesseract).
-    h0, w0 = crop.shape[:2]
-    scale = max(2, int(round(64 / max(1, h0))))
-    big = cv2.resize(mask, (w0 * scale, h0 * scale),
-                     interpolation=cv2.INTER_CUBIC)
-    inv = cv2.bitwise_not(big)
-    inv_bgr = cv2.cvtColor(inv, cv2.COLOR_GRAY2BGR)
-    # Передаём 3-канальное изображение, чтобы preprocess_for_ocr не
-    # пересжимал маску повторно (Otsu сам разберётся).
-    txt = ocr(inv_bgr, lang, digits_only=False, alnum_only=True,
-              calib_key=(zone["tag"], zone["name"]))
+    candidates = [strict]
+    if strict.mean() < 6:
+        soft = cv2.inRange(hsv, (0, 0, 140), (179, 140, 255))
+        if soft.mean() >= 1.5:
+            candidates.append(soft)
+
+    def _ocr_mask(mask: np.ndarray) -> str:
+        h0, w0 = mask.shape[:2]
+        scale = max(2, int(round(64 / max(1, h0))))
+        big = cv2.resize(mask, (w0 * scale, h0 * scale),
+                         interpolation=cv2.INTER_CUBIC)
+        inv = cv2.bitwise_not(big)
+        inv_bgr = cv2.cvtColor(inv, cv2.COLOR_GRAY2BGR)
+        return ocr(inv_bgr, lang, digits_only=False, alnum_only=True,
+                   calib_key=(zone["tag"], zone["name"]))
+
+    txt = ""
+    for m in candidates:
+        t = _ocr_mask(m)
+        # Выбираем тот OCR-выхлоп, где сразу видна "RING N".
+        if RE_RING_NUM.search(t.upper()):
+            txt = t
+            break
+        if len(t) > len(txt):
+            txt = t
     if not txt:
         return None
     up = txt.upper()
