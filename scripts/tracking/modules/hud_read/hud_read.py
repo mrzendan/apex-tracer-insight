@@ -605,15 +605,18 @@ def _scout_rings_with_zone(cap, ring_zone, start_f, end_f, fps,
     def _rollback_start(target_ring: int, target_state: str,
                         f_hi_known: int) -> tuple[int | None, str]:
         """Найти кадр f, где впервые наблюдается (target_ring, target_state).
-        Идём назад от f_hi_known шагом scout_step, пока state == target.
-        Затем бинпоиск + линейный доводчик в окне [f_lo, f_hi].
+        Stage 1: идём назад шагами по 50 кадров до первого кадра, где
+        state != target — это примерная нижняя граница.
+        Stage 2: уточняем границу шагами по 4 кадра (вперёд от f_lo).
+        Stage 3: линейный доводчик до кадровой точности.
         Возвращает (f_start, confidence)."""
         target = (target_ring, target_state)
-        # f_hi: подтверждённый кадр target. f_lo: ищем.
+        # Stage 1 — крупный обратный скан шагом 50 кадров.
+        coarse_back_step = 50
         f_hi = f_hi_known
         f_lo: int | None = None
-        cur = f_hi - scout_step
-        max_back_iters = max(1, (f_hi_known // scout_step) + 2)
+        cur = f_hi - coarse_back_step
+        max_back_iters = max(1, (f_hi_known // coarse_back_step) + 2)
         iters = 0
         while cur >= 0 and iters < max_back_iters:
             rs = read_ring_at(cap, cur, ring_zone, lang)
@@ -623,15 +626,13 @@ def _scout_rings_with_zone(cap, ring_zone, start_f, end_f, fps,
             else:
                 f_lo = cur
                 break
-            cur -= scout_step
+            cur -= coarse_back_step
             iters += 1
         if f_lo is None:
             # Упёрлись в t=0, значит фаза началась с самого начала видео.
             return (f_hi, "boundary")
-        # Stage A — линейный скан вперёд шагом 4 кадра от f_lo до f_hi.
-        # После coarse-прохода окно невелико (≤ scout_step), а OCR на плашке
-        # шумный — бинпоиск может «промахнуться» по unknown-кадру. Мелкий
-        # форвард-скан надёжнее и даёт точность до 4 кадров (~0.07s @60fps).
+        # Stage 2 — уточнение шагами по 4 кадра вперёд от f_lo до f_hi.
+        # Окно после Stage 1 ≤ 50 кадров, шаг 4 даёт точность ~0.07s @60fps.
         confidence = "high"
         last_unknown = False
         fine_step = 4
@@ -648,7 +649,7 @@ def _scout_rings_with_zone(cap, ring_zone, start_f, end_f, fps,
             else:
                 f_lo = cur_fwd
             cur_fwd += fine_step
-        # Stage B — линейный доводчик до кадровой точности.
+        # Stage 3 — линейный доводчик до кадровой точности.
         linear_used = 0
         while f_hi - f_lo > 1 and linear_used < refine_linear:
             cur2 = f_lo + 1
