@@ -96,19 +96,21 @@ def preprocess_for_ocr(crop: np.ndarray) -> np.ndarray:
     scale = max(2, int(round(64 / max(1, h))))
     big = cv2.resize(crop, (w * scale, h * scale), interpolation=cv2.INTER_CUBIC)
     gray = cv2.cvtColor(big, cv2.COLOR_BGR2GRAY) if big.ndim == 3 else big
-    # HUD у Apex — белый/жёлтый текст на тёмном; пробуем обе полярности.
+    # HUD Apex бывает и белый-на-тёмном, и тёмно-красный на светлом
+    # (например, "20 TEAMS"/"60 PLAYERS"). Возвращаем ОБА варианта —
+    # OCR прогонит и выберет лучший.
     _, th1 = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     th2 = cv2.bitwise_not(th1)
-    pick = th1 if (th1 == 0).sum() < (th2 == 0).sum() else th2
-    # Чуть утолщаем штрихи — помогает мелким одиночным цифрам.
-    pick = cv2.copyMakeBorder(pick, 8, 8, 8, 8, cv2.BORDER_CONSTANT, value=255)
-    return pick
+    pad = lambda im: cv2.copyMakeBorder(im, 8, 8, 8, 8, cv2.BORDER_CONSTANT, value=255)
+    return pad(th1), pad(th2)
 
 
 def ocr(crop: np.ndarray, lang: str, digits_only: bool, alnum_only: bool = False) -> str:
     if pytesseract is None or crop.size == 0:
         return ""
-    prep = preprocess_for_ocr(crop)
+    preps = preprocess_for_ocr(crop)
+    if not isinstance(preps, tuple):
+        preps = (preps,)
     whitelist = ""
     if digits_only:
         whitelist = "0123456789"
@@ -117,17 +119,18 @@ def ocr(crop: np.ndarray, lang: str, digits_only: bool, alnum_only: bool = False
     # Пробуем несколько PSM и берём непустой/самый длинный результат.
     psms = (7, 8, 6) if not digits_only else (8, 7, 10)
     best = ""
-    for psm in psms:
-        cfg = f"--psm {psm} --oem 1"
-        if whitelist:
-            cfg += f" -c tessedit_char_whitelist={whitelist}"
-        try:
-            txt = pytesseract.image_to_string(prep, lang=lang, config=cfg).strip()
-        except Exception as e:  # pragma: no cover
-            print(f"[hud_read] tesseract error: {e}", file=sys.stderr)
-            return ""
-        if len(txt) > len(best):
-            best = txt
+    for prep in preps:
+        for psm in psms:
+            cfg = f"--psm {psm} --oem 1"
+            if whitelist:
+                cfg += f" -c tessedit_char_whitelist={whitelist}"
+            try:
+                txt = pytesseract.image_to_string(prep, lang=lang, config=cfg).strip()
+            except Exception as e:  # pragma: no cover
+                print(f"[hud_read] tesseract error: {e}", file=sys.stderr)
+                return ""
+            if len(txt) > len(best):
+                best = txt
     return best
 
 
