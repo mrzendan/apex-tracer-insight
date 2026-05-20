@@ -358,6 +358,72 @@ def scout_rings(cap: cv2.VideoCapture, zones_scaled: list[dict],
         print("[hud_read][ring-scout] зона 'ring status' не найдена")
         return {"transitions": [], "phases": []}
 
+    return _scout_rings_with_zone(cap, ring_zone, start_f, end_f, fps,
+                                  scout_step, lang, refine_budget, refine_linear)
+
+
+def save_ring_debug_screenshots(cap: cv2.VideoCapture, zones_scaled: list[dict],
+                                start_f: int, end_f: int, fps: float,
+                                step_sec: float, out_dir: Path,
+                                lang: str) -> int:
+    """Каждые step_sec секунд сохраняет PNG с кропом зоны 'ring status'
+    + аннотацией распарсенного состояния. Полезно для глазной проверки
+    того, что зона выровнена и таймер/CLOSING читается."""
+    if step_sec <= 0:
+        return 0
+    ring_zone = next(
+        (z for z in zones_scaled if z["tag"] == "hud" and z["name"] == "ring status"),
+        None,
+    )
+    if ring_zone is None:
+        print("[hud_read][ring-debug] зона 'ring status' не найдена")
+        return 0
+    out_dir.mkdir(parents=True, exist_ok=True)
+    step_f = max(1, int(round(step_sec * fps)))
+    f = max(0, start_f)
+    saved = 0
+    pbar = tqdm(total=max(1, (end_f - f) // step_f + 1),
+                unit="shot", desc="ring-debug", dynamic_ncols=True)
+    while f < end_f:
+        frame = read_frame(cap, f)
+        if frame is None:
+            f += step_f
+            pbar.update(1)
+            continue
+        x, y, w, h = ring_zone["x"], ring_zone["y"], ring_zone["w"], ring_zone["h"]
+        crop = frame[y:y + h, x:x + w]
+        rs = read_ring_at(cap, f, ring_zone, lang) if crop.size else None
+        # Аннотация: t, state — пишем над кропом.
+        label_state = (f"R{rs['ring']} {rs['state']}" if rs else "—")
+        t_sec = f / fps
+        label = f"f={f} t={t_sec:.1f}s  {label_state}"
+        # Увеличиваем кроп x2 для читаемости, добавляем верхнюю полосу под текст.
+        if crop.size:
+            big = cv2.resize(crop, (max(1, crop.shape[1] * 2),
+                                    max(1, crop.shape[0] * 2)),
+                             interpolation=cv2.INTER_NEAREST)
+        else:
+            big = np.zeros((40, 200, 3), dtype=np.uint8)
+        bar = np.zeros((28, big.shape[1], 3), dtype=np.uint8)
+        cv2.putText(bar, label, (6, 20), cv2.FONT_HERSHEY_SIMPLEX,
+                    0.55, (0, 220, 255), 1, cv2.LINE_AA)
+        out_img = np.vstack([bar, big])
+        mm = int(t_sec // 60)
+        ss = int(t_sec - mm * 60)
+        fname = f"ring_t{mm:03d}m{ss:02d}s_f{f:07d}.png"
+        cv2.imwrite(str(out_dir / fname), out_img)
+        saved += 1
+        pbar.update(1)
+        f += step_f
+    pbar.close()
+    print(f"[hud_read][ring-debug] saved {saved} screenshots → {out_dir}")
+    return saved
+
+
+def _scout_rings_with_zone(cap, ring_zone, start_f, end_f, fps,
+                           scout_step, lang, refine_budget, refine_linear):
+    """Внутренняя реализация scout_rings — вынесена, чтобы не дублировать поиск зоны."""
+
     print(f"[hud_read][ring-scout] coarse pass: step={scout_step} "
           f"frames ({scout_step/fps:.1f}s)")
 
