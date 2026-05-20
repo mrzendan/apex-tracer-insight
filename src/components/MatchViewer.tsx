@@ -698,7 +698,7 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
 }
 
 /* ---------- RING PHASE STATUS chip (sits next to Stat row) ---------- */
-function RingPhaseChip({ time }: { time: number }) {
+function RingPhaseChip({ time, ringSegments }: { time: number; ringSegments: RingSegment[] }) {
   const seg = ringSegments.find(s => time >= s.startSec && time <= s.endSec)
     ?? ringSegments[ringSegments.length - 1];
   const isClosing = seg.kind === "Closing";
