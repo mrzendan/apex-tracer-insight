@@ -1044,7 +1044,7 @@ function MapCanvas({
         <Stat label="Alive" value={`${aliveTeams}/${teams.length}`} accent />
         <Stat label="Kills" value={totalKills.toString()} />
         <Stat label="Ring"  value={`${ringIndex + 1 || ringCount}/${ringCount}`} />
-        <RingPhaseChip time={time} />
+        <RingPhaseChip time={time} ringSegments={ringSegments} />
       </div>
     </div>
   );
