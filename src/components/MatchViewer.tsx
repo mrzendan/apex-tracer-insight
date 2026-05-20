@@ -379,7 +379,7 @@ export function MatchViewer({ initialGameId }: { initialGameId?: string }) {
           />
           <div className="min-h-0 flex-1 overflow-y-auto p-2 scrollbar-slim">
             {[...teams].sort((a, b) => a.placement - b.placement).map((t) => (
-              <TeamRow key={t.id} team={t} active={selectedTeams.has(t.id)} hovered={hoverTeam === t.id}
+              <TeamRow key={t.id} team={t} slotIndex={teams.indexOf(t)} active={selectedTeams.has(t.id)} hovered={hoverTeam === t.id}
                 onToggle={() => toggleTeam(t.id)}
                 onHover={(v) => setHoverTeam(v ? t.id : null)}
                 logoSize={teamLogoSize} compact={teamCompact}
@@ -428,6 +428,7 @@ export function MatchViewer({ initialGameId }: { initialGameId?: string }) {
             focusRequest={focusRequest}
             onEventClick={handleEventClick}
             ringPhases={ringPhases}
+            teams={teams}
           />
 
           <Timeline time={time} duration={durationSec} playing={playing} speed={speed}
@@ -619,13 +620,13 @@ function PanelHeader({ title, subtitle }: { title: string; subtitle?: React.Reac
   );
 }
 
-function TeamRow({ team, active, hovered, onToggle, onHover, logoSize = 20, compact = false, alive }: {
-  team: Team; active: boolean; hovered: boolean; onToggle: () => void; onHover: (v: boolean) => void;
+function TeamRow({ team, slotIndex, active, hovered, onToggle, onHover, logoSize = 20, compact = false, alive }: {
+  team: Team; slotIndex: number; active: boolean; hovered: boolean; onToggle: () => void; onHover: (v: boolean) => void;
   logoSize?: number; compact?: boolean;
   /** Live alive override; falls back to the static `team.alive` flag. */
   alive?: boolean;
 }) {
-  const slotColor = getSlotColor(teams.indexOf(team));
+  const slotColor = getSlotColor(slotIndex);
   const nameSize = Math.max(12, Math.min(18, Math.round(logoSize * 0.6)));
   const isAlive = alive ?? team.alive;
   if (compact) {
