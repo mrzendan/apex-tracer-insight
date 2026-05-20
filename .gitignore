@@ -45,3 +45,11 @@ __pycache__
 
 # --- OS ---
 Thumbs.db
+
+# --- Tracking outputs: коммитим, чтобы Lovable видел логи прогонов ---
+!scripts/tracking/motion_out/
+!scripts/tracking/motion_out/**
+!scripts/tracking/debug_out/
+!scripts/tracking/debug_out/**
+!scripts/tracking/cuts_out/
+!scripts/tracking/cuts_out/**
