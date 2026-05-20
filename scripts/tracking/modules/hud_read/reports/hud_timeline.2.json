@@ -1,0 +1,4928 @@
+{
+  "video": "scripts\\tracking\\game.mp4",
+  "fps": 59.94005994005994,
+  "frame_step": 600,
+  "zones_source": "scripts\\tracking\\configs\\zones.vod.json",
+  "chunk_id": "2",
+  "start_frame": 45400,
+  "end_frame": 59083,
+  "timeline": [
+    {
+      "frame": 45400,
+      "t": 757.423,
+      "hud": {
+        "map_name": "STORM POINT",
+        "game_number": 4,
+        "number_of_teams_alive": null,
+        "number_of_players_alive": null,
+        "ring_status": null
+      },
+      "teams": [
+        {
+          "slot": 1,
+          "name": "ELTE",
+          "hero_1": "8d8d9d451d1f4f53",
+          "hero_2": "0f3f3f257bda5a07",
+          "hero_3": "0f0f0f4a4d6c6c3c",
+          "pts": 25,
+          "logo": "0018383030303818",
+          "eliminated": false
+        },
+        {
+          "slot": 2,
+          "name": "FREE",
+          "hero_1": "84cececccce6f656",
+          "hero_2": "1cf4b5911154d899",
+          "hero_3": "cdd3d9d1d8dc5d18",
+          "pts": 25,
+          "logo": "0060686464604054",
+          "eliminated": true
+        },
+        {
+          "slot": 3,
+          "name": "EXI",
+          "hero_1": "8faf9f273bfbde27",
+          "hero_2": "0d0e0d071c0f6b4b",
+          "hero_3": "191e0d05351d23bb",
+          "pts": 7,
+          "logo": "0020383838342014",
+          "eliminated": false
+        },
+        {
+          "slot": 4,
+          "name": "NIPC",
+          "hero_1": "878f8fcf6d6e243c",
+          "hero_2": "051a0e1cfc3c7439",
+          "hero_3": "0f1d8fad7674383a",
+          "pts": 31,
+          "logo": "0000303830380800",
+          "eliminated": false
+        },
+        {
+          "slot": 5,
+          "name": "OBVN",
+          "hero_1": "5aeecaccec13233b",
+          "hero_2": "78cccb8a8a1a4317",
+          "hero_3": "859c949090b4793a",
+          "pts": 31,
+          "logo": "1292b0b8ec6c6cc5",
+          "eliminated": true
+        },
+        {
+          "slot": 6,
+          "name": "820",
+          "hero_1": "fceccbcccccacbdb",
+          "hero_2": "786ee9b99b1123bb",
+          "hero_3": "cecec9cbc1663c3c",
+          "pts": 72,
+          "logo": "1a18183024646402",
+          "eliminated": true
+        },
+        {
+          "slot": 7,
+          "name": "SRC",
+          "hero_1": "c6cececa4d4a6c3c",
+          "hero_2": "787ee8aa9a9b232b",
+          "hero_3": "7cedc9d190924b53",
+          "pts": 20,
+          "logo": "0410306478581000",
+          "eliminated": true
+        },
+        {
+          "slot": 8,
+          "name": "STAL",
+          "hero_1": "8faf3f273bdade23",
+          "hero_2": "0d0d090f1d1f4b5b",
+          "hero_3": "070f0d4f6d662c3c",
+          "pts": 17,
+          "logo": "1038383c34341800",
+          "eliminated": false
+        },
+        {
+          "slot": 9,
+          "name": "HH",
+          "hero_1": "8faf372f3bdade23",
+          "hero_2": "0f0f0d4f6d663c3c",
+          "hero_3": "0d0c090f1d0f4b5b",
+          "pts": 21,
+          "logo": "2070707870787820",
+          "eliminated": false
+        },
+        {
+          "slot": 10,
+          "name": "THUG",
+          "hero_1": "c6c6a08f8f87a1c5",
+          "hero_2": "862f563b3b1e1d4d",
+          "hero_3": "07072726b6b69e0e",
+          "pts": 13,
+          "logo": "0032323e3400006b",
+          "eliminated": false
+        },
+        {
+          "slot": 11,
+          "name": "BBD",
+          "hero_1": "e6eeefed76f6a69e",
+          "hero_2": "2ceec76575751c1e",
+          "hero_3": "76eedf5455516f43",
+          "pts": 16,
+          "logo": "0010b0b0e8e8ecec",
+          "eliminated": true
+        },
+        {
+          "slot": 12,
+          "name": "CRT",
+          "hero_1": "878f97b6bbefef83",
+          "hero_2": "7c6e4d460e8f2b0b",
+          "hero_3": "878fade56526361e",
+          "pts": 1,
+          "logo": "2828787868687010",
+          "eliminated": false
+        },
+        {
+          "slot": 13,
+          "name": "CINO",
+          "hero_1": "e6eed7f6f6f29cdd",
+          "hero_2": "1c6c4d65557d5819",
+          "hero_3": "4d4e4e485852961a",
+          "pts": 18,
+          "logo": "a0a0303030100000",
+          "eliminated": true
+        },
+        {
+          "slot": 14,
+          "name": "OKK",
+          "hero_1": "8486888e8e8fa58b",
+          "hero_2": "079e1b363d6d6f91",
+          "hero_3": "0707256526a6be9e",
+          "pts": 22,
+          "logo": "10103038686c6c28",
+          "eliminated": false
+        },
+        {
+          "slot": 15,
+          "name": "GMBL",
+          "hero_1": "f6eed7f6fef1efc3",
+          "hero_2": "6666ef655525b69e",
+          "hero_3": "297675595959b395",
+          "pts": 8,
+          "logo": "0130786868e8b051",
+          "eliminated": true
+        },
+        {
+          "slot": 16,
+          "name": "JDDG",
+          "hero_1": "8787afe5a4a6b69e",
+          "hero_2": "09169595bb99b395",
+          "hero_3": "070f17363d6d6f03",
+          "pts": 30,
+          "logo": "0000243870380000",
+          "eliminated": false
+        },
+        {
+          "slot": 17,
+          "name": "MR",
+          "hero_1": "8d8e8d868e8fab8b",
+          "hero_2": "870f2d656526361e",
+          "hero_3": "070f17b6bbef6f83",
+          "pts": 15,
+          "logo": "1210303068686c6c",
+          "eliminated": false
+        },
+        {
+          "slot": 18,
+          "name": "REV",
+          "hero_1": "858f8fada686965e",
+          "hero_2": "0d1d432313b1c83e",
+          "hero_3": "1c3c1f278d8f9999",
+          "pts": 21,
+          "logo": "7070687060707448",
+          "eliminated": false
+        },
+        {
+          "slot": 19,
+          "name": "ROC",
+          "hero_1": "878f9fb6bdedef91",
+          "hero_2": "3d664d060e8f258b",
+          "hero_3": "8787ad652626361e",
+          "pts": 27,
+          "logo": "1028287030303008",
+          "eliminated": false
+        },
+        {
+          "slot": 20,
+          "name": "SRO",
+          "hero_1": "e6efe5e6f6a6be9e",
+          "hero_2": "6edf6555557d6e51",
+          "hero_3": "7c6e5958580f21cb",
+          "pts": null,
+          "logo": "70b0b0b0282868a9",
+          "eliminated": true
+        }
+      ]
+    },
+    {
+      "frame": 46000,
+      "t": 767.433,
+      "hud": {
+        "map_name": "STORM POINT",
+        "game_number": 4,
+        "number_of_teams_alive": null,
+        "number_of_players_alive": null,
+        "ring_status": {
+          "ring": 3,
+          "state": "CLOSING"
+        }
+      },
+      "teams": [
+        {
+          "slot": 1,
+          "name": "ELTE",
+          "hero_1": "8d8d9d451d1f4f53",
+          "hero_2": "0f3f3f257bda5a07",
+          "hero_3": "0f0f0f4a4d6c6c3c",
+          "pts": 25,
+          "logo": "0818383030301818",
+          "eliminated": false
+        },
+        {
+          "slot": 2,
+          "name": "FREE",
+          "hero_1": "84cececccce6d656",
+          "hero_2": "9cfcb5959154d819",
+          "hero_3": "ccd3d9d1d8dc5c18",
+          "pts": 25,
+          "logo": "00606c6460680854",
+          "eliminated": true
+        },
+        {
+          "slot": 3,
+          "name": "EE",
+          "hero_1": "8faf9f273bfbde27",
+          "hero_2": "8d8e0d071c0f6b4b",
+          "hero_3": "191e0d05351d23bb",
+          "pts": 7,
+          "logo": "0020383838342020",
+          "eliminated": false
+        },
+        {
+          "slot": 4,
+          "name": "NIPC",
+          "hero_1": "8f8f8fcf6d6e243c",
+          "hero_2": "051a0e1cfc3c7439",
+          "hero_3": "0f1d8fad7674383a",
+          "pts": 31,
+          "logo": "0810303830381000",
+          "eliminated": false
+        },
+        {
+          "slot": 5,
+          "name": "OBVN",
+          "hero_1": "5aeecaccec132b3b",
+          "hero_2": "f8ccdb8a8a1a431f",
+          "hero_3": "859c949090f4793a",
+          "pts": 31,
+          "logo": "3090b0b8ecececd5",
+          "eliminated": true
+        },
+        {
+          "slot": 6,
+          "name": null,
+          "hero_1": "fceccbcccccacbcb",
+          "hero_2": "f86ee9b99b1123bb",
+          "hero_3": "46cec9cbc1663c3c",
+          "pts": 72,
+          "logo": "1818183024646418",
+          "eliminated": true
+        },
+        {
+          "slot": 7,
+          "name": "SRC",
+          "hero_1": "4ccececa4d4a6c3c",
+          "hero_2": "787ee8aa9a9b272b",
+          "hero_3": "7cedc99190924b5b",
+          "pts": 20,
+          "logo": "0812706438381212",
+          "eliminated": true
+        },
+        {
+          "slot": 8,
+          "name": "STAL",
+          "hero_1": "8faf3f273bdade23",
+          "hero_2": "0d0d090d1d0f4b5b",
+          "hero_3": "0f0f0d4f6d662c3c",
+          "pts": 17,
+          "logo": "1038303c34343808",
+          "eliminated": false
+        },
+        {
+          "slot": 9,
+          "name": "HH",
+          "hero_1": "8faf372f3bdade23",
+          "hero_2": "0f0f0d4f6d663c3c",
+          "hero_3": "0d0c090f1d0f4b5b",
+          "pts": 21,
+          "logo": "6070707870787828",
+          "eliminated": false
+        },
+        {
+          "slot": 10,
+          "name": "THUG",
+          "hero_1": "c6c6a08f8f87a1c7",
+          "hero_2": "860f543b3b1e1d4d",
+          "hero_3": "07872626b6b69e0e",
+          "pts": 13,
+          "logo": "0032323e3010006b",
+          "eliminated": false
+        },
+        {
+          "slot": 11,
+          "name": "BBD",
+          "hero_1": "e6eeefedfef6a69e",
+          "hero_2": "64eec76575351c1e",
+          "hero_3": "76eedf5455516f47",
+          "pts": 16,
+          "logo": "8030303068686c6c",
+          "eliminated": true
+        },
+        {
+          "slot": 12,
+          "name": "CRT",
+          "hero_1": "878f97b6bbefef83",
+          "hero_2": "3c6e4d460e8f2b0b",
+          "hero_3": "878fade56526361e",
+          "pts": 1,
+          "logo": "2828787868687010",
+          "eliminated": false
+        },
+        {
+          "slot": 13,
+          "name": "DINO",
+          "hero_1": "e6eec7f6f6f09cdd",
+          "hero_2": "0cfc4d65557d5819",
+          "hero_3": "464e4e485852961e",
+          "pts": 18,
+          "logo": "0080303030100010",
+          "eliminated": true
+        },
+        {
+          "slot": 14,
+          "name": "DKK",
+          "hero_1": "8486888e8e8fa58b",
+          "hero_2": "879e1b363d6d6f91",
+          "hero_3": "8707256526a6be9e",
+          "pts": 22,
+          "logo": "10103038686c6c28",
+          "eliminated": false
+        },
+        {
+          "slot": 15,
+          "name": "GMBL",
+          "hero_1": "f6eedff6f6f1efc3",
+          "hero_2": "e666e7655525b69e",
+          "hero_3": "297675595959b395",
+          "pts": 8,
+          "logo": "0031786868693011",
+          "eliminated": true
+        },
+        {
+          "slot": 16,
+          "name": "JDDG",
+          "hero_1": "8787afe5a4a6b69e",
+          "hero_2": "09169595bb99b395",
+          "hero_3": "070f17363d6d6f03",
+          "pts": 30,
+          "logo": "0201647871380000",
+          "eliminated": false
+        },
+        {
+          "slot": 17,
+          "name": "MR",
+          "hero_1": "8d8e8d868e8fab8b",
+          "hero_2": "070f2d656526361e",
+          "hero_3": "070f17b6bbef6f83",
+          "pts": 15,
+          "logo": "5030303068686c6c",
+          "eliminated": false
+        },
+        {
+          "slot": 18,
+          "name": "REV",
+          "hero_1": "858f8fada686965e",
+          "hero_2": "0d1d432313b1c83e",
+          "hero_3": "1c3c1f278d8f9999",
+          "pts": 21,
+          "logo": "5070687060707440",
+          "eliminated": false
+        },
+        {
+          "slot": 19,
+          "name": "ROC",
+          "hero_1": "878f9fb6bdedef91",
+          "hero_2": "3c664d460e4f278b",
+          "hero_3": "878fade5a6a6361e",
+          "pts": 27,
+          "logo": "2028283030303040",
+          "eliminated": false
+        },
+        {
+          "slot": 20,
+          "name": "SRO",
+          "hero_1": "e6efe5f6f6a6be9e",
+          "hero_2": "6edf6555555d6e51",
+          "hero_3": "7c6e5958580b21cb",
+          "pts": 0,
+          "logo": "3030303028686828",
+          "eliminated": true
+        }
+      ]
+    },
+    {
+      "frame": 46600,
+      "t": 777.443,
+      "hud": {
+        "map_name": "STORM POINT",
+        "game_number": 4,
+        "number_of_teams_alive": null,
+        "number_of_players_alive": null,
+        "ring_status": null
+      },
+      "teams": [
+        {
+          "slot": 1,
+          "name": "ELTE",
+          "hero_1": "8d8d89451d1f4b53",
+          "hero_2": "8f3f3f257bdada07",
+          "hero_3": "0f0f0f4a4d6c6c3c",
+          "pts": 25,
+          "logo": "1018303030301838",
+          "eliminated": false
+        },
+        {
+          "slot": 2,
+          "name": "FREE",
+          "hero_1": "84cececcdce65656",
+          "hero_2": "8cfcb5911154d819",
+          "hero_3": "ccd3d9d1d8dc5c18",
+          "pts": 25,
+          "logo": "0060686464600154",
+          "eliminated": true
+        },
+        {
+          "slot": 3,
+          "name": "EE",
+          "hero_1": "8faf9f273bfbde27",
+          "hero_2": "0d8e0d051c0f6b4b",
+          "hero_3": "191e0d05351d23bb",
+          "pts": 7,
+          "logo": "0240383838342020",
+          "eliminated": false
+        },
+        {
+          "slot": 4,
+          "name": "NIPC",
+          "hero_1": "8f8f8fcf6d6e243c",
+          "hero_2": "051a0e1cfc3c7439",
+          "hero_3": "0f1d8fad7674383a",
+          "pts": 31,
+          "logo": "0010303830380800",
+          "eliminated": false
+        },
+        {
+          "slot": 5,
+          "name": "OBVN",
+          "hero_1": "d8eecaccec132b3b",
+          "hero_2": "78cccb8a8a1a431f",
+          "hero_3": "859c949090f4793a",
+          "pts": 31,
+          "logo": "929070786cececd5",
+          "eliminated": true
+        },
+        {
+          "slot": 6,
+          "name": "S20",
+          "hero_1": "fceccbcccccacbcb",
+          "hero_2": "f8eee9a99b1123bb",
+          "hero_3": "cecec9cbc1663c3c",
+          "pts": 72,
+          "logo": "1818183024646418",
+          "eliminated": true
+        },
+        {
+          "slot": 7,
+          "name": "SRC",
+          "hero_1": "c6cececa4d4a6c3c",
+          "hero_2": "787ec8aa9a9b272b",
+          "hero_3": "78edc99190924b5b",
+          "pts": 20,
+          "logo": "08083064381a1204",
+          "eliminated": true
+        },
+        {
+          "slot": 8,
+          "name": "STAL",
+          "hero_1": "8faf3f273bdade23",
+          "hero_2": "0d0d090f1d0f4b5b",
+          "hero_3": "8f0f0d4f6d662c3c",
+          "pts": 17,
+          "logo": "1038383c34343822",
+          "eliminated": false
+        },
+        {
+          "slot": 9,
+          "name": "HH",
+          "hero_1": "8faf372f3bdade23",
+          "hero_2": "0f0f0d4f6d663c3c",
+          "hero_3": "0d0c090f1d0f4b5b",
+          "pts": 21,
+          "logo": "7070707870787830",
+          "eliminated": false
+        },
+        {
+          "slot": 10,
+          "name": "THUG",
+          "hero_1": "c6c6a08f8f87a1c7",
+          "hero_2": "862f563b3b1e1d4d",
+          "hero_3": "07872726b7b69e0e",
+          "pts": 13,
+          "logo": "0032323e3414146b",
+          "eliminated": false
+        },
+        {
+          "slot": 11,
+          "name": "BBD",
+          "hero_1": "e6eeefedfef6a69e",
+          "hero_2": "6ceec76575751c1e",
+          "hero_3": "76eedf545d516f43",
+          "pts": 16,
+          "logo": "8092b23268e9edec",
+          "eliminated": true
+        },
+        {
+          "slot": 12,
+          "name": "CRT",
+          "hero_1": "878f9fb6bbefef83",
+          "hero_2": "7c6e4d460e8f2b0b",
+          "hero_3": "878fade56526361e",
+          "pts": null,
+          "logo": "6868707868687011",
+          "eliminated": false
+        },
+        {
+          "slot": 13,
+          "name": "CINO",
+          "hero_1": "f6eec7f6f6f09cdd",
+          "hero_2": "0efc6d65557c4809",
+          "hero_3": "c64e4e485a52961e",
+          "pts": 18,
+          "logo": "0040303010100001",
+          "eliminated": true
+        },
+        {
+          "slot": 14,
+          "name": "DKK",
+          "hero_1": "8486888e8e8fa58b",
+          "hero_2": "079e1b363d6d6f91",
+          "hero_3": "0707256526a6be9e",
+          "pts": 22,
+          "logo": "10113038686c6c40",
+          "eliminated": false
+        },
+        {
+          "slot": 15,
+          "name": "GMBL",
+          "hero_1": "f6eed7f6f6f1efc3",
+          "hero_2": "66666d655525b69e",
+          "hero_3": "e97675595959b395",
+          "pts": 8,
+          "logo": "00b1796868683050",
+          "eliminated": true
+        },
+        {
+          "slot": 16,
+          "name": "JDG",
+          "hero_1": "8787afe5a4a6b69e",
+          "hero_2": "49169595bb99b395",
+          "hero_3": "070f1f363d6d6f03",
+          "pts": 30,
+          "logo": "00002c7870301008",
+          "eliminated": false
+        },
+        {
+          "slot": 17,
+          "name": "MR",
+          "hero_1": "8d8e8d868e8fab8b",
+          "hero_2": "070f2d656526361e",
+          "hero_3": "070f17b6bbef6f83",
+          "pts": 15,
+          "logo": "3332323068686c6c",
+          "eliminated": false
+        },
+        {
+          "slot": 18,
+          "name": "REV",
+          "hero_1": "858f8fada686965e",
+          "hero_2": "0d1d432313b1c83e",
+          "hero_3": "1c3c1f278d8f9999",
+          "pts": 21,
+          "logo": "7070687060705440",
+          "eliminated": false
+        },
+        {
+          "slot": 19,
+          "name": "ROC",
+          "hero_1": "878f9fb6bdedef91",
+          "hero_2": "3c664d460ecf258b",
+          "hero_3": "8787ade5a6a6361e",
+          "pts": 27,
+          "logo": "0028283030323050",
+          "eliminated": false
+        },
+        {
+          "slot": 20,
+          "name": "SR",
+          "hero_1": "e6efe5f6f6a6be9e",
+          "hero_2": "6edf6555557d6e51",
+          "hero_3": "3c6e5858580b218b",
+          "pts": null,
+          "logo": "3031303028282828",
+          "eliminated": true
+        }
+      ]
+    },
+    {
+      "frame": 47200,
+      "t": 787.453,
+      "hud": {
+        "map_name": "STORM POINT",
+        "game_number": 4,
+        "number_of_teams_alive": null,
+        "number_of_players_alive": null,
+        "ring_status": null
+      },
+      "teams": [
+        {
+          "slot": 1,
+          "name": "ELTE",
+          "hero_1": "8d8d89471d1f4b53",
+          "hero_2": "0f1f3f257bda5a07",
+          "hero_3": "8f0f0f4e4d6c6c3c",
+          "pts": 25,
+          "logo": "0218383030301818",
+          "eliminated": false
+        },
+        {
+          "slot": 2,
+          "name": "FREE",
+          "hero_1": "84cececccce6f656",
+          "hero_2": "1cfcb5911154d891",
+          "hero_3": "4cd3d9d1d8dc5c18",
+          "pts": 25,
+          "logo": "00606c6470780854",
+          "eliminated": true
+        },
+        {
+          "slot": 3,
+          "name": "EE",
+          "hero_1": "8faf9f273bfbde27",
+          "hero_2": "0d0e0d071c0f6b4b",
+          "hero_3": "191e0d05351d23bb",
+          "pts": 7,
+          "logo": "0020383838342424",
+          "eliminated": false
+        },
+        {
+          "slot": 4,
+          "name": "NIPC",
+          "hero_1": "8f8f8fcf6d6e243c",
+          "hero_2": "051a0e1cfc3c7439",
+          "hero_3": "0f1d8fad7674383a",
+          "pts": 31,
+          "logo": "0810303830380800",
+          "eliminated": false
+        },
+        {
+          "slot": 5,
+          "name": "OBVN",
+          "hero_1": "d8eecaccec13233b",
+          "hero_2": "78cccb8a8a1a4317",
+          "hero_3": "85dc949090b47928",
+          "pts": 31,
+          "logo": "129030386c6c6cd5",
+          "eliminated": true
+        },
+        {
+          "slot": 6,
+          "name": "S20",
+          "hero_1": "fceccbcccccacbcb",
+          "hero_2": "786ee9b99b1123bb",
+          "hero_3": "46cec9cbc1663c1c",
+          "pts": 72,
+          "logo": "1858183024646422",
+          "eliminated": true
+        },
+        {
+          "slot": 7,
+          "name": "SRC",
+          "hero_1": "4ecececa4d4a6c3c",
+          "hero_2": "787ee8aa9a9b232b",
+          "hero_3": "7cedd9d190924b5b",
+          "pts": 20,
+          "logo": "0010306438381042",
+          "eliminated": true
+        },
+        {
+          "slot": 8,
+          "name": "STAL",
+          "hero_1": "8faf3f273bdade23",
+          "hero_2": "0d0d090f1d1f4b5b",
+          "hero_3": "0f0f0d4f6d662c3c",
+          "pts": 17,
+          "logo": "1038303c34343800",
+          "eliminated": false
+        },
+        {
+          "slot": 9,
+          "name": "HH",
+          "hero_1": "8faf372f3bdade23",
+          "hero_2": "070f0d4f6d663c3c",
+          "hero_3": "0d0c090f1d0f4b5b",
+          "pts": 21,
+          "logo": "6070707870787820",
+          "eliminated": false
+        },
+        {
+          "slot": 10,
+          "name": "THUG",
+          "hero_1": "c6c6a08f8f87a1c7",
+          "hero_2": "862f543b3b1e1d4d",
+          "hero_3": "07072726b6b69e0e",
+          "pts": 13,
+          "logo": "1032323e3400006b",
+          "eliminated": false
+        },
+        {
+          "slot": 11,
+          "name": "BBD",
+          "hero_1": "e6eeefedfef6a69e",
+          "hero_2": "6ceec76575351c1e",
+          "hero_3": "76eedf545d516f47",
+          "pts": 16,
+          "logo": "0010303068686c6c",
+          "eliminated": true
+        },
+        {
+          "slot": 12,
+          "name": "CRT",
+          "hero_1": "878f97b6bbefef83",
+          "hero_2": "3c6e4d460e8f2b0b",
+          "hero_3": "878fade565a6361e",
+          "pts": 1,
+          "logo": "2828787868687010",
+          "eliminated": false
+        },
+        {
+          "slot": 13,
+          "name": "DINO",
+          "hero_1": "e6eed7f6f6f09cdd",
+          "hero_2": "1cfc6d65557c5819",
+          "hero_3": "444e4e485a52d61a",
+          "pts": 18,
+          "logo": "0020303030908010",
+          "eliminated": true
+        },
+        {
+          "slot": 14,
+          "name": "DKK",
+          "hero_1": "8486888e8e8fa58b",
+          "hero_2": "879e1b363d6d6f91",
+          "hero_3": "0707256526a6be9e",
+          "pts": 22,
+          "logo": "10103038686c6c48",
+          "eliminated": false
+        },
+        {
+          "slot": 15,
+          "name": "GMBL",
+          "hero_1": "f6eed7f6f6f1efc3",
+          "hero_2": "6666ef655525b69e",
+          "hero_3": "297e75595959b395",
+          "pts": 8,
+          "logo": "00b178e8e8e83010",
+          "eliminated": true
+        },
+        {
+          "slot": 16,
+          "name": "JDDG",
+          "hero_1": "8787afe5a4a6b69e",
+          "hero_2": "09169595bb99b395",
+          "hero_3": "870f17363d6d6f03",
+          "pts": 30,
+          "logo": "0400243870381212",
+          "eliminated": false
+        },
+        {
+          "slot": 17,
+          "name": "MR",
+          "hero_1": "8d8e8d868e8fab8b",
+          "hero_2": "070f2f656526361e",
+          "hero_3": "070f17b6bbef6f83",
+          "pts": 15,
+          "logo": "1030303068686c6c",
+          "eliminated": false
+        },
+        {
+          "slot": 18,
+          "name": "REV",
+          "hero_1": "858f8fada686965e",
+          "hero_2": "0d1d432313b1c83e",
+          "hero_3": "1c3c1f278d8f9999",
+          "pts": 21,
+          "logo": "5070687060705008",
+          "eliminated": false
+        },
+        {
+          "slot": 19,
+          "name": "ROC",
+          "hero_1": "878f9fb6b9edef91",
+          "hero_2": "3c664d460ecf258b",
+          "hero_3": "8787ade5a6a6361e",
+          "pts": 27,
+          "logo": "2028283130303010",
+          "eliminated": false
+        },
+        {
+          "slot": 20,
+          "name": "SRD",
+          "hero_1": "e6efe5f6f6a6be9e",
+          "hero_2": "6edf6555557d6e51",
+          "hero_3": "7c6e5858580b21cf",
+          "pts": 0,
+          "logo": "31b1b3b1a8a8a8a8",
+          "eliminated": true
+        }
+      ]
+    },
+    {
+      "frame": 47800,
+      "t": 797.463,
+      "hud": {
+        "map_name": "STORM POINT",
+        "game_number": 4,
+        "number_of_teams_alive": null,
+        "number_of_players_alive": null,
+        "ring_status": null
+      },
+      "teams": [
+        {
+          "slot": 1,
+          "name": "ELTE",
+          "hero_1": "8d8d99451d1f4f53",
+          "hero_2": "0f3f3f257bda5a07",
+          "hero_3": "0f0f0f4a4d6c6c3c",
+          "pts": 25,
+          "logo": "0018383030301818",
+          "eliminated": false
+        },
+        {
+          "slot": 2,
+          "name": "FREE",
+          "hero_1": "84cececcdce6d656",
+          "hero_2": "1cfcb1911154d899",
+          "hero_3": "4cd3d9d1d8dc5c18",
+          "pts": 25,
+          "logo": "0060686468603054",
+          "eliminated": true
+        },
+        {
+          "slot": 3,
+          "name": "EE",
+          "hero_1": "8faf9f273bfbde27",
+          "hero_2": "0d0e0d071c0f6b4b",
+          "hero_3": "191e0d05351d23bb",
+          "pts": 7,
+          "logo": "0220383838342020",
+          "eliminated": false
+        },
+        {
+          "slot": 4,
+          "name": "NIPC",
+          "hero_1": "878f8fcf6d6e243c",
+          "hero_2": "051a0e1cfc3c7439",
+          "hero_3": "0f1d8fad7674383a",
+          "pts": 31,
+          "logo": "0000303830381000",
+          "eliminated": false
+        },
+        {
+          "slot": 5,
+          "name": "OBVN",
+          "hero_1": "5aeecaccec132b3b",
+          "hero_2": "78cccb8a8a1a431f",
+          "hero_3": "859c949090f47928",
+          "pts": 31,
+          "logo": "1090b0b8ecececd5",
+          "eliminated": true
+        },
+        {
+          "slot": 6,
+          "name": "820",
+          "hero_1": "fcecc9cccccacbdb",
+          "hero_2": "78eee9b99b1123bb",
+          "hero_3": "46cec9cbc1663c3c",
+          "pts": 72,
+          "logo": "1818183024646410",
+          "eliminated": true
+        },
+        {
+          "slot": 7,
+          "name": "SRC",
+          "hero_1": "cecececa4d4a6c3c",
+          "hero_2": "787ec8aa9a9b272b",
+          "hero_3": "7cedd9d190924b53",
+          "pts": 20,
+          "logo": "021a3064781a3242",
+          "eliminated": true
+        },
+        {
+          "slot": 8,
+          "name": "STAL",
+          "hero_1": "eeaebea6badadea3",
+          "hero_2": "8d8d890f1d0f4b5b",
+          "hero_3": "0f0f0d4f6d662c3c",
+          "pts": 17,
+          "logo": "0038383c34343800",
+          "eliminated": false
+        },
+        {
+          "slot": 9,
+          "name": "HH",
+          "hero_1": "8faf372f3bdade23",
+          "hero_2": "0f0f0d4f6d663c3c",
+          "hero_3": "0d0c090f1d0f4b4b",
+          "pts": 21,
+          "logo": "6870707870787820",
+          "eliminated": false
+        },
+        {
+          "slot": 10,
+          "name": "THUG",
+          "hero_1": "c6c6a08f8f87a1c5",
+          "hero_2": "862f543b3b1e1d4d",
+          "hero_3": "07072626b6b69e0e",
+          "pts": 13,
+          "logo": "0032323e3400006b",
+          "eliminated": false
+        },
+        {
+          "slot": 11,
+          "name": "BBD",
+          "hero_1": "e6eeefedf6f6a69e",
+          "hero_2": "6ceec76575351c1e",
+          "hero_3": "76eedf5455516f43",
+          "pts": 1,
+          "logo": "0814303028686c6c",
+          "eliminated": true
+        },
+        {
+          "slot": 12,
+          "name": "CRT",
+          "hero_1": "878f97b6bbefef83",
+          "hero_2": "3d6e4d460e8f2b0b",
+          "hero_3": "878fade565a6361e",
+          "pts": 1,
+          "logo": "2828787868687010",
+          "eliminated": false
+        },
+        {
+          "slot": 13,
+          "name": "DINO",
+          "hero_1": "e6eed7e6f6f09cdd",
+          "hero_2": "0cfc4d65557d5819",
+          "hero_3": "444e4e485852921a",
+          "pts": 18,
+          "logo": "8281383030101049",
+          "eliminated": true
+        },
+        {
+          "slot": 14,
+          "name": "DKK",
+          "hero_1": "c486888e8e8fa58f",
+          "hero_2": "879e1b363d6d6f91",
+          "hero_3": "0787256526a6be9e",
+          "pts": 22,
+          "logo": "10103078686c6c48",
+          "eliminated": false
+        },
+        {
+          "slot": 15,
+          "name": "GMBL",
+          "hero_1": "f6eed7f6f6f1efc3",
+          "hero_2": "6666ef655525b61e",
+          "hero_3": "697675595959b395",
+          "pts": 8,
+          "logo": "003079e9e96870b1",
+          "eliminated": true
+        },
+        {
+          "slot": 16,
+          "name": "JDDG",
+          "hero_1": "8787afe5a4a6b69e",
+          "hero_2": "09169595bb99b395",
+          "hero_3": "070f1f363d6d6f03",
+          "pts": 30,
+          "logo": "0000243870380000",
+          "eliminated": false
+        },
+        {
+          "slot": 17,
+          "name": "MR",
+          "hero_1": "8d8e8d868e8fab8b",
+          "hero_2": "070f2f656526361e",
+          "hero_3": "070f17b6bbef6f83",
+          "pts": 15,
+          "logo": "1130303068686c6c",
+          "eliminated": false
+        },
+        {
+          "slot": 18,
+          "name": "REV",
+          "hero_1": "858f8fada686965e",
+          "hero_2": "0d1d432313b1c83e",
+          "hero_3": "1c3c1f278d8f9999",
+          "pts": 21,
+          "logo": "607068706070f480",
+          "eliminated": false
+        },
+        {
+          "slot": 19,
+          "name": "ROC",
+          "hero_1": "878f9fb6bdedef91",
+          "hero_2": "3c664d460e4f258b",
+          "hero_3": "878fade5a6a6361e",
+          "pts": 27,
+          "logo": "0068283030303012",
+          "eliminated": false
+        },
+        {
+          "slot": 20,
+          "name": "SRO",
+          "hero_1": "e6efe5e6f6a6be9e",
+          "hero_2": "6edf6555555d6e51",
+          "hero_3": "bc6e5858590b218b",
+          "pts": null,
+          "logo": "30303030a8a8a8a8",
+          "eliminated": true
+        }
+      ]
+    },
+    {
+      "frame": 48400,
+      "t": 807.473,
+      "hud": {
+        "map_name": "STORM POINT",
+        "game_number": 4,
+        "number_of_teams_alive": null,
+        "number_of_players_alive": null,
+        "ring_status": null
+      },
+      "teams": [
+        {
+          "slot": 1,
+          "name": "ELTE",
+          "hero_1": "8d8d9d451d1f4b53",
+          "hero_2": "8f3f3f257bda5a07",
+          "hero_3": "070f0f4a4d6c6c3c",
+          "pts": 25,
+          "logo": "0818383830301818",
+          "eliminated": false
+        },
+        {
+          "slot": 2,
+          "name": "FREE",
+          "hero_1": "84cececccce6d656",
+          "hero_2": "9cfcb1911154d819",
+          "hero_3": "ccd3d9d1d8dc5c18",
+          "pts": 25,
+          "logo": "0068686460600154",
+          "eliminated": true
+        },
+        {
+          "slot": 3,
+          "name": "EE",
+          "hero_1": "8faf9f273bfbde27",
+          "hero_2": "0d0c0d071c0f6b4b",
+          "hero_3": "191e0d05351d23bb",
+          "pts": 7,
+          "logo": "0800383838342424",
+          "eliminated": false
+        },
+        {
+          "slot": 4,
+          "name": "NIPC",
+          "hero_1": "8f8f8fcf6d6e243c",
+          "hero_2": "051a0e1cfcbc7439",
+          "hero_3": "0f1d8fad7674383a",
+          "pts": 31,
+          "logo": "0010303830380800",
+          "eliminated": false
+        },
+        {
+          "slot": 5,
+          "name": "OBVN",
+          "hero_1": "5aeecaccec132b3b",
+          "hero_2": "78cccb8a8a1a431f",
+          "hero_3": "859c949090f4793a",
+          "pts": 31,
+          "logo": "909230386c6c6cd5",
+          "eliminated": true
+        },
+        {
+          "slot": 6,
+          "name": "S20",
+          "hero_1": "fceccbcccccacbcb",
+          "hero_2": "786ee9b99b1123bb",
+          "hero_3": "c6cec9cbc1663c3c",
+          "pts": 72,
+          "logo": "1818383024646421",
+          "eliminated": true
+        },
+        {
+          "slot": 7,
+          "name": "SRC",
+          "hero_1": "cecececa4d4a6c3c",
+          "hero_2": "787ec8aa9a9b232b",
+          "hero_3": "7cedd99190924b53",
+          "pts": 20,
+          "logo": "1002706438191101",
+          "eliminated": true
+        },
+        {
+          "slot": 8,
+          "name": "STAL",
+          "hero_1": "8faf3f273bdade23",
+          "hero_2": "0d0d090f1d0f4b5b",
+          "hero_3": "0f0f0d4f6d662c3c",
+          "pts": 17,
+          "logo": "0038383c34343800",
+          "eliminated": false
+        },
+        {
+          "slot": 9,
+          "name": "HH",
+          "hero_1": "8faf372f3bdade23",
+          "hero_2": "070f0d4f6d663c3c",
+          "hero_3": "0d0c090f1d0f4b5b",
+          "pts": 21,
+          "logo": "3078707870787820",
+          "eliminated": false
+        },
+        {
+          "slot": 10,
+          "name": "THUG",
+          "hero_1": "c6c6a18f8f87a1c5",
+          "hero_2": "862f543b3b1e1d4d",
+          "hero_3": "87072726b6b69e0e",
+          "pts": 13,
+          "logo": "0032323e3408106b",
+          "eliminated": false
+        },
+        {
+          "slot": 11,
+          "name": "BBD",
+          "hero_1": "e6eeefedf6f6a69e",
+          "hero_2": "2ceec76575351c1e",
+          "hero_3": "76eedf5455554f47",
+          "pts": 16,
+          "logo": "05b0303068686c6c",
+          "eliminated": true
+        },
+        {
+          "slot": 12,
+          "name": "CRT",
+          "hero_1": "878f97b6bbefef83",
+          "hero_2": "3c6e4d460e8f2f0b",
+          "hero_3": "878fafe56526361e",
+          "pts": null,
+          "logo": "2828787868687010",
+          "eliminated": false
+        },
+        {
+          "slot": 13,
+          "name": "DINO",
+          "hero_1": "e6eec7f6f6f09cdd",
+          "hero_2": "0cfc4d65557c5819",
+          "hero_3": "4c464e485a52d61e",
+          "pts": 18,
+          "logo": "2020303030200008",
+          "eliminated": true
+        },
+        {
+          "slot": 14,
+          "name": "DKK",
+          "hero_1": "8486888e8e8fa58f",
+          "hero_2": "879e1b363d6d6f91",
+          "hero_3": "0787256526a6be9e",
+          "pts": 22,
+          "logo": "10303038686c6c40",
+          "eliminated": false
+        },
+        {
+          "slot": 15,
+          "name": "GMBL",
+          "hero_1": "f6eed7f6f6f1efc3",
+          "hero_2": "6666e7655525b69e",
+          "hero_3": "697675595959b395",
+          "pts": 8,
+          "logo": "0430786969693130",
+          "eliminated": true
+        },
+        {
+          "slot": 16,
+          "name": "JDDG",
+          "hero_1": "8787ade5a4a6b69e",
+          "hero_2": "09169595bb99b395",
+          "hero_3": "078f17363d6d6f03",
+          "pts": 30,
+          "logo": "0001243871390000",
+          "eliminated": false
+        },
+        {
+          "slot": 17,
+          "name": "MR",
+          "hero_1": "8d8e8d868e8fab8b",
+          "hero_2": "070f2d656526361e",
+          "hero_3": "070f17b6bbef6f83",
+          "pts": 15,
+          "logo": "3030303068686c6c",
+          "eliminated": false
+        },
+        {
+          "slot": 18,
+          "name": "REV",
+          "hero_1": "858f8fada686965e",
+          "hero_2": "0d1d432313b1c81e",
+          "hero_3": "1c3c1f278d8f9999",
+          "pts": 21,
+          "logo": "7070687060705400",
+          "eliminated": false
+        },
+        {
+          "slot": 19,
+          "name": "ROC",
+          "hero_1": "878f97b6bdedef91",
+          "hero_2": "3c664c460ecf258b",
+          "hero_3": "8787ade5a6a6361e",
+          "pts": 27,
+          "logo": "1028283030303030",
+          "eliminated": false
+        },
+        {
+          "slot": 20,
+          "name": "SRO",
+          "hero_1": "e6efe5e6f6a6be9e",
+          "hero_2": "6edf6555555d6e51",
+          "hero_3": "7c6e5958580f21cb",
+          "pts": null,
+          "logo": "70b1b0b028282829",
+          "eliminated": true
+        }
+      ]
+    },
+    {
+      "frame": 49000,
+      "t": 817.483,
+      "hud": {
+        "map_name": "STORM POINT",
+        "game_number": 4,
+        "number_of_teams_alive": null,
+        "number_of_players_alive": null,
+        "ring_status": null
+      },
+      "teams": [
+        {
+          "slot": 1,
+          "name": "ELTE",
+          "hero_1": "8d8d99451d1f4f53",
+          "hero_2": "8f3f3f257bda5a07",
+          "hero_3": "0f0f0f4a4d6c6c3c",
+          "pts": 25,
+          "logo": "0018383030303818",
+          "eliminated": false
+        },
+        {
+          "slot": 2,
+          "name": "FREE",
+          "hero_1": "84cececccce6f656",
+          "hero_2": "1cfcb5911154d811",
+          "hero_3": "cdd3d9d1d8dc5c18",
+          "pts": 25,
+          "logo": "00706c6464600154",
+          "eliminated": true
+        },
+        {
+          "slot": 3,
+          "name": "EE",
+          "hero_1": "8faf9f273bfbde27",
+          "hero_2": "0d0e0d071c0f6b4b",
+          "hero_3": "191e0d05351d23bb",
+          "pts": 7,
+          "logo": "2020383838342010",
+          "eliminated": false
+        },
+        {
+          "slot": 4,
+          "name": "NIPC",
+          "hero_1": "8f8f8fcf6d6e243c",
+          "hero_2": "851a0e1cfc3c7439",
+          "hero_3": "0f1d8fad7674383a",
+          "pts": 31,
+          "logo": "0010303830381000",
+          "eliminated": false
+        },
+        {
+          "slot": 5,
+          "name": "OBVN",
+          "hero_1": "5aeecaccec132b3b",
+          "hero_2": "78cccb8a8a1a431f",
+          "hero_3": "859c949090f47918",
+          "pts": 31,
+          "logo": "111230386c6c6cd5",
+          "eliminated": true
+        },
+        {
+          "slot": 6,
+          "name": "S20",
+          "hero_1": "fceccbcccccacbdb",
+          "hero_2": "786ee9b99b1123bb",
+          "hero_3": "cecec9cbc1663c3c",
+          "pts": 72,
+          "logo": "1a18183024646401",
+          "eliminated": true
+        },
+        {
+          "slot": 7,
+          "name": "SRC",
+          "hero_1": "cecececa4d4a6c3c",
+          "hero_2": "78fec8aa9a9b232b",
+          "hero_3": "7cedd9d190924f53",
+          "pts": 20,
+          "logo": "0010316438121002",
+          "eliminated": true
+        },
+        {
+          "slot": 8,
+          "name": "STAL",
+          "hero_1": "8faf3f273bdade23",
+          "hero_2": "0d0d090f1d0f4b5b",
+          "hero_3": "070f0d4f6d662c3c",
+          "pts": 17,
+          "logo": "0038383c34341801",
+          "eliminated": false
+        },
+        {
+          "slot": 9,
+          "name": "HH",
+          "hero_1": "8faf372f3bdade23",
+          "hero_2": "070f0d4f6d663c3c",
+          "hero_3": "0d0c090f1d0f4b4b",
+          "pts": 21,
+          "logo": "3070707870786820",
+          "eliminated": false
+        },
+        {
+          "slot": 10,
+          "name": "THUG",
+          "hero_1": "c6c6a08f8f87a1c7",
+          "hero_2": "862f563b3b1e1d4d",
+          "hero_3": "07072726b6b69e0e",
+          "pts": 13,
+          "logo": "0032323e3400006b",
+          "eliminated": false
+        },
+        {
+          "slot": 11,
+          "name": "BBD",
+          "hero_1": "e6eeefedfef6a69e",
+          "hero_2": "6ceec76575351c1e",
+          "hero_3": "76eedf5455514f47",
+          "pts": 16,
+          "logo": "0032303068686c6c",
+          "eliminated": true
+        },
+        {
+          "slot": 12,
+          "name": "CRT",
+          "hero_1": "878f97b6bbefef83",
+          "hero_2": "3d6e4d460e8f2b0b",
+          "hero_3": "878fade565a6361e",
+          "pts": 1,
+          "logo": "2828787868687010",
+          "eliminated": false
+        },
+        {
+          "slot": 13,
+          "name": "DINO",
+          "hero_1": "e6eed7e6f6f09cdd",
+          "hero_2": "4cfc6d65557d4819",
+          "hero_3": "4cce4e485852961e",
+          "pts": 18,
+          "logo": "0400b0b0b0914141",
+          "eliminated": true
+        },
+        {
+          "slot": 14,
+          "name": "DKK",
+          "hero_1": "8486888e8e8fa58f",
+          "hero_2": "079e1b363d6d6f91",
+          "hero_3": "8707256526a6be9e",
+          "pts": 22,
+          "logo": "10103038686c6c28",
+          "eliminated": false
+        },
+        {
+          "slot": 15,
+          "name": "GMBL",
+          "hero_1": "f6eed7f6fef1efc3",
+          "hero_2": "e666ef655525b69e",
+          "hero_3": "a9f675595959b395",
+          "pts": 8,
+          "logo": "00b1796868683110",
+          "eliminated": true
+        },
+        {
+          "slot": 16,
+          "name": "JDDG",
+          "hero_1": "8787afe5a4a6b69e",
+          "hero_2": "09169595bbd9b395",
+          "hero_3": "878f17363d6d6f03",
+          "pts": 30,
+          "logo": "2000243870380101",
+          "eliminated": false
+        },
+        {
+          "slot": 17,
+          "name": "MR",
+          "hero_1": "8d8e8da68e8fab8b",
+          "hero_2": "070f2d656526361e",
+          "hero_3": "070f17b6bbef6f83",
+          "pts": 15,
+          "logo": "1030303068686c4c",
+          "eliminated": false
+        },
+        {
+          "slot": 18,
+          "name": "REV",
+          "hero_1": "858f8fada686965e",
+          "hero_2": "0d1d432313b1c83e",
+          "hero_3": "1c3c1f278d8f9999",
+          "pts": 21,
+          "logo": "7070687060707440",
+          "eliminated": false
+        },
+        {
+          "slot": 19,
+          "name": "ROC",
+          "hero_1": "878f9fb6b9edef91",
+          "hero_2": "3c664d460ecf258b",
+          "hero_3": "878fade5a6a6361e",
+          "pts": 27,
+          "logo": "0028287030303250",
+          "eliminated": false
+        },
+        {
+          "slot": 20,
+          "name": "SRO",
+          "hero_1": "e6efe5f6f6a6be9e",
+          "hero_2": "6edf6555555d6e51",
+          "hero_3": "7c6e5958580f21cb",
+          "pts": null,
+          "logo": "31313131a9a9ad29",
+          "eliminated": true
+        }
+      ]
+    },
+    {
+      "frame": 49600,
+      "t": 827.493,
+      "hud": {
+        "map_name": "STORM POINT",
+        "game_number": 4,
+        "number_of_teams_alive": null,
+        "number_of_players_alive": null,
+        "ring_status": null
+      },
+      "teams": [
+        {
+          "slot": 1,
+          "name": "ELTE",
+          "hero_1": "8d8d99471d1f4f53",
+          "hero_2": "0f3f3f257bda5a07",
+          "hero_3": "0f0f0f4a4d6c6c3c",
+          "pts": 25,
+          "logo": "0018383030301818",
+          "eliminated": false
+        },
+        {
+          "slot": 2,
+          "name": "FREE",
+          "hero_1": "84cececcdce6f656",
+          "hero_2": "3cf8b1911154d819",
+          "hero_3": "cdd3d9d1d8dc5c18",
+          "pts": 25,
+          "logo": "2060686460600854",
+          "eliminated": true
+        },
+        {
+          "slot": 3,
+          "name": "EE",
+          "hero_1": "8faf9f273bfbde27",
+          "hero_2": "0d0e0d071c0f6b4b",
+          "hero_3": "191e0d05351d23bb",
+          "pts": 7,
+          "logo": "0020383838342020",
+          "eliminated": false
+        },
+        {
+          "slot": 4,
+          "name": "NIPC",
+          "hero_1": "8f8f8fcf6d6e243c",
+          "hero_2": "051a0e1cfc3c7439",
+          "hero_3": "0f1d8fad7674383a",
+          "pts": 31,
+          "logo": "0010303830381000",
+          "eliminated": false
+        },
+        {
+          "slot": 5,
+          "name": "OBVN",
+          "hero_1": "58eecaccec132b3b",
+          "hero_2": "78cccb8a8a1a4317",
+          "hero_3": "859c949090f4793a",
+          "pts": 31,
+          "logo": "101030386c6c6cd5",
+          "eliminated": true
+        },
+        {
+          "slot": 6,
+          "name": "S20",
+          "hero_1": "fceccbcccccacbdb",
+          "hero_2": "786ee9b99b1123bb",
+          "hero_3": "c6cec9cbc1663c3c",
+          "pts": 72,
+          "logo": "1a1a183025646404",
+          "eliminated": true
+        },
+        {
+          "slot": 7,
+          "name": "SRC",
+          "hero_1": "46cececa4d4a6c3c",
+          "hero_2": "787ee8aa9a9b232b",
+          "hero_3": "7cedd99190924b53",
+          "pts": 20,
+          "logo": "0010316438581008",
+          "eliminated": true
+        },
+        {
+          "slot": 8,
+          "name": "STAL",
+          "hero_1": "8faf3f273bdade23",
+          "hero_2": "0d0d090f1d0f4b5b",
+          "hero_3": "070f0d4f6d662c3c",
+          "pts": 17,
+          "logo": "2038383c34343810",
+          "eliminated": false
+        },
+        {
+          "slot": 9,
+          "name": "HH",
+          "hero_1": "8faf372f3bdade23",
+          "hero_2": "0f0f0d4f6d663c3c",
+          "hero_3": "0d0c090f1d0f4b5b",
+          "pts": 21,
+          "logo": "2070707870786820",
+          "eliminated": false
+        },
+        {
+          "slot": 10,
+          "name": "THUG",
+          "hero_1": "c6c6a18f8f87a1c7",
+          "hero_2": "862f543b331e1d4d",
+          "hero_3": "07872726b6b69e0e",
+          "pts": 13,
+          "logo": "0032323e3400006b",
+          "eliminated": false
+        },
+        {
+          "slot": 11,
+          "name": "BBD",
+          "hero_1": "e6e6efedf6f6a69e",
+          "hero_2": "6ceec76575351c1e",
+          "hero_3": "76eedf545d514f43",
+          "pts": 16,
+          "logo": "0012303068686c6c",
+          "eliminated": true
+        },
+        {
+          "slot": 12,
+          "name": "CRT",
+          "hero_1": "878f97b6bbefef83",
+          "hero_2": "3c6e4d460e8f2b0b",
+          "hero_3": "878fade565a6361e",
+          "pts": 1,
+          "logo": "2828787868687010",
+          "eliminated": false
+        },
+        {
+          "slot": 13,
+          "name": "DINO",
+          "hero_1": "e6eec7e6f6f09cdd",
+          "hero_2": "8cfc6d65557d5809",
+          "hero_3": "4cce4e485a52d61e",
+          "pts": 18,
+          "logo": "0000303010000404",
+          "eliminated": true
+        },
+        {
+          "slot": 14,
+          "name": "DKK",
+          "hero_1": "8486888e8e8fa58b",
+          "hero_2": "079e1b363d6d6f91",
+          "hero_3": "0707256526a6be9e",
+          "pts": 22,
+          "logo": "10103038686c6c28",
+          "eliminated": false
+        },
+        {
+          "slot": 15,
+          "name": "GMBL",
+          "hero_1": "f6eed7f6f6f1efc3",
+          "hero_2": "6666ef655525b69e",
+          "hero_3": "297675595959b395",
+          "pts": 8,
+          "logo": "01b0f9e8e8e83030",
+          "eliminated": true
+        },
+        {
+          "slot": 16,
+          "name": "JDDG",
+          "hero_1": "8787afe5a4a6b69e",
+          "hero_2": "09169595bb99b395",
+          "hero_3": "070f17363d6d6f03",
+          "pts": 30,
+          "logo": "0000243870301000",
+          "eliminated": false
+        },
+        {
+          "slot": 17,
+          "name": "MR",
+          "hero_1": "8d8e8d868e8fab8b",
+          "hero_2": "070f2d656526361e",
+          "hero_3": "070f17b6bbef6f83",
+          "pts": 15,
+          "logo": "1010303068686c6c",
+          "eliminated": false
+        },
+        {
+          "slot": 18,
+          "name": "REV",
+          "hero_1": "858f8fada686965e",
+          "hero_2": "0d1d432313b1c83e",
+          "hero_3": "1c3c1f278d8f9999",
+          "pts": 21,
+          "logo": "7070687060707440",
+          "eliminated": false
+        },
+        {
+          "slot": 19,
+          "name": "ROC",
+          "hero_1": "878f9fb6b9edef91",
+          "hero_2": "3c664d460e4f258b",
+          "hero_3": "878fade5a6a6361e",
+          "pts": 27,
+          "logo": "1028283030303004",
+          "eliminated": false
+        },
+        {
+          "slot": 20,
+          "name": "SRO",
+          "hero_1": "e6efe5f6f6a6be9e",
+          "hero_2": "6edf6555557d6e51",
+          "hero_3": "7c6e5858580b21cb",
+          "pts": null,
+          "logo": "30b07070282828a9",
+          "eliminated": true
+        }
+      ]
+    },
+    {
+      "frame": 50200,
+      "t": 837.503,
+      "hud": {
+        "map_name": "STORM POINT",
+        "game_number": 4,
+        "number_of_teams_alive": null,
+        "number_of_players_alive": null,
+        "ring_status": null
+      },
+      "teams": [
+        {
+          "slot": 1,
+          "name": "ELTE",
+          "hero_1": "8d8d89471d1f4f53",
+          "hero_2": "0f3f3f257bda5a07",
+          "hero_3": "0f0f0f4a4d6c6c3c",
+          "pts": 25,
+          "logo": "0018383030303818",
+          "eliminated": false
+        },
+        {
+          "slot": 2,
+          "name": "FREE",
+          "hero_1": "84cececccce6f656",
+          "hero_2": "9cfcb5951154d811",
+          "hero_3": "ccd3d9d1d8dc5c18",
+          "pts": 25,
+          "logo": "0060686464604054",
+          "eliminated": true
+        },
+        {
+          "slot": 3,
+          "name": "EE",
+          "hero_1": "8f8f9f273bfbde27",
+          "hero_2": "0d0e09051c0f6b4b",
+          "hero_3": "191e0d05351d23bb",
+          "pts": 7,
+          "logo": "0020383838342020",
+          "eliminated": false
+        },
+        {
+          "slot": 4,
+          "name": "NIPC",
+          "hero_1": "8f8f8fcf6d6e243c",
+          "hero_2": "051a0e1cfc3c7439",
+          "hero_3": "0f1d8fad7674383a",
+          "pts": 31,
+          "logo": "0010303830380800",
+          "eliminated": false
+        },
+        {
+          "slot": 5,
+          "name": "OBVN",
+          "hero_1": "58eecaccec132b3b",
+          "hero_2": "78cccb8a8a1a4317",
+          "hero_3": "859c949090f47938",
+          "pts": 31,
+          "logo": "1292b0b8ec6c6cc5",
+          "eliminated": true
+        },
+        {
+          "slot": 6,
+          "name": "S20",
+          "hero_1": "fceccbcccccacbcb",
+          "hero_2": "786ee9a99b1123bb",
+          "hero_3": "cecec9cbc1663c3c",
+          "pts": 72,
+          "logo": "1818183024646418",
+          "eliminated": true
+        },
+        {
+          "slot": 7,
+          "name": "SRC",
+          "hero_1": "4ecececa4d4a6c3c",
+          "hero_2": "787ee8aa9a9b272b",
+          "hero_3": "7cedd9d190924b53",
+          "pts": 20,
+          "logo": "0410306478581000",
+          "eliminated": true
+        },
+        {
+          "slot": 8,
+          "name": "STAL",
+          "hero_1": "8faf37273bdade23",
+          "hero_2": "0d0d090f1d0f4b5b",
+          "hero_3": "0f0f0d4f6d66243c",
+          "pts": 17,
+          "logo": "0038383c34343800",
+          "eliminated": false
+        },
+        {
+          "slot": 9,
+          "name": "HH",
+          "hero_1": "8faf372f3bdade23",
+          "hero_2": "870f0d4f6d663c3c",
+          "hero_3": "0d0c090f1d0f4b5b",
+          "pts": 21,
+          "logo": "2070707870787820",
+          "eliminated": false
+        },
+        {
+          "slot": 10,
+          "name": "THUG",
+          "hero_1": "c6c6a08f8f87a1c5",
+          "hero_2": "860b543b331e1d4d",
+          "hero_3": "07072726b6b69e0e",
+          "pts": 13,
+          "logo": "0032323e3400006b",
+          "eliminated": false
+        },
+        {
+          "slot": 11,
+          "name": "BBD",
+          "hero_1": "e6eeefedfef6a69e",
+          "hero_2": "6ceec76575351c1e",
+          "hero_3": "76eedf545d556f47",
+          "pts": 16,
+          "logo": "0010b0b0e8e8ecec",
+          "eliminated": true
+        },
+        {
+          "slot": 12,
+          "name": "CRT",
+          "hero_1": "878f97b6bbefef83",
+          "hero_2": "3c6e4d460e8f2b0b",
+          "hero_3": "878fade56526361e",
+          "pts": 1,
+          "logo": "2828787868687010",
+          "eliminated": false
+        },
+        {
+          "slot": 13,
+          "name": "DINO",
+          "hero_1": "f6eec7e6f6f09cdd",
+          "hero_2": "0cfc5d65557d4849",
+          "hero_3": "4c4e4e485a52961e",
+          "pts": 18,
+          "logo": "a0a0303030100000",
+          "eliminated": true
+        },
+        {
+          "slot": 14,
+          "name": "DKK",
+          "hero_1": "8486888e8e8fa58b",
+          "hero_2": "079e1b363d6d6f91",
+          "hero_3": "0707256526a6be9e",
+          "pts": 22,
+          "logo": "10103038686c6c28",
+          "eliminated": false
+        },
+        {
+          "slot": 15,
+          "name": "GMBL",
+          "hero_1": "f6eed7f6f6f5efc3",
+          "hero_2": "6666ed655525b61e",
+          "hero_3": "687675595959b395",
+          "pts": 8,
+          "logo": "0130786868e8b051",
+          "eliminated": true
+        },
+        {
+          "slot": 16,
+          "name": "JDDG",
+          "hero_1": "8787afe5a4a6b69e",
+          "hero_2": "09169595bb99b395",
+          "hero_3": "070f17363d6d6f03",
+          "pts": 30,
+          "logo": "0000243870380000",
+          "eliminated": false
+        },
+        {
+          "slot": 17,
+          "name": "MR",
+          "hero_1": "8d8e8d868e8fab8b",
+          "hero_2": "070f2d656526361e",
+          "hero_3": "070f17b6bbef6f83",
+          "pts": 15,
+          "logo": "1210303068686c6c",
+          "eliminated": false
+        },
+        {
+          "slot": 18,
+          "name": "REV",
+          "hero_1": "858f8fada686965e",
+          "hero_2": "0d1d432313b1c83e",
+          "hero_3": "5c3c1f278d8f9999",
+          "pts": 21,
+          "logo": "7070687060707440",
+          "eliminated": false
+        },
+        {
+          "slot": 19,
+          "name": "ROC",
+          "hero_1": "878f9fb6bdedef91",
+          "hero_2": "3c664d460ecf278b",
+          "hero_3": "8787ade5a6a6361e",
+          "pts": 27,
+          "logo": "1028287030303008",
+          "eliminated": false
+        },
+        {
+          "slot": 20,
+          "name": "SRO",
+          "hero_1": "e6efe5f6f6a6be9e",
+          "hero_2": "eedf6555557d6e51",
+          "hero_3": "7c6e5858580f21cf",
+          "pts": null,
+          "logo": "70b0b0b0282868a9",
+          "eliminated": true
+        }
+      ]
+    },
+    {
+      "frame": 50800,
+      "t": 847.513,
+      "hud": {
+        "map_name": "STORM POINT",
+        "game_number": 4,
+        "number_of_teams_alive": null,
+        "number_of_players_alive": null,
+        "ring_status": null
+      },
+      "teams": [
+        {
+          "slot": 1,
+          "name": "ELTE",
+          "hero_1": "8d8d9d451d1f4f53",
+          "hero_2": "0f3d3f257bda5a07",
+          "hero_3": "0f0f0f4a4d6c6c3c",
+          "pts": 25,
+          "logo": "0018383030303818",
+          "eliminated": false
+        },
+        {
+          "slot": 2,
+          "name": "FREE",
+          "hero_1": "84cececccce6d656",
+          "hero_2": "5cf8b1911154d899",
+          "hero_3": "ccd3d9d1d8dc5c18",
+          "pts": 25,
+          "logo": "0060686464604054",
+          "eliminated": true
+        },
+        {
+          "slot": 3,
+          "name": "EE",
+          "hero_1": "8faf9f273bfbde27",
+          "hero_2": "0d0c0d071c0f6b4b",
+          "hero_3": "191e0d05351d23bb",
+          "pts": 7,
+          "logo": "0020383838342020",
+          "eliminated": false
+        },
+        {
+          "slot": 4,
+          "name": "NIPC",
+          "hero_1": "878f8fcf6d6e243c",
+          "hero_2": "051a0e1cfc3c7439",
+          "hero_3": "0f1d8fad7674383a",
+          "pts": 31,
+          "logo": "0010303830380800",
+          "eliminated": false
+        },
+        {
+          "slot": 5,
+          "name": "OBVN",
+          "hero_1": "5aeecaccec132b3b",
+          "hero_2": "78cccb8a8a1a431f",
+          "hero_3": "859c949090f47938",
+          "pts": 31,
+          "logo": "1292b0b8ec6c6cc5",
+          "eliminated": true
+        },
+        {
+          "slot": 6,
+          "name": "S20",
+          "hero_1": "fcecc9cccccacbdb",
+          "hero_2": "786ee9b99b1123bb",
+          "hero_3": "4ecec9cbc1663c3c",
+          "pts": 72,
+          "logo": "1818183024646418",
+          "eliminated": true
+        },
+        {
+          "slot": 7,
+          "name": "SRC",
+          "hero_1": "cecececa4d4a6c3c",
+          "hero_2": "f8fec8aa9a9b232b",
+          "hero_3": "78edd9d190924b5b",
+          "pts": 20,
+          "logo": "0410306478581000",
+          "eliminated": true
+        },
+        {
+          "slot": 8,
+          "name": "STAL",
+          "hero_1": "8faf37273bdade23",
+          "hero_2": "0d0d090f1d0f4b5b",
+          "hero_3": "0f0f0d4f6d662c3c",
+          "pts": 17,
+          "logo": "0038383c34343800",
+          "eliminated": false
+        },
+        {
+          "slot": 9,
+          "name": "HH",
+          "hero_1": "8faf372f3bdade23",
+          "hero_2": "8f0f0d4f6d663c3c",
+          "hero_3": "0d0c090f1d0f4b5b",
+          "pts": 21,
+          "logo": "2070707870787820",
+          "eliminated": false
+        },
+        {
+          "slot": 10,
+          "name": "THUG",
+          "hero_1": "c6c6a08f8f87a1c7",
+          "hero_2": "862b563b3b1e1d4d",
+          "hero_3": "87872726b6b69e0e",
+          "pts": 13,
+          "logo": "0032323e3400006b",
+          "eliminated": false
+        },
+        {
+          "slot": 11,
+          "name": "BBD",
+          "hero_1": "e6eeefedf6f6a69e",
+          "hero_2": "e4eec76575751c1e",
+          "hero_3": "f6eedf545d516f47",
+          "pts": 16,
+          "logo": "0010b0b0e8e8ecec",
+          "eliminated": true
+        },
+        {
+          "slot": 12,
+          "name": "CRT",
+          "hero_1": "878f97b6bbefef83",
+          "hero_2": "3d6e4d460e8f2b0b",
+          "hero_3": "878fade565a6361e",
+          "pts": 1,
+          "logo": "2828787868687010",
+          "eliminated": false
+        },
+        {
+          "slot": 13,
+          "name": "DINO",
+          "hero_1": "eeeec7f6f6f09cdd",
+          "hero_2": "5cfc4d65557d5819",
+          "hero_3": "444e4e485852961e",
+          "pts": 18,
+          "logo": "a0a0303030100000",
+          "eliminated": true
+        },
+        {
+          "slot": 14,
+          "name": "DKK",
+          "hero_1": "8486888e8e8fa58f",
+          "hero_2": "879e1b363d6d6f91",
+          "hero_3": "0707256526a6be9e",
+          "pts": 22,
+          "logo": "10103038686c6c28",
+          "eliminated": false
+        },
+        {
+          "slot": 15,
+          "name": "GMBL",
+          "hero_1": "f6eed7f6fef1efc3",
+          "hero_2": "666667655525b69e",
+          "hero_3": "697675595959b395",
+          "pts": 8,
+          "logo": "0130786868e8b051",
+          "eliminated": true
+        },
+        {
+          "slot": 16,
+          "name": "JDDG",
+          "hero_1": "8787afe5a4a6b69e",
+          "hero_2": "09169595bb99b395",
+          "hero_3": "870f17363d6d6f03",
+          "pts": 30,
+          "logo": "0000243870380000",
+          "eliminated": false
+        },
+        {
+          "slot": 17,
+          "name": "MR",
+          "hero_1": "8d8e8d868e8fab8b",
+          "hero_2": "070f2d656526361e",
+          "hero_3": "078f17b6bbef6f83",
+          "pts": 15,
+          "logo": "1210303068686c6c",
+          "eliminated": false
+        },
+        {
+          "slot": 18,
+          "name": "REV",
+          "hero_1": "858f8fada686965e",
+          "hero_2": "0d1d432313b1c83e",
+          "hero_3": "1c3c1f278d8f9999",
+          "pts": 21,
+          "logo": "7070687060707440",
+          "eliminated": false
+        },
+        {
+          "slot": 19,
+          "name": "ROC",
+          "hero_1": "878f9fb6bdedef91",
+          "hero_2": "3c664d460ecf258b",
+          "hero_3": "878fade5a6a6361e",
+          "pts": 27,
+          "logo": "1028287030303008",
+          "eliminated": false
+        },
+        {
+          "slot": 20,
+          "name": "SRO",
+          "hero_1": "e6efe5f6f6a6be9e",
+          "hero_2": "6edf6555555d6e51",
+          "hero_3": "7c6e5958580f21cf",
+          "pts": null,
+          "logo": "70b0b0b0282868a9",
+          "eliminated": true
+        }
+      ]
+    },
+    {
+      "frame": 51400,
+      "t": 857.523,
+      "hud": {
+        "map_name": "STORM POINT",
+        "game_number": 4,
+        "number_of_teams_alive": null,
+        "number_of_players_alive": null,
+        "ring_status": null
+      },
+      "teams": [
+        {
+          "slot": 1,
+          "name": "ELTE",
+          "hero_1": "8d8d9d471d1f4f53",
+          "hero_2": "0f1f3f257bda5a07",
+          "hero_3": "0f0f0f4a4d6c6c3c",
+          "pts": 25,
+          "logo": "0018383030303818",
+          "eliminated": false
+        },
+        {
+          "slot": 2,
+          "name": "FREE",
+          "hero_1": "84cececccce6d656",
+          "hero_2": "9cfcb1951154d811",
+          "hero_3": "ccd3d9d1d8dc5c18",
+          "pts": 25,
+          "logo": "0060686464604054",
+          "eliminated": true
+        },
+        {
+          "slot": 3,
+          "name": "EE",
+          "hero_1": "8faf9f273bfbde27",
+          "hero_2": "0d0f0d071c0f6b4b",
+          "hero_3": "191e0d05351d23bb",
+          "pts": 7,
+          "logo": "0020383838342020",
+          "eliminated": false
+        },
+        {
+          "slot": 4,
+          "name": "NIPC",
+          "hero_1": "8f8f8fcf6d6e243c",
+          "hero_2": "051a0e1cfcbc7439",
+          "hero_3": "0f1d8fad7674383a",
+          "pts": 31,
+          "logo": "0010303830380800",
+          "eliminated": false
+        },
+        {
+          "slot": 5,
+          "name": "OBVN",
+          "hero_1": "daeecaccec132b3b",
+          "hero_2": "78cccb8a8a1a4317",
+          "hero_3": "859c949090f47928",
+          "pts": 31,
+          "logo": "1292b0b8ec6c6cc5",
+          "eliminated": true
+        },
+        {
+          "slot": 6,
+          "name": "S20",
+          "hero_1": "fceccbcccccacbdb",
+          "hero_2": "786ee9b99b1123bb",
+          "hero_3": "c6cec9cbc1663c3c",
+          "pts": 12,
+          "logo": "1818183024646418",
+          "eliminated": true
+        },
+        {
+          "slot": 7,
+          "name": "SRC",
+          "hero_1": "4ecececa4d4a6c3c",
+          "hero_2": "787ee8aa9a9b232b",
+          "hero_3": "7cedc99190924b5b",
+          "pts": 20,
+          "logo": "0410306478581000",
+          "eliminated": true
+        },
+        {
+          "slot": 8,
+          "name": "STAL",
+          "hero_1": "8faf3f273bdade23",
+          "hero_2": "0d0d090f1d0f4b5b",
+          "hero_3": "0f0f0d4f6d662c3c",
+          "pts": 17,
+          "logo": "0038383c34343800",
+          "eliminated": false
+        },
+        {
+          "slot": 9,
+          "name": "HH",
+          "hero_1": "8faf372f3bdade23",
+          "hero_2": "070f0d4f6d663c3c",
+          "hero_3": "0d0c090f1d0f4b5b",
+          "pts": 21,
+          "logo": "2070707870787820",
+          "eliminated": false
+        },
+        {
+          "slot": 10,
+          "name": "THUG",
+          "hero_1": "c6c6a08f8f87a1c5",
+          "hero_2": "862f563b3b1e1d4d",
+          "hero_3": "87872726b6b69e0e",
+          "pts": 13,
+          "logo": "0032323e3400006b",
+          "eliminated": false
+        },
+        {
+          "slot": 11,
+          "name": "BBD",
+          "hero_1": "e6eeefedf6f6a69e",
+          "hero_2": "6ceec76575751c1e",
+          "hero_3": "76eedf545d516f43",
+          "pts": 16,
+          "logo": "0010b0b0e8e8ecec",
+          "eliminated": true
+        },
+        {
+          "slot": 12,
+          "name": "CRT",
+          "hero_1": "878f97b6bbefef83",
+          "hero_2": "3c6e4d460e8f2f0b",
+          "hero_3": "878fade56526361e",
+          "pts": 1,
+          "logo": "2828787868687010",
+          "eliminated": false
+        },
+        {
+          "slot": 13,
+          "name": "DINO",
+          "hero_1": "e6eec7f6f6f29cdd",
+          "hero_2": "1cfc6d65557d5819",
+          "hero_3": "4cce4e485a52961e",
+          "pts": 18,
+          "logo": "a0a0303030100000",
+          "eliminated": true
+        },
+        {
+          "slot": 14,
+          "name": "DKK",
+          "hero_1": "8486888e8e8fa58f",
+          "hero_2": "079e1b363d6d6f91",
+          "hero_3": "0707256526a6be9e",
+          "pts": 22,
+          "logo": "10103038686c6c28",
+          "eliminated": false
+        },
+        {
+          "slot": 15,
+          "name": "GMBL",
+          "hero_1": "f6eed7f6f6f1efc3",
+          "hero_2": "6666ef655525b61e",
+          "hero_3": "697675595959b395",
+          "pts": 8,
+          "logo": "0130786868e8b051",
+          "eliminated": true
+        },
+        {
+          "slot": 16,
+          "name": "JDDG",
+          "hero_1": "8787afe5a4a6b69e",
+          "hero_2": "09169595bb99b395",
+          "hero_3": "070f17363d6d6f03",
+          "pts": 30,
+          "logo": "0000243870380000",
+          "eliminated": false
+        },
+        {
+          "slot": 17,
+          "name": "MR",
+          "hero_1": "8d8e8d868e8fab8b",
+          "hero_2": "070f2d656526361e",
+          "hero_3": "078f17b6bbef6f83",
+          "pts": 15,
+          "logo": "1210303068686c6c",
+          "eliminated": false
+        },
+        {
+          "slot": 18,
+          "name": "REV",
+          "hero_1": "858f8fada686965e",
+          "hero_2": "0d1d432313b1c81c",
+          "hero_3": "1c3c1f278d8f9999",
+          "pts": 21,
+          "logo": "7070687060707440",
+          "eliminated": false
+        },
+        {
+          "slot": 19,
+          "name": "ROC",
+          "hero_1": "878f9fb6bdedef91",
+          "hero_2": "3c664d460ecf258b",
+          "hero_3": "878fade5a6a6361e",
+          "pts": 27,
+          "logo": "1028287030303008",
+          "eliminated": false
+        },
+        {
+          "slot": 20,
+          "name": "SRO",
+          "hero_1": "e6efe5f6f6a6be9e",
+          "hero_2": "6edf6555555d6e51",
+          "hero_3": "3c6e5858580b21cb",
+          "pts": 0,
+          "logo": "70b0b0b0282868a9",
+          "eliminated": true
+        }
+      ]
+    },
+    {
+      "frame": 52000,
+      "t": 867.533,
+      "hud": {
+        "map_name": "STORM POINT",
+        "game_number": 4,
+        "number_of_teams_alive": null,
+        "number_of_players_alive": null,
+        "ring_status": null
+      },
+      "teams": [
+        {
+          "slot": 1,
+          "name": "ELTE",
+          "hero_1": "8d8d9d451d1f4b53",
+          "hero_2": "0f3f3f257bda5a07",
+          "hero_3": "0f0f0f4a4d6c6c3c",
+          "pts": 25,
+          "logo": "0018383030303818",
+          "eliminated": false
+        },
+        {
+          "slot": 2,
+          "name": "FREE",
+          "hero_1": "84cececcdce6d65e",
+          "hero_2": "9cf8b5911154d819",
+          "hero_3": "c4d3d9d1d8dc5c18",
+          "pts": 25,
+          "logo": "0060686464604054",
+          "eliminated": true
+        },
+        {
+          "slot": 3,
+          "name": "EE",
+          "hero_1": "8faf9f273bfbde27",
+          "hero_2": "0d0e0d071c0f6b4b",
+          "hero_3": "191e0d05351d23bb",
+          "pts": 7,
+          "logo": "0020383838342020",
+          "eliminated": false
+        },
+        {
+          "slot": 4,
+          "name": "NIPC",
+          "hero_1": "878f8fcf6d6e2c3c",
+          "hero_2": "051a0e1cfc3c7439",
+          "hero_3": "0f1d8fad7674383a",
+          "pts": 31,
+          "logo": "0010303830380800",
+          "eliminated": false
+        },
+        {
+          "slot": 5,
+          "name": "OBVN",
+          "hero_1": "daeecaccec132b3b",
+          "hero_2": "f8cccb8a8a1a431f",
+          "hero_3": "859c949090f4793a",
+          "pts": 31,
+          "logo": "1292b0b8ec6c6cc5",
+          "eliminated": true
+        },
+        {
+          "slot": 6,
+          "name": "S20",
+          "hero_1": "fceccbcccccacbcb",
+          "hero_2": "786ee9b99b1123bb",
+          "hero_3": "46cec9cbc1663c3c",
+          "pts": 72,
+          "logo": "1818183024646418",
+          "eliminated": true
+        },
+        {
+          "slot": 7,
+          "name": "SRC",
+          "hero_1": "cecececa4d4a6c3c",
+          "hero_2": "787ec8aa9a9b272b",
+          "hero_3": "7cedd9d190924b53",
+          "pts": 20,
+          "logo": "0410306478581000",
+          "eliminated": true
+        },
+        {
+          "slot": 8,
+          "name": "STAL",
+          "hero_1": "8faf3f273bdade23",
+          "hero_2": "0d0d090f1d0f4b5b",
+          "hero_3": "070f0d4f6d662c3c",
+          "pts": 17,
+          "logo": "0038383c34343800",
+          "eliminated": false
+        },
+        {
+          "slot": 9,
+          "name": "HH",
+          "hero_1": "8faf372f3bdade23",
+          "hero_2": "0f0f0d4f6d663c3c",
+          "hero_3": "0d0c090f1d0f4b5b",
+          "pts": 21,
+          "logo": "2070707870787820",
+          "eliminated": false
+        },
+        {
+          "slot": 10,
+          "name": "THUG",
+          "hero_1": "c6c6a08f8f87a1c7",
+          "hero_2": "860f543b3b1e1d4d",
+          "hero_3": "87072626b6b69e0e",
+          "pts": 13,
+          "logo": "0032323e3400006b",
+          "eliminated": false
+        },
+        {
+          "slot": 11,
+          "name": "BBD",
+          "hero_1": "e6eeefedf6f6a69e",
+          "hero_2": "64eec76575351c1e",
+          "hero_3": "f6eedf5455516f47",
+          "pts": 16,
+          "logo": "0010b0b0e8e8ecec",
+          "eliminated": true
+        },
+        {
+          "slot": 12,
+          "name": "CRT",
+          "hero_1": "878f97b6bbefef83",
+          "hero_2": "3d6e4d660e8f2b0b",
+          "hero_3": "878fade56526361e",
+          "pts": 1,
+          "logo": "2828787868687010",
+          "eliminated": false
+        },
+        {
+          "slot": 13,
+          "name": "DINO",
+          "hero_1": "e6eec7f6f6f09cdd",
+          "hero_2": "9cfc4d65557d5859",
+          "hero_3": "4c4e4e485852961e",
+          "pts": 18,
+          "logo": "a0a0303030100000",
+          "eliminated": true
+        },
+        {
+          "slot": 14,
+          "name": "DKK",
+          "hero_1": "8486888e8e8fa58b",
+          "hero_2": "079e1b363d6d6f91",
+          "hero_3": "0707256526a6be9e",
+          "pts": 22,
+          "logo": "10103038686c6c28",
+          "eliminated": false
+        },
+        {
+          "slot": 15,
+          "name": "GMBL",
+          "hero_1": "f6eed7f6fef1efc3",
+          "hero_2": "6666e5655525b69e",
+          "hero_3": "a97675595959b395",
+          "pts": 8,
+          "logo": "0130786868e8b051",
+          "eliminated": true
+        },
+        {
+          "slot": 16,
+          "name": "JDDG",
+          "hero_1": "8787ade5a4a6b69e",
+          "hero_2": "09169595bb99b395",
+          "hero_3": "870f17363d6d6f03",
+          "pts": 30,
+          "logo": "0000243870380000",
+          "eliminated": false
+        },
+        {
+          "slot": 17,
+          "name": "MR",
+          "hero_1": "8d8e8d868e8fab8b",
+          "hero_2": "070f2d656526361e",
+          "hero_3": "070f17b6bbef6f83",
+          "pts": 15,
+          "logo": "1210303068686c6c",
+          "eliminated": false
+        },
+        {
+          "slot": 18,
+          "name": "REV",
+          "hero_1": "858f8fada686965e",
+          "hero_2": "0d1d432313b1c83e",
+          "hero_3": "1c3c1f278d8f9999",
+          "pts": 21,
+          "logo": "7070687060707440",
+          "eliminated": false
+        },
+        {
+          "slot": 19,
+          "name": "ROC",
+          "hero_1": "878f9fb6b9edef91",
+          "hero_2": "3c664c460e4f258b",
+          "hero_3": "8787ade5a6a6361e",
+          "pts": 27,
+          "logo": "1028287030303008",
+          "eliminated": false
+        },
+        {
+          "slot": 20,
+          "name": "SRO",
+          "hero_1": "e6efe5f6f6a6be9e",
+          "hero_2": "6edf6555555d6e51",
+          "hero_3": "3c6e5858580f21cb",
+          "pts": null,
+          "logo": "70b0b0b0282868a9",
+          "eliminated": true
+        }
+      ]
+    },
+    {
+      "frame": 52600,
+      "t": 877.543,
+      "hud": {
+        "map_name": "STORM POINT",
+        "game_number": 4,
+        "number_of_teams_alive": null,
+        "number_of_players_alive": null,
+        "ring_status": null
+      },
+      "teams": [
+        {
+          "slot": 1,
+          "name": "ELTE",
+          "hero_1": "8d8d9d451d1f4f53",
+          "hero_2": "0f3d3f257bda5a07",
+          "hero_3": "0f0f0f4a4d6c6c3c",
+          "pts": 25,
+          "logo": "0018383030303818",
+          "eliminated": false
+        },
+        {
+          "slot": 2,
+          "name": "FREE",
+          "hero_1": "84cececcdce6d65e",
+          "hero_2": "9c76b1911154d891",
+          "hero_3": "c4d3d9d1d8dc5c18",
+          "pts": 25,
+          "logo": "0060686464604054",
+          "eliminated": true
+        },
+        {
+          "slot": 3,
+          "name": "EE",
+          "hero_1": "8faf9f273bfbde27",
+          "hero_2": "0d0c0d071c0f6b4b",
+          "hero_3": "191e0d05351d23bb",
+          "pts": 7,
+          "logo": "0020383838342020",
+          "eliminated": false
+        },
+        {
+          "slot": 4,
+          "name": "NIPC",
+          "hero_1": "8f8f8fcf6d6e243c",
+          "hero_2": "051a0e1cfc3c7439",
+          "hero_3": "8f1d8fad7674383a",
+          "pts": 31,
+          "logo": "0010303830380800",
+          "eliminated": false
+        },
+        {
+          "slot": 5,
+          "name": "OBVN",
+          "hero_1": "5aeecaccec132b3b",
+          "hero_2": "78cccb8a8a9a431f",
+          "hero_3": "859c949090f4793a",
+          "pts": 31,
+          "logo": "1292b0b8ec6c6cc5",
+          "eliminated": true
+        },
+        {
+          "slot": 6,
+          "name": "S20",
+          "hero_1": "fceccbcccccacbcb",
+          "hero_2": "786ee9b99b1123bb",
+          "hero_3": "4ecec9cbc1663c3c",
+          "pts": 72,
+          "logo": "1818183024646418",
+          "eliminated": true
+        },
+        {
+          "slot": 7,
+          "name": "SRC",
+          "hero_1": "cccececa4d4a6c3c",
+          "hero_2": "78fec88a9a9b232b",
+          "hero_3": "78edd99190924b53",
+          "pts": 20,
+          "logo": "0410306478581000",
+          "eliminated": true
+        },
+        {
+          "slot": 8,
+          "name": "STAL",
+          "hero_1": "8faf3f273bdade23",
+          "hero_2": "0d0d090f1d0f4b5b",
+          "hero_3": "0f0f0d4f6d662c3c",
+          "pts": 17,
+          "logo": "0038383c34343800",
+          "eliminated": false
+        },
+        {
+          "slot": 9,
+          "name": "HH",
+          "hero_1": "8faf372f3bdade23",
+          "hero_2": "070f0d4f6d663c3c",
+          "hero_3": "0d0c090f1d0f4b4b",
+          "pts": 21,
+          "logo": "2070707870787820",
+          "eliminated": false
+        },
+        {
+          "slot": 10,
+          "name": "THUG",
+          "hero_1": "c6c6a08f8f87a1c5",
+          "hero_2": "860b543b3b1e1d4d",
+          "hero_3": "07072626b6b69e0e",
+          "pts": 13,
+          "logo": "0032323e3400006b",
+          "eliminated": false
+        },
+        {
+          "slot": 11,
+          "name": "BBD",
+          "hero_1": "e6eeefedf6f6a69e",
+          "hero_2": "74eec76575751c1e",
+          "hero_3": "76eedf5455516f43",
+          "pts": 16,
+          "logo": "0010b0b0e8e8ecec",
+          "eliminated": true
+        },
+        {
+          "slot": 12,
+          "name": "CRT",
+          "hero_1": "878f97b6bbefef83",
+          "hero_2": "3c6e4d660e8f2b0b",
+          "hero_3": "878fade565a6361e",
+          "pts": 1,
+          "logo": "2828787868687010",
+          "eliminated": false
+        },
+        {
+          "slot": 13,
+          "name": "DINO",
+          "hero_1": "e6eec7e6f6f09cdd",
+          "hero_2": "1cfc6d65557d5859",
+          "hero_3": "4c4e4e485852961e",
+          "pts": 18,
+          "logo": "a0a0303030100000",
+          "eliminated": true
+        },
+        {
+          "slot": 14,
+          "name": "DKK",
+          "hero_1": "8486888e8e8fa58b",
+          "hero_2": "079e1b363d6d6f91",
+          "hero_3": "0707256526a6be9e",
+          "pts": 22,
+          "logo": "10103038686c6c28",
+          "eliminated": false
+        },
+        {
+          "slot": 15,
+          "name": "GMBL",
+          "hero_1": "f6eedff6fef5efc3",
+          "hero_2": "66666d655525b69e",
+          "hero_3": "697675595959b395",
+          "pts": 8,
+          "logo": "0130786868e8b051",
+          "eliminated": true
+        },
+        {
+          "slot": 16,
+          "name": "JDDG",
+          "hero_1": "8787afe5a4a6b69e",
+          "hero_2": "09169595bb99b395",
+          "hero_3": "070f17363d6d6f03",
+          "pts": 30,
+          "logo": "0000243870380000",
+          "eliminated": false
+        },
+        {
+          "slot": 17,
+          "name": "MR",
+          "hero_1": "8d8e8d868e8fab8b",
+          "hero_2": "070f2d656526361e",
+          "hero_3": "070f17b6bbef6f83",
+          "pts": 15,
+          "logo": "1210303068686c6c",
+          "eliminated": false
+        },
+        {
+          "slot": 18,
+          "name": "REV",
+          "hero_1": "858f8fada686965e",
+          "hero_2": "0d1d432313b1c83e",
+          "hero_3": "1c3c1f278d8f9999",
+          "pts": 21,
+          "logo": "7070687060707440",
+          "eliminated": false
+        },
+        {
+          "slot": 19,
+          "name": "ROC",
+          "hero_1": "878f9fb6bdedef91",
+          "hero_2": "7c664d460e4f258b",
+          "hero_3": "8787ade5a6a6361e",
+          "pts": 27,
+          "logo": "1028287030303008",
+          "eliminated": false
+        },
+        {
+          "slot": 20,
+          "name": "SRO",
+          "hero_1": "e6efe5f6f6a6be9e",
+          "hero_2": "6edf6555555d6e51",
+          "hero_3": "7c6e5958580b21cb",
+          "pts": 0,
+          "logo": "70b0b0b0282868a9",
+          "eliminated": true
+        }
+      ]
+    },
+    {
+      "frame": 53200,
+      "t": 887.553,
+      "hud": {
+        "map_name": "STORM POINT",
+        "game_number": 4,
+        "number_of_teams_alive": null,
+        "number_of_players_alive": null,
+        "ring_status": {
+          "ring": 4,
+          "state": "CLOSING"
+        }
+      },
+      "teams": [
+        {
+          "slot": 1,
+          "name": "ELTE",
+          "hero_1": "8d8d99471d1f4f53",
+          "hero_2": "0f3f3f257bda5a07",
+          "hero_3": "0f0f0f4a4d6c6c3c",
+          "pts": 25,
+          "logo": "0018383030303818",
+          "eliminated": false
+        },
+        {
+          "slot": 2,
+          "name": "FREE",
+          "hero_1": "84cececcdce6f656",
+          "hero_2": "bcfcb1911154d899",
+          "hero_3": "cdd3d9d1d8dc5c18",
+          "pts": 25,
+          "logo": "0060686464604054",
+          "eliminated": true
+        },
+        {
+          "slot": 3,
+          "name": "EE",
+          "hero_1": "8faf9f273bfbde27",
+          "hero_2": "0d0e0d071c0f6b4b",
+          "hero_3": "191e0d05351d23bb",
+          "pts": 7,
+          "logo": "0020383838342020",
+          "eliminated": false
+        },
+        {
+          "slot": 4,
+          "name": "NIPC",
+          "hero_1": "8f8f8fcf6d6e243c",
+          "hero_2": "051a0e1cfc3c7439",
+          "hero_3": "0f1d8fad7674383a",
+          "pts": 31,
+          "logo": "0010303830380800",
+          "eliminated": false
+        },
+        {
+          "slot": 5,
+          "name": "OBVN",
+          "hero_1": "daeecaccec132b3b",
+          "hero_2": "78cccb8a8a1a431f",
+          "hero_3": "85dc949090f47938",
+          "pts": 31,
+          "logo": "1292b0b8ec6c6cc5",
+          "eliminated": true
+        },
+        {
+          "slot": 6,
+          "name": "S20",
+          "hero_1": "fceccbcccccacbcb",
+          "hero_2": "786ee9b99b1123bb",
+          "hero_3": "cecec1cbc1663c3c",
+          "pts": 72,
+          "logo": "1818183024646418",
+          "eliminated": true
+        },
+        {
+          "slot": 7,
+          "name": "SRC",
+          "hero_1": "4ecececa4d4a6c3c",
+          "hero_2": "787ec8aa9a9b272b",
+          "hero_3": "7cedc9d190924b53",
+          "pts": 20,
+          "logo": "0410306478581000",
+          "eliminated": true
+        },
+        {
+          "slot": 8,
+          "name": "STAL",
+          "hero_1": "8faf3f273bdade23",
+          "hero_2": "0d0d090f1d1f4b5b",
+          "hero_3": "070f0d4f6d662c3c",
+          "pts": 17,
+          "logo": "0038383c34343800",
+          "eliminated": false
+        },
+        {
+          "slot": 9,
+          "name": "HH",
+          "hero_1": "8faf372f3bdade23",
+          "hero_2": "0f0f0d4f6d663c3c",
+          "hero_3": "8d0c090f1d0f4b5b",
+          "pts": 21,
+          "logo": "2070707870787820",
+          "eliminated": false
+        },
+        {
+          "slot": 10,
+          "name": "THUG",
+          "hero_1": "c6c6a08f8f87a1c7",
+          "hero_2": "862b563b331e1d4d",
+          "hero_3": "07072626b6b69e0e",
+          "pts": 13,
+          "logo": "0032323e3400006b",
+          "eliminated": false
+        },
+        {
+          "slot": 11,
+          "name": "BBD",
+          "hero_1": "e6eeefedfef6a69e",
+          "hero_2": "74eec76575351c1e",
+          "hero_3": "76eedf5455516f47",
+          "pts": 16,
+          "logo": "0010b0b0e8e8ecec",
+          "eliminated": true
+        },
+        {
+          "slot": 12,
+          "name": "CRT",
+          "hero_1": "878f97b6bbefef83",
+          "hero_2": "3c6e4d460e8f2b0b",
+          "hero_3": "878fade565a6361e",
+          "pts": null,
+          "logo": "2828787868687010",
+          "eliminated": false
+        },
+        {
+          "slot": 13,
+          "name": "DINO",
+          "hero_1": "e6eec7f6f6f09cdd",
+          "hero_2": "0cfc6d65557d4809",
+          "hero_3": "44ce4e485a52961e",
+          "pts": 18,
+          "logo": "a0a0303030100000",
+          "eliminated": true
+        },
+        {
+          "slot": 14,
+          "name": "DKK",
+          "hero_1": "8486888e8e8fa58b",
+          "hero_2": "879e1b363d6d6f91",
+          "hero_3": "0707256526a6be9e",
+          "pts": 22,
+          "logo": "10103038686c6c28",
+          "eliminated": false
+        },
+        {
+          "slot": 15,
+          "name": "GMBL",
+          "hero_1": "f6eed7f6f6f1efc3",
+          "hero_2": "6666ed655525b61e",
+          "hero_3": "69f675595959b395",
+          "pts": 8,
+          "logo": "0130786868e8b051",
+          "eliminated": true
+        },
+        {
+          "slot": 16,
+          "name": "JDDG",
+          "hero_1": "8787afe5a4a6b69e",
+          "hero_2": "09169595bb99b395",
+          "hero_3": "070f17363d6d6f03",
+          "pts": 30,
+          "logo": "0000243870380000",
+          "eliminated": false
+        },
+        {
+          "slot": 17,
+          "name": "MR",
+          "hero_1": "cd8e8d868e8faf8b",
+          "hero_2": "070f2d656526361e",
+          "hero_3": "078f17b6bbef6f83",
+          "pts": 15,
+          "logo": "1210303068686c6c",
+          "eliminated": false
+        },
+        {
+          "slot": 18,
+          "name": "REV",
+          "hero_1": "858f8fada686965e",
+          "hero_2": "0d1d432313b1c83e",
+          "hero_3": "1c3c1f278d8f9999",
+          "pts": 21,
+          "logo": "7070687060707440",
+          "eliminated": false
+        },
+        {
+          "slot": 19,
+          "name": "ROC",
+          "hero_1": "878f9fb6bdedef91",
+          "hero_2": "7c664d460e4f258b",
+          "hero_3": "8787ade5a6a6361e",
+          "pts": 27,
+          "logo": "1028287030303008",
+          "eliminated": false
+        },
+        {
+          "slot": 20,
+          "name": "SRO",
+          "hero_1": "e6efe5f6f6a6be9e",
+          "hero_2": "6edf6555555d6e51",
+          "hero_3": "7c6e5958590b21cb",
+          "pts": 0,
+          "logo": "70b0b0b0282868a9",
+          "eliminated": true
+        }
+      ]
+    },
+    {
+      "frame": 53800,
+      "t": 897.563,
+      "hud": {
+        "map_name": "STORM POINT",
+        "game_number": 4,
+        "number_of_teams_alive": null,
+        "number_of_players_alive": null,
+        "ring_status": {
+          "ring": 4,
+          "state": "CLOSING"
+        }
+      },
+      "teams": [
+        {
+          "slot": 1,
+          "name": "ELTE",
+          "hero_1": "cd8d99471d1f4f53",
+          "hero_2": "0f3f3f257bda5a07",
+          "hero_3": "0f0f0f4a4d6c6c3c",
+          "pts": 25,
+          "logo": "0018383030303818",
+          "eliminated": false
+        },
+        {
+          "slot": 2,
+          "name": "FREE",
+          "hero_1": "84cececcdce6d656",
+          "hero_2": "9cf8b5911154d899",
+          "hero_3": "ccd3d9d1d8dc5c18",
+          "pts": 25,
+          "logo": "0060686464604054",
+          "eliminated": true
+        },
+        {
+          "slot": 3,
+          "name": "EE",
+          "hero_1": "8faf9f273bfbde27",
+          "hero_2": "0d0e0d071c0f6b4b",
+          "hero_3": "191e0d05351d23bb",
+          "pts": 7,
+          "logo": "0020383838342020",
+          "eliminated": false
+        },
+        {
+          "slot": 4,
+          "name": "NIPC",
+          "hero_1": "8f8f8fcf6d6e243c",
+          "hero_2": "051a0e1cfc3c7439",
+          "hero_3": "0f1d8fad7674383a",
+          "pts": 31,
+          "logo": "0010303830380800",
+          "eliminated": false
+        },
+        {
+          "slot": 5,
+          "name": "OBVN",
+          "hero_1": "5aeecaccec132b3b",
+          "hero_2": "78cccb8a8a1a431f",
+          "hero_3": "859c949090b47938",
+          "pts": 31,
+          "logo": "1292b0b8ec6c6cc5",
+          "eliminated": true
+        },
+        {
+          "slot": 6,
+          "name": "S20",
+          "hero_1": "fceccbcccccacbcb",
+          "hero_2": "78eee9b99b1123bb",
+          "hero_3": "cecec1cbc1663c3c",
+          "pts": 72,
+          "logo": "1818183024646418",
+          "eliminated": true
+        },
+        {
+          "slot": 7,
+          "name": "SRC",
+          "hero_1": "c6cececa4d4a6c3c",
+          "hero_2": "787ec8aa9a9b272b",
+          "hero_3": "7cedd9d190924b53",
+          "pts": 20,
+          "logo": "0410306478581000",
+          "eliminated": true
+        },
+        {
+          "slot": 8,
+          "name": "STAL",
+          "hero_1": "8faf3f273bdade23",
+          "hero_2": "0d0d090f1d0f4b5b",
+          "hero_3": "0f0f0d4f6d662c3c",
+          "pts": 17,
+          "logo": "0038383c34343800",
+          "eliminated": false
+        },
+        {
+          "slot": 9,
+          "name": "HH",
+          "hero_1": "8faf372f3bdade23",
+          "hero_2": "8f0f0d4f6d663c3c",
+          "hero_3": "0d0c090f1d0f4b5b",
+          "pts": 21,
+          "logo": "2070707870787820",
+          "eliminated": false
+        },
+        {
+          "slot": 10,
+          "name": "THUG",
+          "hero_1": "c6c6a08f8f87a1c5",
+          "hero_2": "862b563b3b1e1d4d",
+          "hero_3": "07072726b6b69e0e",
+          "pts": 13,
+          "logo": "0032323e3400006b",
+          "eliminated": false
+        },
+        {
+          "slot": 11,
+          "name": "BBD",
+          "hero_1": "e6e6efed7ef6a69e",
+          "hero_2": "6ceec76575351c1e",
+          "hero_3": "76eedf5455514f47",
+          "pts": 16,
+          "logo": "0010b0b0e8e8ecec",
+          "eliminated": true
+        },
+        {
+          "slot": 12,
+          "name": "CRT",
+          "hero_1": "878f97b6bbefef83",
+          "hero_2": "3c6e4d460e8f2b0b",
+          "hero_3": "878fade565a6361e",
+          "pts": 1,
+          "logo": "2828787868687010",
+          "eliminated": false
+        },
+        {
+          "slot": 13,
+          "name": "DINO",
+          "hero_1": "e6eec7f6f6f29cdd",
+          "hero_2": "0cfc4d65557d5819",
+          "hero_3": "4c4e4e485852d61e",
+          "pts": 18,
+          "logo": "a0a0303030100000",
+          "eliminated": true
+        },
+        {
+          "slot": 14,
+          "name": "DKK",
+          "hero_1": "8486888e8e8fa58b",
+          "hero_2": "079e1b363d6d6f91",
+          "hero_3": "0707256526a6be9e",
+          "pts": 22,
+          "logo": "10103038686c6c28",
+          "eliminated": false
+        },
+        {
+          "slot": 15,
+          "name": "GMBL",
+          "hero_1": "f6eed7f6f6f1efc3",
+          "hero_2": "6666ef655525b69e",
+          "hero_3": "297675595959b395",
+          "pts": 8,
+          "logo": "0130786868e8b051",
+          "eliminated": true
+        },
+        {
+          "slot": 16,
+          "name": "JDDG",
+          "hero_1": "8787afe5a6a6b69e",
+          "hero_2": "09169595bb99b395",
+          "hero_3": "070f17363d6d6f03",
+          "pts": 30,
+          "logo": "0000243870380000",
+          "eliminated": false
+        },
+        {
+          "slot": 17,
+          "name": "MR",
+          "hero_1": "8d8e8da68e8fab8b",
+          "hero_2": "070f2d656526361e",
+          "hero_3": "070f17b6bbef6f83",
+          "pts": 15,
+          "logo": "1210303068686c6c",
+          "eliminated": false
+        },
+        {
+          "slot": 18,
+          "name": "REV",
+          "hero_1": "85ceceeda6a6965e",
+          "hero_2": "8d1d43a393b1c83e",
+          "hero_3": "1c3c1f278d8f9999",
+          "pts": 21,
+          "logo": "7070687060707440",
+          "eliminated": false
+        },
+        {
+          "slot": 19,
+          "name": "ROC",
+          "hero_1": "878f9fb6b9edef91",
+          "hero_2": "3c664d460ecf258b",
+          "hero_3": "8787ade5a6a6361e",
+          "pts": 27,
+          "logo": "1028287030303008",
+          "eliminated": false
+        },
+        {
+          "slot": 20,
+          "name": "SRO",
+          "hero_1": "e6efe5f6f6a6be9e",
+          "hero_2": "6edf6555557d6e51",
+          "hero_3": "3c6e5958590b21cf",
+          "pts": 0,
+          "logo": "70b0b0b0282868a9",
+          "eliminated": true
+        }
+      ]
+    },
+    {
+      "frame": 54400,
+      "t": 907.573,
+      "hud": {
+        "map_name": "STORM POINT",
+        "game_number": 4,
+        "number_of_teams_alive": null,
+        "number_of_players_alive": null,
+        "ring_status": {
+          "ring": 4,
+          "state": "CLOSING"
+        }
+      },
+      "teams": [
+        {
+          "slot": 1,
+          "name": "ELTE",
+          "hero_1": "8d8d99471d1f4b53",
+          "hero_2": "0f1f3f257bda5a07",
+          "hero_3": "8f0f0f4a4d6c6c3c",
+          "pts": 25,
+          "logo": "0018383030303818",
+          "eliminated": false
+        },
+        {
+          "slot": 2,
+          "name": "FREE",
+          "hero_1": "84cececccce6f656",
+          "hero_2": "8cfcb5951154d891",
+          "hero_3": "ccd3d9d1d8dc5c18",
+          "pts": 25,
+          "logo": "0060686464604054",
+          "eliminated": true
+        },
+        {
+          "slot": 3,
+          "name": "EE",
+          "hero_1": "8fafbf273bfbde27",
+          "hero_2": "0d0e09071c0f6b4b",
+          "hero_3": "191e0d05351d23bb",
+          "pts": 3,
+          "logo": "0020383838342020",
+          "eliminated": false
+        },
+        {
+          "slot": 4,
+          "name": "NIPC",
+          "hero_1": "8f8f8fcf6d6e243c",
+          "hero_2": "051a0e1cfcbc7439",
+          "hero_3": "0f1d8fad7674383a",
+          "pts": 31,
+          "logo": "0010303830380800",
+          "eliminated": false
+        },
+        {
+          "slot": 5,
+          "name": "OBVN",
+          "hero_1": "5acecaccec132b3b",
+          "hero_2": "78cccb8a8a1a431f",
+          "hero_3": "85dc949090f4793a",
+          "pts": 31,
+          "logo": "1292b0b8ec6c6cc5",
+          "eliminated": true
+        },
+        {
+          "slot": 6,
+          "name": "S20",
+          "hero_1": "fceccbcccccac3cf",
+          "hero_2": "786ee9b99b1123bb",
+          "hero_3": "46cec1cbc1663c1c",
+          "pts": 72,
+          "logo": "1818183024646418",
+          "eliminated": true
+        },
+        {
+          "slot": 7,
+          "name": "SRC",
+          "hero_1": "cecececa4d4a6c3c",
+          "hero_2": "787ec8aa9a9b272b",
+          "hero_3": "7cedd99190924b53",
+          "pts": 20,
+          "logo": "0410306478581000",
+          "eliminated": true
+        },
+        {
+          "slot": 8,
+          "name": "STAL",
+          "hero_1": "8faf3f273bdade23",
+          "hero_2": "0d8d090f1d0f4b5b",
+          "hero_3": "0f0f0d4f6d662c3c",
+          "pts": 17,
+          "logo": "0038383c34343800",
+          "eliminated": false
+        },
+        {
+          "slot": 9,
+          "name": "HH",
+          "hero_1": "8faf372f3bdade23",
+          "hero_2": "070f0d4f6d663c3c",
+          "hero_3": "8d0c090f1d0f4b5b",
+          "pts": 21,
+          "logo": "2070707870787820",
+          "eliminated": false
+        },
+        {
+          "slot": 10,
+          "name": "THUG",
+          "hero_1": "c6c6a08f8f87a1c5",
+          "hero_2": "862f543b3b1e1d4d",
+          "hero_3": "07072626b6b69e0e",
+          "pts": 13,
+          "logo": "0032323e3400006b",
+          "eliminated": false
+        },
+        {
+          "slot": 11,
+          "name": "BBD",
+          "hero_1": "e6e6efedfef6a69e",
+          "hero_2": "74eec76575351c1e",
+          "hero_3": "76eedf5455554f47",
+          "pts": 16,
+          "logo": "0010b0b0e8e8ecec",
+          "eliminated": true
+        },
+        {
+          "slot": 12,
+          "name": "CRT",
+          "hero_1": "878f97b6bbefef83",
+          "hero_2": "3c6e4d460e8f2b0b",
+          "hero_3": "878fade565a6361e",
+          "pts": 1,
+          "logo": "2828787868687010",
+          "eliminated": false
+        },
+        {
+          "slot": 13,
+          "name": "DINO",
+          "hero_1": "f6eed7f6f6f29cdd",
+          "hero_2": "0cfe6d65557d5819",
+          "hero_3": "4ece4e485852961e",
+          "pts": 18,
+          "logo": "a0a0303030100000",
+          "eliminated": true
+        },
+        {
+          "slot": 14,
+          "name": "DKK",
+          "hero_1": "8486888e8e8fa58b",
+          "hero_2": "079e1b363d6d6f91",
+          "hero_3": "0707256526a6be9e",
+          "pts": 22,
+          "logo": "10103038686c6c28",
+          "eliminated": false
+        },
+        {
+          "slot": 15,
+          "name": "GMBL",
+          "hero_1": "f6eed7f6f6f1efc3",
+          "hero_2": "66e6ed655525b69e",
+          "hero_3": "69f675595959b395",
+          "pts": 8,
+          "logo": "0130786868e8b051",
+          "eliminated": true
+        },
+        {
+          "slot": 16,
+          "name": "JDDG",
+          "hero_1": "8787ade5a4a6b69e",
+          "hero_2": "09169595bb99b395",
+          "hero_3": "878f17363d6d6f03",
+          "pts": 30,
+          "logo": "0000243870380000",
+          "eliminated": false
+        },
+        {
+          "slot": 17,
+          "name": "MR",
+          "hero_1": "cd8e8d868e8faf8b",
+          "hero_2": "078f2d656526361e",
+          "hero_3": "878f1fb6bbef6f83",
+          "pts": 17,
+          "logo": "1210303068686c6c",
+          "eliminated": false
+        },
+        {
+          "slot": 18,
+          "name": "REV",
+          "hero_1": "c4cecefed6f6965e",
+          "hero_2": "cc9dc1655571a0b4",
+          "hero_3": "8cfc5b59595a5899",
+          "pts": 21,
+          "logo": "7070687060707440",
+          "eliminated": true
+        },
+        {
+          "slot": 19,
+          "name": "ROC",
+          "hero_1": "878f9fb6b9edef91",
+          "hero_2": "3c664c460e4f278b",
+          "hero_3": "8787ade5a6a6361e",
+          "pts": 27,
+          "logo": "1028287030303008",
+          "eliminated": false
+        },
+        {
+          "slot": 20,
+          "name": "SRO",
+          "hero_1": "e6efe5f6f6a6be9e",
+          "hero_2": "6edf6555557d6e51",
+          "hero_3": "7c6e5858584b21cf",
+          "pts": 0,
+          "logo": "70b0b0b0282868a9",
+          "eliminated": true
+        }
+      ]
+    },
+    {
+      "frame": 55000,
+      "t": 917.583,
+      "hud": {
+        "map_name": "STORM POINT",
+        "game_number": 4,
+        "number_of_teams_alive": null,
+        "number_of_players_alive": null,
+        "ring_status": {
+          "ring": 4,
+          "state": "CLOSING"
+        }
+      },
+      "teams": [
+        {
+          "slot": 1,
+          "name": "ELTE",
+          "hero_1": "8d8d9d451d1f4f53",
+          "hero_2": "0f3f3f257bda5a07",
+          "hero_3": "0f0f0f4e4d6c6c3c",
+          "pts": 25,
+          "logo": "0018383030303818",
+          "eliminated": false
+        },
+        {
+          "slot": 2,
+          "name": "FREE",
+          "hero_1": "84cececcdce6d656",
+          "hero_2": "9cfcb1911154d899",
+          "hero_3": "c4d3d9d1d8dc5c18",
+          "pts": 25,
+          "logo": "0060686464604054",
+          "eliminated": true
+        },
+        {
+          "slot": 3,
+          "name": "EE",
+          "hero_1": "8faf9f273bfbde27",
+          "hero_2": "0d0e0d071c0f6b4b",
+          "hero_3": "191e0d05351d23bb",
+          "pts": 3,
+          "logo": "0020383838342020",
+          "eliminated": false
+        },
+        {
+          "slot": 4,
+          "name": "NIPC",
+          "hero_1": "878f8fcf6d6e2c3c",
+          "hero_2": "051a0e1cfc3c7439",
+          "hero_3": "0f1d8fad7674383a",
+          "pts": 31,
+          "logo": "0010303830380800",
+          "eliminated": false
+        },
+        {
+          "slot": 5,
+          "name": "OBVN",
+          "hero_1": "58eecaccec132b3b",
+          "hero_2": "78cccb8a8a1a431f",
+          "hero_3": "859c949090f4792a",
+          "pts": 31,
+          "logo": "1292b0b8ec6c6cc5",
+          "eliminated": true
+        },
+        {
+          "slot": 6,
+          "name": "S20",
+          "hero_1": "fceccbcccccacbdb",
+          "hero_2": "786ee9b99b1123bb",
+          "hero_3": "cecec1cbc166343c",
+          "pts": 72,
+          "logo": "1818183024646418",
+          "eliminated": true
+        },
+        {
+          "slot": 7,
+          "name": "SRC",
+          "hero_1": "cecececa4d4a6c3c",
+          "hero_2": "78fec8aa9a9b272b",
+          "hero_3": "7cedd99190924b53",
+          "pts": 20,
+          "logo": "0410306478581000",
+          "eliminated": true
+        },
+        {
+          "slot": 8,
+          "name": "STAL",
+          "hero_1": "8faf3f273bdade23",
+          "hero_2": "0d0d090f1d0f4b5b",
+          "hero_3": "0f0f0d4f6d662c3c",
+          "pts": 17,
+          "logo": "0038383c34343800",
+          "eliminated": false
+        },
+        {
+          "slot": 9,
+          "name": "HH",
+          "hero_1": "8faf372f3bdade23",
+          "hero_2": "070f0d4f6d663c3c",
+          "hero_3": "0d0c090f1d0f4b5b",
+          "pts": 21,
+          "logo": "2070707870787820",
+          "eliminated": false
+        },
+        {
+          "slot": 10,
+          "name": "THUG",
+          "hero_1": "c6c6a08f8f87a1c5",
+          "hero_2": "862f563b3b1e1d4d",
+          "hero_3": "07872626b6b69e0e",
+          "pts": 13,
+          "logo": "0032323e3400006b",
+          "eliminated": false
+        },
+        {
+          "slot": 11,
+          "name": "BBD",
+          "hero_1": "e6eeefedf6f6a69e",
+          "hero_2": "64eec76575351c1e",
+          "hero_3": "76eedf5455516f43",
+          "pts": 16,
+          "logo": "0010b0b0e8e8ecec",
+          "eliminated": true
+        },
+        {
+          "slot": 12,
+          "name": "CRT",
+          "hero_1": "878f97b6bbefef83",
+          "hero_2": "7c6e4d460e8f2b0b",
+          "hero_3": "878fade565a6361e",
+          "pts": null,
+          "logo": "2828787868687010",
+          "eliminated": false
+        },
+        {
+          "slot": 13,
+          "name": "DINO",
+          "hero_1": "f6eec7e6f6f09cdd",
+          "hero_2": "1cfc4d65557d5809",
+          "hero_3": "4d4e4e485a52961e",
+          "pts": 18,
+          "logo": "a0a0303030100000",
+          "eliminated": true
+        },
+        {
+          "slot": 14,
+          "name": "DKK",
+          "hero_1": "8486888e8e8fa58b",
+          "hero_2": "079e1b363d6d6f91",
+          "hero_3": "8707256526a6be9e",
+          "pts": 22,
+          "logo": "10103038686c6c28",
+          "eliminated": false
+        },
+        {
+          "slot": 15,
+          "name": "GMBL",
+          "hero_1": "f6eed7f6f6f5efc3",
+          "hero_2": "6666ef655525b61e",
+          "hero_3": "697675595959b395",
+          "pts": 8,
+          "logo": "0130786868e8b051",
+          "eliminated": true
+        },
+        {
+          "slot": 16,
+          "name": "JDDG",
+          "hero_1": "8787afe5a4a6b69e",
+          "hero_2": "09169595bb99b395",
+          "hero_3": "070f17363d6d6f03",
+          "pts": 50,
+          "logo": "0000243870380000",
+          "eliminated": false
+        },
+        {
+          "slot": 17,
+          "name": "MR",
+          "hero_1": "8d8e8d868e8fab8b",
+          "hero_2": "070f2d656526361e",
+          "hero_3": "070f17b6bbef6f83",
+          "pts": 7,
+          "logo": "1210303068686c6c",
+          "eliminated": false
+        },
+        {
+          "slot": 18,
+          "name": "REV",
+          "hero_1": "c4cecefed6f6965e",
+          "hero_2": "cc9dc1655571a8be",
+          "hero_3": "4cfc5b59595a5899",
+          "pts": 21,
+          "logo": "7070687060707440",
+          "eliminated": true
+        },
+        {
+          "slot": 19,
+          "name": "ROC",
+          "hero_1": "878f9fb6b9edef91",
+          "hero_2": "7c664d460e4f258b",
+          "hero_3": "8787ade5a6a6361e",
+          "pts": 27,
+          "logo": "1028287030303008",
+          "eliminated": false
+        },
+        {
+          "slot": 20,
+          "name": "SRO",
+          "hero_1": "e6efe5f6f6a6be9e",
+          "hero_2": "6edf6555557d6e51",
+          "hero_3": "3c6e5958580b23cb",
+          "pts": null,
+          "logo": "70b0b0b0282868a9",
+          "eliminated": true
+        }
+      ]
+    },
+    {
+      "frame": 55600,
+      "t": 927.593,
+      "hud": {
+        "map_name": "STORM POINT",
+        "game_number": 4,
+        "number_of_teams_alive": null,
+        "number_of_players_alive": null,
+        "ring_status": {
+          "ring": 4,
+          "state": "CLOSING"
+        }
+      },
+      "teams": [
+        {
+          "slot": 1,
+          "name": "ELTE",
+          "hero_1": "8d8d99451d1f4f53",
+          "hero_2": "0f3f3f257bda5a07",
+          "hero_3": "0f0f0f4a4d6c6c3c",
+          "pts": 25,
+          "logo": "0018383030303818",
+          "eliminated": false
+        },
+        {
+          "slot": 2,
+          "name": "FREE",
+          "hero_1": "84cececccce6f65e",
+          "hero_2": "9cfcb5911154d819",
+          "hero_3": "cdd3d9d1d8dc5c18",
+          "pts": 25,
+          "logo": "0060686464604054",
+          "eliminated": true
+        },
+        {
+          "slot": 3,
+          "name": "EE",
+          "hero_1": "8fafbf273bfbde27",
+          "hero_2": "3d6e4d051c0f6b4b",
+          "hero_3": "999e8d85359d23bb",
+          "pts": 3,
+          "logo": "0020383838342020",
+          "eliminated": false
+        },
+        {
+          "slot": 4,
+          "name": "NIPC",
+          "hero_1": "8f8f8fcf6d6e243c",
+          "hero_2": "851a0e1cfc3c7439",
+          "hero_3": "0f1d8fad7674383a",
+          "pts": 31,
+          "logo": "0010303830380800",
+          "eliminated": false
+        },
+        {
+          "slot": 5,
+          "name": "OBVN",
+          "hero_1": "58eecaccec132b3b",
+          "hero_2": "78cccb8a8a1a431f",
+          "hero_3": "859c949090f47938",
+          "pts": 31,
+          "logo": "1292b0b8ec6c6cc5",
+          "eliminated": true
+        },
+        {
+          "slot": 6,
+          "name": "S20",
+          "hero_1": "fceccbcccccacbdb",
+          "hero_2": "786ee9b99b1123bb",
+          "hero_3": "c6cec1cbc1663c1c",
+          "pts": 72,
+          "logo": "1818183024646418",
+          "eliminated": true
+        },
+        {
+          "slot": 7,
+          "name": "SRC",
+          "hero_1": "4ecececa4d4a6c3c",
+          "hero_2": "787ee8aa9a9b232b",
+          "hero_3": "7cedd9d190924b53",
+          "pts": 20,
+          "logo": "0410306478581000",
+          "eliminated": true
+        },
+        {
+          "slot": 8,
+          "name": "STAL",
+          "hero_1": "8faf3f273bdade23",
+          "hero_2": "0d0d090f1d1f4b5b",
+          "hero_3": "070f0d4f6d662c3c",
+          "pts": 17,
+          "logo": "0038383c34343800",
+          "eliminated": false
+        },
+        {
+          "slot": 9,
+          "name": "HH",
+          "hero_1": "8faf372f3bdade23",
+          "hero_2": "0f0f0d4f6d663c3c",
+          "hero_3": "0d0c090f1d0f4b5b",
+          "pts": 21,
+          "logo": "2070707870787820",
+          "eliminated": false
+        },
+        {
+          "slot": 10,
+          "name": "THUG",
+          "hero_1": "c6c6a08f8f87a1c7",
+          "hero_2": "860f563b3b1e1d4d",
+          "hero_3": "07072726b6b69e0e",
+          "pts": 13,
+          "logo": "0032323e3400006b",
+          "eliminated": false
+        },
+        {
+          "slot": 11,
+          "name": "BBD",
+          "hero_1": "e6eeefedfef6a69e",
+          "hero_2": "6ceec76575351c1e",
+          "hero_3": "f6eedf5455514f47",
+          "pts": 16,
+          "logo": "0010b0b0e8e8ecec",
+          "eliminated": true
+        },
+        {
+          "slot": 12,
+          "name": "CRT",
+          "hero_1": "878f97b6bbefef83",
+          "hero_2": "3c6e4d660e8f2b0b",
+          "hero_3": "878fade56526361e",
+          "pts": 1,
+          "logo": "2828787868687010",
+          "eliminated": false
+        },
+        {
+          "slot": 13,
+          "name": "DINO",
+          "hero_1": "e6eec7e6f6f09cdd",
+          "hero_2": "8cfc6d65557d5809",
+          "hero_3": "444e4e485852961e",
+          "pts": 18,
+          "logo": "a0a0303030100000",
+          "eliminated": true
+        },
+        {
+          "slot": 14,
+          "name": "DKK",
+          "hero_1": "c486888e8e8fa58b",
+          "hero_2": "879e1b363d6d6f91",
+          "hero_3": "0707256526a6be9e",
+          "pts": 22,
+          "logo": "10103038686c6c28",
+          "eliminated": false
+        },
+        {
+          "slot": 15,
+          "name": "GMBL",
+          "hero_1": "f6eed7f6f6f1efc3",
+          "hero_2": "66e6ed655525b69e",
+          "hero_3": "697675595959b395",
+          "pts": 8,
+          "logo": "0130786868e8b051",
+          "eliminated": true
+        },
+        {
+          "slot": 16,
+          "name": "JDDG",
+          "hero_1": "8787afe5a4a6b69e",
+          "hero_2": "09169595bb99b395",
+          "hero_3": "070f17363d6d6f03",
+          "pts": 30,
+          "logo": "0000243870380000",
+          "eliminated": false
+        },
+        {
+          "slot": 17,
+          "name": "MR",
+          "hero_1": "8d8e8d868e8fab8b",
+          "hero_2": "870f2d656526361e",
+          "hero_3": "070f17b6bbef6f83",
+          "pts": 17,
+          "logo": "1210303068686c6c",
+          "eliminated": false
+        },
+        {
+          "slot": 18,
+          "name": "REV",
+          "hero_1": "c4cecefed6f696de",
+          "hero_2": "cc9dc1655571a89c",
+          "hero_3": "9cfc5b59595a5899",
+          "pts": 21,
+          "logo": "7070687060707440",
+          "eliminated": true
+        },
+        {
+          "slot": 19,
+          "name": "ROC",
+          "hero_1": "878f9fb6bdedef91",
+          "hero_2": "7c664d460ecf258b",
+          "hero_3": "8787ade5a6a6361e",
+          "pts": 27,
+          "logo": "1028287030303008",
+          "eliminated": false
+        },
+        {
+          "slot": 20,
+          "name": "SRO",
+          "hero_1": "e6efe5f6f6a6be9e",
+          "hero_2": "6edf6555555d6e51",
+          "hero_3": "3c6e5858580f218f",
+          "pts": 0,
+          "logo": "70b0b0b0282868a9",
+          "eliminated": true
+        }
+      ]
+    },
+    {
+      "frame": 56200,
+      "t": 937.603,
+      "hud": {
+        "map_name": "STORM POINT",
+        "game_number": 4,
+        "number_of_teams_alive": null,
+        "number_of_players_alive": null,
+        "ring_status": null
+      },
+      "teams": [
+        {
+          "slot": 1,
+          "name": "ELTE",
+          "hero_1": "8d8d89451d1f4b53",
+          "hero_2": "0f3f3f257bda5a07",
+          "hero_3": "0f0f0f4a4d6c6c3c",
+          "pts": 25,
+          "logo": "0018383030303818",
+          "eliminated": false
+        },
+        {
+          "slot": 2,
+          "name": "FREE",
+          "hero_1": "84cececcdce6b65e",
+          "hero_2": "9c7cb1919150d819",
+          "hero_3": "cdd3d9d1d8dc5c18",
+          "pts": 25,
+          "logo": "0060686464604054",
+          "eliminated": true
+        },
+        {
+          "slot": 3,
+          "name": "EE",
+          "hero_1": "8faf9f273bfbde27",
+          "hero_2": "3c6e4dc79c8e6b4b",
+          "hero_3": "787eede5349d23bb",
+          "pts": 3,
+          "logo": "0020383838342020",
+          "eliminated": false
+        },
+        {
+          "slot": 4,
+          "name": "NIPC",
+          "hero_1": "8f8f8fcf6d6e243c",
+          "hero_2": "051a0e1cfc3c7439",
+          "hero_3": "0f1d8fad7674383a",
+          "pts": 33,
+          "logo": "0010303830380800",
+          "eliminated": false
+        },
+        {
+          "slot": 5,
+          "name": "OBVN",
+          "hero_1": "5aeecaccec132b3b",
+          "hero_2": "78cccb8a8a1a4317",
+          "hero_3": "859d949090f4793a",
+          "pts": 31,
+          "logo": "1292b0b8ec6c6cc5",
+          "eliminated": true
+        },
+        {
+          "slot": 6,
+          "name": "S20",
+          "hero_1": "fceccbcccccacbdb",
+          "hero_2": "786eedb99b1123bb",
+          "hero_3": "c6cec8cbc1663c3c",
+          "pts": 72,
+          "logo": "1818183024646418",
+          "eliminated": true
+        },
+        {
+          "slot": 7,
+          "name": "SRC",
+          "hero_1": "c6cececa4d4a6c3c",
+          "hero_2": "787ec8aa9a9b272b",
+          "hero_3": "78edd9d190924b53",
+          "pts": 20,
+          "logo": "0410306478581000",
+          "eliminated": true
+        },
+        {
+          "slot": 8,
+          "name": "STAL",
+          "hero_1": "8faf3f253bdade23",
+          "hero_2": "0d0d090f1d0f4b5b",
+          "hero_3": "070f0d4f6d662c3c",
+          "pts": 17,
+          "logo": "0038383c34343800",
+          "eliminated": false
+        },
+        {
+          "slot": 9,
+          "name": "HH",
+          "hero_1": "8faf372f3bdade23",
+          "hero_2": "0f0f0d4f6d663c3c",
+          "hero_3": "0d0c090f1d0f4b5b",
+          "pts": 21,
+          "logo": "2070707870787820",
+          "eliminated": false
+        },
+        {
+          "slot": 10,
+          "name": "THUG",
+          "hero_1": "c6c6a08f8f87a1c7",
+          "hero_2": "860f543b3b1e1d4d",
+          "hero_3": "87872726b6b69e0e",
+          "pts": 13,
+          "logo": "0032323e3400006b",
+          "eliminated": false
+        },
+        {
+          "slot": 11,
+          "name": "BBD",
+          "hero_1": "e6eeefedf6f6a69e",
+          "hero_2": "66eec76575351c1e",
+          "hero_3": "76eedf5455514f43",
+          "pts": 16,
+          "logo": "0010b0b0e8e8ecec",
+          "eliminated": true
+        },
+        {
+          "slot": 12,
+          "name": "CRT",
+          "hero_1": "878f97b6bbefef83",
+          "hero_2": "3c6e4d460e8f2b0b",
+          "hero_3": "878fade56526361e",
+          "pts": 1,
+          "logo": "2828787868687010",
+          "eliminated": false
+        },
+        {
+          "slot": 13,
+          "name": "DINO",
+          "hero_1": "e6eec7e6f6f09cdd",
+          "hero_2": "0c7c6d65557d5809",
+          "hero_3": "4e4e4e485a52961e",
+          "pts": 18,
+          "logo": "a0a0303030100000",
+          "eliminated": true
+        },
+        {
+          "slot": 14,
+          "name": "DKK",
+          "hero_1": "8486888e8e8fa58f",
+          "hero_2": "079e1b363d6d6f91",
+          "hero_3": "0707256526a6be9e",
+          "pts": 22,
+          "logo": "10103038686c6c28",
+          "eliminated": false
+        },
+        {
+          "slot": 15,
+          "name": "GMBL",
+          "hero_1": "f6eedff6fef1efc3",
+          "hero_2": "6666ef655525b69e",
+          "hero_3": "a9f675595959b395",
+          "pts": 8,
+          "logo": "0130786868e8b051",
+          "eliminated": true
+        },
+        {
+          "slot": 16,
+          "name": "JDDG",
+          "hero_1": "8787afe5a4a6b69e",
+          "hero_2": "09169595bbd9b395",
+          "hero_3": "070f17363d6d6f03",
+          "pts": 30,
+          "logo": "0000243870380000",
+          "eliminated": false
+        },
+        {
+          "slot": 17,
+          "name": "MR",
+          "hero_1": "8d8e8da68e8fab8b",
+          "hero_2": "070f2d656526361e",
+          "hero_3": "070f17b6bbef6f83",
+          "pts": 7,
+          "logo": "1210303068686c6c",
+          "eliminated": false
+        },
+        {
+          "slot": 18,
+          "name": "REV",
+          "hero_1": "c4cecefed6f6965e",
+          "hero_2": "cc9dc1655571a8b6",
+          "hero_3": "4cec5b59595a5899",
+          "pts": 21,
+          "logo": "7070687060707440",
+          "eliminated": true
+        },
+        {
+          "slot": 19,
+          "name": "ROC",
+          "hero_1": "878f9fb6b9edef91",
+          "hero_2": "3c664d460ecf258b",
+          "hero_3": "8787ade5a6a6361e",
+          "pts": 27,
+          "logo": "1028287030303008",
+          "eliminated": false
+        },
+        {
+          "slot": 20,
+          "name": "SRO",
+          "hero_1": "e6efe5e6f6a6be9e",
+          "hero_2": "6edf6555555d6e51",
+          "hero_3": "3c6e5958580f21cb",
+          "pts": 0,
+          "logo": "70b0b0b0282868a9",
+          "eliminated": true
+        }
+      ]
+    },
+    {
+      "frame": 56800,
+      "t": 947.613,
+      "hud": {
+        "map_name": "STORM POINT",
+        "game_number": 4,
+        "number_of_teams_alive": null,
+        "number_of_players_alive": null,
+        "ring_status": null
+      },
+      "teams": [
+        {
+          "slot": 1,
+          "name": "ELTE",
+          "hero_1": "8d8d89451d1f4b53",
+          "hero_2": "0f3f3f257bda5a07",
+          "hero_3": "0f0f0f4a4d6c6c3c",
+          "pts": 25,
+          "logo": "0018383030303818",
+          "eliminated": false
+        },
+        {
+          "slot": 2,
+          "name": "FREE",
+          "hero_1": "84cececccce6d656",
+          "hero_2": "9c7cb1911154d811",
+          "hero_3": "ccd3d9d1d8dc5c18",
+          "pts": 25,
+          "logo": "0060686464604054",
+          "eliminated": true
+        },
+        {
+          "slot": 3,
+          "name": "EE",
+          "hero_1": "8faf9f273bfbde27",
+          "hero_2": "3c6e4dc59c8e6b4b",
+          "hero_3": "787eede5349d23bb",
+          "pts": 3,
+          "logo": "0020383838342020",
+          "eliminated": false
+        },
+        {
+          "slot": 4,
+          "name": "NIPC",
+          "hero_1": "878f8fcf6d6e243c",
+          "hero_2": "051a0e1cfc3c7439",
+          "hero_3": "0f1d8fad7674383a",
+          "pts": 33,
+          "logo": "0010303830380800",
+          "eliminated": false
+        },
+        {
+          "slot": 5,
+          "name": "OBVN",
+          "hero_1": "5aeecaccec132b3b",
+          "hero_2": "78cccb8a8a1a4317",
+          "hero_3": "859c949090f4793a",
+          "pts": 31,
+          "logo": "1292b0b8ec6c6cc5",
+          "eliminated": true
+        },
+        {
+          "slot": 6,
+          "name": "S20",
+          "hero_1": "fceccbcccccacbcb",
+          "hero_2": "786ee9b99b1123bb",
+          "hero_3": "c6cec9cbc1663c3c",
+          "pts": 72,
+          "logo": "1818183024646418",
+          "eliminated": true
+        },
+        {
+          "slot": 7,
+          "name": "SRC",
+          "hero_1": "4ecececa4d4a6c3c",
+          "hero_2": "787ee8aa9a9b272b",
+          "hero_3": "7cedd99190924b53",
+          "pts": 20,
+          "logo": "0410306478581000",
+          "eliminated": true
+        },
+        {
+          "slot": 8,
+          "name": "STAL",
+          "hero_1": "8faf3f273bdade23",
+          "hero_2": "0d0d090f1d0f4b5b",
+          "hero_3": "070f0d4f6d662c3c",
+          "pts": 17,
+          "logo": "0038383c34343800",
+          "eliminated": false
+        },
+        {
+          "slot": 9,
+          "name": "HH",
+          "hero_1": "8faf372f3bdade23",
+          "hero_2": "070f0d4f6d663c3c",
+          "hero_3": "0d0c090f1d0f4b5b",
+          "pts": 21,
+          "logo": "2070707870787820",
+          "eliminated": false
+        },
+        {
+          "slot": 10,
+          "name": "THUG",
+          "hero_1": "c6c6a08f8f87a1c7",
+          "hero_2": "860f543b3b1e1d4d",
+          "hero_3": "07872626b6b69e0e",
+          "pts": 13,
+          "logo": "0032323e3400006b",
+          "eliminated": false
+        },
+        {
+          "slot": 11,
+          "name": "BBD",
+          "hero_1": "e6eeefedfef6a69e",
+          "hero_2": "64eec76575351c1e",
+          "hero_3": "76eedf545d516f47",
+          "pts": 16,
+          "logo": "0010b0b0e8e8ecec",
+          "eliminated": true
+        },
+        {
+          "slot": 12,
+          "name": "CRT",
+          "hero_1": "878f97b6bbefef83",
+          "hero_2": "3d6e4d460e8f2b0b",
+          "hero_3": "878fade56526361e",
+          "pts": 1,
+          "logo": "2828787868687010",
+          "eliminated": false
+        },
+        {
+          "slot": 13,
+          "name": "DINO",
+          "hero_1": "e6eec7e6f6f29cdd",
+          "hero_2": "0c744d65557d5809",
+          "hero_3": "4cce4e485852961e",
+          "pts": 18,
+          "logo": "a0a0303030100000",
+          "eliminated": true
+        },
+        {
+          "slot": 14,
+          "name": "DKK",
+          "hero_1": "8486888e8e8fa58f",
+          "hero_2": "071e1b363d6d6f91",
+          "hero_3": "0707256526a6be9e",
+          "pts": 22,
+          "logo": "10103038686c6c28",
+          "eliminated": false
+        },
+        {
+          "slot": 15,
+          "name": "GMBL",
+          "hero_1": "f6eed7f6fef1efc3",
+          "hero_2": "6666ef655525b69e",
+          "hero_3": "297675595959b395",
+          "pts": 8,
+          "logo": "0130786868e8b051",
+          "eliminated": true
+        },
+        {
+          "slot": 16,
+          "name": "JDDG",
+          "hero_1": "8787afe5a4a6b69e",
+          "hero_2": "09169595bbd9b395",
+          "hero_3": "070f17363d6d6f03",
+          "pts": 30,
+          "logo": "0000243870380000",
+          "eliminated": false
+        },
+        {
+          "slot": 17,
+          "name": "MR",
+          "hero_1": "8d8e8d868e8fab8b",
+          "hero_2": "870f2d656526361e",
+          "hero_3": "664e17b6bbef6f03",
+          "pts": 7,
+          "logo": "1210303068686c6c",
+          "eliminated": false
+        },
+        {
+          "slot": 18,
+          "name": "REV",
+          "hero_1": "c4cecefed6f696de",
+          "hero_2": "cc9dc1655571b89c",
+          "hero_3": "8cfc5b59595a5899",
+          "pts": 21,
+          "logo": "7070687060707440",
+          "eliminated": true
+        },
+        {
+          "slot": 19,
+          "name": "ROC",
+          "hero_1": "878f9fb6b9edef91",
+          "hero_2": "3c664d460e4f258b",
+          "hero_3": "878fade5a6a6361e",
+          "pts": 27,
+          "logo": "1028287030303008",
+          "eliminated": false
+        },
+        {
+          "slot": 20,
+          "name": "SRO",
+          "hero_1": "e6efe5f6f6a6be9e",
+          "hero_2": "eedf6555557d6e51",
+          "hero_3": "7c6e5858580b29cf",
+          "pts": 0,
+          "logo": "70b0b0b0282868a9",
+          "eliminated": true
+        }
+      ]
+    },
+    {
+      "frame": 57400,
+      "t": 957.623,
+      "hud": {
+        "map_name": "STORM POINT",
+        "game_number": 4,
+        "number_of_teams_alive": null,
+        "number_of_players_alive": null,
+        "ring_status": null
+      },
+      "teams": [
+        {
+          "slot": 1,
+          "name": "ELTE",
+          "hero_1": "8d8d8d451d1f4f53",
+          "hero_2": "0f3f3f257bda5a07",
+          "hero_3": "0f0f0f4a4d6c6c3c",
+          "pts": 26,
+          "logo": "0018383030303818",
+          "eliminated": false
+        },
+        {
+          "slot": 2,
+          "name": "FREE",
+          "hero_1": "84cececcdce6f65e",
+          "hero_2": "9cfcb1911154d819",
+          "hero_3": "cdd3d9d1d8dc5c18",
+          "pts": 25,
+          "logo": "0060686464604054",
+          "eliminated": true
+        },
+        {
+          "slot": 3,
+          "name": "EE",
+          "hero_1": "e6ee9eccccdade83",
+          "hero_2": "3c6ec99195936b43",
+          "hero_3": "787eedd5d0d123bb",
+          "pts": 3,
+          "logo": "0020383838342020",
+          "eliminated": true
+        },
+        {
+          "slot": 4,
+          "name": "NIPC",
+          "hero_1": "8f8f8fcf6d6e243c",
+          "hero_2": "051a0e1cfc3c7439",
+          "hero_3": "0f1d8fad7674383a",
+          "pts": 34,
+          "logo": "0010303830380800",
+          "eliminated": false
+        },
+        {
+          "slot": 5,
+          "name": "OBVN",
+          "hero_1": "daeecaccec132b3b",
+          "hero_2": "78cccb8a8a9a431f",
+          "hero_3": "859d949090f4793a",
+          "pts": 3,
+          "logo": "1292b0b8ec6c6cc5",
+          "eliminated": true
+        },
+        {
+          "slot": 6,
+          "name": "S20",
+          "hero_1": "fceccbcccccacbdb",
+          "hero_2": "786ee9b99b1123bb",
+          "hero_3": "cecec9cbc1663c3c",
+          "pts": 72,
+          "logo": "1818183024646418",
+          "eliminated": true
+        },
+        {
+          "slot": 7,
+          "name": "SRC",
+          "hero_1": "cecececa4d4a6c3c",
+          "hero_2": "787e48aa9a9b232b",
+          "hero_3": "7cedc99190924b53",
+          "pts": 20,
+          "logo": "0410306478581000",
+          "eliminated": true
+        },
+        {
+          "slot": 8,
+          "name": "STAL",
+          "hero_1": "8faf3f273bdade23",
+          "hero_2": "0d0d090f1d0f4b5b",
+          "hero_3": "474e4d4f6d662c3c",
+          "pts": 18,
+          "logo": "0038383c34343800",
+          "eliminated": false
+        },
+        {
+          "slot": 9,
+          "name": "HH",
+          "hero_1": "8faf372f3bdade23",
+          "hero_2": "0f0f0d4f6d663c3c",
+          "hero_3": "0d0c090f1d0f4b5b",
+          "pts": 22,
+          "logo": "2070707870787820",
+          "eliminated": false
+        },
+        {
+          "slot": 10,
+          "name": "THUG",
+          "hero_1": "c6c6a08f8f87a1c7",
+          "hero_2": "860b543b3b1e1d4d",
+          "hero_3": "07072626b6b69e0e",
+          "pts": 14,
+          "logo": "0032323e3400006b",
+          "eliminated": false
+        },
+        {
+          "slot": 11,
+          "name": "BBD",
+          "hero_1": "e6e6efedf6f6a69e",
+          "hero_2": "64eec76575351c1e",
+          "hero_3": "76eedf5455514f47",
+          "pts": 1,
+          "logo": "0010b0b0e8e8ecec",
+          "eliminated": true
+        },
+        {
+          "slot": 12,
+          "name": "CRT",
+          "hero_1": "878f97b6bbefef83",
+          "hero_2": "3d6e4d660e8f2b0b",
+          "hero_3": "878fade565a6361e",
+          "pts": 2,
+          "logo": "2828787868687010",
+          "eliminated": false
+        },
+        {
+          "slot": 13,
+          "name": "DINO",
+          "hero_1": "e6eed7e6f6f09cdd",
+          "hero_2": "5cf44d65557d4819",
+          "hero_3": "464e4e485a52961e",
+          "pts": 18,
+          "logo": "a0a0303030100000",
+          "eliminated": true
+        },
+        {
+          "slot": 14,
+          "name": "DKK",
+          "hero_1": "8486888e8e8fa58b",
+          "hero_2": "071e1b363d6d6f91",
+          "hero_3": "0707256526a6be9e",
+          "pts": 24,
+          "logo": "10103038686c6c28",
+          "eliminated": false
+        },
+        {
+          "slot": 15,
+          "name": "GMBL",
+          "hero_1": "f6eedff6f6f5efc3",
+          "hero_2": "6666ef655525b69e",
+          "hero_3": "697675595959b395",
+          "pts": 8,
+          "logo": "0130786868e8b051",
+          "eliminated": true
+        },
+        {
+          "slot": 16,
+          "name": "JDDG",
+          "hero_1": "8787afe5a6a6b69e",
+          "hero_2": "09169595bb99b395",
+          "hero_3": "078f1f363d6d6f03",
+          "pts": 31,
+          "logo": "0000243870380000",
+          "eliminated": false
+        },
+        {
+          "slot": 17,
+          "name": "MR",
+          "hero_1": "8d8e8d868e8fab8b",
+          "hero_2": "070f2d656526361e",
+          "hero_3": "070f17b6bbef6f83",
+          "pts": 1,
+          "logo": "1210303068686c6c",
+          "eliminated": false
+        },
+        {
+          "slot": 18,
+          "name": "REV",
+          "hero_1": "c4cecefed6f6965e",
+          "hero_2": "cc9dc1655571a88c",
+          "hero_3": "0cfc5959595ad899",
+          "pts": 21,
+          "logo": "7070687060707440",
+          "eliminated": true
+        },
+        {
+          "slot": 19,
+          "name": "ROC",
+          "hero_1": "878f9fb6bdedef91",
+          "hero_2": "7c664d460ecf258b",
+          "hero_3": "878fade5a6a6361e",
+          "pts": 28,
+          "logo": "1028287030303008",
+          "eliminated": false
+        },
+        {
+          "slot": 20,
+          "name": "SRO",
+          "hero_1": "e6efe5f6f6a6be9e",
+          "hero_2": "6edf6555555d6e51",
+          "hero_3": "7c6e5858580b21cb",
+          "pts": null,
+          "logo": "70b0b0b0282868a9",
+          "eliminated": true
+        }
+      ]
+    },
+    {
+      "frame": 58000,
+      "t": 967.633,
+      "hud": {
+        "map_name": "STORM POINT",
+        "game_number": 4,
+        "number_of_teams_alive": null,
+        "number_of_players_alive": null,
+        "ring_status": null
+      },
+      "teams": [
+        {
+          "slot": 1,
+          "name": "ELTE",
+          "hero_1": "8d8d99451d1f4f53",
+          "hero_2": "0f3f3f257bda5a07",
+          "hero_3": "0f0f0f4a4d6c6c3c",
+          "pts": 26,
+          "logo": "0018383030303818",
+          "eliminated": false
+        },
+        {
+          "slot": 2,
+          "name": "FREE",
+          "hero_1": "84cececccce6f656",
+          "hero_2": "5cfcb5911154d811",
+          "hero_3": "c5d3d9d1d8dc5c19",
+          "pts": 25,
+          "logo": "0060686464604054",
+          "eliminated": true
+        },
+        {
+          "slot": 3,
+          "name": "EE",
+          "hero_1": "eeee9ececcdadea7",
+          "hero_2": "3c6cc99195936b4b",
+          "hero_3": "787eedd5d0d123bb",
+          "pts": 3,
+          "logo": "0020383838342020",
+          "eliminated": true
+        },
+        {
+          "slot": 4,
+          "name": "NIPC",
+          "hero_1": "878f8fcf6d6e2c3c",
+          "hero_2": "051a0e1cfcbc7439",
+          "hero_3": "0f1d8fad7674383a",
+          "pts": 34,
+          "logo": "0010303830380800",
+          "eliminated": false
+        },
+        {
+          "slot": 5,
+          "name": "OBVN",
+          "hero_1": "daeecaccec132b3b",
+          "hero_2": "78cccb8a8a1a4317",
+          "hero_3": "859c949090f47918",
+          "pts": 31,
+          "logo": "1292b0b8ec6c6cc5",
+          "eliminated": true
+        },
+        {
+          "slot": 6,
+          "name": "S20",
+          "hero_1": "fceccbcccccacbdb",
+          "hero_2": "786ee9b99b1123bb",
+          "hero_3": "4ecec1cbc1663c3c",
+          "pts": 72,
+          "logo": "1818183024646418",
+          "eliminated": true
+        },
+        {
+          "slot": 7,
+          "name": "SRC",
+          "hero_1": "c6cececa4d4a6c3c",
+          "hero_2": "787ec8aa9a9b272b",
+          "hero_3": "78edd99190924b53",
+          "pts": 20,
+          "logo": "0410306478581000",
+          "eliminated": true
+        },
+        {
+          "slot": 8,
+          "name": "STAL",
+          "hero_1": "eeaebea6badadea3",
+          "hero_2": "8d8d890f1d1f4b5b",
+          "hero_3": "474e4d4f6d662c3c",
+          "pts": 18,
+          "logo": "0038383c34343800",
+          "eliminated": false
+        },
+        {
+          "slot": 9,
+          "name": "HH",
+          "hero_1": "8faf372f3bdade23",
+          "hero_2": "0f0f0d4f6d663c3c",
+          "hero_3": "0d0c090f1d0f4b5b",
+          "pts": 22,
+          "logo": "2070707870787820",
+          "eliminated": false
+        },
+        {
+          "slot": 10,
+          "name": "THUG",
+          "hero_1": "c6c6a08f8f87a1c7",
+          "hero_2": "862f563b331e1d4d",
+          "hero_3": "87072626b6b69e0e",
+          "pts": 14,
+          "logo": "0032323e3400006b",
+          "eliminated": false
+        },
+        {
+          "slot": 11,
+          "name": "BBD",
+          "hero_1": "e6eeefedf6f6a69e",
+          "hero_2": "6ceec76575351c1e",
+          "hero_3": "76eedf545d556f43",
+          "pts": 16,
+          "logo": "0010b0b0e8e8ecec",
+          "eliminated": true
+        },
+        {
+          "slot": 12,
+          "name": "CRT",
+          "hero_1": "878f97b6bbefef83",
+          "hero_2": "3d6e4d660e8f2b0b",
+          "hero_3": "878fade56526361e",
+          "pts": 2,
+          "logo": "2828787868687010",
+          "eliminated": false
+        },
+        {
+          "slot": 13,
+          "name": "DINO",
+          "hero_1": "e6eec7f6f6f09cdd",
+          "hero_2": "1c7c6d65556d5819",
+          "hero_3": "44c64e485a52d61e",
+          "pts": 18,
+          "logo": "a0a0303030100000",
+          "eliminated": true
+        },
+        {
+          "slot": 14,
+          "name": "DKK",
+          "hero_1": "8486888e8e8fa58b",
+          "hero_2": "079e1b363d6d6f91",
+          "hero_3": "0707256526a6be9e",
+          "pts": 24,
+          "logo": "10103038686c6c28",
+          "eliminated": false
+        },
+        {
+          "slot": 15,
+          "name": "GMBL",
+          "hero_1": "f6eedff6f6f1efc3",
+          "hero_2": "6666ef655525b69e",
+          "hero_3": "697675595959b395",
+          "pts": 8,
+          "logo": "0130786868e8b051",
+          "eliminated": true
+        },
+        {
+          "slot": 16,
+          "name": "JDDG",
+          "hero_1": "8787afe5a4a6b69e",
+          "hero_2": "09169595bbd9b395",
+          "hero_3": "070f17363d6d6f03",
+          "pts": null,
+          "logo": "0000243870380000",
+          "eliminated": false
+        },
+        {
+          "slot": 17,
+          "name": "MR",
+          "hero_1": "8d8e8d868e8fab8b",
+          "hero_2": "070f2d656526361e",
+          "hero_3": "070f17b6bbef6f83",
+          "pts": 1,
+          "logo": "1210303068686c6c",
+          "eliminated": false
+        },
+        {
+          "slot": 18,
+          "name": "REV",
+          "hero_1": "c4cecefed6f6965e",
+          "hero_2": "cc9dc1655571a896",
+          "hero_3": "1cf85b59595a5899",
+          "pts": 21,
+          "logo": "7070687060707440",
+          "eliminated": true
+        },
+        {
+          "slot": 19,
+          "name": "ROC",
+          "hero_1": "878f9fb6b9edef91",
+          "hero_2": "7c664c460ecf258b",
+          "hero_3": "878fade5a6a6361e",
+          "pts": 28,
+          "logo": "1028287030303008",
+          "eliminated": false
+        },
+        {
+          "slot": 20,
+          "name": "SRO",
+          "hero_1": "e6efe5f6f6a6be9e",
+          "hero_2": "6edf6555555d6e51",
+          "hero_3": "3c6e5858580b218b",
+          "pts": 0,
+          "logo": "70b0b0b0282868a9",
+          "eliminated": true
+        }
+      ]
+    },
+    {
+      "frame": 58600,
+      "t": 977.643,
+      "hud": {
+        "map_name": "STORM POINT",
+        "game_number": 4,
+        "number_of_teams_alive": null,
+        "number_of_players_alive": null,
+        "ring_status": null
+      },
+      "teams": [
+        {
+          "slot": 1,
+          "name": "ELTE",
+          "hero_1": "8d8d9d451d1f4f53",
+          "hero_2": "0f1f3f257bda5a07",
+          "hero_3": "0f0f0f4a4d6c6c3c",
+          "pts": 26,
+          "logo": "0018383030303818",
+          "eliminated": false
+        },
+        {
+          "slot": 2,
+          "name": "FREE",
+          "hero_1": "84cececccce6b65e",
+          "hero_2": "b8fcb5951156d819",
+          "hero_3": "4cd3d9d1d8dc5c18",
+          "pts": 25,
+          "logo": "0060686464604054",
+          "eliminated": true
+        },
+        {
+          "slot": 3,
+          "name": "EE",
+          "hero_1": "eeee9ececcdade87",
+          "hero_2": "7c6ccd9195936b4b",
+          "hero_3": "787eedd5d0d123bb",
+          "pts": 3,
+          "logo": "0020383838342020",
+          "eliminated": true
+        },
+        {
+          "slot": 4,
+          "name": "NIPC",
+          "hero_1": "8f8f8fcf6d6e2c3c",
+          "hero_2": "051a0e1cfc3c7439",
+          "hero_3": "0f1d8fad7674383a",
+          "pts": 36,
+          "logo": "0010303830380800",
+          "eliminated": false
+        },
+        {
+          "slot": 5,
+          "name": "OBVN",
+          "hero_1": "d8eecaccec132b3b",
+          "hero_2": "78cccb8a8a1a431f",
+          "hero_3": "859c949090f4793a",
+          "pts": 31,
+          "logo": "1292b0b8ec6c6cc5",
+          "eliminated": true
+        },
+        {
+          "slot": 6,
+          "name": "S20",
+          "hero_1": "fceccbcccccacbdb",
+          "hero_2": "f8eee9b99b1123bb",
+          "hero_3": "c6cec9cbc1663c3c",
+          "pts": 72,
+          "logo": "1818183024646418",
+          "eliminated": true
+        },
+        {
+          "slot": 7,
+          "name": "SRC",
+          "hero_1": "cecececa4d4a6c3c",
+          "hero_2": "787ee8aa9a9b232b",
+          "hero_3": "7cedc99190924b53",
+          "pts": 20,
+          "logo": "0410306478581000",
+          "eliminated": true
+        },
+        {
+          "slot": 8,
+          "name": "STAL",
+          "hero_1": "eeeebeccccdadea3",
+          "hero_2": "7cedd99999124b5b",
+          "hero_3": "46cecccbc9ea2c3c",
+          "pts": 18,
+          "logo": "0038383c34343800",
+          "eliminated": false
+        },
+        {
+          "slot": 9,
+          "name": "HH",
+          "hero_1": "8faf372f3bdade23",
+          "hero_2": "0f0f0d4f6d663c3c",
+          "hero_3": "0d0c090f1d0f4b5b",
+          "pts": 22,
+          "logo": "2070707870787820",
+          "eliminated": false
+        },
+        {
+          "slot": 10,
+          "name": "THUG",
+          "hero_1": "c6c6a08f8f87a1c5",
+          "hero_2": "860b563b331e1d4d",
+          "hero_3": "07072726b6b69e0e",
+          "pts": 14,
+          "logo": "0032323e3400006b",
+          "eliminated": false
+        },
+        {
+          "slot": 11,
+          "name": "BBD",
+          "hero_1": "e6eeefedf6f6a69e",
+          "hero_2": "6ceec76575351c1e",
+          "hero_3": "76eedf545d514f47",
+          "pts": 16,
+          "logo": "0010b0b0e8e8ecec",
+          "eliminated": true
+        },
+        {
+          "slot": 12,
+          "name": "CRT",
+          "hero_1": "878f97b6bbefef83",
+          "hero_2": "3c6e4d460e8f2b0b",
+          "hero_3": "878fade56526361e",
+          "pts": null,
+          "logo": "2828787868687010",
+          "eliminated": false
+        },
+        {
+          "slot": 13,
+          "name": "DINO",
+          "hero_1": "f6eec7f6f6f09cdd",
+          "hero_2": "9cfc4d65557d5819",
+          "hero_3": "444e4e485852961e",
+          "pts": 18,
+          "logo": "a0a0303030100000",
+          "eliminated": true
+        },
+        {
+          "slot": 14,
+          "name": "DKK",
+          "hero_1": "8486888e8e8fa58b",
+          "hero_2": "871e1b363d6d6f91",
+          "hero_3": "0707256526a6be9e",
+          "pts": 24,
+          "logo": "10103038686c6c28",
+          "eliminated": false
+        },
+        {
+          "slot": 15,
+          "name": "GMBL",
+          "hero_1": "f6eed7f6fef1efc3",
+          "hero_2": "6666ed655525b61e",
+          "hero_3": "297675595959b395",
+          "pts": 8,
+          "logo": "0130786868e8b051",
+          "eliminated": true
+        },
+        {
+          "slot": 16,
+          "name": "JDDG",
+          "hero_1": "8787afe5a4a6b69e",
+          "hero_2": "09169595bb99b395",
+          "hero_3": "070f17363d6d6f03",
+          "pts": null,
+          "logo": "0000243870380000",
+          "eliminated": false
+        },
+        {
+          "slot": 17,
+          "name": "MR",
+          "hero_1": "8d8e8d868e8fab8b",
+          "hero_2": "070f2d656526361e",
+          "hero_3": "070f17b6bbef6f83",
+          "pts": 18,
+          "logo": "1210303068686c6c",
+          "eliminated": false
+        },
+        {
+          "slot": 18,
+          "name": "REV",
+          "hero_1": "c4cecefed6f6965e",
+          "hero_2": "cc9dc1655571b8be",
+          "hero_3": "0cec5b59595a5899",
+          "pts": 21,
+          "logo": "7070687060707440",
+          "eliminated": true
+        },
+        {
+          "slot": 19,
+          "name": "ROC",
+          "hero_1": "878f9fb6bdedef91",
+          "hero_2": "3c664c460ecf258b",
+          "hero_3": "8787ade5a6a6361e",
+          "pts": 28,
+          "logo": "1028287030303008",
+          "eliminated": false
+        },
+        {
+          "slot": 20,
+          "name": "SRO",
+          "hero_1": "e6efe5f6f6a6be9e",
+          "hero_2": "6edf6555557d6e51",
+          "hero_3": "3c6e5958588f21cb",
+          "pts": 0,
+          "logo": "70b0b0b0282868a9",
+          "eliminated": true
+        }
+      ]
+    }
+  ]
+}
