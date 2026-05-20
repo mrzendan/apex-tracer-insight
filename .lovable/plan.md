@@ -1,90 +1,88 @@
-## Цель
+## Диагноз
 
-Убрать у пользователя необходимость знать тайминги колец заранее. `hud_read --rings-only` должен сам находить начало каждого кольца через "rollback от CLOSING к COUNTDOWN", а `ring_locator` — измерять геометрию для всех колец, включая R1.
+В `rings-7.json` видно три симптома:
 
-## Проблема сейчас
+1. **R1 пропал полностью.** Хотя CLOSING(1) длится ~6 минут (140s..517s) и должно дать десятки сэмплов на coarse-шаге.
+2. **Фантом R5 COUNTDOWN в t=935.9s** — но R5 CLOSING при этом отсутствует, а R4 CLOSING стоит в t=919s. Физически невозможно: пока R4 закрывается, плашка показывает "RING 4 CLOSING", а не "RING 5 IN ...".
+3. **R3 / R5 CLOSING отсутствуют**, хотя в предыдущих прогонах с тем же видео они находились в 725s / 1015s.
 
-1. **`--ring-start-sec` обязателен** — иначе coarse-pass начинается с t=0, тратит OCR на пустые кадры и часто не находит первое CLOSING (плашки нет до ~1:55).
-2. **Seed-фаза не откатывается** — если первое наблюдение R1 CLOSING на t=180s, фаза фиксируется на этом t, а не на реальном начале (1:55).
-3. **`ring_locator` теряет R1** — он измеряет "следующее кольцо" во время COUNTDOWN предыдущего; для R1 нет "предыдущего", и фаза пропускается.
+Все три проблемы — следствия одной архитектурной ошибки в `_scout_rings_with_zone`.
+
+## Корень проблемы
+
+Алгоритм сейчас:
+
+```text
+earliest_by[(ring, state)] = min(f for sample in samples if sample == (ring, state))
+→ для каждого ключа делаем _rollback_start(...) от этого f
+```
+
+Это значит, что **одна-единственная** OCR-ошибка («RING 4» прочитан как «RING 5», или таймер таймера прочитан как COUNTDOWN при том, что текущий ring другой) фиксируется как «earliest» и становится якорем для rollback. Rollback потом честно сужает окно к этому артефакту, и в JSON попадает фантомная фаза с правдоподобным временем (±0.5 кадра вокруг шумового сэмпла).
+
+Симметричная проблема: настоящие фазы могут отсутствовать, если на крупном шаге не повезло попасть в плашку из-за изменившейся HSV-маски (`S<90, V>170` строже, чем была), а одиночный шум побеждает в `earliest_by`.
 
 ## Решение
 
-### Layer 1 — Автодетекция начала колец (`hud_read.py`)
+Все правки — в `scripts/tracking/modules/hud_read/hud_read.py`, в `_scout_rings_with_zone` и `read_ring_at`. Внешний контракт (`rings.json`, CLI флаги) не меняется.
 
-**Алгоритм "find-then-rollback":**
+### 1. Считать прогон состояний, а не одиночные сэмплы
+
+Вместо `earliest_by[(ring,state)] = min f` строить **runs** — непрерывные отрезки coarse-сэмплов с одним и тем же `(ring, state)`, разрешая «пропуски» (None и опечатки) длиной не более `gap_tolerance` (например 1 сэмпл).
+
+Для каждого `(ring, state)` брать самый ранний *run длиной ≥ 2 сэмпла* как якорь для rollback. Это автоматически отбрасывает одиночные OCR-выбросы — R5@935 не выживет, потому что соседние сэмплы дают R4 CLOSING.
+
+Если ни одного run длиной ≥2 нет, но есть одиночный сэмпл — рапортуем с `confidence: "low"` и НЕ ходим в rollback (чтобы не фабриковать точное время вокруг шума).
+
+### 2. Sanity-проверка результата rollback
+
+После того как `_rollback_start` вернул `f_start`, перечитать 2–3 кадра в окне `[f_start, f_start + scout_step//2]` и убедиться, что хотя бы один даёт ровно `(target_ring, target_state)`. Если ни один не подтверждает — фазу отбрасываем (это был фантом, и rollback просто сошёлся к границе шумового сэмпла).
+
+### 3. Запрет на нарушение монотонности
+
+Кольца в Apex закрываются строго по порядку: `t_countdown_start[N+1] >= t_closed[N] >= t_closing_start[N]`. После сборки всех фаз делаем финальный фильтр:
+
+- если `t_countdown_start[N]` оказался раньше `t_closing_start[N-1]` — фаза N помечается `phantom` и удаляется;
+- если `t_closing_start[N]` раньше `t_countdown_start[N]` для того же N — `t_countdown_start[N]` сбрасывается в `null`.
+
+### 4. R1 missing — смягчить HSV-маску и сделать её адаптивной
+
+В `read_ring_at` сейчас `cv2.inRange(hsv, (0,0,170), (179,90,255))`. Плашка R1 в начале матча может иметь другой фон (нет «красного» оттенка опасности), маска `mask.mean() < 3` режет всё.
+
+Правка:
+- понизить порог отбраковки до `mask.mean() < 1.5`;
+- если основной маски мало (`mask.mean() < 6`), вторым проходом пробовать запасную маску `S<140, V>140` и брать ту, что даёт более длинный OCR-результат с матчем `RE_RING_NUM`.
+
+### 5. Дебаг-вывод для верификации
+
+В лог coarse-пасса (`tqdm.write` около строки 449) добавить пометку, попал ли сэмпл в выбранный run, или классифицирован как outlier. Это пригодится в следующий раз — мы сразу увидим, как R5@935 был отброшен.
+
+## Технические детали
 
 ```text
-1. Coarse forward-pass с крупным шагом (по умолч. 600f ≈ 10s) от t=0.
-   - Пустые кадры (mask brightness < threshold) пропускаются дёшево (без OCR).
-   - Останавливаемся, как только нашли первое валидное RING N STATE.
-
-2. Для КАЖДОГО обнаруженного состояния `RING N CLOSING`:
-   a) Rollback к началу CLOSING:
-      - шаг назад reverse_step (по умолч. 300f), читаем state;
-      - пока state == CLOSING (тот же ring) — продолжаем;
-      - как только state != CLOSING (COUNTDOWN/CLOSED/None) — бинпоиск
-        в окне [last_other, first_closing] до кадровой точности.
-      → даёт точный t_closing_start[N].
-   b) Rollback дальше для t_countdown_start[N]:
-      - продолжаем назад от t_closing_start, ищем границу
-        COUNTDOWN(N) → (что-то иное: CLOSED(N-1) или None);
-      - бинпоиск даёт t_countdown_start[N] (== t_closed[N-1]).
-
-3. Forward от первого найденного CLOSING крупным шагом — собираем все
-   последующие переходы (R1→R2→…), для каждого нового CLOSING повторяем
-   rollback из п.2.
+runs = build_runs(samples, gap_tolerance=1)   # list[{ring,state,f_start,f_end,n_samples}]
+earliest_runs = {key: min runs by f_start where n_samples >= 2}
+fallback singles → confidence="low", no rollback, transition only as informational
 ```
 
-**Изменения в коде `hud_read.py`:**
+`build_runs` обходит samples по порядку, начинает новый run при смене `(ring,state)`; единичные «отличающиеся» сэмплы внутри run-а игнорируются, если суммарный gap ≤ `gap_tolerance`.
 
-- `scout_rings()`: переписать. Убрать предположение, что окно сканирования = окно колец. Вместо seed_phase делать настоящий rollback.
-- Новая функция `_rollback_to_state_start(cap, ring_zone, f_known, expected_state, ring_n, step, max_back, fps, lang)` — возвращает кадр первой встречи `expected_state` для `ring_n`. Использует крупный шаг назад + бинпоиск.
-- `_derive_ring_constants()` остаётся как fallback для случаев, когда rollback упёрся в t=0 или в "плашки нет".
-- Сделать `--ring-start-sec` опциональным (default 0). Параметр оставить — может пригодиться для отладки.
-- Префильтр пустого кадра (`mask.mean() < 4` уже есть в `read_ring_at`) — гарантирует быстрый скан до появления плашки.
-
-### Layer 2 — Геометрия R1 (`ring_locator.py`)
-
-Сейчас окно для R1 пропускается, потому что нет `prev` фазы. Логика:
-
-- Для R1 окно сэмплов = `[max(0, t_closing_start[1] − median_countdown), t_closing_start[1] − 0.5]`.
-  - `median_countdown` берётся из `rings.json.derived` (его уже считает `_derive_ring_constants`).
-  - Если `derived.median_countdown` отсутствует — берём фиксированное окно (например, 30s до начала закрытия).
-- Для R2..RN — оставить текущую логику (окно между `t_closed[N-1]` и `t_closing_start[N]`).
-
-### Layer 3 — UI (без изменений API)
-
-`src/lib/test-game-data.ts` уже читает `rings.geometry.phases[].ring` — после фикса R1 появится в массиве автоматически.
-
-## Что НЕ трогаем
-
-- `push.ps1` / `run.ps1` остаются с теми же параметрами (`--ring-start-sec` всё ещё валиден, но необязателен).
-- `sync_to_ui.py`, `eliminations` логика, OCR-функции `read_ring_at` / `RE_RING_NUM` — без изменений.
-- `track_teams`, гомография — отдельная подсистема.
+Sanity-проверка после rollback вызывает уже существующий `read_ring_at` 2–3 раза, бюджет +6 OCR-вызовов на ring — пренебрежимо на фоне coarse-пасса.
 
 ## Команды для проверки
 
 ```powershell
-# 1. Полный auto-detect колец (без --ring-start-sec)
 powershell -ExecutionPolicy Bypass -File `
   scripts\tracking\modules\hud_read\run.ps1 `
-  -Video scripts\tracking\game.mp4 -RingsOnly
-
-# 2. Геометрия (включая R1)
-powershell -ExecutionPolicy Bypass -File `
-  scripts\tracking\modules\ring_locator\run.ps1 `
-  -Video scripts\tracking\game.mp4 `
-  -Rings scripts\tracking\modules\hud_read\reports\rings.json `
-  -Cuts  scripts\tracking\modules\find_cuts\reports\cuts.json `
-  -Zones scripts\tracking\configs\zones.vod.json `
-  -MinimapZone "camera roi" -SyncUI
+  -Video scripts\tracking\game.mp4 -RingsOnly -RingDebugSec 30
 ```
 
-Ожидаемо: `phases[0].t_closing_start ≈ 115s` (R1 в 1:55) и `geometry.phases[0].ring == 1`.
+Ожидаемо в `rings.json`:
+- R1 CLOSING присутствует (~140s);
+- R5 COUNTDOWN в районе ~935 отсутствует или помечен low/phantom;
+- R3 CLOSING (~725s) и R5 CLOSING (~1015s) восстановлены;
+- порядок монотонный: для каждого N выполнено `t_countdown_start[N] ≤ t_closing_start[N]`, и `t_closing_start[N] < t_countdown_start[N+1]`.
 
 ## Файлы
 
-- `scripts/tracking/modules/hud_read/hud_read.py` — переработать `scout_rings`, добавить `_rollback_to_state_start`.
-- `scripts/tracking/modules/ring_locator/ring_locator.py` — добавить ветку для R1 (окно от `median_countdown`).
-- `scripts/tracking/modules/hud_read/README.md` — обновить описание режима.
+- `scripts/tracking/modules/hud_read/hud_read.py` — `_scout_rings_with_zone`, `read_ring_at`, новые хелперы `_build_runs`, `_verify_rollback`, финальный `_enforce_monotonic`.
+- Остальные файлы (`push.ps1`, `run.ps1`, `sync_to_ui.py`, UI) не меняются.

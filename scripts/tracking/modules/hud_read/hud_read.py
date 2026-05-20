@@ -292,25 +292,38 @@ def read_ring_at(cap: cv2.VideoCapture, f: int, zone: dict,
     if crop.size == 0:
         return None
     # Плашка кольца Apex — стилизованный белый текст с обводкой на
-    # красном/тёмном фоне. Изолируем именно БЕЛЫЕ пиксели:
-    # низкая насыщенность (S) + высокая яркость (V). Это убирает
-    # красный фон, который при простом V>180 тоже попадал в маску.
+    # красном/тёмном фоне. Изолируем БЕЛЫЕ пиксели: низкая S + высокая V.
+    # У R1 фон может быть нейтральным, поэтому если строгая маска даёт
+    # мало пикселей — пробуем «мягкую» и берём лучший OCR.
     hsv = cv2.cvtColor(crop, cv2.COLOR_BGR2HSV)
-    s, v = hsv[:, :, 1], hsv[:, :, 2]
-    mask = cv2.inRange(hsv, (0, 0, 170), (179, 90, 255))
-    if mask.mean() < 3:  # плашки нет вовсе
+    strict = cv2.inRange(hsv, (0, 0, 170), (179, 90, 255))
+    if strict.mean() < 1.5:
         return None
-    # Готовим контрастный ч/б: чёрный текст на белом фоне (любит tesseract).
-    h0, w0 = crop.shape[:2]
-    scale = max(2, int(round(64 / max(1, h0))))
-    big = cv2.resize(mask, (w0 * scale, h0 * scale),
-                     interpolation=cv2.INTER_CUBIC)
-    inv = cv2.bitwise_not(big)
-    inv_bgr = cv2.cvtColor(inv, cv2.COLOR_GRAY2BGR)
-    # Передаём 3-канальное изображение, чтобы preprocess_for_ocr не
-    # пересжимал маску повторно (Otsu сам разберётся).
-    txt = ocr(inv_bgr, lang, digits_only=False, alnum_only=True,
-              calib_key=(zone["tag"], zone["name"]))
+    candidates = [strict]
+    if strict.mean() < 6:
+        soft = cv2.inRange(hsv, (0, 0, 140), (179, 140, 255))
+        if soft.mean() >= 1.5:
+            candidates.append(soft)
+
+    def _ocr_mask(mask: np.ndarray) -> str:
+        h0, w0 = mask.shape[:2]
+        scale = max(2, int(round(64 / max(1, h0))))
+        big = cv2.resize(mask, (w0 * scale, h0 * scale),
+                         interpolation=cv2.INTER_CUBIC)
+        inv = cv2.bitwise_not(big)
+        inv_bgr = cv2.cvtColor(inv, cv2.COLOR_GRAY2BGR)
+        return ocr(inv_bgr, lang, digits_only=False, alnum_only=True,
+                   calib_key=(zone["tag"], zone["name"]))
+
+    txt = ""
+    for m in candidates:
+        t = _ocr_mask(m)
+        # Выбираем тот OCR-выхлоп, где сразу видна "RING N".
+        if RE_RING_NUM.search(t.upper()):
+            txt = t
+            break
+        if len(t) > len(txt):
+            txt = t
     if not txt:
         return None
     up = txt.upper()
@@ -430,6 +443,90 @@ def save_ring_debug_screenshots(cap: cv2.VideoCapture, zones_scaled: list[dict],
     return saved
 
 
+def _build_runs(samples: list[tuple[int, dict | None]],
+                gap_tolerance: int = 1) -> list[dict]:
+    """Из coarse-сэмплов строим непрерывные runs одного (ring,state).
+    Одиночные «выбросы» (≠ текущему run) длиной ≤ gap_tolerance
+    игнорируются — это либо None-кадр, либо OCR-ошибка.
+    Возвращает list[{ring, state, f_start, f_end, n_samples, samples:[f,...]}].
+    """
+    runs: list[dict] = []
+    cur: dict | None = None
+    pending_gap = 0  # сколько подряд сэмплов «не наш» внутри run
+    for f, rs in samples:
+        key = _ring_state_key(rs)
+        if cur is None:
+            if key is None:
+                continue
+            cur = {
+                "ring": key[0], "state": key[1],
+                "f_start": f, "f_end": f, "n_samples": 1,
+                "samples": [f],
+            }
+            pending_gap = 0
+            continue
+        cur_key = (cur["ring"], cur["state"])
+        if key == cur_key:
+            cur["f_end"] = f
+            cur["n_samples"] += 1
+            cur["samples"].append(f)
+            pending_gap = 0
+        else:
+            pending_gap += 1
+            if pending_gap > gap_tolerance:
+                runs.append(cur)
+                if key is None:
+                    cur = None
+                else:
+                    cur = {
+                        "ring": key[0], "state": key[1],
+                        "f_start": f, "f_end": f, "n_samples": 1,
+                        "samples": [f],
+                    }
+                pending_gap = 0
+    if cur is not None:
+        runs.append(cur)
+    return runs
+
+
+def _enforce_monotonic(phases: list[dict]) -> tuple[list[dict], list[dict]]:
+    """Фильтр: кольца закрываются строго по порядку.
+    Возвращает (clean_phases, rejected_phases).
+    """
+    if not phases:
+        return phases, []
+    by_ring = {p["ring"]: p for p in phases}
+    rings_sorted = sorted(by_ring)
+    rejected: list[dict] = []
+    # 1) внутри одной фазы: countdown ≤ closing.
+    for n in rings_sorted:
+        p = by_ring[n]
+        tc = p.get("t_countdown_start")
+        tcl = p.get("t_closing_start")
+        if tc is not None and tcl is not None and tc > tcl + 1.0:
+            p["t_countdown_start"] = None
+            p["countdown_start_f"] = None
+            p.setdefault("confidence", {})["COUNTDOWN"] = "rejected_monotonic"
+    # 2) межфазная монотонность: t_countdown_start[N+1] > t_closing_start[N].
+    last_anchor: float | None = None
+    for n in rings_sorted:
+        p = by_ring[n]
+        anchor = p.get("t_closing_start") or p.get("t_countdown_start")
+        if anchor is None:
+            continue
+        if last_anchor is not None and anchor < last_anchor:
+            # эта фаза «вернулась в прошлое» — фантом.
+            rejected.append(p)
+            continue
+        last_anchor = max(filter(None, [
+            p.get("t_closing_start"), p.get("t_countdown_start"),
+            last_anchor,
+        ]))
+    rejected_rings = {r["ring"] for r in rejected}
+    clean = [p for p in phases if p["ring"] not in rejected_rings]
+    return clean, rejected
+
+
 def _scout_rings_with_zone(cap, ring_zone, start_f, end_f, fps,
                            scout_step, lang, refine_budget, refine_linear):
     """Внутренняя реализация scout_rings — вынесена, чтобы не дублировать поиск зоны."""
@@ -451,17 +548,28 @@ def _scout_rings_with_zone(cap, ring_zone, start_f, end_f, fps,
         f += scout_step
     pbar.close()
 
-    # Для каждого ring N собираем все samples, где видели его в этом state.
-    # earliest_by[(N, STATE)] = минимальный кадр, на котором мы это видели.
-    # latest_other_by[(N, STATE)] = максимальный кадр ДО earliest_by,
-    #     где видели НЕ (N, STATE) (или None/другой ring/state).
-    earliest_by: dict[tuple[int, str], int] = {}
-    for fi, si in samples:
-        if not si:
-            continue
-        key = (si["ring"], si["state"])
-        if key not in earliest_by or fi < earliest_by[key]:
-            earliest_by[key] = fi
+    # Строим runs — устойчивые отрезки одного (ring,state).
+    # Это автоматически отбрасывает одиночные OCR-выбросы
+    # (например, "RING 4" → "RING 5" в одном кадре посреди CLOSING(4)).
+    runs = _build_runs(samples, gap_tolerance=1)
+    # earliest run для каждого (ring,state) — самый ранний и длиной >= 2.
+    earliest_runs: dict[tuple[int, str], dict] = {}
+    singles: dict[tuple[int, str], int] = {}  # fallback на одиночки
+    rejected_singles: list[tuple[int, int, str]] = []  # (f, ring, state)
+    for r in runs:
+        key = (r["ring"], r["state"])
+        if r["n_samples"] >= 2:
+            if key not in earliest_runs or r["f_start"] < earliest_runs[key]["f_start"]:
+                earliest_runs[key] = r
+        else:
+            if key not in singles or r["f_start"] < singles[key]:
+                singles[key] = r["f_start"]
+            rejected_singles.append((r["f_start"], r["ring"], r["state"]))
+    for f_out, ring_out, st_out in rejected_singles:
+        # Если для этого ключа есть нормальный run — single был шумом.
+        if (ring_out, st_out) in earliest_runs:
+            tqdm.write(f"[ring-scout] outlier dropped: f={f_out} "
+                       f"t={f_out/fps:.1f}s R{ring_out} {st_out}")
 
     def _rollback_start(target_ring: int, target_state: str,
                         f_hi_known: int) -> tuple[int | None, str]:
@@ -524,11 +632,24 @@ def _scout_rings_with_zone(cap, ring_zone, start_f, end_f, fps,
             confidence = "medium"
         return (f_hi, confidence)
 
-    # Список (ring, state, f_observed) для rollback. Только CLOSING/COUNTDOWN/CLOSED.
-    rings_to_resolve = sorted(
-        {r for (r, _s) in earliest_by.keys()}
-    )
+    def _verify_phase(target_ring: int, target_state: str,
+                      f_start: int) -> bool:
+        """Sanity-check: после rollback хотя бы один из 3 кадров вперёд
+        в окне [f_start, f_start + scout_step//2] должен подтвердить state."""
+        window = max(2, scout_step // 2)
+        probes = [f_start, f_start + window // 4, f_start + window // 2]
+        for fp in probes:
+            if fp >= end_f:
+                continue
+            rs = read_ring_at(cap, fp, ring_zone, lang)
+            if rs and rs["ring"] == target_ring and rs["state"] == target_state:
+                return True
+        return False
+
+    # Только ring-ы, у которых есть хоть один устойчивый run.
+    rings_to_resolve = sorted({k[0] for k in earliest_runs.keys()})
     print(f"[hud_read][ring-scout] coarse found rings: {rings_to_resolve} "
+          f"(via {len(earliest_runs)} runs, {len(singles)} singles ignored) "
           f"(rollback budget binary≤{refine_budget} + linear≤{refine_linear})")
 
     phases_map: dict[int, dict] = {}
@@ -545,11 +666,18 @@ def _scout_rings_with_zone(cap, ring_zone, start_f, end_f, fps,
             ("CLOSING",   "closing_start_f",   "t_closing_start"),
             ("CLOSED",    "closed_f",          "t_closed"),
         ):
-            f_obs = earliest_by.get((ring_n, state))
-            if f_obs is None:
+            run = earliest_runs.get((ring_n, state))
+            if run is None:
                 continue
+            f_obs = run["f_start"]
             f_start, conf = _rollback_start(ring_n, state, f_obs)
             if f_start is None:
+                continue
+            # Sanity: подтверждаем, что найденная точка действительно
+            # принадлежит фазе (а не сошлась к границе шума).
+            if not _verify_phase(ring_n, state, f_start):
+                tqdm.write(f"  R{ring_n} {state}: VERIFY-FAIL "
+                           f"@f={f_start} t={f_start/fps:.2f}s — пропускаем")
                 continue
             ph[field_f] = f_start
             ph[field_t] = round(f_start / fps, 3)
@@ -564,10 +692,17 @@ def _scout_rings_with_zone(cap, ring_zone, start_f, end_f, fps,
             })
             tqdm.write(
                 f"  R{ring_n} {state}: f={f_start} t={f_start/fps:.2f}s "
-                f"(obs@t={f_obs/fps:.1f}s) {conf}"
+                f"(run x{run['n_samples']} @t={f_obs/fps:.1f}s) {conf}"
             )
 
     phases = [phases_map[k] for k in sorted(phases_map)]
+    phases, rejected = _enforce_monotonic(phases)
+    if rejected:
+        for p in rejected:
+            tqdm.write(f"[ring-scout] phantom phase rejected by monotonic: R{p['ring']}")
+        # вычистить transitions с этих ring-ов
+        rej_rings = {p["ring"] for p in rejected}
+        transitions = [tr for tr in transitions if tr["to"]["ring"] not in rej_rings]
     derived = _derive_ring_constants(phases, fps)
     return {"transitions": transitions, "phases": phases, "derived": derived}
 
