@@ -822,6 +822,19 @@ def main():
         print(f"[info] anchors: {sum(1 for a in anchors_map.values() if a.get('conf') in ('HIGH','MED'))} HIGH/MED, {sum(1 for a in anchors_map.values() if a.get('conf') == 'LOW')} LOW")
     frame_step = int(args.frame_step or cfg.get("frame_step", 3))
 
+    # Per-slot local trackers (the actual detection workhorse). They seed from
+    # motion_detect anchors when available and project canonical → frame each step.
+    slot_cfg = dict(det_cfg)  # inherit min/max area, morph_kernel as defaults
+    slot_cfg.update(cfg.get("slot_tracker", {}) or {})
+    slot_trackers: dict[str, SlotTracker] = {}
+    for t in teams:
+        a = anchors_map.get(t.id, {}) or {}
+        init_canon = None
+        if a.get("canonical_px") is not None:
+            init_canon = (float(a["canonical_px"][0]), float(a["canonical_px"][1]))
+        slot_trackers[t.id] = SlotTracker(t, slot_cfg, init_canon)
+    print(f"[info] slot trackers: {sum(1 for s in slot_trackers.values() if s.canonical_px is not None)}/{len(slot_trackers)} seeded with canonical anchor")
+
     cap = cv2.VideoCapture(str(args.video))
     if not cap.isOpened():
         print("[err] cv2 не открыл видео", file=sys.stderr); sys.exit(2)
@@ -901,44 +914,43 @@ def main():
                     "rotation_deg": round(decomp["rotation_deg"], 2),
                     "pan_canonical": [round(cx_can, 1), round(cy_can, 1)],
                 }
-                blobs = detect_team_blobs(frame, teams, det_cfg)
-                world_dets = []
-                for b in blobs:
-                    cx_c, cy_c = map_point(H, b["frame_px"])
-                    wx, wy = map_point(cmap.px_to_world, (cx_c, cy_c))
-                    angle_world = None
-                    if b["angle_frame_deg"] is not None:
-                        # повернуть единичный вектор стрелки через H и измерить угол на карте
-                        a = math.radians(b["angle_frame_deg"])
-                        p0 = b["frame_px"]
-                        p1 = (p0[0] + 10 * math.cos(a), p0[1] + 10 * math.sin(a))
-                        cx1, cy1 = map_point(H, p1)
-                        wx1, wy1 = map_point(cmap.px_to_world, (cx1, cy1))
-                        angle_world = math.degrees(math.atan2(wy1 - wy, wx1 - wx))
-                    world_dets.append({
-                        "team_id": b["team_id"],
-                        "frame_px": [round(b["frame_px"][0], 1), round(b["frame_px"][1], 1)],
-                        "canonical_px": [round(cx_c, 1), round(cy_c, 1)],
-                        "world": [wx, wy],
-                        "angle_world_deg": angle_world,
-                        "score": b["score"],
-                    })
+                # ---- Per-slot local detection in frame ROI ---------------
                 t_now = (frame_idx - start_frame) / fps
-                trk.step(world_dets, t_now)
+                world_dets: list[dict] = []
+                slot_snaps: list[dict] = []
+                for t in teams:
+                    st = slot_trackers[t.id]
+                    snap = st.update(frame, H)
+                    if snap is None:
+                        continue
+                    slot_snaps.append(snap)
+                    if st.canonical_px is not None and st.state in ("tracked", "hold", "low_conf"):
+                        wx, wy = map_point(cmap.px_to_world, st.canonical_px)
+                        world_dets.append({
+                            "team_id": t.id,
+                            "world": (wx, wy),
+                            "score": st.last_score,
+                            "angle_world_deg": None,
+                        })
+                # WorldTracker остаётся только для wipe-логики (длительное отсутствие).
+                # Feed it only confirmed (tracked) detections to avoid wipe-resets on hold.
+                tracked_dets = [d for d in world_dets if any(
+                    s["team_id"] == d["team_id"] and s["state"] == "tracked" for s in slot_snaps
+                )]
+                trk.step(tracked_dets, t_now)
+                # Merge WorldTracker wipe state with slot snapshots.
+                wipe_states = {tr.team_id: tr for tr in trk.tracks.values()}
                 tracks_world = []
-                # обогатим snapshot последними измеренными canonical_px / frame_px (для рендера)
-                snap = trk.snapshot()
-                last_meas = {}
-                for d in world_dets:
-                    cur = last_meas.get(d["team_id"])
-                    if cur is None or d.get("score", 0) > cur.get("score", 0):
-                        last_meas[d["team_id"]] = d
-                for s in snap:
-                    meas = last_meas.get(s["team_id"])
-                    if meas is not None:
-                        s["canonical_px"] = meas["canonical_px"]
-                        s["frame_px"] = meas["frame_px"]
-                    tracks_world.append(s)
+                for snap in slot_snaps:
+                    tr = wipe_states.get(snap["team_id"])
+                    if tr is not None and tr.wiped_at_t is not None:
+                        snap["state"] = "lost"
+                        snap["state_reason"] = f"wiped@{tr.wiped_at_t}"
+                    # world coord (from current canonical)
+                    if snap.get("canonical_px") is not None:
+                        wx, wy = map_point(cmap.px_to_world, snap["canonical_px"])
+                        snap["world"] = [round(wx, 2), round(wy, 2)]
+                    tracks_world.append(snap)
 
             record = {
                 "t": round((frame_idx - start_frame) / fps, 3),
