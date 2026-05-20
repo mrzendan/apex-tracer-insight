@@ -291,25 +291,35 @@ def read_ring_at(cap: cv2.VideoCapture, f: int, zone: dict,
     crop = frame[y:y + h, x:x + w]
     if crop.size == 0:
         return None
-    # Плашка кольца Apex — стилизованный белый текст с обводкой на
-    # красном/тёмном фоне. Изолируем БЕЛЫЕ пиксели: низкая S + высокая V.
-    # У R1 фон может быть нейтральным, поэтому если строгая маска даёт
-    # мало пикселей — пробуем «мягкую» и берём лучший OCR.
+    # Плашка кольца Apex: КРАСНЫЙ текст ("RING N CLOSING / IN m:ss / CLOSED")
+    # на светлом/прозрачном фоне. Раньше маска искала белые пиксели — это
+    # ловило фон, а не текст, поэтому OCR падал и COUNTDOWN не находился.
+    # Теперь изолируем красные пиксели по двум диапазонам H.
     hsv = cv2.cvtColor(crop, cv2.COLOR_BGR2HSV)
-    strict = cv2.inRange(hsv, (0, 0, 170), (179, 90, 255))
-    if strict.mean() < 1.5:
+    red1 = cv2.inRange(hsv, (0, 120, 80), (12, 255, 255))
+    red2 = cv2.inRange(hsv, (168, 120, 80), (179, 255, 255))
+    red = cv2.bitwise_or(red1, red2)
+    # Резерв на случай светлой COUNTDOWN-плашки/смены палитры — белый текст.
+    white = cv2.inRange(hsv, (0, 0, 200), (179, 70, 255))
+    candidates = []
+    if red.mean() >= 1.5:
+        candidates.append(red)
+    if white.mean() >= 1.5 and abs(white.mean() - red.mean()) > 1.0:
+        # Используем белую только если она НЕ просто фон (не доминирует
+        # сильно — плашка иначе была бы вся белая).
+        if white.mean() < 60:
+            candidates.append(white)
+    if not candidates:
         return None
-    candidates = [strict]
-    if strict.mean() < 6:
-        soft = cv2.inRange(hsv, (0, 0, 140), (179, 140, 255))
-        if soft.mean() >= 1.5:
-            candidates.append(soft)
 
     def _ocr_mask(mask: np.ndarray) -> str:
         h0, w0 = mask.shape[:2]
         scale = max(2, int(round(64 / max(1, h0))))
         big = cv2.resize(mask, (w0 * scale, h0 * scale),
                          interpolation=cv2.INTER_CUBIC)
+        # После resize маска уже не строго бинарная — порог + инвертирование,
+        # чтобы текст стал чёрным на белом фоне (как любит tesseract).
+        _, big = cv2.threshold(big, 80, 255, cv2.THRESH_BINARY)
         inv = cv2.bitwise_not(big)
         inv_bgr = cv2.cvtColor(inv, cv2.COLOR_GRAY2BGR)
         return ocr(inv_bgr, lang, digits_only=False, alnum_only=True,
