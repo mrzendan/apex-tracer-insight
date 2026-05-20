@@ -8,12 +8,15 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sys
+import time
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
 import cv2
 import numpy as np
+from tqdm import tqdm
 
 try:
     import pytesseract
@@ -30,10 +33,21 @@ IMAGE_NAMES = {"logo", "hero 1", "hero 2", "hero 3"}
 # Поля, состоящие только из цифр.
 DIGIT_NAMES = {"pts", "game number", "number of teams alive", "number of players alive"}
 
+# Поля, которые в матче не меняются — достаточно зафиксировать первые стабильные значения.
+# Для команд "name"/"logo" и для HUD "map name"/"game number".
+STATIC_TEAM_NAMES = {"name", "logo"}
+STATIC_HUD_NAMES = {"map name", "game number"}
+
+# Известные карты Apex — для snap-фикса OCR-ошибок (G↔C, O↔0 и т.п.).
+KNOWN_MAPS = [
+    "STORM POINT", "WORLDS EDGE", "KINGS CANYON",
+    "OLYMPUS", "BROKEN MOON", "E-DISTRICT",
+]
+
 RE_MATCH = re.compile(r"MATCH\s+(\d+)", re.I)
 RE_TEAMS = re.compile(r"(\d+)\s*TEAMS?", re.I)
 RE_PLAYERS = re.compile(r"(\d+)\s*PLAYERS?", re.I)
-RE_RING = re.compile(r"RING\s*(\d+).*?(CLOSING|COUNTDOWN)", re.I)
+RE_RING = re.compile(r"RING\s*(\d+).*?(CLOSING|COUNTDOWN|CLOSED|OPEN)", re.I)
 RE_INT = re.compile(r"-?\d+")
 RE_ELIM = re.compile(r"ELIMIN", re.I)
 
@@ -78,31 +92,75 @@ def preprocess_for_ocr(crop: np.ndarray) -> np.ndarray:
     if crop.size == 0:
         return crop
     h, w = crop.shape[:2]
-    scale = max(1, int(round(48 / max(1, h))))  # тянем до ~48px высоты строки
+    # Тянем до ~64px высоты строки — мелкие цифры pts вроде "11" иначе склеиваются.
+    scale = max(2, int(round(64 / max(1, h))))
     big = cv2.resize(crop, (w * scale, h * scale), interpolation=cv2.INTER_CUBIC)
     gray = cv2.cvtColor(big, cv2.COLOR_BGR2GRAY) if big.ndim == 3 else big
-    # HUD у Apex — белый/жёлтый текст на тёмном; берём максимум контраста
-    # обоих полярностей и оставляем чёрный текст на белом фоне.
+    # HUD у Apex — белый/жёлтый текст на тёмном; пробуем обе полярности.
     _, th1 = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     th2 = cv2.bitwise_not(th1)
-    # Берём ту бинарку, где меньше чёрных пикселей (текст обычно тоньше фона).
     pick = th1 if (th1 == 0).sum() < (th2 == 0).sum() else th2
+    # Чуть утолщаем штрихи — помогает мелким одиночным цифрам.
+    pick = cv2.copyMakeBorder(pick, 8, 8, 8, 8, cv2.BORDER_CONSTANT, value=255)
     return pick
 
 
-def ocr(crop: np.ndarray, lang: str, digits_only: bool) -> str:
+def ocr(crop: np.ndarray, lang: str, digits_only: bool, alnum_only: bool = False) -> str:
     if pytesseract is None or crop.size == 0:
         return ""
     prep = preprocess_for_ocr(crop)
-    config = "--psm 7"
+    whitelist = ""
     if digits_only:
-        config += " -c tessedit_char_whitelist=0123456789"
-    try:
-        txt = pytesseract.image_to_string(prep, lang=lang, config=config)
-    except Exception as e:  # pragma: no cover
-        print(f"[hud_read] tesseract error: {e}")
-        return ""
-    return txt.strip()
+        whitelist = "0123456789"
+    elif alnum_only:
+        whitelist = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 '-"
+    # Пробуем несколько PSM и берём непустой/самый длинный результат.
+    psms = (7, 8, 6) if not digits_only else (8, 7, 10)
+    best = ""
+    for psm in psms:
+        cfg = f"--psm {psm} --oem 1"
+        if whitelist:
+            cfg += f" -c tessedit_char_whitelist={whitelist}"
+        try:
+            txt = pytesseract.image_to_string(prep, lang=lang, config=cfg).strip()
+        except Exception as e:  # pragma: no cover
+            print(f"[hud_read] tesseract error: {e}", file=sys.stderr)
+            return ""
+        if len(txt) > len(best):
+            best = txt
+    return best
+
+
+def snap_to_known(text: str, vocab: list[str], max_dist: int = 2) -> str | None:
+    """Возвращает ближайшее слово из vocab по расстоянию Левенштейна, либо None."""
+    if not text:
+        return None
+    t = re.sub(r"[^A-Z' -]", "", text.upper()).strip()
+    if not t:
+        return None
+    if t in vocab:
+        return t
+    # маленькая реализация расстояния (vocab короткий)
+    def lev(a: str, b: str) -> int:
+        if a == b:
+            return 0
+        if not a:
+            return len(b)
+        if not b:
+            return len(a)
+        prev = list(range(len(b) + 1))
+        for i, ca in enumerate(a, 1):
+            cur = [i]
+            for j, cb in enumerate(b, 1):
+                cur.append(min(cur[-1] + 1, prev[j] + 1, prev[j - 1] + (ca != cb)))
+            prev = cur
+        return prev[-1]
+    best, best_d = None, max_dist + 1
+    for w in vocab:
+        d = lev(t, w)
+        if d < best_d:
+            best, best_d = w, d
+    return best
 
 
 def parse_field(tag: str, name: str, text: str) -> Any:
@@ -126,7 +184,9 @@ def parse_field(tag: str, name: str, text: str) -> Any:
     if name == "eliminated":
         return bool(RE_ELIM.search(text))
     if name == "map name":
-        return re.sub(r"[^A-Z' ]", "", text.upper()).strip() or None
+        cleaned = re.sub(r"[^A-Z' -]", "", text.upper()).strip()
+        snapped = snap_to_known(cleaned, KNOWN_MAPS, max_dist=3)
+        return snapped or (cleaned or None)
     if name == "name":  # team tag, e.g. "TSM"
         return re.sub(r"[^A-Z0-9 ]", "", text.upper()).strip() or None
     return text or None
