@@ -190,6 +190,56 @@ def detect_next_ring(
     return norm
 
 
+def _red_mask(bgr: np.ndarray) -> np.ndarray:
+    """HSV-маска для красной окантовки уже закрытого кольца на миникарте.
+    Красный «обнимает» 0°, поэтому две полосы Hue."""
+    hsv = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
+    m1 = cv2.inRange(hsv, (0,   110,  90), (10,  255, 255))
+    m2 = cv2.inRange(hsv, (170, 110,  90), (180, 255, 255))
+    mask = m1 | m2
+    mask = cv2.morphologyEx(
+        mask, cv2.MORPH_CLOSE,
+        cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)),
+    )
+    return mask
+
+
+def detect_closed_red_ring(
+    minimap: np.ndarray,
+    return_debug: bool = False,
+):
+    """Найти красную окружность уже зафиксированного (закрытого) кольца.
+    Тот же контракт, что detect_next_ring."""
+    if minimap.size == 0:
+        return None
+    h, w = minimap.shape[:2]
+    mask = _red_mask(minimap)
+    blurred = cv2.GaussianBlur(mask, (5, 5), 1.5)
+    min_r = max(6, min(w, h) // 20)
+    max_r = max(min_r + 4, min(w, h) // 2)
+    circles = cv2.HoughCircles(
+        blurred, cv2.HOUGH_GRADIENT, dp=1.2,
+        minDist=max(20, min(w, h) // 3),
+        param1=80, param2=18, minRadius=min_r, maxRadius=max_r,
+    )
+    if circles is None:
+        return None
+    best, best_score = None, -1.0
+    for c in circles[0]:
+        cx, cy, r = float(c[0]), float(c[1]), float(c[2])
+        score = _ring_score(mask, cx, cy, r, n=72)
+        if score > best_score:
+            best_score = score
+            best = (cx, cy, r)
+    if best is None or best_score < 0.45:
+        return None
+    cx, cy, r = best
+    norm = (cx / w, cy / h, r / max(w, h))
+    if return_debug:
+        return (*norm, cx, cy, r, mask)
+    return norm
+
+
 def _ring_score(mask: np.ndarray, cx: float, cy: float, r: float,
                 n: int = 36) -> float:
     h, w = mask.shape[:2]
