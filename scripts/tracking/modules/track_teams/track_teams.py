@@ -338,6 +338,9 @@ class Track:
     miss: int = 0
     state: str = "alive"
     last_conf: float = 1.0
+    slot_id: Optional[str] = None
+    last_seen_t: float = 0.0
+    wiped_at_t: Optional[float] = None
 
     def predict(self):
         self.x += self.vx
@@ -365,8 +368,29 @@ class WorldTracker:
         self.gate = float(cfg.get("gating_world_dist", 50.0))
         self.q = float(cfg.get("process_noise", 1.0))
         self.r = float(cfg.get("measurement_noise", 4.0))
+        # wipe detection
+        wcfg = cfg.get("wipe", {}) or {}
+        self.wipe_absence_sec = float(wcfg.get("absence_sec", 45.0))
+        self.wipe_respect_cuts = bool(wcfg.get("respect_cuts", True))
+        # cuts handled by main loop (it freezes last_seen_t around camera cuts)
+        self.slot_anchors: dict[str, dict] = {}  # team_id -> anchor info
+        self.cur_t: float = 0.0
+        self.new_wipes: list[dict] = []
 
-    def step(self, detections_world: list[dict]):
+    def set_anchors(self, anchors: dict[str, dict]):
+        self.slot_anchors = anchors or {}
+        for team_id, a in self.slot_anchors.items():
+            if a.get("conf") in ("HIGH", "MED") and a.get("world") is not None:
+                wx, wy = a["world"]
+                self.tracks[team_id] = Track(
+                    team_id=team_id, x=wx, y=wy,
+                    state="alive", last_conf=1.0 if a["conf"] == "HIGH" else 0.7,
+                    slot_id=a.get("slot_id"), last_seen_t=0.0,
+                )
+
+    def step(self, detections_world: list[dict], t: float):
+        self.cur_t = t
+        self.new_wipes = []
         # 1 predict
         for tr in self.tracks.values():
             tr.predict()
@@ -375,12 +399,27 @@ class WorldTracker:
                 tr.state = "low_conf"
             if tr.miss > self.max_gap:
                 tr.state = "lost"
+            # 1b wipe detection: long unbroken absence -> mark wiped
+            if (tr.wiped_at_t is None
+                    and tr.last_seen_t > 0
+                    and (t - tr.last_seen_t) >= self.wipe_absence_sec):
+                tr.wiped_at_t = round(t, 2)
+                tr.state = "lost"
+                self.new_wipes.append({
+                    "slot_id": tr.slot_id or tr.team_id,
+                    "team_id": tr.team_id,
+                    "t": tr.wiped_at_t,
+                    "last_world": [round(tr.x, 2), round(tr.y, 2)],
+                })
         # 2 group detections by team and pick closest to existing track or pick highest score
         by_team: dict[str, list[dict]] = {}
         for d in detections_world:
             by_team.setdefault(d["team_id"], []).append(d)
         for team_id, dets in by_team.items():
             tr = self.tracks.get(team_id)
+            if tr is not None and tr.wiped_at_t is not None:
+                # команда официально выбита — игнорим ложные детекции
+                continue
             chosen = None
             if tr is not None and tr.state != "lost":
                 dets_in_gate = [d for d in dets if math.hypot(d["world"][0] - tr.x, d["world"][1] - tr.y) <= self.gate]
@@ -391,9 +430,15 @@ class WorldTracker:
             mx, my = chosen["world"]
             angle = chosen.get("angle_world_deg")
             if tr is None or tr.state == "lost":
-                self.tracks[team_id] = Track(team_id=team_id, x=mx, y=my, angle=angle, last_conf=chosen.get("score", 1.0))
+                anchor = self.slot_anchors.get(team_id, {})
+                self.tracks[team_id] = Track(
+                    team_id=team_id, x=mx, y=my, angle=angle,
+                    last_conf=chosen.get("score", 1.0),
+                    slot_id=anchor.get("slot_id"), last_seen_t=t,
+                )
             else:
                 tr.update(mx, my, angle, chosen.get("score", 1.0), self.q, self.r)
+                tr.last_seen_t = t
 
     def snapshot(self) -> list[dict]:
         out = []
@@ -402,6 +447,7 @@ class WorldTracker:
                 continue
             out.append({
                 "team_id": tr.team_id,
+                "slot_id": tr.slot_id or tr.team_id,
                 "world": [round(tr.x, 2), round(tr.y, 2)],
                 "angle_world_deg": None if tr.angle is None else round(tr.angle, 1),
                 "state": tr.state,
