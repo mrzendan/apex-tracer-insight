@@ -153,11 +153,11 @@ def _ring_score(mask: np.ndarray, cx: float, cy: float, r: float,
     return hits / max(1, total)
 
 
-def sample_phase(cap: cv2.VideoCapture, minimap_rect: tuple[int, int, int, int],
-                 t_lo: float, t_hi: float, fps: float,
-                 bad: list[tuple[float, float]],
-                 max_samples: int = 5) -> list[tuple[float, float, float, float]]:
-    """Возвращает список (t, cx_norm, cy_norm, r_norm)."""
+def sample_window(cap: cv2.VideoCapture, minimap_rect: tuple[int, int, int, int],
+                  t_lo: float, t_hi: float, fps: float,
+                  hud_bad: list[tuple[float, float]],
+                  max_samples: int = 3) -> list[tuple[float, float, float, float]]:
+    """Сэмплит одно POV-окно. Возвращает список (t, cx_norm, cy_norm, r_norm)."""
     if t_hi <= t_lo:
         return []
     x, y, w, h = minimap_rect
@@ -165,7 +165,7 @@ def sample_phase(cap: cv2.VideoCapture, minimap_rect: tuple[int, int, int, int],
     for i in range(max_samples):
         alpha = (i + 1) / (max_samples + 1)
         t = t_lo + (t_hi - t_lo) * alpha
-        if is_bad_time(t, bad):
+        if is_bad_time(t, hud_bad):
             continue
         f = int(round(t * fps))
         frame = grab_frame(cap, f)
@@ -181,6 +181,47 @@ def sample_phase(cap: cv2.VideoCapture, minimap_rect: tuple[int, int, int, int],
         cx, cy, r = det
         samples.append((t, cx, cy, r))
     return samples
+
+
+def sample_phase(
+    cap: cv2.VideoCapture, minimap_rect: tuple[int, int, int, int],
+    t_lo: float, t_hi: float, fps: float,
+    cut_ts: list[float], hud_bad: list[tuple[float, float]],
+    max_samples_per_window: int = 3,
+) -> tuple[list[tuple[float, float, float, float]],
+           tuple[float, float] | None, int]:
+    """Из всех POV-под-окон [t_lo..t_hi] выбираем самое согласованное.
+    Возвращает (samples, chosen_window, total_subwindows)."""
+    subwins = pov_subwindows(t_lo, t_hi, cut_ts)
+    if not subwins:
+        # Нет ни одного сегмента ≥ min_len — берём всё окно как fallback.
+        subwins = [(t_lo, t_hi)] if t_hi > t_lo else []
+    best: tuple[list[tuple[float, float, float, float]],
+                tuple[float, float], float] | None = None
+    for win in subwins:
+        samples = sample_window(
+            cap, minimap_rect, win[0], win[1], fps, hud_bad,
+            max_samples=max_samples_per_window,
+        )
+        if len(samples) < 2:
+            # Один сэмпл нельзя оценить на согласованность — пропускаем,
+            # если есть другие варианты.
+            if best is None and samples:
+                best = (samples, win, float("inf"))
+            continue
+        med_cx = statistics.median(s[1] for s in samples)
+        med_cy = statistics.median(s[2] for s in samples)
+        med_r = statistics.median(s[3] for s in samples)
+        spread = max(
+            max(abs(s[1] - med_cx) for s in samples),
+            max(abs(s[2] - med_cy) for s in samples),
+            max(abs(s[3] - med_r) for s in samples),
+        )
+        if best is None or spread < best[2]:
+            best = (samples, win, spread)
+    if best is None:
+        return [], None, len(subwins)
+    return best[0], best[1], len(subwins)
 
 
 def main() -> int:
