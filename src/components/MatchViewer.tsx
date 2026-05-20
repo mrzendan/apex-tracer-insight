@@ -426,10 +426,12 @@ export function MatchViewer({ initialGameId }: { initialGameId?: string }) {
             controls={{ showTrails, setShowTrails, showRing, setShowRing, showLabels, setShowLabels }}
             focusRequest={focusRequest}
             onEventClick={handleEventClick}
+            ringPhases={ringPhases}
           />
 
           <Timeline time={time} duration={durationSec} playing={playing} speed={speed}
-            onSeek={setTime} onTogglePlay={() => setPlaying((p) => !p)} onSpeedChange={setSpeed} />
+            onSeek={setTime} onTogglePlay={() => setPlaying((p) => !p)} onSpeedChange={setSpeed}
+            ringSegments={ringSegments} events={events} />
         </main>
 
         {rightCollapsed ? (
