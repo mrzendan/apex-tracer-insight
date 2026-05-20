@@ -381,12 +381,26 @@ def main() -> int:
                     val = None
             else:
                 alnum = name in ("name", "map name", "ring status")
-                txt = ocr(crop, args.ocr_lang,
-                          digits_only=(name in DIGIT_NAMES),
-                          alnum_only=alnum)
-                if txt:
-                    st["ocr"] += 1
-                val = parse_field(tag, name, txt)
+                global _OCR_CACHE_HITS, _OCR_CACHE_MISS
+                # dHash-кеш: если кроп визуально не изменился —
+                # переиспользуем последний распарсенный value.
+                crop_hash = dhash(crop) if crop.size else ""
+                cache_key = (tag, name, crop_hash)
+                if cache_key in _OCR_CACHE:
+                    val = _OCR_CACHE[cache_key]
+                    _OCR_CACHE_HITS += 1
+                    st["ocr"] += 1  # считаем как успех
+                    txt = "" if val is None else str(val)
+                else:
+                    txt = ocr(crop, args.ocr_lang,
+                              digits_only=(name in DIGIT_NAMES),
+                              alnum_only=alnum,
+                              calib_key=(tag, name))
+                    if txt:
+                        st["ocr"] += 1
+                    val = parse_field(tag, name, txt)
+                    _OCR_CACHE[cache_key] = val
+                    _OCR_CACHE_MISS += 1
                 if val is not None and val is not False:
                     st["parsed"] += 1
                 if val not in (None, "", False):
