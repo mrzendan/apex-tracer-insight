@@ -1,0 +1,40 @@
+{
+  "slots": [
+    {
+      "slot_id": "red",
+      "slot": null,
+      "team_id": "red",
+      "name": "Team Red",
+      "color": "#ef4444",
+      "anchor_conf": "MISS",
+      "wiped_at_t": null
+    },
+    {
+      "slot_id": "blue",
+      "slot": null,
+      "team_id": "blue",
+      "name": "Team Blue",
+      "color": "#3b82f6",
+      "anchor_conf": "MISS",
+      "wiped_at_t": null
+    },
+    {
+      "slot_id": "yellow",
+      "slot": null,
+      "team_id": "yellow",
+      "name": "Team Yellow",
+      "color": "#eab308",
+      "anchor_conf": "MISS",
+      "wiped_at_t": null
+    },
+    {
+      "slot_id": "green",
+      "slot": null,
+      "team_id": "green",
+      "name": "Team Green",
+      "color": "#22c55e",
+      "anchor_conf": "MISS",
+      "wiped_at_t": 940.94
+    }
+  ]
+}
