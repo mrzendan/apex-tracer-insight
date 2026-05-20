@@ -619,6 +619,7 @@ function ZonesAdmin() {
               {zones.map((z) => {
                 if (getMeta(z.id).hidden) return null;
                 const active = z.id === sel;
+                const inSel = selectedIds.has(z.id);
                 const locked = getMeta(z.id).locked;
                 const c = tagColor(z.tag);
                  const handle = 12 / zoom;
@@ -632,13 +633,13 @@ function ZonesAdmin() {
                   { m: "w",  cx: z.x,         cy: z.y + z.h/2, cur: "ew-resize" },
                   { m: "e",  cx: z.x + z.w,   cy: z.y + z.h/2, cur: "ew-resize" },
                 ];
-                const fillOpacity = active ? "33" : "0d";
-                const strokeOpacity = active ? 1 : 0.45;
+                const fillOpacity = active ? "33" : inSel ? "22" : "0d";
+                const strokeOpacity = active ? 1 : inSel ? 0.9 : 0.45;
                 return (
-                  <g key={z.id} opacity={active ? 1 : 0.75}>
+                  <g key={z.id} opacity={active ? 1 : inSel ? 0.95 : 0.75}>
                      <rect x={z.x} y={z.y} width={z.w} height={z.h}
                       fill={`${c}${fillOpacity}`} stroke={c} strokeOpacity={strokeOpacity}
-                      strokeWidth={(active ? 3 : 1.5) / zoom} strokeDasharray={locked ? `${8/zoom} ${6/zoom}` : undefined}
+                      strokeWidth={(active ? 3 : inSel ? 2.25 : 1.5) / zoom} strokeDasharray={locked ? `${8/zoom} ${6/zoom}` : undefined}
                       style={{ cursor: locked ? "not-allowed" : "move" }}
                       onPointerDown={(e) => onPointerDown(e, z, "move")} />
                     {active && (
