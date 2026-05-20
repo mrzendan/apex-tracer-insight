@@ -1,0 +1,306 @@
+{
+  "base": [
+    1920,
+    1080
+  ],
+  "mode": "vod",
+  "zones": [
+    {
+      "id": "v-minimap",
+      "name": "map name",
+      "tag": "map_name",
+      "x": 90,
+      "y": 165,
+      "w": 225,
+      "h": 45
+    },
+    {
+      "id": "v-map-name",
+      "name": "game number",
+      "tag": "game_number",
+      "x": 70,
+      "y": 60,
+      "w": 285,
+      "h": 85
+    },
+    {
+      "id": "v-timer",
+      "name": "team 1 name",
+      "tag": "team",
+      "x": 75,
+      "y": 335,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdm8yns-0",
+      "name": "team 2 name",
+      "tag": "team",
+      "x": 75,
+      "y": 415,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdm96w8-1",
+      "name": "team 3 name",
+      "tag": "team",
+      "x": 75,
+      "y": 495,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdm9fg0-2",
+      "name": "team 4 name",
+      "tag": "team",
+      "x": 75,
+      "y": 570,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdm9ljn-3",
+      "name": "team 5 name",
+      "tag": "team",
+      "x": 75,
+      "y": 650,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdm9tg8-4",
+      "name": "team 6 name",
+      "tag": "team",
+      "x": 75,
+      "y": 730,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdm9umv-5",
+      "name": "team 7 name",
+      "tag": "team",
+      "x": 75,
+      "y": 805,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdmafsg-6",
+      "name": "team 8 name",
+      "tag": "team",
+      "x": 75,
+      "y": 885,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdmanaw-7",
+      "name": "team 9 name",
+      "tag": "team",
+      "x": 75,
+      "y": 960,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdmauqy-8",
+      "name": "team 10 name",
+      "tag": "team",
+      "x": 75,
+      "y": 1040,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdmbini-9",
+      "name": "team 11 name",
+      "tag": "team",
+      "x": 1575,
+      "y": 335,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdmbsm0-10",
+      "name": "team 12 name",
+      "tag": "team",
+      "x": 1575,
+      "y": 415,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdmby4h-11",
+      "name": "team 15 name",
+      "tag": "team",
+      "x": 1575,
+      "y": 650,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdmck19-12",
+      "name": "team 13 name",
+      "tag": "team",
+      "x": 1575,
+      "y": 495,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdmcraw-13",
+      "name": "team 14 name",
+      "tag": "team",
+      "x": 1575,
+      "y": 570,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdmd4rw-14",
+      "name": "team 16 name",
+      "tag": "team",
+      "x": 1575,
+      "y": 730,
+      "w": 70,
+      "h": 25
+    },
+    {
+      "id": "z-mpdmddvw-15",
+      "name": "team 17 name",
+      "tag": "team",
+      "x": 1575,
+      "y": 810,
+      "w": 70,
+      "h": 25
+    },
+    {
+      "id": "z-mpdmdj0l-16",
+      "name": "team 18 name",
+      "tag": "team",
+      "x": 1575,
+      "y": 885,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdmdqqv-17",
+      "name": "team 19 name",
+      "tag": "team",
+      "x": 1575,
+      "y": 965,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdme1ms-18",
+      "name": "team 20 name",
+      "tag": "team",
+      "x": 1575,
+      "y": 1040,
+      "w": 70,
+      "h": 30
+    },
+    {
+      "id": "z-mpdmg1f6-19",
+      "name": "number of teams alive",
+      "tag": "match_state",
+      "x": 1620,
+      "y": 105,
+      "w": 175,
+      "h": 45
+    },
+    {
+      "id": "z-mpdmh7f5-20",
+      "name": "number of players alive",
+      "tag": "match_state",
+      "x": 1620,
+      "y": 185,
+      "w": 175,
+      "h": 45
+    },
+    {
+      "id": "z-mpdmi81j-21",
+      "name": "team 1 hero 1",
+      "tag": "team",
+      "x": 150,
+      "y": 295,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdmissf-22",
+      "name": "team 1 hero 2",
+      "tag": "team",
+      "x": 220,
+      "y": 295,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdmixnb-23",
+      "name": "team 1 hero 3",
+      "tag": "team",
+      "x": 290,
+      "y": 295,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdmj73l-24",
+      "name": "team 1 points",
+      "tag": "team",
+      "x": 360,
+      "y": 310,
+      "w": 50,
+      "h": 50
+    },
+    {
+      "id": "z-mpdmk3u6-25",
+      "name": "team 2 hero 1 ",
+      "tag": "team",
+      "x": 150,
+      "y": 375,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdmkebk-26",
+      "name": "team 2 hero 2",
+      "tag": "team",
+      "x": 220,
+      "y": 375,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdmkjph-27",
+      "name": "team 2 hero 3",
+      "tag": "team",
+      "x": 290,
+      "y": 375,
+      "w": 65,
+      "h": 70
+    },
+    {
+      "id": "z-mpdmkp6g-28",
+      "name": "team 2 points",
+      "tag": "team",
+      "x": 360,
+      "y": 385,
+      "w": 50,
+      "h": 50
+    },
+    {
+      "id": "z-mpdmsqzb-29",
+      "name": "camera roi",
+      "tag": "minimap",
+      "x": 435,
+      "y": 40,
+      "w": 1050,
+      "h": 1030
+    }
+  ]
+}

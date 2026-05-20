@@ -1,0 +1,141 @@
+{
+  "video": "video.mp4",
+  "fps": 59.94005994005994,
+  "frames_scanned": 40,
+  "max_de": 28.0,
+  "profiles": [
+    {
+      "slot": 1,
+      "ref_hex": "#078396",
+      "found": false,
+      "samples": 0
+    },
+    {
+      "slot": 2,
+      "ref_hex": "#1B486A",
+      "found": false,
+      "samples": 0
+    },
+    {
+      "slot": 3,
+      "ref_hex": "#1F55CD",
+      "found": false,
+      "samples": 0
+    },
+    {
+      "slot": 4,
+      "ref_hex": "#452A60",
+      "found": false,
+      "samples": 0
+    },
+    {
+      "slot": 5,
+      "ref_hex": "#6E2C70",
+      "found": false,
+      "samples": 0
+    },
+    {
+      "slot": 6,
+      "ref_hex": "#AD2D78",
+      "found": false,
+      "samples": 0
+    },
+    {
+      "slot": 7,
+      "ref_hex": "#AE1C51",
+      "found": false,
+      "samples": 0
+    },
+    {
+      "slot": 8,
+      "ref_hex": "#BF000B",
+      "found": false,
+      "samples": 0
+    },
+    {
+      "slot": 9,
+      "ref_hex": "#C34221",
+      "found": false,
+      "samples": 0
+    },
+    {
+      "slot": 10,
+      "ref_hex": "#791F14",
+      "found": true,
+      "samples": 16,
+      "w_median": 14,
+      "h_median": 18,
+      "w_std": 7.695118176480463,
+      "h_std": 0.0,
+      "area_median": 205.0,
+      "lab_median": [
+        49.0,
+        167.5,
+        150.0
+      ],
+      "delta_e_mean": 22.707436442375183,
+      "delta_e_max": 26.419689178466797
+    },
+    {
+      "slot": 11,
+      "ref_hex": "#9F3A0D",
+      "found": false,
+      "samples": 0
+    },
+    {
+      "slot": 12,
+      "ref_hex": "#764B01",
+      "found": false,
+      "samples": 0
+    },
+    {
+      "slot": 13,
+      "ref_hex": "#CE7A12",
+      "found": false,
+      "samples": 0
+    },
+    {
+      "slot": 14,
+      "ref_hex": "#967E01",
+      "found": false,
+      "samples": 0
+    },
+    {
+      "slot": 15,
+      "ref_hex": "#84930A",
+      "found": false,
+      "samples": 0
+    },
+    {
+      "slot": 16,
+      "ref_hex": "#495903",
+      "found": false,
+      "samples": 0
+    },
+    {
+      "slot": 17,
+      "ref_hex": "#719844",
+      "found": false,
+      "samples": 0
+    },
+    {
+      "slot": 18,
+      "ref_hex": "#398935",
+      "found": false,
+      "samples": 0
+    },
+    {
+      "slot": 19,
+      "ref_hex": "#2F5B19",
+      "found": false,
+      "samples": 0
+    },
+    {
+      "slot": 20,
+      "ref_hex": "#017557",
+      "found": false,
+      "samples": 0
+    }
+  ],
+  "rejected_count": 17
+}

@@ -1,7 +1,7 @@
-canonical: size=(1000, 1000), features=4000
-frame 10309: keypoints=4000, good_matches=36, inliers=11, H=ok
-frame 20619: keypoints=4002, good_matches=52, inliers=19, H=ok
-frame 30929: keypoints=4001, good_matches=66, inliers=24, H=ok
-frame 41238: keypoints=4000, good_matches=45, inliers=7, H=ok
-frame 51548: keypoints=4000, good_matches=33, inliers=6, H=ok
-frame 61858: keypoints=4001, good_matches=42, inliers=2, H=ok
+canonical: size=(2048, 2048), features=4000
+frame 10309: keypoints=4000, good_matches=265, inliers=237, H=ok
+frame 20619: keypoints=4000, good_matches=425, inliers=377, H=ok
+frame 30929: keypoints=4001, good_matches=499, inliers=439, H=ok
+frame 41238: keypoints=4000, good_matches=150, inliers=101, H=ok
+frame 51548: keypoints=4000, good_matches=95, inliers=41, H=ok
+frame 61858: keypoints=2957, good_matches=44, inliers=11, H=ok

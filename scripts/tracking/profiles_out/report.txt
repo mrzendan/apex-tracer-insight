@@ -1,0 +1,24 @@
+bootstrap_profiles: 40 clean frames scanned
+slots found: 1/20  (rejected: 17)
+
+slot       hex    n    w    h   area  ΔE_mean
+   1   #078396   -    -    -      -        -   NOT FOUND
+   2   #1B486A   -    -    -      -        -   NOT FOUND
+   3   #1F55CD   -    -    -      -        -   NOT FOUND
+   4   #452A60   -    -    -      -        -   NOT FOUND
+   5   #6E2C70   -    -    -      -        -   NOT FOUND
+   6   #AD2D78   -    -    -      -        -   NOT FOUND
+   7   #AE1C51   -    -    -      -        -   NOT FOUND
+   8   #BF000B   -    -    -      -        -   NOT FOUND
+   9   #C34221   -    -    -      -        -   NOT FOUND
+  10   #791F14   16   14   18    205    22.71
+  11   #9F3A0D   -    -    -      -        -   NOT FOUND
+  12   #764B01   -    -    -      -        -   NOT FOUND
+  13   #CE7A12   -    -    -      -        -   NOT FOUND
+  14   #967E01   -    -    -      -        -   NOT FOUND
+  15   #84930A   -    -    -      -        -   NOT FOUND
+  16   #495903   -    -    -      -        -   NOT FOUND
+  17   #719844   -    -    -      -        -   NOT FOUND
+  18   #398935   -    -    -      -        -   NOT FOUND
+  19   #2F5B19   -    -    -      -        -   NOT FOUND
+  20   #017557   -    -    -      -        -   NOT FOUND
