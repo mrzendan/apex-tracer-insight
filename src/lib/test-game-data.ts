@@ -24,32 +24,9 @@ type RingPhaseRaw = {
   closed_f: number | null;
   t_closed: number | null;
 };
-type RingGeomPhase = {
-  ring: number;
-  cx_norm: number | null;
-  cy_norm: number | null;
-  r_norm: number | null;
-  cx_roi_px?: number | null;
-  cy_roi_px?: number | null;
-  r_roi_px?: number | null;
-  roi_size?: [number, number];
-  cx_map_norm?: number | null;
-  cy_map_norm?: number | null;
-  r_map_norm?: number | null;
-  cx_zoom_norm?: number | null;
-  cy_zoom_norm?: number | null;
-  r_zoom_norm?: number | null;
-  map_zoom?: number | null;
-  geometry_confidence?: string;
-};
 type RingsFile = {
   fps: number;
   phases: RingPhaseRaw[];
-  geometry?: {
-    phases?: RingGeomPhase[];
-    minimap?: [number, number, number, number];
-    map_bounds_in_roi?: { x: number; y: number; w: number; h: number };
-  };
 };
 type RingGeomV2Phase = {
   ring: number;
@@ -70,9 +47,6 @@ const rings = ringsRaw as unknown as RingsFile;
 const ringsV2 = ringsV2Raw as unknown as RingsV2File;
 const slotToTag = slotToTagRaw as unknown as Record<string, string>;
 
-/** Сырая геометрия для дебаг-оверлея (?debug=1). */
-export const testGameRingGeometry = rings.geometry ?? null;
-
 /** Длительность игры — последний наблюдавшийся "жив". */
 export const testGameDurationSec: number = Math.ceil(
   Object.values(elim.teams).reduce(
@@ -88,20 +62,14 @@ export const testGameRingPhases: RingPhase[] = (() => {
 
   if (closing.length === 0) return [];
 
-  // Если есть реальная геометрия из ring_locator — берём её, иначе
-  // падаем на mock RING_OFFSETS, чтобы хоть что-то рисовать.
-  const geomByRing = new Map<number, RingGeomPhase>();
-  for (const g of rings.geometry?.phases ?? []) {
-    if (g.cx_norm != null && g.cy_norm != null && g.r_norm != null) {
-      geomByRing.set(g.ring, g);
-    }
-  }
-  // v2: канонические координаты (storm_point.png 2048x2048), приоритет над v1.
-  const geomV2ByRing = new Map<number, RingGeomV2Phase>();
+  // Геометрия из ring_locator в координатах канонической карты
+  // (storm_point.png 2048x2048). Поздние фазы без замера наследуют
+  // последнее реальное кольцо — см. roadmap в модуле ring_locator.
+  const geomByRing = new Map<number, RingGeomV2Phase>();
   for (const g of ringsV2.phases ?? []) {
     if (g.cx_canon_norm != null && g.cy_canon_norm != null && g.r_canon_norm != null
         && (g.samples ?? 0) >= 2) {
-      geomV2ByRing.set(g.ring, g);
+      geomByRing.set(g.ring, g);
     }
   }
 
@@ -109,33 +77,23 @@ export const testGameRingPhases: RingPhase[] = (() => {
   let lastReal: { cx: number; cy: number; r: number } | null = null;
   for (let i = 0; i < closing.length; i++) {
     const ringN = closing[i].ring;
-    const v2 = geomV2ByRing.get(ringN);
     const real = geomByRing.get(ringN);
     let cx: number, cy: number, r: number;
     let source: "real" | "inherited";
-    if (v2) {
-      cx = v2.cx_canon_norm!;
-      cy = v2.cy_canon_norm!;
-      r = v2.r_canon_norm!;
-      source = "real";
-      lastReal = { cx, cy, r };
-    } else if (real) {
-      cx = real.cx_zoom_norm ?? real.cx_map_norm ?? real.cx_norm!;
-      cy = real.cy_zoom_norm ?? real.cy_map_norm ?? real.cy_norm!;
-      r = real.r_zoom_norm ?? real.r_map_norm ?? real.r_norm!;
+    if (real) {
+      cx = real.cx_canon_norm!;
+      cy = real.cy_canon_norm!;
+      r = real.r_canon_norm!;
       source = "real";
       lastReal = { cx, cy, r };
     } else if (lastReal) {
-      // Нет геометрии для этой фазы — наследуем предыдущую реальную
-      // (не выдумываем смещение моком). Кольцо «стоит на месте» до
-      // следующего реального замера.
+      // Нет геометрии для этой фазы — наследуем предыдущую реальную.
       cx = lastReal.cx;
       cy = lastReal.cy;
       r = lastReal.r;
       source = "inherited";
     } else {
-      // До первого реального замера данных нет — фазу пропускаем,
-      // чтобы не рисовать произвольное кольцо.
+      // До первого реального замера данных нет — фазу пропускаем.
       continue;
     }
     const cur = closing[i];
