@@ -90,11 +90,16 @@ export const testGameRingPhases: RingPhase[] = (() => {
       cx = parent.cx + parent.r * off.fx;
       cy = parent.cy + parent.r * off.fy;
     }
-    const startSec = i === 0 ? 0 : (closing[i - 1].t_closing_start ?? 0);
+    const cur = closing[i];
+    const next = closing[i + 1];
+    const prev = closing[i - 1];
+    const startSec = cur.t_countdown_start
+      ?? (i === 0 ? 0 : (prev?.t_closing_start ?? 0));
+    const closingStartSec = cur.t_closing_start ?? undefined;
     const endSec = i === closing.length - 1
       ? testGameDurationSec
-      : (closing[i].t_closing_start ?? testGameDurationSec);
-    out.push({ startSec, endSec, cx, cy, r });
+      : (next?.t_countdown_start ?? next?.t_closing_start ?? testGameDurationSec);
+    out.push({ startSec, endSec, closingStartSec, cx, cy, r });
   }
   return out;
 })();
