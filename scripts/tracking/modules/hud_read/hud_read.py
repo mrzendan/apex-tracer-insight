@@ -426,6 +426,16 @@ def main() -> int:
                     default="forward",
                     help="forward = обычный проход; scout = только обратный поиск "
                          "таймингов вылетов; two-pass = scout + forward")
+    ap.add_argument("--rings", action="store_true",
+                    help="Включить высокоточный scout таймингов колец")
+    ap.add_argument("--rings-only", action="store_true",
+                    help="Только ring-scout (без elim-scout и без forward)")
+    ap.add_argument("--ring-scout-step", type=int, default=600,
+                    help="Шаг coarse-прохода ring-scout (кадров)")
+    ap.add_argument("--ring-refine-budget", type=int, default=10,
+                    help="Бюджет бинпоиска ring-перехода")
+    ap.add_argument("--ring-refine-linear", type=int, default=4,
+                    help="Линейный доводчик ring-перехода")
     ap.add_argument("--reverse-step", type=int, default=1800,
                     help="Шаг обратного разведчика (кадров). 1800@30fps ≈ 60с")
     ap.add_argument("--refine-budget", type=int, default=10,
