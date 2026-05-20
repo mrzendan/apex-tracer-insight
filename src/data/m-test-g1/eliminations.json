@@ -1,0 +1,171 @@
+{
+  "video": "scripts\\tracking\\game.mp4",
+  "fps": 59.94005994005994,
+  "mode": "scout",
+  "reverse_step": 1800,
+  "refine_budget": 10,
+  "refine_linear": 4,
+  "refine_rollback": 0,
+  "teams": {
+    "1": {
+      "f_first_dead": 62070,
+      "t_first_dead": 1035.53,
+      "f_last_alive": 62069,
+      "t_last_alive": 1035.52,
+      "refine_method": "binary10+linear1",
+      "refine_window": 1
+    },
+    "2": {
+      "f_first_dead": 35437,
+      "t_first_dead": 591.21,
+      "f_last_alive": 35436,
+      "t_last_alive": 591.19,
+      "refine_method": "binary10+linear1",
+      "refine_window": 1
+    },
+    "3": {
+      "f_first_dead": 56997,
+      "t_first_dead": 950.9,
+      "f_last_alive": 56996,
+      "t_last_alive": 950.88,
+      "refine_method": "binary10+linear1",
+      "refine_window": 1
+    },
+    "4": {
+      "f_first_dead": null,
+      "t_first_dead": null,
+      "f_last_alive": 70367,
+      "t_last_alive": 1173.96,
+      "refine_method": "none",
+      "refine_window": null
+    },
+    "5": {
+      "f_first_dead": 61511,
+      "t_first_dead": 1026.21,
+      "f_last_alive": 61510,
+      "t_last_alive": 1026.19,
+      "refine_method": "binary10+linear1",
+      "refine_window": 1
+    },
+    "6": {
+      "f_first_dead": 34800,
+      "t_first_dead": 580.58,
+      "f_last_alive": 34799,
+      "t_last_alive": 580.56,
+      "refine_method": "binary10+linear1",
+      "refine_window": 1
+    },
+    "7": {
+      "f_first_dead": 32986,
+      "t_first_dead": 550.32,
+      "f_last_alive": 32985,
+      "t_last_alive": 550.3,
+      "refine_method": "binary10+linear1",
+      "refine_window": 1
+    },
+    "8": {
+      "f_first_dead": 58507,
+      "t_first_dead": 976.09,
+      "f_last_alive": 58506,
+      "t_last_alive": 976.08,
+      "refine_method": "binary10+linear1",
+      "refine_window": 1
+    },
+    "9": {
+      "f_first_dead": null,
+      "t_first_dead": null,
+      "f_last_alive": 70367,
+      "t_last_alive": 1173.96,
+      "refine_method": "none",
+      "refine_window": null
+    },
+    "10": {
+      "f_first_dead": null,
+      "t_first_dead": null,
+      "f_last_alive": 70367,
+      "t_last_alive": 1173.96,
+      "refine_method": "none",
+      "refine_window": null
+    },
+    "11": {
+      "f_first_dead": 19835,
+      "t_first_dead": 330.91,
+      "f_last_alive": 19834,
+      "t_last_alive": 330.9,
+      "refine_method": "binary10+linear1",
+      "refine_window": 1
+    },
+    "12": {
+      "f_first_dead": 69936,
+      "t_first_dead": 1166.77,
+      "f_last_alive": 69935,
+      "t_last_alive": 1166.75,
+      "refine_method": "binary10+linear1",
+      "refine_window": 1
+    },
+    "13": {
+      "f_first_dead": 63295,
+      "t_first_dead": 1055.97,
+      "f_last_alive": 63294,
+      "t_last_alive": 1055.95,
+      "refine_method": "binary10+linear1",
+      "refine_window": 1
+    },
+    "14": {
+      "f_first_dead": null,
+      "t_first_dead": null,
+      "f_last_alive": 70367,
+      "t_last_alive": 1173.96,
+      "refine_method": "none",
+      "refine_window": null
+    },
+    "15": {
+      "f_first_dead": 44970,
+      "t_first_dead": 750.25,
+      "f_last_alive": 44969,
+      "t_last_alive": 750.23,
+      "refine_method": "binary10+linear1",
+      "refine_window": 1
+    },
+    "16": {
+      "f_first_dead": null,
+      "t_first_dead": null,
+      "f_last_alive": 70367,
+      "t_last_alive": 1173.96,
+      "refine_method": "none",
+      "refine_window": null
+    },
+    "17": {
+      "f_first_dead": 68601,
+      "t_first_dead": 1144.49,
+      "f_last_alive": 68600,
+      "t_last_alive": 1144.48,
+      "refine_method": "binary10+linear1",
+      "refine_window": 1
+    },
+    "18": {
+      "f_first_dead": 54000,
+      "t_first_dead": 900.9,
+      "f_last_alive": 53999,
+      "t_last_alive": 900.88,
+      "refine_method": "binary10+linear1",
+      "refine_window": 1
+    },
+    "19": {
+      "f_first_dead": 63840,
+      "t_first_dead": 1065.06,
+      "f_last_alive": 63839,
+      "t_last_alive": 1065.05,
+      "refine_method": "binary10+linear1",
+      "refine_window": 1
+    },
+    "20": {
+      "f_first_dead": 43391,
+      "t_first_dead": 723.91,
+      "f_last_alive": 43390,
+      "t_last_alive": 723.89,
+      "refine_method": "binary10+linear1",
+      "refine_window": 1
+    }
+  }
+}
