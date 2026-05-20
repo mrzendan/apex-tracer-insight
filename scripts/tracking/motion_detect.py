@@ -510,3 +510,63 @@ def main():
                     cv2.putText(ov, f"{r['slot']}:{r['confidence']}",
                                 (p[0] + 6, p[1] - 6),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.45, bgr, 1)
+        cv2.imwrite(str(args.out_dir / "overlays" / f"motion_{fi}.jpg"),
+                    ov, [cv2.IMWRITE_JPEG_QUALITY, 85])
+
+    # ---- сохраняем JSON ----
+    (args.out_dir / "motion_tracks.json").write_text(json.dumps({
+        "video": args.video.name, "fps": fps,
+        "start_sec": args.start_sec, "window": args.window, "step": args.step,
+        "static_thresh_px": args.static_thresh,
+        "loose_static_thresh_px": args.loose_static_thresh,
+        "link_dist_px": args.link_dist,
+        "diff_thresh": args.diff_thresh,
+        "color_tol": args.color_tol,
+        "loose_h": args.loose_h, "loose_sv_drop": args.loose_sv_drop,
+        "agree_radius_px": agree_radius,
+        "zone_tag": args.zone_tag,
+        "frames_used": frames_to_grab,
+        "results": results,
+    }, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    # ---- отчёт ----
+    conf_order = {"HIGH": 0, "MED": 1, "LOW": 2, "MISS": 3}
+    lines = [
+        f"motion_detect: {len(frames_to_grab)} frames, "
+        f"window={args.window}, step={args.step}\n",
+        f"methods: M1=hsv_strict (static<{args.static_thresh}px) "
+        f"M2=motion_diff (diff>{args.diff_thresh}, hue<{args.color_tol}) "
+        f"M3=hsv_loose (h±{args.loose_h}, sv-{args.loose_sv_drop}, "
+        f"static<{args.loose_static_thresh}px)\n",
+        f"agree_radius={agree_radius:.0f}px, link_dist={args.link_dist:.0f}px\n\n",
+        f"{'slot':>4} {'hex':>9} {'M1':>3} {'M2':>3} {'M3':>3} "
+        f"{'agree':>6} {'conf':>5}  {'cx,cy':>11}  name\n",
+        "-" * 70 + "\n",
+    ]
+    for r in sorted(results, key=lambda x: (conf_order[x["confidence"]], x["slot"])):
+        c = r["counts"]
+        xy = (f"{r['consensus_xy'][0]:>5.0f},{r['consensus_xy'][1]:<5.0f}"
+              if r["consensus_xy"] else "    -      ")
+        lines.append(f"{r['slot']:>4} {(r['hex'] or '-'):>9} "
+                     f"{c['hsv_strict']:>3} {c['motion_diff']:>3} "
+                     f"{c['hsv_loose']:>3} "
+                     f"{r['agree']:>6} {r['confidence']:>5}  {xy}  "
+                     f"{r['team_name'] or ''}\n")
+    # сводка
+    n_high = sum(1 for r in results if r["confidence"] == "HIGH")
+    n_med  = sum(1 for r in results if r["confidence"] == "MED")
+    n_low  = sum(1 for r in results if r["confidence"] == "LOW")
+    n_miss = sum(1 for r in results if r["confidence"] == "MISS")
+    lines.append("\n")
+    lines.append(f"summary: HIGH={n_high} MED={n_med} LOW={n_low} MISS={n_miss} "
+                 f"(total {len(results)})\n")
+    (args.out_dir / "report.txt").write_text("".join(lines), encoding="utf-8")
+
+    print(f"[ok] motion tracks -> {args.out_dir / 'motion_tracks.json'}")
+    print(f"[ok] overlays      -> {args.out_dir / 'overlays'}/motion_*.jpg")
+    print(f"[ok] report        -> {args.out_dir / 'report.txt'}")
+    print(f"[ok] HIGH={n_high} MED={n_med} LOW={n_low} MISS={n_miss}")
+
+
+if __name__ == "__main__":
+    main()
