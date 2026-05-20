@@ -1,20 +1,11 @@
-# push_logs.ps1 — собрать артефакты track_teams + motion_detect и запушить
-# их в git, чтобы Lovable-агент увидел свежие отчёты.
+# push_logs.ps1 - collect track_teams + motion_detect report artifacts
+# and push them to git so the Lovable agent can see fresh reports.
 #
-# Использование (из корня репо):
+# Usage (from repo root):
 #   powershell -ExecutionPolicy Bypass -File scripts\tracking\modules\track_teams\push_logs.ps1
 #   powershell -ExecutionPolicy Bypass -File scripts\tracking\modules\track_teams\push_logs.ps1 -NoPush
 #
-# Что коммитим:
-#   scripts/tracking/modules/track_teams/reports/tracks.json
-#   scripts/tracking/modules/track_teams/reports/tracks.slots.json
-#   scripts/tracking/modules/track_teams/reports/eval_id_switches.json
-#   scripts/tracking/modules/track_teams/reports/eval_id_switches.txt
-#   scripts/tracking/modules/track_teams/reports/run.log
-#   scripts/tracking/modules/motion_detect/reports/report.txt
-#   scripts/tracking/modules/motion_detect/reports/motion_tracks.json
-#
-# Тяжёлые overlay/*.png НЕ коммитим (слишком большие).
+# We commit small report files only. Heavy overlay PNGs are NOT committed.
 
 param(
   [switch]$NoPush
@@ -26,7 +17,7 @@ chcp 65001 > $null
 $env:PYTHONUTF8 = "1"
 
 $repo = (git rev-parse --show-toplevel).Trim()
-if (-not $repo) { throw "Не вижу git-репозитория." }
+if (-not $repo) { throw "No git repo found." }
 Set-Location $repo
 
 $paths = @(
@@ -47,43 +38,44 @@ foreach ($p in $paths) {
     Write-Host ("  + {0,-70} {1,8:N1} KB" -f $p, $sz) -ForegroundColor Green
     $found += $p
   } else {
-    Write-Host ("  - {0,-70} (нет)" -f $p) -ForegroundColor DarkYellow
+    Write-Host ("  - {0,-70} (missing)" -f $p) -ForegroundColor DarkYellow
     $missing += $p
   }
 }
 
 if ($found.Count -eq 0) {
-  throw "Нечего пушить — все ожидаемые отчёты отсутствуют. Запусти сначала push.ps1 трекеров."
+  throw "Nothing to push - all expected reports are missing. Run push.ps1 first."
 }
 
-# Сводный размер
 $totalKb = 0
 foreach ($p in $found) { $totalKb += (Get-Item $p).Length / 1KB }
-Write-Host ("[push_logs] всего {0:N1} KB в {1} файлах" -f $totalKb, $found.Count) -ForegroundColor Cyan
+Write-Host ("[push_logs] total {0:N1} KB across {1} files" -f $totalKb, $found.Count) -ForegroundColor Cyan
 if ($totalKb -gt 20480) {
-  Write-Warning "Артефакты больше 20 MB — не коммичу, разбирайся почему так разрослось."
+  Write-Warning "Artifacts larger than 20 MB - not committing."
   return
 }
 
 if ($NoPush) {
-  Write-Host "[ok] локально готово (no-push)." -ForegroundColor Green
+  Write-Host "[ok] local-only (no-push)." -ForegroundColor Green
   return
 }
 
 git add @found
 $stamp = Get-Date -Format 'yyyy-MM-dd HH:mm'
-$msg = "track_teams: logs $stamp ($($found.Count) files, $([int]$totalKb) KB)"
+$fileCount = $found.Count
+$kbInt = [int]$totalKb
+$msg = "track_teams: logs $stamp ($fileCount files, $kbInt KB)"
 git commit -m $msg | Out-Null
 if ($LASTEXITCODE -ne 0) {
-  Write-Host "[push_logs] нечего коммитить (нет изменений)" -ForegroundColor Yellow
+  Write-Host "[push_logs] nothing to commit (no changes)" -ForegroundColor Yellow
   return
 }
 
 Write-Host "[push_logs] git push..." -ForegroundColor Cyan
 git push
 
-Write-Host "[ok] готово. Скажи агенту: 'посмотри scripts/tracking/modules/track_teams/reports/'" -ForegroundColor Green
+Write-Host "[ok] done. Tell the agent: look at scripts/tracking/modules/track_teams/reports/" -ForegroundColor Green
 if ($missing.Count -gt 0) {
-  Write-Host "[note] не нашлись (это ок, если ещё не запускал eval):" -ForegroundColor DarkYellow
+  Write-Host "[note] missing (ok if eval not yet run):" -ForegroundColor DarkYellow
   foreach ($m in $missing) { Write-Host "  - $m" -ForegroundColor DarkYellow }
 }
