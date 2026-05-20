@@ -357,17 +357,69 @@ def main() -> int:
                 confidence = "low"
         prev_geom = (cx, cy, r)
         t_avg = statistics.mean(s[0] for s in samples)
-        out_phases.append({
+        # Пиксельные координаты в ROI
+        roi_w, roi_h = minimap_rect[2], minimap_rect[3]
+        cx_px = cx * roi_w
+        cy_px = cy * roi_h
+        r_px  = r  * max(roi_w, roi_h)
+        entry: dict[str, Any] = {
             "ring": ring_n,
             "cx_norm": round(cx, 4),
             "cy_norm": round(cy, 4),
             "r_norm": round(r, 4),
+            "cx_roi_px": round(cx_px, 1),
+            "cy_roi_px": round(cy_px, 1),
+            "r_roi_px": round(r_px, 1),
+            "roi_size": [roi_w, roi_h],
             "measured_at_t": round(t_avg, 2),
             "samples": len(samples),
             "geometry_confidence": confidence,
             "pov_window": [round(chosen[0], 2), round(chosen[1], 2)] if chosen else None,
             "pov_subwindows_total": n_sub,
-        })
+        }
+        # Координаты, нормализованные в канонический квадрат карты
+        # (если задан map_bounds_in_roi).
+        if map_bounds:
+            mbx, mby, mbw, mbh = map_bounds
+            entry["cx_map_norm"] = round((cx_px - mbx) / mbw, 4)
+            entry["cy_map_norm"] = round((cy_px - mby) / mbh, 4)
+            entry["r_map_norm"]  = round(r_px / max(mbw, mbh), 4)
+        # ---- DEBUG: пересчитаем детекцию на центральном кадре и сохраним кропы ----
+        if debug_dir is not None:
+            t_dbg = samples[len(samples) // 2][0]
+            f_dbg = int(round(t_dbg * fps))
+            frame = grab_frame(cap, f_dbg)
+            if frame is not None:
+                fh, fw = frame.shape[:2]
+                x, y, ww, hh = minimap_rect
+                xx, yy = min(x, fw - 1), min(y, fh - 1)
+                ww2, hh2 = min(ww, fw - xx), min(hh, fh - yy)
+                crop = frame[yy:yy + hh2, xx:xx + ww2].copy()
+                cv2.imwrite(str(debug_dir / f"ring{ring_n}_roi_f{f_dbg}.jpg"),
+                            crop, [cv2.IMWRITE_JPEG_QUALITY, 85])
+                det = detect_next_ring(crop, return_debug=True)
+                if det is not None:
+                    _, _, _, dcx, dcy, dr, mask = det
+                    cv2.imwrite(str(debug_dir / f"ring{ring_n}_mask_f{f_dbg}.png"),
+                                mask)
+                    ov = crop.copy()
+                    cv2.circle(ov, (int(dcx), int(dcy)), int(dr),
+                               (0, 200, 255), 2)
+                    cv2.drawMarker(ov, (int(dcx), int(dcy)), (0, 200, 255),
+                                   cv2.MARKER_CROSS, 16, 2)
+                    cv2.putText(ov, f"R{ring_n} t={t_dbg:.1f}s conf={confidence}",
+                                (8, 24), cv2.FONT_HERSHEY_SIMPLEX, 0.6,
+                                (0, 0, 0), 3, cv2.LINE_AA)
+                    cv2.putText(ov, f"R{ring_n} t={t_dbg:.1f}s conf={confidence}",
+                                (8, 24), cv2.FONT_HERSHEY_SIMPLEX, 0.6,
+                                (0, 200, 255), 1, cv2.LINE_AA)
+                    if map_bounds:
+                        mbx, mby, mbw, mbh = map_bounds
+                        cv2.rectangle(ov, (mbx, mby), (mbx + mbw, mby + mbh),
+                                      (0, 255, 0), 2)
+                    cv2.imwrite(str(debug_dir / f"ring{ring_n}_overlay_f{f_dbg}.jpg"),
+                                ov, [cv2.IMWRITE_JPEG_QUALITY, 85])
+        out_phases.append(entry)
         pov_s = f"[{chosen[0]:.1f}..{chosen[1]:.1f}]" if chosen else "n/a"
         print(f"[ring_locator] R{ring_n}: ({cx:.3f},{cy:.3f}) r={r:.3f} "
               f"n={len(samples)} {confidence} pov={pov_s} (sub={n_sub})")
@@ -375,12 +427,64 @@ def main() -> int:
     cap.release()
     args.out.mkdir(parents=True, exist_ok=True)
     out_path = args.out / "ring_geometry.json"
-    out_path.write_text(json.dumps({
+    payload: dict[str, Any] = {
         "video": str(args.video), "fps": fps,
         "minimap": list(minimap_rect),
         "phases": out_phases,
-    }, ensure_ascii=False, indent=2), encoding="utf-8")
+    }
+    if map_bounds:
+        payload["map_bounds_in_roi"] = {
+            "x": map_bounds[0], "y": map_bounds[1],
+            "w": map_bounds[2], "h": map_bounds[3],
+        }
+    out_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2),
+                        encoding="utf-8")
     print(f"[ring_locator] → {out_path}")
+    # ---- DEBUG: «все кольца на одном кадре» ----
+    if debug_dir is not None and out_phases:
+        cap2 = cv2.VideoCapture(str(args.video))
+        try:
+            # берём последний измеренный t как «свежий» кадр
+            last_t = next((e["measured_at_t"] for e in reversed(out_phases)
+                           if e.get("measured_at_t") is not None), None)
+            if last_t is not None:
+                f_all = int(round(float(last_t) * fps))
+                frame = grab_frame(cap2, f_all)
+                if frame is not None:
+                    fh, fw = frame.shape[:2]
+                    x, y, ww, hh = minimap_rect
+                    xx, yy = min(x, fw - 1), min(y, fh - 1)
+                    ww2, hh2 = min(ww, fw - xx), min(hh, fh - yy)
+                    ov = frame[yy:yy + hh2, xx:xx + ww2].copy()
+                    if map_bounds:
+                        mbx, mby, mbw, mbh = map_bounds
+                        cv2.rectangle(ov, (mbx, mby), (mbx + mbw, mby + mbh),
+                                      (0, 255, 0), 2)
+                        cv2.putText(ov, "map_bounds_in_roi",
+                                    (mbx + 6, mby + 22),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 0.55,
+                                    (0, 255, 0), 1, cv2.LINE_AA)
+                    palette = [(255, 80, 80), (255, 180, 60), (255, 240, 60),
+                               (80, 240, 120), (80, 200, 255), (200, 120, 255)]
+                    for e in out_phases:
+                        if e.get("cx_roi_px") is None: continue
+                        col = palette[(e["ring"] - 1) % len(palette)]
+                        cv2.circle(ov, (int(e["cx_roi_px"]), int(e["cy_roi_px"])),
+                                   int(e["r_roi_px"]), col, 2)
+                        cv2.drawMarker(ov,
+                                       (int(e["cx_roi_px"]), int(e["cy_roi_px"])),
+                                       col, cv2.MARKER_CROSS, 14, 2)
+                        cv2.putText(ov, f"R{e['ring']}",
+                                    (int(e["cx_roi_px"]) + 6,
+                                     int(e["cy_roi_px"]) - 6),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 0.55,
+                                    col, 2, cv2.LINE_AA)
+                    out_all = debug_dir / "_all_rings_on_roi.jpg"
+                    cv2.imwrite(str(out_all), ov,
+                                [cv2.IMWRITE_JPEG_QUALITY, 88])
+                    print(f"[ring_locator] debug → {out_all}")
+        finally:
+            cap2.release()
     return 0
 
 
