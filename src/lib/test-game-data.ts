@@ -80,6 +80,8 @@ export const testGameTrajectories: Record<string, { t: number; x: number; y: num
   const out: Record<string, { t: number; x: number; y: number }[]> = {};
   for (const fr of tracks.frames) {
     for (const tr of fr.tracks) {
+      // Skip "lost" — это последняя известная позиция, не реальное наблюдение.
+      if (tr.state === "lost") continue;
       // slot_1 -> t-test-1
       const slotNum = tr.team_id.replace(/^slot_/, "");
       const key = `t-test-${slotNum}`;
