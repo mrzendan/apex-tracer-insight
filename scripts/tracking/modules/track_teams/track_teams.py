@@ -531,9 +531,22 @@ def main():
         print(f"[err] не нашёл видео: {args.video}", file=sys.stderr); sys.exit(2)
 
     cfg = load_config(args.config)
-    teams = parse_teams(cfg)
+    # anchors path (CLI overrides config); if present, derive 20 teams from it
+    # and ignore YAML 'teams:' — this matches motion_detect's per-slot palette.
+    anchors_path = args.anchors
+    if anchors_path is None and cfg.get("anchors_file"):
+        anchors_path = (args.config.parent / cfg["anchors_file"]).resolve()
+
+    teams: list[TeamCfg] = []
+    if anchors_path and Path(anchors_path).exists():
+        teams = teams_from_anchors(Path(anchors_path))
+        print(f"[info] teams: {len(teams)} auto-generated from anchors ({anchors_path})")
     if not teams:
-        print("[err] в config не описано ни одной команды", file=sys.stderr); sys.exit(2)
+        teams = parse_teams(cfg)
+        if anchors_path:
+            print(f"[warn] anchors file {anchors_path} unusable — fell back to YAML teams ({len(teams)})")
+    if not teams:
+        print("[err] в config не описано ни одной команды и нет --anchors", file=sys.stderr); sys.exit(2)
     canonical_dir = (args.config.parent / "canonical_maps").resolve()
     if not canonical_dir.exists():
         canonical_dir = (Path(__file__).resolve().parents[2] / "shared" / "canonical_maps").resolve()
@@ -541,10 +554,6 @@ def main():
     reg = FrameRegistrar(cmap, cfg.get("registration", {}))
     det_cfg = cfg.get("detection", {})
     trk = WorldTracker(cfg.get("tracking", {}))
-    # anchors (motion_detect)
-    anchors_path = args.anchors
-    if anchors_path is None and cfg.get("anchors_file"):
-        anchors_path = (args.config.parent / cfg["anchors_file"]).resolve()
     anchors_map: dict[str, dict] = {}
     if anchors_path:
         mini_affine = load_minimap_affine(cmap.name, canonical_dir)
