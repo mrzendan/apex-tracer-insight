@@ -3,17 +3,30 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Eye, EyeOff, Lock, Unlock, Pencil, Copy, RotateCcw, AlignCenter, Files, Plus, Trash2, Check, ZoomIn, ZoomOut, Maximize2, Hand } from "lucide-react";
 import vodBg from "@/assets/hsv-samples/worlds-edge.png";
+import vodBg2 from "@/assets/zones-samples/vod-stream-2.png";
 import cameraBg from "@/assets/zones-samples/camera.png";
 import { useAdminStore, setZones as setZonesStore, type Zone, type ZoneMode } from "@/lib/admin-store";
 import { ActionBtn, Field, NumField } from "@/components/admin/zones-parts";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
+import { SLOT_COLORS } from "@/lib/team-colors";
 
 export const Route = createFileRoute("/admin/zones")({ component: ZonesAdmin });
 
-type BuiltinPreset = "vod" | "camera";
+type BuiltinPreset = "vod" | "vod2" | "camera";
 type CustomPreset = { id: string; label: string; mode: ZoneMode; zones: Zone[] };
 
 const BUILTIN: { id: BuiltinPreset; label: string; mode: ZoneMode }[] = [
   { id: "vod",    label: "VOD Stream", mode: "vod" },
+  { id: "vod2",   label: "VOD Stream 2", mode: "vod2" },
   { id: "camera", label: "Player Cam", mode: "camera" },
 ];
 
@@ -24,8 +37,12 @@ const DEFAULT_TAG_COLORS: Record<string, string> = {
   minimap:  "#ff8a00",
   timer:    "#facc15",
   map_name: "#34d399",
+  hud:      "#38bdf8",
+  ...Object.fromEntries(SLOT_COLORS.map((c, i) => [`team_${i + 1}`, c])),
 };
 const FALLBACK_PALETTE = ["#f472b6", "#fb7185", "#60a5fa", "#4ade80", "#fbbf24", "#c084fc", "#f87171", "#2dd4bf"];
+
+const isTeamTag = (id: string) => /^team_\d+$/.test(id);
 
 let _idc = 0;
 const newId = (p = "z") => `${p}-${Date.now().toString(36)}-${_idc++}`;
@@ -75,7 +92,7 @@ function ZonesAdmin() {
   >(null);
 
   const W = 1920, H = 1080;
-  const bg = mode === "vod" ? vodBg : cameraBg;
+  const bg = mode === "vod" ? vodBg : mode === "vod2" ? vodBg2 : cameraBg;
   const selZone = zones.find((z) => z.id === sel);
 
   const setZones = (next: Zone[] | ((zs: Zone[]) => Zone[])) => {
@@ -83,6 +100,18 @@ function ZonesAdmin() {
     if (builtin) setZonesStore(builtin.mode, computed);
     else if (custom) setCustoms((cs) => cs.map((c) => (c.id === custom.id ? { ...c, zones: computed } : c)));
   };
+
+  // ── Import dialog state ──────────────────────────────────────────────
+  type PendingImport = {
+    zones: Zone[];
+    mode: ZoneMode | null;       // mode из payload, если был
+    presetLabel: string | null;  // label из payload, если был
+    missingTags: string[];       // теги из файла, которых ещё нет
+  };
+  const [pendingImport, setPendingImport] = useState<PendingImport | null>(null);
+  const [importAddTags, setImportAddTags] = useState(true);
+  // Свёрнутость группы тегов команд
+  const [teamsCollapsed, setTeamsCollapsed] = useState(true);
 
   const choosePreset = (id: string) => {
     setActiveId(id);
@@ -153,7 +182,7 @@ function ZonesAdmin() {
     if (tags.some((t) => t.id === clean)) return;
     setTags((ts) => ts.map((t) => (t.id === oldId ? { ...t, id: clean } : t)));
     // Update zones using old tag (only mutate built-in ones via store; custom via state)
-    (["vod", "camera"] as ZoneMode[]).forEach((m) => {
+    (["vod", "vod2", "camera"] as ZoneMode[]).forEach((m) => {
       const next = store.zones[m].map((z) => (z.tag === oldId ? { ...z, tag: clean as Zone["tag"] } : z));
       setZonesStore(m, next);
     });
@@ -164,7 +193,7 @@ function ZonesAdmin() {
     if (tags.length <= 1) return;
     const fallback = tags.find((t) => t.id !== id)!.id;
     setTags((ts) => ts.filter((t) => t.id !== id));
-    (["vod", "camera"] as ZoneMode[]).forEach((m) => {
+    (["vod", "vod2", "camera"] as ZoneMode[]).forEach((m) => {
       const next = store.zones[m].map((z) => (z.tag === id ? { ...z, tag: fallback as Zone["tag"] } : z));
       setZonesStore(m, next);
     });
