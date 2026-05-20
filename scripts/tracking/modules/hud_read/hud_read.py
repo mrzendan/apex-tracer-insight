@@ -274,6 +274,156 @@ def is_eliminated_at(cap: cv2.VideoCapture, f: int, zone: dict, lang: str) -> bo
     return bool(RE_ELIM.search(txt))
 
 
+def read_ring_at(cap: cv2.VideoCapture, f: int, zone: dict,
+                 lang: str) -> dict | None:
+    """Возвращает {'ring':int,'state':str} или None если кадр/ocr пуст."""
+    frame = read_frame(cap, f)
+    if frame is None:
+        return None
+    x, y, w, h = zone["x"], zone["y"], zone["w"], zone["h"]
+    crop = frame[y:y + h, x:x + w]
+    if crop.size == 0:
+        return None
+    txt = ocr(crop, lang, digits_only=False, alnum_only=True,
+              calib_key=(zone["tag"], zone["name"]))
+    m = RE_RING.search(txt or "")
+    if not m:
+        return None
+    return {"ring": int(m.group(1)), "state": m.group(2).upper()}
+
+
+def _ring_state_key(rs: dict | None) -> tuple | None:
+    if not rs:
+        return None
+    return (rs["ring"], rs["state"])
+
+
+def scout_rings(cap: cv2.VideoCapture, zones_scaled: list[dict],
+                start_f: int, end_f: int, fps: float,
+                scout_step: int, lang: str,
+                refine_budget: int = 10,
+                refine_linear: int = 4) -> dict[str, Any]:
+    """Coarse forward-pass + бинпоиск + линейный доводчик границ ring-фаз."""
+    ring_zone = next(
+        (z for z in zones_scaled if z["tag"] == "hud" and z["name"] == "ring status"),
+        None,
+    )
+    if ring_zone is None:
+        print("[hud_read][ring-scout] зона 'ring status' не найдена")
+        return {"transitions": [], "phases": []}
+
+    print(f"[hud_read][ring-scout] coarse pass: step={scout_step} "
+          f"frames ({scout_step/fps:.1f}s)")
+
+    # Coarse: собираем samples
+    samples: list[tuple[int, dict | None]] = []
+    f = max(0, start_f)
+    total_iters = max(1, (end_f - f) // scout_step + 1)
+    pbar = tqdm(total=total_iters, unit="f", desc="ring-scout", dynamic_ncols=True)
+    while f < end_f:
+        rs = read_ring_at(cap, f, ring_zone, lang)
+        samples.append((f, rs))
+        if rs:
+            tqdm.write(f"ring f{f:>7} t={f/fps:6.1f}s  R{rs['ring']} {rs['state']}")
+        pbar.update(1)
+        f += scout_step
+    pbar.close()
+
+    # Найдём transitions между соседними непустыми samples с разными ключами.
+    transitions: list[dict] = []
+    prev_idx = None
+    for i, (fi, si) in enumerate(samples):
+        if si is None:
+            continue
+        if prev_idx is None:
+            prev_idx = i
+            continue
+        fp, sp = samples[prev_idx]
+        if _ring_state_key(si) != _ring_state_key(sp):
+            transitions.append({
+                "from": sp, "to": si,
+                "f_lo": fp, "f_hi": fi,
+            })
+        prev_idx = i
+
+    print(f"[hud_read][ring-scout] coarse found {len(transitions)} transitions, "
+          f"refining (binary≤{refine_budget} + linear≤{refine_linear})")
+
+    refined: list[dict] = []
+    for t in transitions:
+        lo, hi = t["f_lo"], t["f_hi"]
+        from_key = _ring_state_key(t["from"])
+        to_key = _ring_state_key(t["to"])
+        # Stage A — бинпоиск
+        steps = 0
+        confidence = "high"
+        while hi - lo > 1 and steps < refine_budget:
+            mid = (lo + hi) // 2
+            rs = read_ring_at(cap, mid, ring_zone, lang)
+            k = _ring_state_key(rs)
+            if k is None:
+                # неопределённый кадр — двигаем hi и понижаем доверие
+                hi = mid
+                confidence = "low"
+            elif k == from_key:
+                lo = mid
+            elif k == to_key:
+                hi = mid
+            else:
+                # промежуточное состояние — считаем «уже после» и понижаем доверие
+                hi = mid
+                confidence = "low"
+            steps += 1
+        # Stage B — линейный доводчик
+        linear_used = 0
+        while hi - lo > 1 and linear_used < refine_linear:
+            cur = lo + 1
+            rs = read_ring_at(cap, cur, ring_zone, lang)
+            k = _ring_state_key(rs)
+            if k is None:
+                break
+            if k == from_key:
+                lo = cur
+            else:
+                hi = cur
+            linear_used += 1
+        refined.append({
+            "f": hi,
+            "t": round(hi / fps, 3),
+            "from": t["from"],
+            "to": t["to"],
+            "confidence": confidence,
+            "refine_method": f"binary{steps}+linear{linear_used}",
+            "refine_window": hi - lo,
+        })
+        tqdm.write(
+            f"  R{t['from']['ring']}{t['from']['state'][:3]}"
+            f"→R{t['to']['ring']}{t['to']['state'][:3]}: "
+            f"f~{hi} t~{hi/fps:.2f}s window={hi-lo} ({confidence})"
+        )
+
+    # Агрегируем фазы (по ring number)
+    phases_map: dict[int, dict] = {}
+    for r in refined:
+        ring_n = r["to"]["ring"]
+        state = r["to"]["state"]
+        phases_map.setdefault(ring_n, {
+            "ring": ring_n,
+            "countdown_start_f": None, "t_countdown_start": None,
+            "closing_start_f": None,   "t_closing_start": None,
+            "closed_f": None,          "t_closed": None,
+        })
+        ph = phases_map[ring_n]
+        if state == "COUNTDOWN" and ph["countdown_start_f"] is None:
+            ph["countdown_start_f"] = r["f"]; ph["t_countdown_start"] = r["t"]
+        elif state == "CLOSING" and ph["closing_start_f"] is None:
+            ph["closing_start_f"] = r["f"]; ph["t_closing_start"] = r["t"]
+        elif state == "CLOSED" and ph["closed_f"] is None:
+            ph["closed_f"] = r["f"]; ph["t_closed"] = r["t"]
+    phases = [phases_map[k] for k in sorted(phases_map)]
+    return {"transitions": refined, "phases": phases}
+
+
 def scout_eliminations(cap: cv2.VideoCapture, zones_scaled: list[dict],
                        start_f: int, end_f: int, fps: float,
                        reverse_step: int, lang: str,
