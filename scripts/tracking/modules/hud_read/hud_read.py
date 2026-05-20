@@ -48,6 +48,10 @@ RE_MATCH = re.compile(r"MATCH\s+(\d+)", re.I)
 RE_TEAMS = re.compile(r"(\d+)\s*TEAMS?", re.I)
 RE_PLAYERS = re.compile(r"(\d+)\s*PLAYERS?", re.I)
 RE_RING = re.compile(r"RING\s*(\d+).*?(CLOSING|COUNTDOWN|CLOSED|OPEN)", re.I)
+# Раздельные «половинки» для случаев, когда OCR-плашки путает символы
+# (CLOS1NG, OOUNTDOWN и т.п.) и единый regex не срабатывает.
+RE_RING_NUM = re.compile(r"R[I1L]NG\s*([1-9])", re.I)
+RING_STATES = ("CLOSING", "COUNTDOWN", "CLOSED", "OPEN")
 RE_INT = re.compile(r"-?\d+")
 RE_ELIM = re.compile(r"ELIMIN", re.I)
 _OCR_ERRORS_SEEN: set[str] = set()
@@ -284,12 +288,37 @@ def read_ring_at(cap: cv2.VideoCapture, f: int, zone: dict,
     crop = frame[y:y + h, x:x + w]
     if crop.size == 0:
         return None
-    txt = ocr(crop, lang, digits_only=False, alnum_only=True,
-              calib_key=(zone["tag"], zone["name"]))
-    m = RE_RING.search(txt or "")
-    if not m:
+    # Префильтр под белый текст плашки: HSV V-канал, отсекаем тёмный фон.
+    # Если маска оказалась почти пустой — плашка не отрисована (early game).
+    hsv = cv2.cvtColor(crop, cv2.COLOR_BGR2HSV)
+    v = hsv[:, :, 2]
+    _, mask = cv2.threshold(v, 180, 255, cv2.THRESH_BINARY)
+    if mask.mean() < 4:  # < ~1.5% ярких пикселей — плашки нет
         return None
-    return {"ring": int(m.group(1)), "state": m.group(2).upper()}
+    bright = cv2.bitwise_and(crop, crop, mask=mask)
+    txt = ocr(bright, lang, digits_only=False, alnum_only=True,
+              calib_key=(zone["tag"], zone["name"]))
+    if not txt:
+        return None
+    up = txt.upper()
+    # 1) сначала единый regex (когда OCR чистый);
+    m = RE_RING.search(up)
+    if m:
+        return {"ring": int(m.group(1)), "state": m.group(2).upper()}
+    # 2) fallback: ищем номер и состояние независимо + snap по словарю.
+    mn = RE_RING_NUM.search(up)
+    if not mn:
+        return None
+    state = None
+    for s in RING_STATES:
+        if s in up:
+            state = s
+            break
+    if state is None:
+        state = snap_to_known(up, list(RING_STATES), max_dist=2)
+    if state is None:
+        return None
+    return {"ring": int(mn.group(1)), "state": state}
 
 
 def _ring_state_key(rs: dict | None) -> tuple | None:
@@ -421,7 +450,53 @@ def scout_rings(cap: cv2.VideoCapture, zones_scaled: list[dict],
         elif state == "CLOSED" and ph["closed_f"] is None:
             ph["closed_f"] = r["f"]; ph["t_closed"] = r["t"]
     phases = [phases_map[k] for k in sorted(phases_map)]
-    return {"transitions": refined, "phases": phases}
+    derived = _derive_ring_constants(phases, fps)
+    return {"transitions": refined, "phases": phases, "derived": derived}
+
+
+def _derive_ring_constants(phases: list[dict], fps: float) -> dict:
+    """Из таймингов phases считаем константы: длительности CLOSING/COUNTDOWN.
+    Если у фазы N не известен t_closed — оцениваем его как
+    t_closing_start[N+1] − median(countdown_duration).
+    """
+    closing_durs: list[float] = []
+    countdown_durs: list[float] = []
+    for p in phases:
+        if p.get("t_closing_start") is not None and p.get("t_closed") is not None:
+            closing_durs.append(p["t_closed"] - p["t_closing_start"])
+    by_ring = {p["ring"]: p for p in phases}
+    for n, p in by_ring.items():
+        nxt = by_ring.get(n + 1)
+        if not nxt:
+            continue
+        if p.get("t_closed") is not None and nxt.get("t_closing_start") is not None:
+            countdown_durs.append(nxt["t_closing_start"] - p["t_closed"])
+
+    def med(xs: list[float]) -> float | None:
+        if not xs:
+            return None
+        xs = sorted(xs)
+        return round(xs[len(xs) // 2], 2)
+
+    median_countdown = med(countdown_durs)
+    # Доводка пропущенных t_closed по медианному countdown.
+    if median_countdown is not None:
+        for n, p in by_ring.items():
+            nxt = by_ring.get(n + 1)
+            if not nxt or p.get("t_closed") is not None:
+                continue
+            t_next = nxt.get("t_closing_start")
+            if t_next is None:
+                continue
+            p["t_closed"] = round(t_next - median_countdown, 2)
+            p["closed_f"] = int(round(p["t_closed"] * fps))
+            p["closed_confidence"] = "derived"
+    return {
+        "closing_durations": [round(x, 2) for x in closing_durs],
+        "countdown_durations": [round(x, 2) for x in countdown_durs],
+        "median_closing": med(closing_durs),
+        "median_countdown": median_countdown,
+    }
 
 
 def scout_eliminations(cap: cv2.VideoCapture, zones_scaled: list[dict],
@@ -582,6 +657,9 @@ def main() -> int:
                     help="Только ring-scout (без elim-scout и без forward)")
     ap.add_argument("--ring-scout-step", type=int, default=600,
                     help="Шаг coarse-прохода ring-scout (кадров)")
+    ap.add_argument("--ring-start-sec", type=float, default=0.0,
+                    help="Нижняя граница окна ring-scout в секундах. "
+                         "До этого момента плашка обычно ещё не отрисована.")
     ap.add_argument("--ring-refine-budget", type=int, default=10,
                     help="Бюджет бинпоиска ring-перехода")
     ap.add_argument("--ring-refine-linear", type=int, default=4,
@@ -659,8 +737,9 @@ def main() -> int:
     do_rings = args.rings or args.rings_only or args.mode in ("scout", "two-pass")
     # rings-only — короткий путь
     if args.rings_only:
+        rs_start = max(start_f, int(args.ring_start_sec * fps))
         ring_res = scout_rings(
-            cap, zones_scaled, start_f, end_f, fps,
+            cap, zones_scaled, rs_start, end_f, fps,
             scout_step=max(1, args.ring_scout_step),
             lang=args.ocr_lang,
             refine_budget=max(1, args.ring_refine_budget),
@@ -673,6 +752,7 @@ def main() -> int:
                 "scout_step": args.ring_scout_step,
                 "refine_budget": args.ring_refine_budget,
                 "refine_linear": args.ring_refine_linear,
+                "ring_start_sec": args.ring_start_sec,
                 **ring_res,
             }, ensure_ascii=False, indent=2),
             encoding="utf-8",
@@ -703,8 +783,9 @@ def main() -> int:
         )
         print(f"[hud_read][scout] eliminations.json → {args.out/'eliminations.json'}")
         # Ring scout — встроен в scout/two-pass по умолчанию
+        rs_start = max(start_f, int(args.ring_start_sec * fps))
         ring_res = scout_rings(
-            cap, zones_scaled, start_f, end_f, fps,
+            cap, zones_scaled, rs_start, end_f, fps,
             scout_step=max(1, args.ring_scout_step),
             lang=args.ocr_lang,
             refine_budget=max(1, args.ring_refine_budget),
@@ -717,6 +798,7 @@ def main() -> int:
                 "scout_step": args.ring_scout_step,
                 "refine_budget": args.ring_refine_budget,
                 "refine_linear": args.ring_refine_linear,
+                "ring_start_sec": args.ring_start_sec,
                 **ring_res,
             }, ensure_ascii=False, indent=2),
             encoding="utf-8",
