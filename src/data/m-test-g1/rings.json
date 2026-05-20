@@ -1,0 +1,141 @@
+{
+  "video": "scripts\\tracking\\game.mp4",
+  "fps": 59.94005994005994,
+  "scout_step": 600,
+  "refine_budget": 0,
+  "refine_linear": 0,
+  "note": "provisional: derived from forward hud_timeline samples; re-run hud_read --rings-only for frame-accurate timings",
+  "transitions": [
+    {
+      "f": 31234,
+      "t": 521.087,
+      "from": {
+        "ring": 1,
+        "state": "CLOSING"
+      },
+      "to": {
+        "ring": 2,
+        "state": "CLOSING"
+      },
+      "confidence": "low",
+      "refine_method": "timeline-derived",
+      "refine_window": 10800
+    },
+    {
+      "f": 46000,
+      "t": 767.433,
+      "from": {
+        "ring": 2,
+        "state": "CLOSING"
+      },
+      "to": {
+        "ring": 3,
+        "state": "CLOSING"
+      },
+      "confidence": "low",
+      "refine_method": "timeline-derived",
+      "refine_window": 14766
+    },
+    {
+      "f": 53200,
+      "t": 887.553,
+      "from": {
+        "ring": 3,
+        "state": "CLOSING"
+      },
+      "to": {
+        "ring": 4,
+        "state": "CLOSING"
+      },
+      "confidence": "low",
+      "refine_method": "timeline-derived",
+      "refine_window": 7200
+    },
+    {
+      "f": 61483,
+      "t": 1025.741,
+      "from": {
+        "ring": 4,
+        "state": "CLOSING"
+      },
+      "to": {
+        "ring": 5,
+        "state": "CLOSING"
+      },
+      "confidence": "low",
+      "refine_method": "timeline-derived",
+      "refine_window": 8283
+    },
+    {
+      "f": 68683,
+      "t": 1145.861,
+      "from": {
+        "ring": 5,
+        "state": "CLOSING"
+      },
+      "to": {
+        "ring": 6,
+        "state": "CLOSING"
+      },
+      "confidence": "low",
+      "refine_method": "timeline-derived",
+      "refine_window": 7200
+    }
+  ],
+  "phases": [
+    {
+      "ring": 1,
+      "countdown_start_f": null,
+      "t_countdown_start": null,
+      "closing_start_f": 20434,
+      "t_closing_start": 340.907,
+      "closed_f": null,
+      "t_closed": null
+    },
+    {
+      "ring": 2,
+      "countdown_start_f": null,
+      "t_countdown_start": null,
+      "closing_start_f": 31234,
+      "t_closing_start": 521.087,
+      "closed_f": null,
+      "t_closed": null
+    },
+    {
+      "ring": 3,
+      "countdown_start_f": null,
+      "t_countdown_start": null,
+      "closing_start_f": 46000,
+      "t_closing_start": 767.433,
+      "closed_f": null,
+      "t_closed": null
+    },
+    {
+      "ring": 4,
+      "countdown_start_f": null,
+      "t_countdown_start": null,
+      "closing_start_f": 53200,
+      "t_closing_start": 887.553,
+      "closed_f": null,
+      "t_closed": null
+    },
+    {
+      "ring": 5,
+      "countdown_start_f": null,
+      "t_countdown_start": null,
+      "closing_start_f": 61483,
+      "t_closing_start": 1025.741,
+      "closed_f": null,
+      "t_closed": null
+    },
+    {
+      "ring": 6,
+      "countdown_start_f": null,
+      "t_countdown_start": null,
+      "closing_start_f": 68683,
+      "t_closing_start": 1145.861,
+      "closed_f": null,
+      "t_closed": null
+    }
+  ]
+}
