@@ -7,79 +7,64 @@
   "ring_start_sec": 0.0,
   "transitions": [
     {
-      "f": 22252,
-      "t": 371.238,
-      "from": {
+      "f": 8400,
+      "t": 140.14,
+      "to": {
         "ring": 1,
         "state": "CLOSING"
       },
+      "confidence": "medium",
+      "refine_method": "rollback"
+    },
+    {
+      "f": 31005,
+      "t": 517.267,
       "to": {
         "ring": 2,
         "state": "CLOSING"
       },
-      "confidence": "low",
-      "refine_method": "binary10+linear4",
-      "refine_window": 5
+      "confidence": "medium",
+      "refine_method": "rollback"
     },
     {
-      "f": 38122,
-      "t": 636.002,
-      "from": {
-        "ring": 2,
-        "state": "CLOSING"
-      },
+      "f": 43508,
+      "t": 725.858,
       "to": {
         "ring": 3,
         "state": "CLOSING"
       },
-      "confidence": "low",
-      "refine_method": "binary10+linear0",
-      "refine_window": 6
+      "confidence": "medium",
+      "refine_method": "rollback"
     },
     {
-      "f": 47109,
-      "t": 785.935,
-      "from": {
-        "ring": 3,
-        "state": "CLOSING"
-      },
+      "f": 53099,
+      "t": 885.868,
       "to": {
         "ring": 4,
         "state": "CLOSING"
       },
-      "confidence": "low",
-      "refine_method": "binary10+linear3",
-      "refine_window": 4
+      "confidence": "medium",
+      "refine_method": "rollback"
     },
     {
-      "f": 56099,
-      "t": 935.918,
-      "from": {
-        "ring": 4,
-        "state": "CLOSING"
-      },
+      "f": 60895,
+      "t": 1015.932,
       "to": {
         "ring": 5,
         "state": "CLOSING"
       },
-      "confidence": "low",
-      "refine_method": "binary10+linear3",
-      "refine_window": 2
+      "confidence": "medium",
+      "refine_method": "rollback"
     },
     {
-      "f": 63895,
-      "t": 1065.982,
-      "from": {
-        "ring": 5,
-        "state": "CLOSING"
-      },
+      "f": 68088,
+      "t": 1135.935,
       "to": {
         "ring": 6,
         "state": "CLOSING"
       },
-      "confidence": "low",
-      "refine_method": "binary10+linear1",
-      "refine_window": 4
+      "confidence": "medium",
+      "refine_method": "rollback"
     }
   ],
   "phases": [
@@ -91,52 +76,69 @@
       "t_closing_start": 140.14,
       "closed_f": null,
       "t_closed": null,
-      "pre_window": true
+      "confidence": {
+        "CLOSING": "medium"
+      }
     },
     {
       "ring": 2,
       "countdown_start_f": null,
       "t_countdown_start": null,
-      "closing_start_f": 22252,
-      "t_closing_start": 371.238,
+      "closing_start_f": 31005,
+      "t_closing_start": 517.267,
       "closed_f": null,
-      "t_closed": null
+      "t_closed": null,
+      "confidence": {
+        "CLOSING": "medium"
+      }
     },
     {
       "ring": 3,
       "countdown_start_f": null,
       "t_countdown_start": null,
-      "closing_start_f": 38122,
-      "t_closing_start": 636.002,
+      "closing_start_f": 43508,
+      "t_closing_start": 725.858,
       "closed_f": null,
-      "t_closed": null
+      "t_closed": null,
+      "confidence": {
+        "CLOSING": "medium"
+      }
     },
     {
       "ring": 4,
       "countdown_start_f": null,
       "t_countdown_start": null,
-      "closing_start_f": 47109,
-      "t_closing_start": 785.935,
+      "closing_start_f": 53099,
+      "t_closing_start": 885.868,
       "closed_f": null,
-      "t_closed": null
+      "t_closed": null,
+      "confidence": {
+        "CLOSING": "medium"
+      }
     },
     {
       "ring": 5,
       "countdown_start_f": null,
       "t_countdown_start": null,
-      "closing_start_f": 56099,
-      "t_closing_start": 935.918,
+      "closing_start_f": 60895,
+      "t_closing_start": 1015.932,
       "closed_f": null,
-      "t_closed": null
+      "t_closed": null,
+      "confidence": {
+        "CLOSING": "medium"
+      }
     },
     {
       "ring": 6,
       "countdown_start_f": null,
       "t_countdown_start": null,
-      "closing_start_f": 63895,
-      "t_closing_start": 1065.982,
+      "closing_start_f": 68088,
+      "t_closing_start": 1135.935,
       "closed_f": null,
-      "t_closed": null
+      "t_closed": null,
+      "confidence": {
+        "CLOSING": "medium"
+      }
     }
   ],
   "derived": {
@@ -158,52 +160,52 @@
         "cx_norm": 0.3914,
         "cy_norm": 0.3885,
         "r_norm": 0.3112,
-        "measured_at_t": 109.89,
+        "measured_at_t": 124.89,
         "samples": 5,
         "geometry_confidence": "high"
       },
       {
         "ring": 2,
-        "cx_norm": 0.3606,
-        "cy_norm": 0.5225,
-        "r_norm": 0.4659,
-        "measured_at_t": 340.99,
+        "cx_norm": 0.4886,
+        "cy_norm": 0.3979,
+        "r_norm": 0.2772,
+        "measured_at_t": 502.02,
         "samples": 5,
         "geometry_confidence": "low"
       },
       {
         "ring": 3,
-        "cx_norm": 0.5503,
-        "cy_norm": 0.3699,
-        "r_norm": 0.3714,
-        "measured_at_t": 605.75,
+        "cx_norm": 0.4223,
+        "cy_norm": 0.2685,
+        "r_norm": 0.2215,
+        "measured_at_t": 710.61,
         "samples": 5,
         "geometry_confidence": "low"
       },
       {
         "ring": 4,
-        "cx_norm": 0.5469,
-        "cy_norm": 0.3198,
-        "r_norm": 0.2712,
-        "measured_at_t": 755.68,
+        "cx_norm": 0.3103,
+        "cy_norm": 0.4643,
+        "r_norm": 0.2019,
+        "measured_at_t": 870.62,
         "samples": 5,
-        "geometry_confidence": "high"
+        "geometry_confidence": "low"
       },
       {
         "ring": 5,
-        "cx_norm": 0.2983,
-        "cy_norm": 0.4718,
-        "r_norm": 0.2487,
-        "measured_at_t": 903.19,
-        "samples": 4,
+        "cx_norm": 0.3537,
+        "cy_norm": 0.4235,
+        "r_norm": 0.2291,
+        "measured_at_t": 1000.68,
+        "samples": 5,
         "geometry_confidence": "low"
       },
       {
         "ring": 6,
-        "cx_norm": 0.3549,
-        "cy_norm": 0.4258,
-        "r_norm": 0.2288,
-        "measured_at_t": 1035.73,
+        "cx_norm": 0.6349,
+        "cy_norm": 0.3035,
+        "r_norm": 0.1878,
+        "measured_at_t": 1120.68,
         "samples": 5,
         "geometry_confidence": "low"
       }
