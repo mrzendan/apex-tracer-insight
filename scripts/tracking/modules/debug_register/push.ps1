@@ -1,66 +1,59 @@
-# Быстрый цикл отладки: прогнать debug_register.py и запушить результат в git,
-# чтобы Lovable-агент увидел свежие картинки и report.txt.
+# debug_register: запустить debug_register.py и (опционально) запушить reports/ в git.
 #
-# Использование (из корня репо):
-#   powershell -ExecutionPolicy Bypass -File scripts/tracking/debug.ps1 -Video scripts/tracking/video.mp4
-#
-# Параметры:
-#   -Video   путь к mp4 (обязательно)
-#   -N       сколько кадров пробовать (по умолчанию 6)
-#   -Config  путь к конфигу (по умолчанию scripts/tracking/config.example.yaml)
-#   -Out     папка вывода (по умолчанию scripts/tracking/debug_out)
-#   -NoPush  не делать git push (только локальный коммит)
+# Использование:
+#   powershell -ExecutionPolicy Bypass -File scripts/tracking/modules/debug_register/push.ps1 -Video scripts/tracking/game.mp4
+#   powershell -ExecutionPolicy Bypass -File scripts/tracking/modules/debug_register/run.ps1  -Video scripts/tracking/game.mp4
 
 param(
   [Parameter(Mandatory=$true)][string]$Video,
   [int]$N = 6,
-  [string]$Config = "scripts/tracking/config.example.yaml",
-  [string]$Out = "scripts/tracking/debug_out",
+  [string]$Config = "scripts/tracking/modules/track_teams/config.example.yaml",
+  [string]$Out = "scripts/tracking/modules/debug_register/reports",
   [switch]$NoPush
 )
 
 $ErrorActionPreference = "Stop"
-
-# UTF-8 вывод (иначе кириллица превращается в Р·Р°РїСѓСЃРєР°СЋ)
 chcp 65001 > $null
 $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $env:PYTHONIOENCODING = "utf-8"
 $env:PYTHONUTF8 = "1"
 
-# 1. Найти корень репо (там, где .git)
 $repo = (git rev-parse --show-toplevel).Trim()
-if (-not $repo) { throw "Не вижу git-репозитория. Сначала подключи проект к GitHub в Lovable." }
+if (-not $repo) { throw "Не вижу git-репозитория." }
 Set-Location $repo
 
-# 2. Почистить старый debug_out, чтобы не таскать мусор
-if (Test-Path $Out) { Remove-Item -Recurse -Force $Out }
+if (Test-Path $Out) {
+  Get-ChildItem $Out -Recurse -Force | Where-Object { $_.Name -ne ".gitkeep" } |
+    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+}
+New-Item -ItemType Directory -Force -Path $Out | Out-Null
 
-# 3. Запустить отладку
-Write-Host "[debug] запускаю debug_register.py..." -ForegroundColor Cyan
-python scripts/tracking/debug_register.py --video $Video --config $Config --out $Out --n $N
+Write-Host "[debug] запускаю debug_register.py (n=$N)..." -ForegroundColor Cyan
+python scripts/tracking/modules/debug_register/debug_register.py --video $Video --config $Config --out $Out --n $N
 if ($LASTEXITCODE -ne 0) { throw "debug_register.py упал" }
 
-# 4. Размер на всякий случай — не пушим если вдруг гигабайты
 $size = (Get-ChildItem $Out -Recurse | Measure-Object Length -Sum).Sum / 1MB
-Write-Host ("[debug] debug_out весит {0:N1} MB" -f $size) -ForegroundColor Cyan
+Write-Host ("[debug] reports весит {0:N1} MB" -f $size) -ForegroundColor Cyan
 if ($size -gt 50) {
-  Write-Warning "debug_out больше 50 MB. Уменьши -N или сожми картинки перед коммитом."
+  Write-Warning "reports больше 50 MB. Уменьши -N."
   return
 }
 
-# 5. Коммит + пуш
+if ($NoPush) {
+  Write-Host "[ok] локально готово (no-push). Reports: $Out" -ForegroundColor Green
+  return
+}
+
 git add $Out
-$msg = "debug: tracking-lab run $(Get-Date -Format 'yyyy-MM-dd HH:mm')"
+$msg = "debug_register: run $(Get-Date -Format 'yyyy-MM-dd HH:mm')"
 git commit -m $msg | Out-Null
 if ($LASTEXITCODE -ne 0) {
-  Write-Host "[debug] нечего коммитить (нет изменений)" -ForegroundColor Yellow
+  Write-Host "[debug] нечего коммитить" -ForegroundColor Yellow
   return
 }
 
-if (-not $NoPush) {
-  Write-Host "[debug] git push..." -ForegroundColor Cyan
-  git push
-}
+Write-Host "[debug] git push..." -ForegroundColor Cyan
+git push
 
-Write-Host "[ok] готово. Скажи агенту в чате: 'посмотри scripts/tracking/debug_out/report.txt'" -ForegroundColor Green
+Write-Host "[ok] готово. Скажи агенту: 'посмотри scripts/tracking/modules/debug_register/reports/report.txt'" -ForegroundColor Green

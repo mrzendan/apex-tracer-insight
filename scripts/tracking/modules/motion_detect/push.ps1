@@ -1,28 +1,17 @@
-# Прогнать motion_detect.py и запушить motion_out в git,
-# чтобы Lovable-агент увидел свежий report.txt + overlays.
+# motion_detect: запустить motion_detect.py и (опционально) запушить reports/ в git.
 #
 # Использование (из корня репо):
-#   powershell -ExecutionPolicy Bypass -File scripts/tracking/motion.ps1 -Video scripts/tracking/game.mp4
+#   # обычный запуск с push (для меня, чтобы Lovable-агент увидел report.txt):
+#   powershell -ExecutionPolicy Bypass -File scripts/tracking/modules/motion_detect/push.ps1 -Video scripts/tracking/game.mp4
 #
-# Параметры:
-#   -Video         путь к mp4 (обязательно)
-#   -Cuts          cuts.json (по умолчанию scripts/tracking/cuts_out/cuts.json)
-#   -HsvPresets    HSV пресеты (по умолчанию scripts/tracking/configs/hsv_presets.worlds-edge.json)
-#   -Zones         zones.vod.json (по умолчанию scripts/tracking/configs/zones.vod.json)
-#   -ZoneTag       тег зоны (по умолчанию minimap)
-#   -StartSec      с какой секунды (по умолчанию 60)
-#   -Window        кадров в окне (по умолчанию 300)
-#   -Step          шаг между кадрами (по умолчанию 10)
-#   -StaticThresh  px ниже = статика (по умолчанию 3)
-#   -LinkDist      px макс. сдвиг между выборками (по умолчанию 80)
-#   -Out           папка вывода (по умолчанию scripts/tracking/motion_out)
-#   -NoPush        не делать git push (только локальный коммит)
+#   # без push (только локально):
+#   powershell -ExecutionPolicy Bypass -File scripts/tracking/modules/motion_detect/run.ps1  -Video scripts/tracking/game.mp4
 
 param(
   [Parameter(Mandatory=$true)][string]$Video,
-  [string]$Cuts = "scripts/tracking/cuts_out/cuts.json",
-  [string]$HsvPresets = "scripts/tracking/configs/hsv_presets.worlds-edge.json",
-  [string]$Zones = "scripts/tracking/configs/zones.vod.json",
+  [string]$Cuts = "scripts/tracking/modules/find_cuts/reports/cuts.json",
+  [string]$HsvPresets = "scripts/tracking/modules/motion_detect/configs/hsv_presets.worlds-edge.json",
+  [string]$Zones = "scripts/tracking/modules/motion_detect/configs/zones.vod.json",
   [string]$ZoneTag = "minimap",
   [double]$StartSec = 60,
   [int]$Window = 300,
@@ -34,7 +23,7 @@ param(
   [int]$LooseH = 5,
   [int]$LooseSvDrop = 30,
   [double]$AgreeRadius = 0,
-  [string]$Out = "scripts/tracking/motion_out",
+  [string]$Out = "scripts/tracking/modules/motion_detect/reports",
   [switch]$NoPush
 )
 
@@ -49,7 +38,6 @@ $repo = (git rev-parse --show-toplevel).Trim()
 if (-not $repo) { throw "Не вижу git-репозитория." }
 Set-Location $repo
 
-# Чистим старый motion_out, но сохраняем .gitkeep'ы
 if (Test-Path $Out) {
   Get-ChildItem $Out -Recurse -Force | Where-Object { $_.Name -ne ".gitkeep" } |
     Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
@@ -62,7 +50,7 @@ $logPath = Join-Path $Out "run.log"
 Write-Host "[motion] запускаю motion_detect.py (win=$Window step=$Step static<$StaticThresh link=$LinkDist diff=$DiffThresh hue<$ColorTol h±$LooseH)..." -ForegroundColor Cyan
 $prevEAP = $ErrorActionPreference
 $ErrorActionPreference = "Continue"
-& python scripts/tracking/motion_detect.py `
+& python scripts/tracking/modules/motion_detect/motion_detect.py `
   --video $Video `
   --cuts $Cuts `
   --hsv-presets $HsvPresets `
@@ -84,9 +72,14 @@ if ($code -ne 0) {
 }
 
 $size = (Get-ChildItem $Out -Recurse | Measure-Object Length -Sum).Sum / 1MB
-Write-Host ("[motion] motion_out весит {0:N1} MB" -f $size) -ForegroundColor Cyan
+Write-Host ("[motion] reports весит {0:N1} MB" -f $size) -ForegroundColor Cyan
 if ($size -gt 50) {
-  Write-Warning "motion_out больше 50 MB. Не коммичу. Уменьши -Window или сожми overlays."
+  Write-Warning "reports больше 50 MB. Не коммичу. Уменьши -Window или сожми overlays."
+  return
+}
+
+if ($NoPush) {
+  Write-Host "[ok] локально готово (no-push). Reports: $Out" -ForegroundColor Green
   return
 }
 
@@ -98,9 +91,7 @@ if ($LASTEXITCODE -ne 0) {
   return
 }
 
-if (-not $NoPush) {
-  Write-Host "[motion] git push..." -ForegroundColor Cyan
-  git push
-}
+Write-Host "[motion] git push..." -ForegroundColor Cyan
+git push
 
-Write-Host "[ok] готово. Скажи агенту: 'посмотри scripts/tracking/motion_out/report.txt'" -ForegroundColor Green
+Write-Host "[ok] готово. Скажи агенту: 'посмотри scripts/tracking/modules/motion_detect/reports/report.txt'" -ForegroundColor Green
