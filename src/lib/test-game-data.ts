@@ -4,6 +4,7 @@
  */
 import elimRaw from "@/data/m-test-g1/eliminations.json";
 import ringsRaw from "@/data/m-test-g1/rings.json";
+import ringsV2Raw from "@/data/m-test-g1/ring_geometry_v2.json";
 import slotToTagRaw from "@/data/m-test-g1/slot-to-tag.json";
 import type { GameEvent, RingPhase, Team } from "./mock-match";
 
@@ -50,9 +51,23 @@ type RingsFile = {
     map_bounds_in_roi?: { x: number; y: number; w: number; h: number };
   };
 };
+type RingGeomV2Phase = {
+  ring: number;
+  cx_canon_norm?: number;
+  cy_canon_norm?: number;
+  r_canon_norm?: number;
+  geometry_confidence?: string;
+  samples?: number;
+};
+type RingsV2File = {
+  canonical?: string;
+  canonical_size?: [number, number];
+  phases?: RingGeomV2Phase[];
+};
 
 const elim = elimRaw as unknown as ElimFile;
 const rings = ringsRaw as unknown as RingsFile;
+const ringsV2 = ringsV2Raw as unknown as RingsV2File;
 const slotToTag = slotToTagRaw as unknown as Record<string, string>;
 
 /** Сырая геометрия для дебаг-оверлея (?debug=1). */
@@ -81,15 +96,30 @@ export const testGameRingPhases: RingPhase[] = (() => {
       geomByRing.set(g.ring, g);
     }
   }
+  // v2: канонические координаты (storm_point.png 2048x2048), приоритет над v1.
+  const geomV2ByRing = new Map<number, RingGeomV2Phase>();
+  for (const g of ringsV2.phases ?? []) {
+    if (g.cx_canon_norm != null && g.cy_canon_norm != null && g.r_canon_norm != null
+        && (g.samples ?? 0) >= 2) {
+      geomV2ByRing.set(g.ring, g);
+    }
+  }
 
   const out: RingPhase[] = [];
   let lastReal: { cx: number; cy: number; r: number } | null = null;
   for (let i = 0; i < closing.length; i++) {
     const ringN = closing[i].ring;
+    const v2 = geomV2ByRing.get(ringN);
     const real = geomByRing.get(ringN);
     let cx: number, cy: number, r: number;
     let source: "real" | "inherited";
-    if (real) {
+    if (v2) {
+      cx = v2.cx_canon_norm!;
+      cy = v2.cy_canon_norm!;
+      r = v2.r_canon_norm!;
+      source = "real";
+      lastReal = { cx, cy, r };
+    } else if (real) {
       cx = real.cx_zoom_norm ?? real.cx_map_norm ?? real.cx_norm!;
       cy = real.cy_zoom_norm ?? real.cy_map_norm ?? real.cy_norm!;
       r = real.r_zoom_norm ?? real.r_map_norm ?? real.r_norm!;
