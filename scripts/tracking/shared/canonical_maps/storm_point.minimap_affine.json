@@ -1,11 +1,25 @@
 {
-  "_note": "2D affine from motion_detect minimap-ROI pixel coordinates to canonical map pixels. Calibrate once per (map, zones.json) pair: pick 3-4 distinctive landmarks visible both in the minimap zone overlay and on shared/canonical_maps/storm_point.png. minimap_px values are in the zone's local pixel space (origin = zone top-left, exactly what motion_detect outputs as consensus_xy).",
+  "_note": "2D affine from motion_detect minimap-ROI pixel coordinates to canonical map pixels (storm_point.png, 2048x2048). Derived from zones.vod.json -> zone 'z-mpdmsqzb-29' (minimap, ROI 1050x1030) using its map_bounds_in_roi = {x:45, y:0, w:960, h:1030} — the four corners of the canonical square inside the minimap ROI map to the four corners of the canonical image. Re-derive whenever zones.vod.json minimap or map_bounds_in_roi changes.",
   "map": "storm_point",
   "zone_tag": "minimap",
+  "source": {
+    "zones_file": "scripts/tracking/configs/zones.vod.json",
+    "zone_id": "z-mpdmsqzb-29",
+    "roi_size": [1050, 1030],
+    "map_bounds_in_roi": { "x": 45, "y": 0, "w": 960, "h": 1030 },
+    "canonical_size": [2048, 2048]
+  },
   "points": [
-    { "minimap_px": [0,    0],    "canonical_px": [0,    0]    },
-    { "minimap_px": [1080, 0],    "canonical_px": [2048, 0]    },
-    { "minimap_px": [1080, 1080], "canonical_px": [2048, 2048] },
-    { "minimap_px": [0,    1080], "canonical_px": [0,    2048] }
-  ]
+    { "minimap_px": [45,    0],    "canonical_px": [0,    0]    },
+    { "minimap_px": [1005,  0],    "canonical_px": [2048, 0]    },
+    { "minimap_px": [1005,  1030], "canonical_px": [2048, 2048] },
+    { "minimap_px": [45,    1030], "canonical_px": [0,    2048] }
+  ],
+  "affine": {
+    "_comment": "Cached 2x3 matrix [[a,b,tx],[c,d,ty]] so that canonical_xy = M @ [mx,my,1]. Identical to fitting the 4 points above.",
+    "matrix": [
+      [2.13333333, 0.0,        -96.0],
+      [0.0,        1.98834951,   0.0]
+    ]
+  }
 }
