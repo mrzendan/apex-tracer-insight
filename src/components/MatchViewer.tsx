@@ -992,6 +992,7 @@ function MapCanvas({
             })}
 
           </svg>
+          <RingDebugOverlay matchId={matchId} scale={view.scale} />
         </div>
       </div>
 
