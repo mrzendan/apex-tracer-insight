@@ -50,6 +50,7 @@ RE_PLAYERS = re.compile(r"(\d+)\s*PLAYERS?", re.I)
 RE_RING = re.compile(r"RING\s*(\d+).*?(CLOSING|COUNTDOWN|CLOSED|OPEN)", re.I)
 RE_INT = re.compile(r"-?\d+")
 RE_ELIM = re.compile(r"ELIMIN", re.I)
+_OCR_ERRORS_SEEN: set[str] = set()
 
 
 # ── helpers ──────────────────────────────────────────────────────────
@@ -115,7 +116,9 @@ def ocr(crop: np.ndarray, lang: str, digits_only: bool, alnum_only: bool = False
     if digits_only:
         whitelist = "0123456789"
     elif alnum_only:
-        whitelist = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 '-"
+        # Не добавляем пробелы/апострофы в whitelist: pytesseract передаёт config
+        # через парсер аргументов, и такие символы на Windows дают "No closing quotation".
+        whitelist = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     # Пробуем несколько PSM и берём непустой/самый длинный результат.
     psms = (7, 8, 6) if not digits_only else (8, 7, 10)
     best = ""
@@ -127,7 +130,10 @@ def ocr(crop: np.ndarray, lang: str, digits_only: bool, alnum_only: bool = False
             try:
                 txt = pytesseract.image_to_string(prep, lang=lang, config=cfg).strip()
             except Exception as e:  # pragma: no cover
-                print(f"[hud_read] tesseract error: {e}", file=sys.stderr)
+                msg = str(e)
+                if msg not in _OCR_ERRORS_SEEN:
+                    _OCR_ERRORS_SEEN.add(msg)
+                    print(f"[hud_read] tesseract error: {msg}", file=sys.stderr)
                 return ""
             if len(txt) > len(best):
                 best = txt
