@@ -78,38 +78,6 @@
         791.66,
         803.66
       ]
-    },
-    {
-      "ring": 4,
-      "cx_canon_px": 1419.3,
-      "cy_canon_px": 1690.4,
-      "r_canon_px": 1213.4,
-      "cx_canon_norm": 0.693,
-      "cy_canon_norm": 0.82537,
-      "r_canon_norm": 0.59248,
-      "canonical_size": [
-        2048,
-        2048
-      ],
-      "samples": 1,
-      "spread_px": 0.0,
-      "rel_spread": 0.0,
-      "geometry_confidence": "medium",
-      "measured_at_t": 939.8,
-      "pov_window": [
-        937.4,
-        949.4
-      ]
-    },
-    {
-      "ring": 5,
-      "samples": 0,
-      "geometry_confidence": "missing"
-    },
-    {
-      "ring": 6,
-      "samples": 0,
-      "geometry_confidence": "missing"
     }
   ]
 }

@@ -1,151 +1,110 @@
-# ring_locator — геометрия колец на миникарте
+# ring_locator — геометрия колец в canonical-координатах
 
-Второй слой ring-трекинга. Тайминги фаз приходят из `hud_read` (`rings.json`).
-Здесь мы только **измеряем (cx, cy, r)** следующего кольца в моменты,
-когда оно стоит — это окно `COUNTDOWN` между `t_closed[N-1]` и
-`t_closing_start[N]`. Положение/радиус кольца в любой другой момент
-восстанавливается аналитически (линейная интерполяция от prev к next
-за `closing_duration`).
+Второй слой ring-трекинга. Тайминги фаз приходят из `hud_read`
+(`rings.json`). Здесь мы только **измеряем (cx, cy, r)** кольца в
+координатах канонической карты (`shared/canonical_maps/<name>.png`),
+чтобы фронт мог рисовать кольца поверх статичной PNG без подгонки под
+плавающую HUD-миникарту.
 
-## Что нужно на входе
+## Алгоритм
 
-- `--video` — тот же VOD, что и для `hud_read`.
-- `--rings` — `rings.json` из `hud_read` с непустыми `phases[]`.
-- `--cuts` (опц.) — `find_cuts/reports/cuts.json`. Окна `hud_events`
-  пропускаем (там обсервер открыл fullmap/inventory и миникарта искажена).
-- `--minimap "x,y,w,h"` — прямоугольник миникарты в координатах
-  оригинального видео. По умолчанию `34,775,300,300` для 1920×1080.
-  (В `zones.vod.json` пока нет честной HUD-миникарты — есть только
-  `camera roi` для мирового видео; передавай явный rect, пока зону
-  не пропишем в `/admin/zones`.)
+Для каждого кольца N (по умолчанию N ∈ {1, 2, 3} — см. roadmap):
 
-## Как работает
-
-Для каждой фазы N с известным `t_closing_start[N]`:
-
-1. Окно сэмплирования: `[t_closed[N-1], t_closing_start[N] - 0.5s]`.
-   Для первой фазы (N=1) берём `[max(0, t_closing_start[1] - 60s),
-   t_closing_start[1] - 0.5s]`.
-2. Берём до 5 равномерных сэмплов, отфильтрованных по `cuts.json`
-   (вырезаем кадры внутри `hud_events`).
-3. На каждом сэмпле — кроп миникарты, HSV-маска по тёмно-серому
-   (низкая S, средняя V), морфология, `cv2.HoughCircles`.
-4. Из всех кандидатов берём медиану (cx, cy, r) — это страхует от
-   killcam/рекламных оверлеев.
-5. Sanity-check: центр следующего кольца должен лежать внутри
-   предыдущего (если оно уже измерено). Иначе фаза получает
-   `geometry_confidence: "low"`.
-
-## Дебаг
-
-По умолчанию пишет `reports/debug/`:
-- `ring{N}_roi_f{frame}.jpg` — сырой кроп ROI.
-- `ring{N}_overlay_f{frame}.jpg` — кроп + найденная окружность + рамка
-  `map_bounds_in_roi` (если задана в zones).
-- `ring{N}_mask_f{frame}.png` — HSV-маска, по которой работал HoughCircles.
-- `_all_rings_on_roi.jpg` — последний кадр ROI с наложенными ВСЕМИ
-  6 окружностями (нумерация R1…R6) — эталон для калибровки UI.
-
-Отключить: `--no-debug`. Изменить папку: `--debug-dir <path>`.
-
-### Калибровка `map_bounds_in_roi`
-
-ROI «camera roi» (1050×1030) включает HUD-края и чёрные поля вокруг
-квадратной игровой карты. Нормализация `cx_norm = cx_px / roi_w` отдаёт
-координаты *внутри ROI*, а сайт рисует кольца поверх *чистого квадрата
-карты* — отсюда систематическое смещение.
-
-Решение: в `scripts/tracking/configs/zones.vod.json` на зоне
-`camera roi` добавь блок:
-
-```json
-"map_bounds_in_roi": { "x": 45, "y": 0, "w": 960, "h": 1030 }
-```
-
-— где `x,y,w,h` — координаты квадрата игровой карты ВНУТРИ ROI.
-Подбирай по `_all_rings_on_roi.jpg`: зелёная рамка должна точно
-совпадать с границами квадратной карты, а не с ROI целиком.
-
-После калибровки `ring_locator` дополнительно пишет `cx_map_norm /
-cy_map_norm / r_map_norm` в `ring_geometry.json` — это правильные
-координаты для фронта.
-
-### Сравнение Python vs UI одним кадром
-
-```powershell
-python scripts\tracking\modules\ring_locator\compare_to_ui.py `
-  --map-image src\assets\maps\storm-point.png
-```
-
-→ `reports/debug/compare.png`: слева — что увидел Python на ROI,
-справа — те же кольца на чистой PNG карты в системе `map_norm`.
-Если кольца совпали по форме/положению — `map_bounds_in_roi` подобран
-верно.
-
-### Дебаг-режим на сайте
-
-Открой `/games/m-test-g1?debug=1` — поверх карты появятся все 6 колец
-цветом по номеру, крестик-центр и подпись с координатами. В левом
-верхнем углу — переключатель `roi-norm ↔ map-norm`: видно, какая
-система рисует кольца правильно.
+1. Берём окно после старта `COUNTDOWN(N+1)` — там кольцо N+1 уже
+   нарисовано и стоит. (`t_anchor + post_close_delay`, длина
+   `post_close_window`.)
+2. Режем окно границами `events` из `cuts.json` (POV-каты) и выкидываем
+   кадры внутри `hud_events ±0.5с` (killcam / fullmap / inventory).
+3. По N сэмплам:
+   - `FrameRegistrar` (SIFT + RANSAC) → гомография
+     `H: frame_px → canonical_px` и зум `H`.
+   - HSV-маска красной "опасной" зоны → `MORPH_GRADIENT` =
+     тонкий контур = граница кольца.
+   - **RANSAC по 3 точкам** фитит окружность. Устойчиво к видимой
+     дуге 1/3..1 (когда часть кольца обрезана краем миникарты).
+   - `(cx, cy) → canonical` через H, `r_canon = r_frame * zoom`.
+4. Медиана по сэмплам + `geometry_confidence` (`high / medium / low /
+   missing`) на основе разброса.
 
 ## Запуск
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\tracking\modules\ring_locator\run.ps1 `
+powershell -ExecutionPolicy Bypass -File `
+  scripts\tracking\modules\ring_locator\run.ps1 `
   -Video scripts\tracking\game.mp4 `
   -Rings scripts\tracking\modules\hud_read\reports\rings.json `
   -Cuts  scripts\tracking\modules\find_cuts\reports\cuts.json `
-  -Minimap "34,775,300,300"
+  -Zones scripts\tracking\configs\zones.vod.json `
+  -Canonical storm_point `
+  -MaxRing 3
 ```
 
 ## Выход
 
-`reports/ring_geometry.json`:
+`reports/ring_geometry_v2.json`:
 
 ```json
 {
-  "video": "...", "fps": 59.94, "minimap": [34, 775, 300, 300],
+  "canonical": "storm_point",
+  "canonical_size": [2048, 2048],
+  "max_ring": 3,
   "phases": [
-    { "ring": 1, "cx_norm": 0.50, "cy_norm": 0.50, "r_norm": 0.46,
-      "measured_at_t": 100.0, "samples": 3,
+    {
+      "ring": 1,
+      "cx_canon_norm": 0.39161,
+      "cy_canon_norm": 0.41149,
+      "r_canon_norm": 0.30597,
+      "samples": 4,
+      "rel_spread": 0.0,
       "geometry_confidence": "high",
-      "pov_window": [70.2, 99.5], "pov_subwindows_total": 2 }
+      "measured_at_t": 393.44,
+      "pov_window": [387.44, 399.44]
+    }
   ]
 }
 ```
 
-Координаты нормализованы к миникарте: (0,0) — левый верх, (1,1) —
-правый низ. Фронт умножает на размеры своего MapCanvas.
+Координаты нормализованы к canonical-карте (`0..1` от
+`canonical_size`). Фронт умножает на размер `MapCanvas` — никакой
+калибровки `map_bounds_in_roi` или поправок на HUD больше не нужно.
 
-## Почему нужен `--cuts`
+На UI данные подхватывает `src/lib/test-game-data.ts` через
+`src/data/m-test-g1/ring_geometry_v2.json`. Фазы без замера наследуют
+последнее реальное кольцо (`source: "inherited"`).
 
-HUD-миникарта в Apex плавающая: её центр и зум привязаны к POV
-спектируемого игрока. Если внутри окна COUNTDOWN обсервер переключил
-POV (`events` в `cuts.json`), сэмплы относятся к разным проекциям мира
-и медиана `(cx, cy, r)` даёт смещённый центр / неверный радиус.
+## Зависимости
 
-`ring_locator` режет окно `[t_closed[N-1]..t_closing_start[N]-0.5]`
-границами `events.t` на под-окна непрерывного POV, сэмплит каждое
-отдельно и выбирает то, где разброс `(cx, cy, r)` между сэмплами
-минимален. `hud_events` остаются blacklist'ом отдельных кадров
-(killcam/zoom-пульс, ±0.5с) — внутри POV-окна они только пропускают
-конкретный кадр, а не отбрасывают всё окно.
+- `track_teams.FrameRegistrar` — SIFT/ORB + RANSAC, общий канонический
+  лоадер карт.
+- `find_cuts/reports/cuts.json` — POV-каты и `hud_events`.
+- `hud_read/reports/rings.json` — `transitions[]` с переходами в
+  `COUNTDOWN` и `phases[]` с `t_closing_start`.
 
-Поля в выводе:
-- `pov_window` — какой POV-сегмент использовали для замера;
-- `pov_subwindows_total` — сколько вообще POV-сегментов нашлось в окне.
+## Roadmap — поздние кольца (R4..R6)
 
-Без `--cuts` работает по-старому (одно окно) — но печатает warning,
-потому что на плавающей миникарте `geometry_confidence` массово
-уходит в `low`.
+Текущий пайплайн **умышленно ограничен `--max-ring 3`**, потому что
+поздние фазы регулярно проваливают одну или несколько проверок:
 
-## Что дальше
+- **Радиус → меньше шумов**. У R4..R6 кольцо занимает 10..30 px на
+  ROI; RANSAC по дуге становится менее устойчив, доминируют красные
+  HUD-элементы вне миникарты.
+- **POV нестабилен**. В лейте обсервер быстро прыгает между POV,
+  валидное под-окно `pov_subwindows` часто короче `min_len`.
+- **Killcam / smoke / гранаты** дают красные пятна, ломающие маску
+  «опасной» зоны.
+- **Регистрация ROI** на лейтовых fullmap-сценах с подсветкой
+  выживших иногда отдаёт малое число inliers.
 
-`sync_to_ui.py` мерджит `ring_geometry.json` в
-`src/data/m-test-g1/rings.json` (новый ключ `geometry`).
-`src/lib/test-game-data.ts` читает `geometry`, если есть — строит
-`RingPhase[]` из реальных измерений. Фазы без реального замера
-наследуют предыдущее реальное кольцо (`source: "inherited"`) —
-мок-смещения больше не используются, чтобы на превью не появлялись
-«лишние» нарисованные кольца.
+Возможные улучшения:
+
+1. Маска по **сине-белой кайме** кольца (а не по внешней красной
+   зоне) — у поздних колец она тоньше, но контрастнее.
+2. Анкер по предыдущему реальному кольцу: ограничить поиск центра
+   `R_{N+1}` окрестностью `R_N` (физика Apex: следующее кольцо
+   полностью внутри предыдущего).
+3. Brute-force без регистрации: фитить окружность сразу в canonical,
+   варпая ROI через H предыдущего успешного сэмпла.
+4. Использовать full-map (M / Tab) кадры — у них стабильный масштаб
+   и нет HUD-шума, но они появляются эпизодически.
+
+До реализации — поздние фазы наследуют последнее замеренное кольцо.
