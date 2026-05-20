@@ -1053,10 +1053,11 @@ function MapCanvas({
 
 /* ---------- TIMELINE ---------- */
 function Timeline({
-  time, duration, playing, speed, onSeek, onTogglePlay, onSpeedChange,
+  time, duration, playing, speed, onSeek, onTogglePlay, onSpeedChange, ringSegments, events,
 }: {
   time: number; duration: number; playing: boolean; speed: number;
   onSeek: (t: number) => void; onTogglePlay: () => void; onSpeedChange: (s: number) => void;
+  ringSegments: RingSegment[]; events: GameEvent[];
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
