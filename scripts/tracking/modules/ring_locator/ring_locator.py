@@ -260,8 +260,12 @@ def main() -> int:
                        ensure_ascii=False, indent=2), encoding="utf-8")
         return 0
 
-    bad = load_cuts(args.cuts)
-    print(f"[ring_locator] cuts mask: {len(bad)} bad intervals")
+    cut_ts, hud_bad = load_cut_segments(args.cuts)
+    if args.cuts is None:
+        print("[ring_locator] WARN: --cuts не передан — на плавающей "
+              "HUD-миникарте точность геометрии деградирует")
+    print(f"[ring_locator] cuts: {len(cut_ts)} POV-границ, "
+          f"{len(hud_bad)} hud_event-интервалов")
 
     cap = cv2.VideoCapture(str(args.video))
     if not cap.isOpened():
@@ -286,10 +290,12 @@ def main() -> int:
             window = median_countdown if median_countdown else 30.0
             t_lo = max(0.0, t_close - float(window))
         t_hi = t_close - 0.5
-        samples = sample_phase(cap, minimap_rect, t_lo, t_hi, fps, bad)
+        samples, chosen, n_sub = sample_phase(
+            cap, minimap_rect, t_lo, t_hi, fps, cut_ts, hud_bad,
+        )
         if not samples:
             print(f"[ring_locator] R{ring_n}: нет валидных сэмплов "
-                  f"в окне [{t_lo:.1f}..{t_hi:.1f}]")
+                  f"в окне [{t_lo:.1f}..{t_hi:.1f}] (POV-сегментов: {n_sub})")
             out_phases.append({
                 "ring": ring_n,
                 "cx_norm": None, "cy_norm": None, "r_norm": None,
@@ -317,9 +323,12 @@ def main() -> int:
             "measured_at_t": round(t_avg, 2),
             "samples": len(samples),
             "geometry_confidence": confidence,
+            "pov_window": [round(chosen[0], 2), round(chosen[1], 2)] if chosen else None,
+            "pov_subwindows_total": n_sub,
         })
+        pov_s = f"[{chosen[0]:.1f}..{chosen[1]:.1f}]" if chosen else "n/a"
         print(f"[ring_locator] R{ring_n}: ({cx:.3f},{cy:.3f}) r={r:.3f} "
-              f"n={len(samples)} {confidence}")
+              f"n={len(samples)} {confidence} pov={pov_s} (sub={n_sub})")
 
     cap.release()
     args.out.mkdir(parents=True, exist_ok=True)
