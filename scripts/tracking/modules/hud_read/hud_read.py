@@ -850,6 +850,13 @@ def main() -> int:
     # rings-only — короткий путь
     if args.rings_only:
         rs_start = max(start_f, int(args.ring_start_sec * fps))
+        if args.ring_debug_sec > 0:
+            save_ring_debug_screenshots(
+                cap, zones_scaled, rs_start, end_f, fps,
+                step_sec=args.ring_debug_sec,
+                out_dir=args.out / "ring_debug",
+                lang=args.ocr_lang,
+            )
         ring_res = scout_rings(
             cap, zones_scaled, rs_start, end_f, fps,
             scout_step=max(1, args.ring_scout_step),
@@ -874,6 +881,14 @@ def main() -> int:
         return 0
 
     if args.mode in ("scout", "two-pass"):
+        if args.ring_debug_sec > 0:
+            rs_start_dbg = max(start_f, int(args.ring_start_sec * fps))
+            save_ring_debug_screenshots(
+                cap, zones_scaled, rs_start_dbg, end_f, fps,
+                step_sec=args.ring_debug_sec,
+                out_dir=args.out / "ring_debug",
+                lang=args.ocr_lang,
+            )
         elim = scout_eliminations(cap, zones_scaled, start_f, end_f, fps,
                                   reverse_step=max(1, args.reverse_step),
                                   lang=args.ocr_lang,
