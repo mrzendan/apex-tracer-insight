@@ -324,12 +324,12 @@ def read_ring_at(cap: cv2.VideoCapture, f: int, zone: dict,
     state: str | None = None
     if "CLOSED" in up:
         state = "CLOSED"
+    elif "COUNTDOWN" in up or "COUNT" in up or "NTDOWN" in up:
+        state = "COUNTDOWN"
     elif "CLOSING" in up or "CLOS" in up:  # OCR любит ломать "CLOSING" → "CLOS1NG"/"CLOSNG"
         # snap: проверим, что это именно CLOSING, а не CLOSED
         snapped = snap_to_known(up, ["CLOSING", "CLOSED"], max_dist=2)
         state = snapped or "CLOSING"
-    elif "COUNTDOWN" in up:
-        state = "COUNTDOWN"
     # 2) если ничего из слов — но виден таймер MM:SS → это COUNTDOWN ("RING N IN M:SS")
     if state is None and RE_RING_TIMER.search(up):
         state = "COUNTDOWN"
