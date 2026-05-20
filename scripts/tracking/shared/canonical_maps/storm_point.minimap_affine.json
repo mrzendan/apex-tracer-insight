@@ -1,0 +1,11 @@
+{
+  "_note": "2D affine from motion_detect minimap-ROI pixel coordinates to canonical map pixels. Calibrate once per (map, zones.json) pair: pick 3-4 distinctive landmarks visible both in the minimap zone overlay and on shared/canonical_maps/storm_point.png. minimap_px values are in the zone's local pixel space (origin = zone top-left, exactly what motion_detect outputs as consensus_xy).",
+  "map": "storm_point",
+  "zone_tag": "minimap",
+  "points": [
+    { "minimap_px": [0,    0],    "canonical_px": [0,    0]    },
+    { "minimap_px": [1080, 0],    "canonical_px": [2048, 0]    },
+    { "minimap_px": [1080, 1080], "canonical_px": [2048, 2048] },
+    { "minimap_px": [0,    1080], "canonical_px": [0,    2048] }
+  ]
+}
