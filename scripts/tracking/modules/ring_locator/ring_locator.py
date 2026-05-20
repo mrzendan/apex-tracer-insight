@@ -303,10 +303,14 @@ def main() -> int:
         map_bounds = map_bounds_from_zones(args.zones, args.minimap_zone)
         if map_bounds:
             print(f"[ring_locator] map_bounds_in_roi = {map_bounds}")
+        zoom_correction = zoom_correction_from_zones(args.zones, args.minimap_zone)
+        if zoom_correction:
+            print(f"[ring_locator] map_zoom_correction = {zoom_correction}")
     else:
         minimap_rect = parse_rect(args.minimap)
         print(f"[ring_locator] minimap (raw) = {minimap_rect}")
         map_bounds = None
+        zoom_correction = None
     rings_data = json.loads(args.rings.read_text(encoding="utf-8"))
     fps = float(rings_data.get("fps") or 30.0)
     phases = rings_data.get("phases") or []
@@ -408,9 +412,19 @@ def main() -> int:
         # (если задан map_bounds_in_roi).
         if map_bounds:
             mbx, mby, mbw, mbh = map_bounds
-            entry["cx_map_norm"] = round((cx_px - mbx) / mbw, 4)
-            entry["cy_map_norm"] = round((cy_px - mby) / mbh, 4)
-            entry["r_map_norm"]  = round(r_px / max(mbw, mbh), 4)
+            cx_map = (cx_px - mbx) / mbw
+            cy_map = (cy_px - mby) / mbh
+            r_map = r_px / max(mbw, mbh)
+            entry["cx_map_norm"] = round(cx_map, 4)
+            entry["cy_map_norm"] = round(cy_map, 4)
+            entry["r_map_norm"]  = round(r_map, 4)
+            zoomed = apply_zoom_correction(cx_map, cy_map, r_map, ring_n, zoom_correction)
+            if zoomed is not None:
+                zcx, zcy, zr, zoom = zoomed
+                entry["cx_zoom_norm"] = round(zcx, 4)
+                entry["cy_zoom_norm"] = round(zcy, 4)
+                entry["r_zoom_norm"] = round(zr, 4)
+                entry["map_zoom"] = round(zoom, 3)
         # ---- DEBUG: пересчитаем детекцию на центральном кадре и сохраним кропы ----
         if debug_dir is not None:
             t_dbg = samples[len(samples) // 2][0]
@@ -464,6 +478,8 @@ def main() -> int:
             "x": map_bounds[0], "y": map_bounds[1],
             "w": map_bounds[2], "h": map_bounds[3],
         }
+    if zoom_correction:
+        payload["map_zoom_correction"] = zoom_correction
     out_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2),
                         encoding="utf-8")
     print(f"[ring_locator] → {out_path}")
