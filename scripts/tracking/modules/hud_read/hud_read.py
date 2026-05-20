@@ -51,6 +51,9 @@ RE_RING = re.compile(r"RING\s*(\d+).*?(CLOSING|COUNTDOWN|CLOSED|OPEN)", re.I)
 # Раздельные «половинки» для случаев, когда OCR-плашки путает символы
 # (CLOS1NG, OOUNTDOWN и т.п.) и единый regex не срабатывает.
 RE_RING_NUM = re.compile(r"R[I1L]NG\s*([1-9])", re.I)
+# В Apex HUD во время COUNTDOWN буквального слова "COUNTDOWN" нет —
+# отображается "RING N IN M:SS". Детектим таймер MM:SS / M:SS.
+RE_RING_TIMER = re.compile(r"\b\d{1,2}\s*[:.]\s*\d{2}\b")
 RING_STATES = ("CLOSING", "COUNTDOWN", "CLOSED", "OPEN")
 RE_INT = re.compile(r"-?\d+")
 RE_ELIM = re.compile(r"ELIMIN", re.I)
