@@ -12,7 +12,7 @@ import sys
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import cv2
 import numpy as np
@@ -51,6 +51,15 @@ RE_RING = re.compile(r"RING\s*(\d+).*?(CLOSING|COUNTDOWN|CLOSED|OPEN)", re.I)
 RE_INT = re.compile(r"-?\d+")
 RE_ELIM = re.compile(r"ELIMIN", re.I)
 _OCR_ERRORS_SEEN: set[str] = set()
+
+# Глобальные кеши, работают на протяжении всего прогона.
+# Кеш OCR по (tag, name, dhash(crop)) → последнее распарсенное value.
+_OCR_CACHE: dict[tuple[str, str, str], Any] = {}
+_OCR_CACHE_HITS = 0
+_OCR_CACHE_MISS = 0
+# Калибровка: после первой удачной комбинации (psm_idx, prep_idx)
+# для зоны фиксируем «победителя» и больше не перебираем варианты.
+_OCR_CALIB: dict[tuple[str, str], tuple[int, int]] = {}
 
 
 # ── helpers ──────────────────────────────────────────────────────────
@@ -106,7 +115,8 @@ def preprocess_for_ocr(crop: np.ndarray) -> np.ndarray:
     return pad(th1), pad(th2)
 
 
-def ocr(crop: np.ndarray, lang: str, digits_only: bool, alnum_only: bool = False) -> str:
+def ocr(crop: np.ndarray, lang: str, digits_only: bool, alnum_only: bool = False,
+        calib_key: Optional[tuple[str, str]] = None) -> str:
     if pytesseract is None or crop.size == 0:
         return ""
     preps = preprocess_for_ocr(crop)
@@ -120,10 +130,29 @@ def ocr(crop: np.ndarray, lang: str, digits_only: bool, alnum_only: bool = False
         # через парсер аргументов, и такие символы на Windows дают "No closing quotation".
         whitelist = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     # Пробуем несколько PSM и берём непустой/самый длинный результат.
+    # Если для этой зоны уже зафиксирована «победившая» комбинация —
+    # используем только её (экономия x3–x6 на вызовах tesseract).
     psms = (7, 8, 6) if not digits_only else (8, 7, 10)
+    locked = _OCR_CALIB.get(calib_key) if calib_key is not None else None
+    if locked is not None:
+        psm_i, prep_i = locked
+        try:
+            prep = preps[prep_i]
+            psm = psms[psm_i]
+            cfg = f"--psm {psm} --oem 1"
+            if whitelist:
+                cfg += f" -c tessedit_char_whitelist={whitelist}"
+            return pytesseract.image_to_string(prep, lang=lang, config=cfg).strip()
+        except Exception as e:  # pragma: no cover
+            msg = str(e)
+            if msg not in _OCR_ERRORS_SEEN:
+                _OCR_ERRORS_SEEN.add(msg)
+                print(f"[hud_read] tesseract error: {msg}", file=sys.stderr)
+            return ""
     best = ""
-    for prep in preps:
-        for psm in psms:
+    best_combo: Optional[tuple[int, int]] = None
+    for prep_i, prep in enumerate(preps):
+        for psm_i, psm in enumerate(psms):
             cfg = f"--psm {psm} --oem 1"
             if whitelist:
                 cfg += f" -c tessedit_char_whitelist={whitelist}"
@@ -137,6 +166,9 @@ def ocr(crop: np.ndarray, lang: str, digits_only: bool, alnum_only: bool = False
                 return ""
             if len(txt) > len(best):
                 best = txt
+                best_combo = (psm_i, prep_i)
+    if calib_key is not None and best and best_combo is not None:
+        _OCR_CALIB[calib_key] = best_combo
     return best
 
 
