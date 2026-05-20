@@ -1,0 +1,11 @@
+{
+  "_note": "Manual ground-truth anchors for ID-switch evaluation. Add ~30 entries spread across the match — one per (slot, timestamp). Pick by skimming overlay frames or the in-game minimap. world_xy is in canonical-px units (same space as meta.canonical_size).",
+  "video": "game.mp4",
+  "points": [
+    { "t": 60.0,   "slot_id": "slot_3",  "world_xy": [515, 284] },
+    { "t": 60.0,   "slot_id": "slot_4",  "world_xy": [767, 374] },
+    { "t": 60.0,   "slot_id": "slot_6",  "world_xy": [451, 136] },
+    { "t": 60.0,   "slot_id": "slot_19", "world_xy": [116, 305] },
+    { "t": 60.0,   "slot_id": "slot_20", "world_xy": [840, 562] }
+  ]
+}
