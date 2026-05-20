@@ -29,6 +29,11 @@ param(
   [int]$Step = 10,
   [double]$StaticThresh = 3,
   [double]$LinkDist = 80,
+  [int]$DiffThresh = 12,
+  [int]$ColorTol = 12,
+  [int]$LooseH = 5,
+  [int]$LooseSvDrop = 30,
+  [double]$AgreeRadius = 0,
   [string]$Out = "scripts/tracking/motion_out",
   [switch]$NoPush
 )
@@ -54,7 +59,7 @@ New-Item -ItemType Directory -Force -Path (Join-Path $Out "overlays") | Out-Null
 
 $logPath = Join-Path $Out "run.log"
 
-Write-Host "[motion] запускаю motion_detect.py (window=$Window step=$Step static<$StaticThresh link=$LinkDist)..." -ForegroundColor Cyan
+Write-Host "[motion] запускаю motion_detect.py (win=$Window step=$Step static<$StaticThresh link=$LinkDist diff=$DiffThresh hue<$ColorTol h±$LooseH)..." -ForegroundColor Cyan
 $prevEAP = $ErrorActionPreference
 $ErrorActionPreference = "Continue"
 & python scripts/tracking/motion_detect.py `
@@ -66,6 +71,9 @@ $ErrorActionPreference = "Continue"
   --start-sec $StartSec `
   --window $Window --step $Step `
   --static-thresh $StaticThresh --link-dist $LinkDist `
+  --diff-thresh $DiffThresh --color-tol $ColorTol `
+  --loose-h $LooseH --loose-sv-drop $LooseSvDrop `
+  --agree-radius $AgreeRadius `
   --out-dir $Out 2>&1 | ForEach-Object { "$_" } | Tee-Object -FilePath $logPath
 $code = $LASTEXITCODE
 $ErrorActionPreference = $prevEAP
