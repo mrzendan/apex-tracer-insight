@@ -7,8 +7,9 @@ import {
   matchSeedExtras,
   teams,
   generateTrajectory,
-  ringPhases,
-  events,
+  ringPhases as defaultRingPhases,
+  events as defaultEvents,
+  gameDataOverrides,
   getGames,
   parseGameId,
   type Team,
@@ -53,14 +54,16 @@ function matchesFilter(e: GameEvent, f: EventFilter) {
 /** Split each ring phase into CD (waiting) and Closing windows. */
 const RING_CLOSE_FRACTION = 0.4;
 type RingSegment = { phaseIndex: number; kind: "CD" | "Closing"; startSec: number; endSec: number };
-const ringSegments: RingSegment[] = ringPhases.flatMap((p, i) => {
-  const dur = p.endSec - p.startSec;
-  const closeStart = p.startSec + dur * (1 - RING_CLOSE_FRACTION);
-  return [
-    { phaseIndex: i, kind: "CD",      startSec: p.startSec, endSec: closeStart } as RingSegment,
-    { phaseIndex: i, kind: "Closing", startSec: closeStart, endSec: p.endSec }    as RingSegment,
-  ];
-});
+function buildRingSegments(phases: RingPhase[]): RingSegment[] {
+  return phases.flatMap((p, i) => {
+    const dur = p.endSec - p.startSec;
+    const closeStart = p.startSec + dur * (1 - RING_CLOSE_FRACTION);
+    return [
+      { phaseIndex: i, kind: "CD",      startSec: p.startSec, endSec: closeStart } as RingSegment,
+      { phaseIndex: i, kind: "Closing", startSec: closeStart, endSec: p.endSec }    as RingSegment,
+    ];
+  });
+}
 
 export function MatchViewer({ initialGameId }: { initialGameId?: string }) {
   const initial = (() => {
