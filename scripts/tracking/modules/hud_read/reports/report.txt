@@ -1,0 +1,315 @@
+hud_read — 87 frames analyzed (step=600)
+video: scripts\tracking\game.mp4
+zones: scripts\tracking\configs\zones.vod.json
+
+tag        name                         ok%  parsed%  suggest  examples
+hud        game number                 100%     100%  OK                     4, 4, 4
+hud        map name                    100%     100%  OK                     STORM POINT, STORM POINT, STORM POINT
+hud        number of players alive      34%       0%  EMPTY/MISALIGNED       
+hud        number of teams alive        51%       0%  TIGHTEN                
+hud        ring status                 100%      36%  TIGHTEN                {'ring': 1, 'state': 'CLOSING'}, {'ring': 1, 'state': 'CLOSING'}, {'ring': 1, 'state': 'CLOSING'}, {'ring': 1, 'state': 'CLOSING'}, {'ring': 2, 'state': 'CLOSING'}
+minimap    camera roi                  100%     100%  OK                     ‘s ye - ; fey 5”
+i. * . ZEUS STATION
+x -* ~—. a _ elite Feports ll Ro ; wee
+FO Elite Esports - — eT
+woo. oe, a, THE) WALL
++ Team Liquid a
+f WKN = 3 oO
+‘ ~ oc Miports ——_ Oblivion | \ ! Source Gaming
+, wi. I ‘ 2 ~,
+ROC Esport: NinjasinPyjamas “ \ xX a f 7
+. ¢ \ NYASINEYIAMSS Full Full XI a sh S.° LIGHTNE.
+a Sie  - StlopifyRebeltion n Yo N
+S . | we | St ShopifyRebellion ty
+<< lo, CrazyThieves = Sox f =
+‘ OF ni 7 ~- le COMMAND’ CENTER }
+\ (ehecrorny , / ¥ i .
+eo NO oS Fasten rem S$ \
+a Re So ee q 3 7. cASKApE FALLS la i : _
+\ A 3b “ sae 7 an _ STORM SATCHER * <
+TLL re 2 Se ae o , 7
+a Ry eo 5. 3 (a
+c . o ey / ° .
+— a oe, a e Stallions 2g
+~% ~~ JD GAMING Oo - , i.
+C < “ee a , 4 e 4 ; Li, | = 3 a \
+@ rl a Soe re ate Oo of Yoo
+VEN Oy Bir THUGS “/ a =
+. _ 6S ae ae - t ° an on Laten fac
+ee oo. ee — 68 Sa. < &
+7) 2 ON ao ae af
+e 57 & g BRM 7
+DTE CAVE> a _ eg eS, NY g& . ei a?
+Oo. oS ZEUS, STATION)
+. “> 7 Elite Esports >| ll o “ 5
+‘ a Be =) = ° 0
+BAM on - Sie WALL, —_
+- Team Liquid a
+oO iam Liquid \ y oO
+. of oe eee RL |
+"FORE uN snPy ee an \ en Aa
+Spor! NinjasinPyjamas ; oY
+"© Niwasinryismas Full Full XI 7 \ \, y LIGHTNY,
+. cen, . ~ . oo jee Ca \ i ho
+. . . oe. S ShopifyRebellion <S nn,
+NO, — CrayThievess Bee —
+ar ae / mer. i le COMMAND CENTER y
+Vv. (SHECHPOINT _
+7 . Hazy WlbweS / ' ao |
+eo . . v . e . } JR VIVAL Pa - q Co
+ez NO 0 8 ee. a \
+Cus woe CASCADE FALLS,
+\ 4 rere) ~ 3 S a ce STORM Baton” 4
+"wen Oe, p* Free Thinkers ION Do N a F
+\ a) ) cere Hi ION O a ,
+a SQ CON /
+A G 8 LH 7 ; qQ*
+, -~o Stallinns <. Wo “Se
+° . f Nee a Stallions Node ; ae °
+g — fl Fo) .
+@ 1, GX. SD GAMING o AY?
+Sr ea Yy \ Se __ se . ‘o.
+So <Q 4S THUGGETS gt .
+@ ott \Y” @ BBBIBDI ss mg
+PTE CAVE va A NY yet be, in f a VN * ma, cee a ZEUS STATION
+Nat : Elite Exports = "Oo
+we 2. MS o . IHe| WALL rf
+. Team Liquid d .
+fo a: .
+ROC Espor NinjasinPyjamas \ a a
+(° Ninjasin™jamas Ful Full XI an | SO o> EIGHTNE
+Ex eS i. . _ ‘ . ¥ / |
+iM | WP gs) ShopifyRebellion S bore
+7 ; or eee x Lp
+ee AO, Crary Thives inves . ay? iy,
+oi° \ aa ° COMMAND CENTER DIS 4
+SOR SIAET / 4
+re On ae <.
+be) 7 ON & : ae 7 <
+a: {7S comm |
+4 me. 2 CASCADE FALLS” »
+Ke Bs NN NGA Se a:
+Wo, 3 oe” - ; STORM SATCHER™ ©
+i ue , .
+SN OS fF Free Thinkers ts * “e
+[LL ty 2 CETASSTATION Oo ~ ‘
+~ we Leela . 7 Ig os
+C oC oO: fa) Ss o :
+a i aa ™~ \; . Tf ie ae) ‘ °
+CO Ss 2 ‘DKK C+ Stallions | BOON
+@rr, 4 ny a eo mw ° Stallions | o a
+OOS AD GAMING | So |
+ne a = OF a> ~s ‘ .
+Cy SG THUBBETS Og 8
+_ © ef 4 78 2 © .
+Tove m = INGICLOSING «© ;
+DTE CAVE> _ fe o, aac wi, oy r ZEUS, STARION
+i a ~ “oe “ pope
+a ae EliteEspots, = ery
+S (ao o : IWE)WALL
+_ Team Liquid |": ;
+. SS Ao... \ yo a
+. Toe . Obliviat ; Lo Sour
+Y enn a . . . . 1 : a ri
+ROC Espori NinjasinPyjamas | ~ . \ \ CO os ° LIGHTNZ.
+( \  Ninjasine amas F Full XI \ 7 A ; %? Py 4
+f° te ° : ° in i Be
+yy \ . | : ShopifyRebellion ‘ _ a)
+4 NO. Crazy Thieves | eee
+<= azy Thieves . .
+; :  Cideytiteves /
+° VY < CRT . /
+~ * - } A - q
+° | N 9 8 iy, yA REVIVAL ‘
+SO $s CASCADE FALLS/< ogo
+a / a L, ,e
+we Sa ‘S Ley EX:
+a . IN : a7 fag ” te
+a So - el te STORM CATCHER: ”
+“Na OD . _¢  FreeThinkersi <>. ag ‘
+TLL — OD LE IL’ Sy ntgON Oo . 7 .
+we fe I AST Om’ .
+tC Co o 7 o ;
+° 4 Ser . ~~ Ns OF ~¢
+8. OD: DKK eo ONY
+2 SS re « © ora i} 8 oy
+\¢ Te NN a * Stallions oN
+(KEY SDGAMING *"*-THUGGETS Stallions ae
+ry ~ - .~ . ‘ + om a jo a oe *
+° _ Se a __ a oN QO 2 SAB. Poe | Laren: Bao
+; ~ a NG OP ° hs
+-y Oe 4 em at
+DTE CAVE: & aE "<¢ . o
+mo, —_ aaa oa eens ae f a ca ra, a , ~b el  @
+ae = - _ ZEUS, STATION
+x ow Elite Esports = oo
+_ Team Liquid; o "ea | ° | SW
+pe EE civion | \ yoo -
+: vy & > /
+~- wnyasinFiamas —¢ Full XI ; \ ' LIGHT
+ns | ee Shop fyRebettion 4 i
+. 4 1, Crazy Thieves ShopifyRebeltion : -
+bo. po? nS 3 Crazy Thieves . ho COMMAND CENTER
+. \ (SHECHPOINT —L (
+racy Heyes /
+° \ eo ; =
+4 nn) 7 o pi REVAL
+\e ON oo wy 4 lia Qo $2
+eo $s ~ . Ra a CASCADE FALLS / fa) i te
+Ds 3 a oe . . STORM GATCHER °
+ae Free Thinkers.” Y >
+er OS Free Thinkers 87
+MILL ~~ DOD | vey Ss 1alaan Oo. ? .
+ye ot so at % 2 o% . .
+a CG \o e
+f oo, = a
+e / Aye , 2 . i NS co _ 7 ; . Se :
+CA GAMING ome: eo
+aN ¢ Te Ne? _. THUGGETS 4 Stallions llions 3 J 7
+, oY a1 + ey Ce a - . vc
+~, - ; = om ( ~ - wy i - me)
+. CN TN a 2 ome Later Be
+- _. . 7 a o - . . O°
+SGC «= ING CLOSING © Qa ;
+NOTE CAVE: — a, “
+a ~ ; dy a xo 1 f= > “
+team_1     eliminated                   98%      18%  TIGHTEN                True, True, True, True, True
+team_1     hero 1                      100%     100%  OK                     29 unique hashes / 87 frames
+team_1     hero 2                      100%     100%  OK                     14 unique hashes / 87 frames
+team_1     hero 3                      100%     100%  OK                     13 unique hashes / 87 frames
+team_1     logo                        100%     100%  OK                     7 unique hashes / 87 frames
+team_1     name                        100%     100%  OK                     ELTE, ELTE, ELTE
+team_1     pts                         100%     100%  OK                     24, 24, 24, 24, 24
+team_10    eliminated                   99%       0%  TIGHTEN                
+team_10    hero 1                      100%     100%  OK                     6 unique hashes / 87 frames
+team_10    hero 2                      100%     100%  OK                     18 unique hashes / 87 frames
+team_10    hero 3                      100%     100%  OK                     8 unique hashes / 87 frames
+team_10    logo                        100%     100%  STATIC?  (zone might be misaligned) 4 unique hashes / 87 frames
+team_10    name                        100%     100%  OK                     THUG, THUG, THUG
+team_10    pts                         100%     100%  OK                     12, 12, 12, 12, 12
+team_11    eliminated                   99%      99%  OK                     True, True, True, True, True
+team_11    hero 1                      100%     100%  OK                     7 unique hashes / 87 frames
+team_11    hero 2                      100%     100%  OK                     16 unique hashes / 87 frames
+team_11    hero 3                      100%     100%  OK                     22 unique hashes / 87 frames
+team_11    logo                        100%     100%  OK                     8 unique hashes / 87 frames
+team_11    name                        100%     100%  OK                     BBD, BBD, BBD
+team_11    pts                          99%      99%  OK                     16, 16, 16, 16, 16
+team_12    eliminated                   92%       3%  TIGHTEN                True, True, True
+team_12    hero 1                      100%     100%  OK                     7 unique hashes / 87 frames
+team_12    hero 2                      100%     100%  OK                     17 unique hashes / 87 frames
+team_12    hero 3                      100%     100%  OK                     7 unique hashes / 87 frames
+team_12    logo                        100%     100%  OK                     6 unique hashes / 87 frames
+team_12    name                        100%     100%  OK                     CRT, CRT, CRT
+team_12    pts                          86%      76%  OK                     3, 3, 3, 3, 3
+team_13    eliminated                   95%      52%  TIGHTEN                True, True, True, True, True
+team_13    hero 1                      100%     100%  OK                     28 unique hashes / 87 frames
+team_13    hero 2                      100%     100%  OK                     58 unique hashes / 87 frames
+team_13    hero 3                      100%     100%  OK                     41 unique hashes / 87 frames
+team_13    logo                        100%     100%  OK                     8 unique hashes / 87 frames
+team_13    name                        100%     100%  OK                     DINO, CINO, DINO, DINO
+team_13    pts                         100%     100%  OK                     15, 15, 15, 15, 15
+team_14    eliminated                  100%       0%  TIGHTEN                
+team_14    hero 1                      100%     100%  STATIC?  (zone might be misaligned) 4 unique hashes / 87 frames
+team_14    hero 2                      100%     100%  OK                     5 unique hashes / 87 frames
+team_14    hero 3                      100%     100%  OK                     5 unique hashes / 87 frames
+team_14    logo                        100%     100%  OK                     6 unique hashes / 87 frames
+team_14    name                        100%     100%  OK                     DKK, DKK, DKK
+team_14    pts                         100%     100%  OK                     20, 20, 20, 20, 20
+team_15    eliminated                   95%      52%  TIGHTEN                True, True, True, True, True
+team_15    hero 1                      100%     100%  OK                     10 unique hashes / 87 frames
+team_15    hero 2                      100%     100%  OK                     25 unique hashes / 87 frames
+team_15    hero 3                      100%     100%  OK                     19 unique hashes / 87 frames
+team_15    logo                        100%     100%  OK                     8 unique hashes / 87 frames
+team_15    name                        100%     100%  OK                     GMBL, GMBL, GMBL
+team_15    pts                          93%      93%  OK                     5, 5, 5, 5, 5
+team_16    eliminated                   99%       0%  TIGHTEN                
+team_16    hero 1                      100%     100%  OK                     5 unique hashes / 87 frames
+team_16    hero 2                      100%     100%  OK                     6 unique hashes / 87 frames
+team_16    hero 3                      100%     100%  OK                     9 unique hashes / 87 frames
+team_16    logo                        100%     100%  OK                     8 unique hashes / 87 frames
+team_16    name                        100%     100%  OK                     JDDG, JDDG, JDDG
+team_16    pts                          86%      80%  OK                     26, 26, 26, 26, 26
+team_17    eliminated                   94%       6%  TIGHTEN                True, True, True, True, True
+team_17    hero 1                      100%     100%  OK                     11 unique hashes / 87 frames
+team_17    hero 2                      100%     100%  OK                     8 unique hashes / 87 frames
+team_17    hero 3                      100%     100%  OK                     11 unique hashes / 87 frames
+team_17    logo                        100%     100%  STATIC?  (zone might be misaligned) 2 unique hashes / 87 frames
+team_17    name                        100%     100%  OK                     MR, MR, MR
+team_17    pts                         100%     100%  OK                     13, 13, 13, 13, 13
+team_18    eliminated                   98%      34%  TIGHTEN                True, True, True, True, True
+team_18    hero 1                      100%     100%  OK                     6 unique hashes / 87 frames
+team_18    hero 2                      100%     100%  OK                     25 unique hashes / 87 frames
+team_18    hero 3                      100%     100%  OK                     18 unique hashes / 87 frames
+team_18    logo                        100%     100%  STATIC?  (zone might be misaligned) 4 unique hashes / 87 frames
+team_18    name                        100%     100%  OK                     REV, REV, REV
+team_18    pts                         100%     100%  OK                     17, 17, 17, 17, 17
+team_19    eliminated                   94%      15%  TIGHTEN                True, True, True, True, True
+team_19    hero 1                      100%     100%  OK                     12 unique hashes / 87 frames
+team_19    hero 2                      100%     100%  OK                     23 unique hashes / 87 frames
+team_19    hero 3                      100%     100%  OK                     21 unique hashes / 87 frames
+team_19    logo                        100%     100%  OK                     8 unique hashes / 87 frames
+team_19    name                        100%     100%  OK                     ROC, ROC, ROC
+team_19    pts                         100%     100%  OK                     25, 25, 25, 25, 25
+team_2     eliminated                   92%      69%  OK                     True, True, True, True, True
+team_2     hero 1                      100%     100%  OK                     19 unique hashes / 87 frames
+team_2     hero 2                      100%     100%  OK                     61 unique hashes / 87 frames
+team_2     hero 3                      100%     100%  OK                     22 unique hashes / 87 frames
+team_2     logo                        100%     100%  OK                     8 unique hashes / 87 frames
+team_2     name                        100%     100%  OK                     FREE, FREE, FREE
+team_2     pts                         100%     100%  OK                     25, 25, 25, 25, 25
+team_20    eliminated                   98%      76%  OK                     True, True, True, True, True
+team_20    hero 1                      100%     100%  OK                     8 unique hashes / 87 frames
+team_20    hero 2                      100%     100%  OK                     9 unique hashes / 87 frames
+team_20    hero 3                      100%     100%  OK                     59 unique hashes / 87 frames
+team_20    logo                        100%     100%  STATIC?  (zone might be misaligned) 1 unique hashes / 87 frames
+team_20    name                        100%     100%  OK                     SRO, SRO, SR, SR, SRO
+team_20    pts                          34%      25%  EMPTY/MISALIGNED       1, 1, 1, 1, 1
+team_3     eliminated                   97%      29%  TIGHTEN                True, True, True, True, True
+team_3     hero 1                      100%     100%  OK                     19 unique hashes / 87 frames
+team_3     hero 2                      100%     100%  OK                     37 unique hashes / 87 frames
+team_3     hero 3                      100%     100%  OK                     7 unique hashes / 87 frames
+team_3     logo                        100%     100%  OK                     8 unique hashes / 87 frames
+team_3     name                        100%     100%  OK                     FXI, FXI, FXI
+team_3     pts                         100%     100%  OK                     3, 3, 3, 3, 3
+team_4     eliminated                  100%       0%  TIGHTEN                
+team_4     hero 1                      100%     100%  OK                     5 unique hashes / 87 frames
+team_4     hero 2                      100%     100%  OK                     7 unique hashes / 87 frames
+team_4     hero 3                      100%     100%  OK                     5 unique hashes / 87 frames
+team_4     logo                        100%     100%  OK                     8 unique hashes / 87 frames
+team_4     name                        100%     100%  OK                     NIPC, NIPE, NIPC, NIPC
+team_4     pts                         100%     100%  OK                     26, 26, 26, 26, 26
+team_5     eliminated                   98%      52%  TIGHTEN                True, True, True, True, True
+team_5     hero 1                      100%     100%  OK                     12 unique hashes / 87 frames
+team_5     hero 2                      100%     100%  OK                     12 unique hashes / 87 frames
+team_5     hero 3                      100%     100%  OK                     20 unique hashes / 87 frames
+team_5     logo                        100%     100%  STATIC?  (zone might be misaligned) 2 unique hashes / 87 frames
+team_5     name                        100%     100%  OK                     OBVN, OBVN, OBVN
+team_5     pts                          46%      30%  OK                     28, 28, 28, 23, 23
+team_6     eliminated                  100%      71%  OK                     True, True, True, True, True
+team_6     hero 1                      100%     100%  OK                     7 unique hashes / 87 frames
+team_6     hero 2                      100%     100%  OK                     12 unique hashes / 87 frames
+team_6     hero 3                      100%     100%  OK                     21 unique hashes / 87 frames
+team_6     logo                        100%     100%  OK                     7 unique hashes / 87 frames
+team_6     name                        100%     100%  OK                     820, S20, 820, S20, S20
+team_6     pts                         100%     100%  OK                     72, 72, 72, 72, 72
+team_7     eliminated                   99%      75%  OK                     True, True, True, True, True
+team_7     hero 1                      100%     100%  OK                     7 unique hashes / 87 frames
+team_7     hero 2                      100%     100%  OK                     23 unique hashes / 87 frames
+team_7     hero 3                      100%     100%  OK                     26 unique hashes / 87 frames
+team_7     logo                        100%     100%  OK                     8 unique hashes / 87 frames
+team_7     name                        100%     100%  OK                     SRC, SRC, SRC
+team_7     pts                         100%     100%  OK                     20, 20, 20, 20, 20
+team_8     eliminated                   97%      25%  TIGHTEN                True, True, True, True, True
+team_8     hero 1                      100%     100%  OK                     6 unique hashes / 87 frames
+team_8     hero 2                      100%     100%  OK                     26 unique hashes / 87 frames
+team_8     hero 3                      100%     100%  OK                     17 unique hashes / 87 frames
+team_8     logo                        100%     100%  OK                     7 unique hashes / 87 frames
+team_8     name                        100%     100%  OK                     STAL, STAL, STAL
+team_8     pts                         100%     100%  OK                     18, 18, 18, 16, 18
+team_9     eliminated                  100%       0%  TIGHTEN                
+team_9     hero 1                      100%     100%  STATIC?  (zone might be misaligned) 2 unique hashes / 87 frames
+team_9     hero 2                      100%     100%  OK                     6 unique hashes / 87 frames
+team_9     hero 3                      100%     100%  OK                     6 unique hashes / 87 frames
+team_9     logo                        100%     100%  OK                     8 unique hashes / 87 frames
+team_9     name                        100%     100%  OK                     HH, TL, HH, HH
+team_9     pts                          71%      69%  OK                     20, 20, 20, 20, 20

@@ -1,0 +1,128 @@
+{
+  "video": "scripts\\tracking\\game.mp4",
+  "fps": 59.94005994005994,
+  "mode": "two-pass",
+  "reverse_step": 1800,
+  "teams": {
+    "1": {
+      "f_first_dead": 62070,
+      "t_first_dead": 1035.53,
+      "f_last_alive": 62042,
+      "t_last_alive": 1035.07
+    },
+    "2": {
+      "f_first_dead": 35463,
+      "t_first_dead": 591.64,
+      "f_last_alive": 35435,
+      "t_last_alive": 591.17
+    },
+    "3": {
+      "f_first_dead": 57007,
+      "t_first_dead": 951.07,
+      "f_last_alive": 56979,
+      "t_last_alive": 950.6
+    },
+    "4": {
+      "f_first_dead": null,
+      "t_first_dead": null,
+      "f_last_alive": 70367,
+      "t_last_alive": 1173.96
+    },
+    "5": {
+      "f_first_dead": 61535,
+      "t_first_dead": 1026.61,
+      "f_last_alive": 61507,
+      "t_last_alive": 1026.14
+    },
+    "6": {
+      "f_first_dead": 34817,
+      "t_first_dead": 580.86,
+      "f_last_alive": 34788,
+      "t_last_alive": 580.38
+    },
+    "7": {
+      "f_first_dead": 32988,
+      "t_first_dead": 550.35,
+      "f_last_alive": 32960,
+      "t_last_alive": 549.88
+    },
+    "8": {
+      "f_first_dead": 58526,
+      "t_first_dead": 976.41,
+      "f_last_alive": 58498,
+      "t_last_alive": 975.94
+    },
+    "9": {
+      "f_first_dead": null,
+      "t_first_dead": null,
+      "f_last_alive": 70367,
+      "t_last_alive": 1173.96
+    },
+    "10": {
+      "f_first_dead": null,
+      "t_first_dead": null,
+      "f_last_alive": 70367,
+      "t_last_alive": 1173.96
+    },
+    "11": {
+      "f_first_dead": 19854,
+      "t_first_dead": 331.23,
+      "f_last_alive": 19826,
+      "t_last_alive": 330.76
+    },
+    "12": {
+      "f_first_dead": 69945,
+      "t_first_dead": 1166.92,
+      "f_last_alive": 69917,
+      "t_last_alive": 1166.45
+    },
+    "13": {
+      "f_first_dead": 63307,
+      "t_first_dead": 1056.17,
+      "f_last_alive": 63279,
+      "t_last_alive": 1055.7
+    },
+    "14": {
+      "f_first_dead": null,
+      "t_first_dead": null,
+      "f_last_alive": 70367,
+      "t_last_alive": 1173.96
+    },
+    "15": {
+      "f_first_dead": 44970,
+      "t_first_dead": 750.25,
+      "f_last_alive": 44942,
+      "t_last_alive": 749.78
+    },
+    "16": {
+      "f_first_dead": null,
+      "t_first_dead": null,
+      "f_last_alive": 70367,
+      "t_last_alive": 1173.96
+    },
+    "17": {
+      "f_first_dead": 68623,
+      "t_first_dead": 1144.86,
+      "f_last_alive": 68595,
+      "t_last_alive": 1144.39
+    },
+    "18": {
+      "f_first_dead": 54026,
+      "t_first_dead": 901.33,
+      "f_last_alive": 53998,
+      "t_last_alive": 900.87
+    },
+    "19": {
+      "f_first_dead": 63842,
+      "t_first_dead": 1065.1,
+      "f_last_alive": 63813,
+      "t_last_alive": 1064.61
+    },
+    "20": {
+      "f_first_dead": 43395,
+      "t_first_dead": 723.97,
+      "f_last_alive": 43367,
+      "t_last_alive": 723.51
+    }
+  }
+}
