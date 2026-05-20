@@ -2,13 +2,13 @@
   "video": "scripts\\tracking\\game.mp4",
   "fps": 59.94005994005994,
   "scout_step": 600,
-  "refine_budget": 0,
-  "refine_linear": 0,
-  "note": "provisional: derived from forward hud_timeline samples; re-run hud_read --rings-only for frame-accurate timings",
+  "refine_budget": 10,
+  "refine_linear": 4,
+  "ring_start_sec": 0.0,
   "transitions": [
     {
-      "f": 31234,
-      "t": 521.087,
+      "f": 22252,
+      "t": 371.238,
       "from": {
         "ring": 1,
         "state": "CLOSING"
@@ -18,12 +18,12 @@
         "state": "CLOSING"
       },
       "confidence": "low",
-      "refine_method": "timeline-derived",
-      "refine_window": 10800
+      "refine_method": "binary10+linear4",
+      "refine_window": 5
     },
     {
-      "f": 46000,
-      "t": 767.433,
+      "f": 38122,
+      "t": 636.002,
       "from": {
         "ring": 2,
         "state": "CLOSING"
@@ -33,12 +33,12 @@
         "state": "CLOSING"
       },
       "confidence": "low",
-      "refine_method": "timeline-derived",
-      "refine_window": 14766
+      "refine_method": "binary10+linear0",
+      "refine_window": 6
     },
     {
-      "f": 53200,
-      "t": 887.553,
+      "f": 47109,
+      "t": 785.935,
       "from": {
         "ring": 3,
         "state": "CLOSING"
@@ -48,12 +48,12 @@
         "state": "CLOSING"
       },
       "confidence": "low",
-      "refine_method": "timeline-derived",
-      "refine_window": 7200
+      "refine_method": "binary10+linear3",
+      "refine_window": 4
     },
     {
-      "f": 61483,
-      "t": 1025.741,
+      "f": 56099,
+      "t": 935.918,
       "from": {
         "ring": 4,
         "state": "CLOSING"
@@ -63,12 +63,12 @@
         "state": "CLOSING"
       },
       "confidence": "low",
-      "refine_method": "timeline-derived",
-      "refine_window": 8283
+      "refine_method": "binary10+linear3",
+      "refine_window": 2
     },
     {
-      "f": 68683,
-      "t": 1145.861,
+      "f": 63895,
+      "t": 1065.982,
       "from": {
         "ring": 5,
         "state": "CLOSING"
@@ -78,8 +78,8 @@
         "state": "CLOSING"
       },
       "confidence": "low",
-      "refine_method": "timeline-derived",
-      "refine_window": 7200
+      "refine_method": "binary10+linear1",
+      "refine_window": 4
     }
   ],
   "phases": [
@@ -87,17 +87,18 @@
       "ring": 1,
       "countdown_start_f": null,
       "t_countdown_start": null,
-      "closing_start_f": 20434,
-      "t_closing_start": 340.907,
+      "closing_start_f": 8400,
+      "t_closing_start": 140.14,
       "closed_f": null,
-      "t_closed": null
+      "t_closed": null,
+      "pre_window": true
     },
     {
       "ring": 2,
       "countdown_start_f": null,
       "t_countdown_start": null,
-      "closing_start_f": 31234,
-      "t_closing_start": 521.087,
+      "closing_start_f": 22252,
+      "t_closing_start": 371.238,
       "closed_f": null,
       "t_closed": null
     },
@@ -105,8 +106,8 @@
       "ring": 3,
       "countdown_start_f": null,
       "t_countdown_start": null,
-      "closing_start_f": 46000,
-      "t_closing_start": 767.433,
+      "closing_start_f": 38122,
+      "t_closing_start": 636.002,
       "closed_f": null,
       "t_closed": null
     },
@@ -114,8 +115,8 @@
       "ring": 4,
       "countdown_start_f": null,
       "t_countdown_start": null,
-      "closing_start_f": 53200,
-      "t_closing_start": 887.553,
+      "closing_start_f": 47109,
+      "t_closing_start": 785.935,
       "closed_f": null,
       "t_closed": null
     },
@@ -123,8 +124,8 @@
       "ring": 5,
       "countdown_start_f": null,
       "t_countdown_start": null,
-      "closing_start_f": 61483,
-      "t_closing_start": 1025.741,
+      "closing_start_f": 56099,
+      "t_closing_start": 935.918,
       "closed_f": null,
       "t_closed": null
     },
@@ -132,10 +133,80 @@
       "ring": 6,
       "countdown_start_f": null,
       "t_countdown_start": null,
-      "closing_start_f": 68683,
-      "t_closing_start": 1145.861,
+      "closing_start_f": 63895,
+      "t_closing_start": 1065.982,
       "closed_f": null,
       "t_closed": null
     }
-  ]
+  ],
+  "derived": {
+    "closing_durations": [],
+    "countdown_durations": [],
+    "median_closing": null,
+    "median_countdown": null
+  },
+  "geometry": {
+    "minimap": [
+      437,
+      45,
+      1050,
+      1030
+    ],
+    "phases": [
+      {
+        "ring": 1,
+        "cx_norm": 0.3914,
+        "cy_norm": 0.3885,
+        "r_norm": 0.3112,
+        "measured_at_t": 109.89,
+        "samples": 5,
+        "geometry_confidence": "high"
+      },
+      {
+        "ring": 2,
+        "cx_norm": 0.3606,
+        "cy_norm": 0.5225,
+        "r_norm": 0.4659,
+        "measured_at_t": 340.99,
+        "samples": 5,
+        "geometry_confidence": "low"
+      },
+      {
+        "ring": 3,
+        "cx_norm": 0.5503,
+        "cy_norm": 0.3699,
+        "r_norm": 0.3714,
+        "measured_at_t": 605.75,
+        "samples": 5,
+        "geometry_confidence": "low"
+      },
+      {
+        "ring": 4,
+        "cx_norm": 0.5469,
+        "cy_norm": 0.3198,
+        "r_norm": 0.2712,
+        "measured_at_t": 755.68,
+        "samples": 5,
+        "geometry_confidence": "high"
+      },
+      {
+        "ring": 5,
+        "cx_norm": 0.2983,
+        "cy_norm": 0.4718,
+        "r_norm": 0.2487,
+        "measured_at_t": 903.19,
+        "samples": 4,
+        "geometry_confidence": "low"
+      },
+      {
+        "ring": 6,
+        "cx_norm": 0.3549,
+        "cy_norm": 0.4258,
+        "r_norm": 0.2288,
+        "measured_at_t": 1035.73,
+        "samples": 5,
+        "geometry_confidence": "low"
+      }
+    ]
+  }
 }
