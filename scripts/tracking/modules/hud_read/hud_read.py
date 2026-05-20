@@ -466,7 +466,9 @@ def main() -> int:
                 f"  {alive_t or '?':>2}T/{alive_p or '?':>2}P  {ring_str:<8}"
                 f"  {' '.join(top_teams)}")
         tqdm.write(line)
-        pbar.set_postfix(fps=f"{rate:.2f}", static_skip=skipped_static, refresh=False)
+        pbar.set_postfix(fps=f"{rate:.2f}", static_skip=skipped_static,
+                         ocr_cache=f"{_OCR_CACHE_HITS}/{_OCR_CACHE_HITS + _OCR_CACHE_MISS}",
+                         refresh=False)
         pbar.update(1)
 
         processed += 1
@@ -474,7 +476,11 @@ def main() -> int:
 
     pbar.close()
     cap.release()
-    print(f"[hud_read] processed={processed} static_skips={skipped_static} elapsed={time.time()-t0:.1f}s")
+    total_ocr = _OCR_CACHE_HITS + _OCR_CACHE_MISS
+    cache_pct = round(100 * _OCR_CACHE_HITS / total_ocr) if total_ocr else 0
+    print(f"[hud_read] processed={processed} static_skips={skipped_static} "
+          f"ocr_cache_hits={_OCR_CACHE_HITS}/{total_ocr} ({cache_pct}%) "
+          f"elapsed={time.time()-t0:.1f}s")
 
     # ── reports ─────────────────────────────────────────────────────
     (args.out / "hud_timeline.json").write_text(
