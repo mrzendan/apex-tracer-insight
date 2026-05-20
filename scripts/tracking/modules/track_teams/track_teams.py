@@ -970,8 +970,10 @@ def main():
                 for s in tracks_world:
                     if "frame_px" not in s:
                         continue
+                    if s.get("frame_px") is None:
+                        continue
                     x, y = s["frame_px"]
-                    color = (0, 255, 0) if s["state"] == "alive" else (0, 200, 255)
+                    color = (0, 255, 0) if s.get("state") == "tracked" else (0, 200, 255)
                     cv2.circle(vis, (int(x), int(y)), 10, color, 2)
                     cv2.putText(vis, s["team_id"], (int(x) + 12, int(y)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
                 preview_writer.write(vis)
