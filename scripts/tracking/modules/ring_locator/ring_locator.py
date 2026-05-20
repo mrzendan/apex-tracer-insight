@@ -179,6 +179,8 @@ def main() -> int:
     rings_data = json.loads(args.rings.read_text(encoding="utf-8"))
     fps = float(rings_data.get("fps") or 30.0)
     phases = rings_data.get("phases") or []
+    derived = rings_data.get("derived") or {}
+    median_countdown = derived.get("median_countdown")
     if not phases:
         print("[ring_locator] phases[] пуст — нечего измерять")
         args.out.mkdir(parents=True, exist_ok=True)
@@ -204,9 +206,15 @@ def main() -> int:
         t_close = p.get("t_closing_start")
         if t_close is None:
             continue
-        # Окно: между t_closed предыдущей фазы и t_closing_start текущей.
+        # Окно: между t_closed предыдущей фазы (=COUNTDOWN текущей)
+        # и t_closing_start текущей. Для R1 «предыдущей» нет —
+        # используем median_countdown из derived (или 30s fallback).
         prev = phases_by_ring.get(ring_n - 1)
-        t_lo = (prev.get("t_closed") if prev else None) or max(0.0, t_close - 60.0)
+        if prev and prev.get("t_closed") is not None:
+            t_lo = prev["t_closed"]
+        else:
+            window = median_countdown if median_countdown else 30.0
+            t_lo = max(0.0, t_close - float(window))
         t_hi = t_close - 0.5
         samples = sample_phase(cap, minimap_rect, t_lo, t_hi, fps, bad)
         if not samples:
