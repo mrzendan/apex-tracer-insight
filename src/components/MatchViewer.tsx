@@ -426,10 +426,12 @@ export function MatchViewer({ initialGameId }: { initialGameId?: string }) {
             controls={{ showTrails, setShowTrails, showRing, setShowRing, showLabels, setShowLabels }}
             focusRequest={focusRequest}
             onEventClick={handleEventClick}
+            ringPhases={ringPhases}
           />
 
           <Timeline time={time} duration={durationSec} playing={playing} speed={speed}
-            onSeek={setTime} onTogglePlay={() => setPlaying((p) => !p)} onSpeedChange={setSpeed} />
+            onSeek={setTime} onTogglePlay={() => setPlaying((p) => !p)} onSpeedChange={setSpeed}
+            ringSegments={ringSegments} events={events} />
         </main>
 
         {rightCollapsed ? (
@@ -696,7 +698,7 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
 }
 
 /* ---------- RING PHASE STATUS chip (sits next to Stat row) ---------- */
-function RingPhaseChip({ time }: { time: number }) {
+function RingPhaseChip({ time, ringSegments }: { time: number; ringSegments: RingSegment[] }) {
   const seg = ringSegments.find(s => time >= s.startSec && time <= s.endSec)
     ?? ringSegments[ringSegments.length - 1];
   const isClosing = seg.kind === "Closing";
@@ -753,6 +755,7 @@ function MapCanvas({
   ringPhases: RingPhase[];
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const ringSegments = useMemo(() => buildRingSegments(ringPhases), [ringPhases]);
   const [view, setView] = useState({ scale: 1, tx: 0, ty: 0 });
   const drag = useRef<{ x: number; y: number; tx: number; ty: number } | null>(null);
 
@@ -1042,7 +1045,7 @@ function MapCanvas({
         <Stat label="Alive" value={`${aliveTeams}/${teams.length}`} accent />
         <Stat label="Kills" value={totalKills.toString()} />
         <Stat label="Ring"  value={`${ringIndex + 1 || ringCount}/${ringCount}`} />
-        <RingPhaseChip time={time} />
+        <RingPhaseChip time={time} ringSegments={ringSegments} />
       </div>
     </div>
   );
@@ -1050,10 +1053,11 @@ function MapCanvas({
 
 /* ---------- TIMELINE ---------- */
 function Timeline({
-  time, duration, playing, speed, onSeek, onTogglePlay, onSpeedChange,
+  time, duration, playing, speed, onSeek, onTogglePlay, onSpeedChange, ringSegments, events,
 }: {
   time: number; duration: number; playing: boolean; speed: number;
   onSeek: (t: number) => void; onTogglePlay: () => void; onSpeedChange: (s: number) => void;
+  ringSegments: RingSegment[]; events: GameEvent[];
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
