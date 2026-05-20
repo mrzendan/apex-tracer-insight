@@ -365,6 +365,8 @@ def main():
     if not teams:
         print("[err] в config не описано ни одной команды", file=sys.stderr); sys.exit(2)
     canonical_dir = (args.config.parent / "canonical_maps").resolve()
+    if not canonical_dir.exists():
+        canonical_dir = (Path(__file__).resolve().parents[2] / "shared" / "canonical_maps").resolve()
     cmap = load_canonical_map(cfg.get("canonical_map", "storm_point"), canonical_dir)
     reg = FrameRegistrar(cmap, cfg.get("registration", {}))
     det_cfg = cfg.get("detection", {})
