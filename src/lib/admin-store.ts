@@ -96,7 +96,7 @@ type State = {
   matches: MatchFull[];
   tournaments: Tournament[];
   polygons: Polygon[];
-  zones: { vod: Zone[]; camera: Zone[] };
+  zones: { vod: Zone[]; vod2: Zone[]; camera: Zone[] };
   processes: AnalysisProcess[];
   customMaps: CustomMap[];
 };
@@ -119,7 +119,7 @@ let state: State = {
   matches: initialMatches,
   tournaments: seedTournaments,
   polygons: [],
-  zones: { vod: initialVod, camera: initialCamera },
+  zones: { vod: initialVod, vod2: initialVod2, camera: initialCamera },
   processes: [],
   customMaps: loadCustomMaps(),
 };
