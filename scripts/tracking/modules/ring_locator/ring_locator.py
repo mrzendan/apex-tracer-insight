@@ -532,7 +532,7 @@ def main() -> int:
                 crop = frame[yy:yy + hh2, xx:xx + ww2].copy()
                 cv2.imwrite(str(debug_dir / f"ring{ring_n}_roi_f{f_dbg}.jpg"),
                             crop, [cv2.IMWRITE_JPEG_QUALITY, 85])
-                det = detect_next_ring(crop, return_debug=True)
+                det = detector(crop, return_debug=True)
                 if det is not None:
                     _, _, _, dcx, dcy, dr, mask = det
                     cv2.imwrite(str(debug_dir / f"ring{ring_n}_mask_f{f_dbg}.png"),
