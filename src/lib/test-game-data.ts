@@ -28,12 +28,23 @@ type RingGeomPhase = {
   cx_norm: number | null;
   cy_norm: number | null;
   r_norm: number | null;
+  cx_roi_px?: number | null;
+  cy_roi_px?: number | null;
+  r_roi_px?: number | null;
+  roi_size?: [number, number];
+  cx_map_norm?: number | null;
+  cy_map_norm?: number | null;
+  r_map_norm?: number | null;
   geometry_confidence?: string;
 };
 type RingsFile = {
   fps: number;
   phases: RingPhaseRaw[];
-  geometry?: { phases?: RingGeomPhase[] };
+  geometry?: {
+    phases?: RingGeomPhase[];
+    minimap?: [number, number, number, number];
+    map_bounds_in_roi?: { x: number; y: number; w: number; h: number };
+  };
 };
 
 const elim = elimRaw as unknown as ElimFile;
