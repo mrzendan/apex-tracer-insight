@@ -1,88 +1,74 @@
-## Корневая причина (гипотеза)
+# План: улучшение трекинга команд и визуализация на сайте
 
-`ring_locator` пишет `cx_norm/cy_norm/r_norm` нормализованные **внутри ROI кропа** `camera roi = [437, 45, 1050, 1030]` (1050×1030 пикселей видео). В `src/lib/test-game-data.ts` эти числа уходят напрямую в `RingPhase.{cx,cy,r}`, а `MapCanvas` рисует их **поверх чистой PNG карты** (Storm Point, квадратной). Получаем два разных расхождения:
+## 1. Бэкенд-логика трекинга (Python, `scripts/tracking/modules/`)
 
-1. **Aspect**: ROI 1050×1030 ≠ квадрат PNG → радиус по X/Y растягивается по-разному.
-2. **Offset/scale**: ROI включает чёрные поля и HUD-края вокруг наблюдательской карты. Реальный канонический квадрат карты занимает только часть ROI (грубо: ~80–120px отступ слева/справа, ~0–60px сверху/снизу). Все кольца «слипаются» в верхнем-левом углу, потому что их `cx/cy/r` ужимаются картой, у которой нет тех же полей.
+### 1.1 Интеграция `motion_detect` → `track_teams`
+Сейчас `motion_detect` выдаёт `consensus_xy` с conf-уровнем для всех 20 слотов один раз в начале, а `track_teams` стартует «с нуля» из HSV-плашек кадра. Сольём:
 
-Чтобы поймать обе ошибки сразу, нужны **визуальные дебаг-инструменты по обе стороны конвейера** — на Python (что увидел `ring_locator`) и на сайте (что нарисовал фронт). Я их предлагаю ниже как минимально-инвазивное добавление, без перехода на новую систему координат до того, как мы увидим картинку.
+- В `track_teams.py` добавить флаг `--anchors <motion_tracks.json>` (и поле `anchors_file` в `config.yaml`).
+- На init считывать `consensus_xy` + `conf` для каждой команды; переводить их через зарегистрированную карту минимапа → канонические/мировые координаты (motion-detect работает в координатах ROI minimap, нужна простая аффинка из `zones.vod.json` → canonical, добавить в shared/).
+- Каждый слот получает: `world_anchor`, `anchor_conf` (HIGH/MED/LOW), `palette_hsv` (цвет из конфига команд).
+- Калман-треки инициализируются от якорей HIGH/MED. LOW-якоря только подсказывают приоритет ассоциации (бонус к gating). MISS — трек создаётся по факту первой детекции.
+- В `output.tracks[*]` появляется `slot_id` (1..20) рядом с `team_id` — теперь это идентичность команды на весь матч, а не только цвет.
 
----
+### 1.2 Детект «команда выбита»
+- Новый модуль `scripts/tracking/modules/team_wipe/` или функция внутри `track_teams`:
+  - Сейчас трек переходит в `lost` после `max_gap_frames` без детекции.
+  - Добавить честный признак `wiped_at_t` per slot: пропадание плашки **и** отсутствие повторного появления цвета в радиусе R мира на интервале > N секунд → команда помечена выбитой; трек закрывается, не «висит» мёртвой точкой.
+  - Опционально валидация по `modules/find_cuts/reports/cuts.json` (не считать камера-кат за смерть).
+- Расширить `tracks.schema.json`: добавить в `meta` массив `slots[]` (id, color, name, wiped_at_t|null), в `tracks[*]` поле `slot_id`, в `frames[*]` поле `wipes[]` (новые события на этом кадре).
 
-## Что добавляю
+### 1.3 Тесты и метрика ID-switches
+- Тесты гоняем на единственном VOD `scripts/tracking/game.mp4` (storm_point, тот же m-test-g1).
+- Скрипт `scripts/tracking/modules/track_teams/eval_id_switches.py`:
+  - Берёт `tracks.json` + ручной набор «опорных» аннотаций (`assets/gt_anchors.json`: список `{t, slot_id, world_xy}` — ~30 точек, размечаем руками по overlay-кадрам).
+  - Для каждого слота считает: сколько раз `team_id` трека, ближайшего к GT-точке, поменялся между соседними GT, % покрытия (track present at GT), медианный px-error.
+  - Пишет `reports/eval_id_switches.txt` и `eval_id_switches.json`.
+- Цель — снизить ID-switches до 0 на сегментах между POV-катами (текущий baseline померяем первым прогоном).
 
-### 1. Дебаг-оверлеи в `ring_locator.py`
+### 1.4 Документация
+Обновить `track_teams/README.md` (раздел про anchors + wipe-детект), `motion_detect/README.md` (формат, который читает track_teams), добавить раздел «Метрика ID-switches и как запускать eval» в `docs/tracking-lab.md`.
 
-Новый флаг `--debug-dir <path>` (по умолчанию `reports/debug/`). На каждое измеренное кольцо сохраняем:
+## 2. Визуализация на сайте
 
-- `ring{N}_roi_f{frame}.jpg` — сырой кроп ROI `camera roi`.
-- `ring{N}_overlay_f{frame}.jpg` — тот же кроп с нарисованной найденной окружностью (cx_px, cy_px, r_px) и подписью `t=…s conf=…`.
-- `ring{N}_mask_f{frame}.png` — HSV-маска, по которой работал HoughCircles (видно, что попало в «серое кольцо»).
+### 2.1 Данные матча
+- Положить эталонный `tracks.json` после улучшенного прогона в `src/data/m-test-g1/tracks.json`.
+- В `src/lib/test-game-data.ts` добавить импорт и адаптер: `tracksByTime(t) → Array<{ slotId, teamId, canonical_norm:[x,y], state, wiped }>`.
+- Слоты команд (1..20) маппить на текущие `teams` из `defaultTeams` по slot_id (расширить мета mock-команд полем `slotId`).
 
-И один сводный файл:
+### 2.2 `/games/m-test-g1` — продакшн-таймлайн
+- В `MatchViewer.tsx` заменить `generateTrajectory` для тех команд, по которым есть реальный трек:
+  - Реальный сэмпл → точная позиция; между сэмплами линейная интерполяция; в `lost` — pulsing полупрозрачная точка; после `wiped_at_t` — точку не рисуем, в team-list ставим серый/перечёркнутый стиль.
+  - Команды без трека (MISS до улучшений) — fallback на текущий mock, помечаются «estimated».
+- На Timeline добавить вертикальные маркеры `wipe` (из новых `wipes[]`), цвет = цвет команды; подсказка `slot+name`.
+- Никаких отладочных оверлеев на этой странице.
 
-- `_all_rings_on_roi.jpg` — последний кадр ROI с наложенными ВСЕМИ 6 окружностями (нумерация R1…R6, цвет по кольцу). Это эталон, с которым сверяется UI.
+### 2.3 `/admin/tracking-lab` — расширенная отладка
+- Toggle-слои поверх карты:
+  - «Anchors»: рисуем HIGH/MED/LOW якоря из motion_detect (точки + крестики из overlay).
+  - «Confidence»: цвет трека по `state` (alive/low_conf/lost) и по `confidence`.
+  - «ID-switch markers»: красные кружки в точках, где `eval_id_switches` зафиксировал переключение.
+- Панель метрик: счётчики HIGH/MED/LOW/MISS старта, total ID-switches, per-team coverage; данные читаются из `eval_id_switches.json`, который дропается вместе с `tracks.json`.
 
-В `ring_geometry.json` дополнительно пишем **пиксельные** координаты в ROI:
+## 3. Порядок работ
 
-```json
-{ "ring": 1, "cx_norm": 0.39, ..., "cx_roi_px": 412, "cy_roi_px": 400, "r_roi_px": 327,
-  "roi_size": [1050, 1030] }
-```
+1. Расширить схему (`tracks.schema.json`) + миграция `track_teams.py` под slot_id/wipes — без логики, только структура.
+2. Реализовать чтение motion-якорей и инициализацию треков от них.
+3. Добавить wipe-детект + проверка на cuts.json.
+4. Прогнать на `game.mp4`, разметить ~30 GT-точек, запустить `eval_id_switches.py`, зафиксировать baseline и улучшения.
+5. Адаптер на фронте + интеграция в `/admin/tracking-lab` (быстрее починить и удобнее отлаживать).
+6. Подмена mock-траекторий и wipe-маркеров на `/games/m-test-g1`.
 
-Это позволит фронту независимо перевычислить нормализацию.
+## 4. Технические детали
 
-### 2. Калибровка «ROI → канонический квадрат карты»
+- **Координатная система якорей.** motion_detect работает в пиксельных координатах minimap-ROI; track_teams — в canonical_px/world. Нужен один раз посчитанный 2D-affine `minimap_roi → canonical` (по корнерам ROI, заданным в `zones.vod.json`, и калибровке карты `storm_point.json`). Складываем в `shared/canonical_maps/storm_point.minimap_affine.json`.
+- **Slot stability.** Сейчас `team_id` в `tracks.json` = цвет (`red`/`blue`/…). Меняем на slot id (`slot_3`, `slot_4`, …, как в `motion_detect/report.txt`); цвет уходит в `meta.slots[].color`. Это разовая ломка формата — `/admin/tracking-lab` обновляется в той же ветке.
+- **Wipe-детект.** Параметры в `config.yaml` (`wipe.absence_sec`, `wipe.search_radius_world`, `wipe.respect_cuts: true`). По умолчанию: 45s отсутствия в радиусе 80 ед. мира + игнор интервалов вокруг cuts.
+- **Eval.** GT-точки складываем в `scripts/tracking/modules/track_teams/assets/gt_anchors.json`, версионируем. Скрипт детерминирован, прогоняется в push-обёртке.
+- **Site.** Никаких новых тяжёлых зависимостей; `tracks.json` грузится статикой через `src/data/m-test-g1/`. Объём ~1-2 МБ на матч (frame_step=600 при 60fps) — ок.
 
-В `scripts/tracking/configs/zones.vod.json` (или новый `minimap_calibration.json`) добавляю под `camera roi` блок:
+## 5. Что НЕ делаем в этой итерации
 
-```json
-"map_bounds_in_roi": { "x": 95, "y": 5, "w": 860, "h": 1020 }
-```
-
-— это где **именно** в ROI лежит квадратный игровой ареал (пока ставлю «на глаз», финализируем по дебаг-изображению `_all_rings_on_roi.jpg`).
-
-`ring_locator` при наличии этого блока пишет **второй** набор координат, уже нормализованных в квадрат карты:
-
-```json
-"cx_map_norm": 0.37, "cy_map_norm": 0.39, "r_map_norm": 0.38
-```
-
-— это то, что должен потреблять сайт.
-
-### 3. Дебаг-режим на странице `/games/m-test-g1`
-
-Кнопка-тоггл «Debug rings» рядом с CONFIG (только когда `?debug=1` в URL — чтобы не пугать обычных пользователей). Включает:
-
-- Тонкие пунктирные окружности **всех 6 колец сразу** с подписью R1…R6 и `conf`.
-- Маркер центра каждого кольца (крестик + координаты `cx,cy,r` в подписи).
-- Прямоугольную рамку `map_bounds_in_roi` (если используется ROI-нормализация — чтобы видеть, что фронт и Python согласны).
-- Маленький уголок-HUD: текущая фаза, t, источник (`real`/`inherited`), и dropdown «координатная система»: `roi-norm` ↔ `map-norm` (можно на лету переключаться, чтобы быстро увидеть, какой набор «правильный»).
-
-Источник данных — текущий `src/data/m-test-g1/rings.json` плюс новые поля из п.2.
-
-### 4. Сравнительный скрипт-снимок
-
-`scripts/tracking/modules/ring_locator/compare_to_ui.py`: берёт `_all_rings_on_roi.jpg`, делает рядом скриншот текущего рендера UI (через сохранённый PNG карты + те же `cx/cy/r`, что прочитает фронт), и склеивает их бок-о-бок в `reports/debug/compare.png`. Это «один взгляд — один ответ»: видно, как кольца сместились между Python и UI.
-
----
-
-## Технические детали
-
-- Дебаг-флаги Python: `--debug-dir`, `--debug-all` (без них поведение не меняется).
-- Все дебаг-артефакты идут в `reports/debug/` (gitignore уже игнорирует `reports/*`).
-- На фронте debug-слой — отдельный компонент `RingDebugOverlay.tsx`, рисуется поверх `MapCanvas` через тот же transform контейнер, чтобы пан/зум миникарты совпадали.
-- Тип `RingGeomPhase` в `src/lib/test-game-data.ts` расширяется опциональными полями `cx_roi_px/cy_roi_px/r_roi_px/cx_map_norm/cy_map_norm/r_map_norm`. Существующий рендер (`cx_norm/cy_norm/r_norm`) НЕ меняется в этом плане — сначала смотрим на дебаг, потом решаем, переключать ли источник.
-
-## Файлы
-
-- `scripts/tracking/modules/ring_locator/ring_locator.py` — debug-оверлеи, пиксельные координаты, опциональный map_bounds.
-- `scripts/tracking/modules/ring_locator/compare_to_ui.py` — новый, генерация compare.png.
-- `scripts/tracking/configs/zones.vod.json` — поле `map_bounds_in_roi` на зоне `camera roi`.
-- `src/components/RingDebugOverlay.tsx` — новый компонент.
-- `src/components/MatchViewer.tsx` — подключение оверлея по `?debug=1`.
-- `src/lib/test-game-data.ts` — расширение типов (без смены логики выбора координат).
-
-## Что НЕ делаю в этом шаге
-
-Не переписываю формулу размещения колец на чистую `map_norm` систему, пока ты не подтвердил по дебаг-картинке, что `map_bounds_in_roi` подобран верно. Это следующий шаг — но он становится тривиальным, как только дебаг-оверлей покажет реальное расхождение.
+- Не улучшаем точность LOW/MISS команд в motion_detect (template matching и пр.) — отдельная задача, оставляем как «возможное улучшение» в README.
+- Не вводим серверные функции — пайплайн остаётся локальным, сайт читает статические артефакты.
+- Не трогаем кольца, killfeed и другие модули.
