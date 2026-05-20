@@ -4,7 +4,10 @@ param(
   [string]$Zones = "scripts/tracking/configs/zones.vod.json",
   [ValidateSet("forward","scout","two-pass")][string]$Mode = "forward",
   [int]$ReverseStep = 1800,
-  [int]$RefineBudget = 6,
+  [int]$RefineBudget = 10,
+  [int]$RefineLinear = 4,
+  [int]$RefineRollback = 0,
+  [int]$Workers = 0,
   [int]$FrameStep = 600,
   [double]$StartSec = 0,
   [double]$EndSec = 0,
@@ -28,26 +31,53 @@ if (Test-Path $Out) {
     Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
 }
 New-Item -ItemType Directory -Force -Path $Out | Out-Null
-$argsList = @(
-  "scripts/tracking/modules/hud_read/hud_read.py",
-  "--video", $Video,
-  "--zones", $Zones,
-  "--mode", $Mode,
-  "--reverse-step", $ReverseStep,
-  "--refine-budget", $RefineBudget,
-  "--frame-step", $FrameStep,
-  "--start-sec", $StartSec,
-  "--end-sec", $EndSec,
-  "--ocr-lang", $OcrLang,
-  "--overlay-every", $OverlayEvery,
-  "--crop-first-n", $CropFirstN,
-  "--static-confirm", $StaticConfirm,
-  "--static-max-frames", $StaticMaxFrames,
-  "--out", $Out
-)
+if ($Workers -gt 0) {
+  $script = "scripts/tracking/modules/hud_read/orchestrate.py"
+  $modeArg = if ($Mode -eq "scout") { "two-pass" } else { $Mode }
+  $argsList = @(
+    $script,
+    "--video", $Video,
+    "--zones", $Zones,
+    "--workers", $Workers,
+    "--mode", $modeArg,
+    "--reverse-step", $ReverseStep,
+    "--refine-budget", $RefineBudget,
+    "--refine-linear", $RefineLinear,
+    "--refine-rollback", $RefineRollback,
+    "--frame-step", $FrameStep,
+    "--start-sec", $StartSec,
+    "--end-sec", $EndSec,
+    "--ocr-lang", $OcrLang,
+    "--overlay-every", $OverlayEvery,
+    "--crop-first-n", $CropFirstN,
+    "--static-confirm", $StaticConfirm,
+    "--static-max-frames", $StaticMaxFrames,
+    "--out", $Out
+  )
+} else {
+  $argsList = @(
+    "scripts/tracking/modules/hud_read/hud_read.py",
+    "--video", $Video,
+    "--zones", $Zones,
+    "--mode", $Mode,
+    "--reverse-step", $ReverseStep,
+    "--refine-budget", $RefineBudget,
+    "--refine-linear", $RefineLinear,
+    "--refine-rollback", $RefineRollback,
+    "--frame-step", $FrameStep,
+    "--start-sec", $StartSec,
+    "--end-sec", $EndSec,
+    "--ocr-lang", $OcrLang,
+    "--overlay-every", $OverlayEvery,
+    "--crop-first-n", $CropFirstN,
+    "--static-confirm", $StaticConfirm,
+    "--static-max-frames", $StaticMaxFrames,
+    "--out", $Out
+  )
+}
 if ($TessCmd) { $argsList += @("--tess-cmd", $TessCmd) }
 & python @argsList
-if ($LASTEXITCODE -ne 0) { throw "hud_read.py упал" }
+if ($LASTEXITCODE -ne 0) { throw "hud_read упал (rc=$LASTEXITCODE)" }
 if ($NoPush) { return }
 git add $Out
 git commit -m "hud_read: run $(Get-Date -Format 'yyyy-MM-dd HH:mm')" | Out-Null

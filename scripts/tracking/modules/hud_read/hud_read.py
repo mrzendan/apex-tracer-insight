@@ -277,7 +277,9 @@ def is_eliminated_at(cap: cv2.VideoCapture, f: int, zone: dict, lang: str) -> bo
 def scout_eliminations(cap: cv2.VideoCapture, zones_scaled: list[dict],
                        start_f: int, end_f: int, fps: float,
                        reverse_step: int, lang: str,
-                       refine_budget: int = 6) -> dict[int, dict[str, Any]]:
+                       refine_budget: int = 10,
+                       refine_linear: int = 4,
+                       refine_rollback: int = 0) -> dict[int, dict[str, Any]]:
     """Идёт от end_f к start_f крупным шагом, читает только elim-зоны
     у каждой команды. Возвращает {slot: {t_last_alive, f_first_dead, t_first_dead, ...}}.
     Затем для каждой команды бинпоиском уточняет точный кадр перехода."""
@@ -342,14 +344,19 @@ def scout_eliminations(cap: cv2.VideoCapture, zones_scaled: list[dict],
         f -= reverse_step
     pbar.close()
 
-    # ── refine: бинпоиск точного кадра перехода alive→dead ──────────
-    print(f"[hud_read][scout] refine windows (budget={refine_budget} per team)")
+    # ── refine: бинпоиск + линейный доводчик до кадровой точности ──
+    print(f"[hud_read][scout] refine windows: binary≤{refine_budget} + "
+          f"linear≤{refine_linear} per team"
+          + (f" + rollback step={refine_rollback}" if refine_rollback > 0 else ""))
     for slot, st in state.items():
         lo = st["f_last_alive"]
         hi = st["f_first_dead"]
         if lo is None or hi is None or hi <= lo + 1:
+            st["refine_method"] = "none"
+            st["refine_window"] = (hi - lo) if (lo is not None and hi is not None) else None
             continue
         z = elim_zones[slot]
+        # Stage A — бинпоиск.
         steps = 0
         while hi - lo > 1 and steps < refine_budget:
             mid = (lo + hi) // 2
@@ -361,10 +368,38 @@ def scout_eliminations(cap: cv2.VideoCapture, zones_scaled: list[dict],
             else:
                 lo = mid
             steps += 1
+        # Stage B — опциональный rollback скаут с мелким шагом
+        # внутри окна [lo, hi] (на случай мерцания HUD).
+        if refine_rollback > 0 and hi - lo > refine_rollback:
+            cur = hi - refine_rollback
+            while cur > lo:
+                v = is_eliminated_at(cap, cur, z, lang)
+                if v is None:
+                    break
+                if v:
+                    hi = cur
+                else:
+                    lo = cur
+                    break
+                cur -= refine_rollback
+        # Stage C — линейный доводчик: гарантирует кадровую точность.
+        linear_used = 0
+        while hi - lo > 1 and linear_used < refine_linear:
+            cur = lo + 1
+            v = is_eliminated_at(cap, cur, z, lang)
+            if v is None:
+                break
+            if v:
+                hi = cur
+            else:
+                lo = cur
+            linear_used += 1
         st["f_first_dead"] = hi
         st["f_last_alive"] = lo
+        st["refine_method"] = f"binary{steps}+linear{linear_used}"
+        st["refine_window"] = hi - lo
         tqdm.write(f"  team {slot:>2}: elim at f~{hi} t~{hi/fps:.1f}s "
-                   f"(window ±{(hi-lo)} frames, {steps} probes)")
+                   f"(window {hi-lo} frames, binary={steps} linear={linear_used})")
 
     # привести к человеку
     result: dict[int, dict[str, Any]] = {}
@@ -376,6 +411,8 @@ def scout_eliminations(cap: cv2.VideoCapture, zones_scaled: list[dict],
             "f_last_alive": st["f_last_alive"],
             "t_last_alive": round(st["f_last_alive"] / fps, 2)
                              if st["f_last_alive"] is not None else None,
+            "refine_method": st.get("refine_method"),
+            "refine_window": st.get("refine_window"),
         }
     return result
 
@@ -391,11 +428,23 @@ def main() -> int:
                          "таймингов вылетов; two-pass = scout + forward")
     ap.add_argument("--reverse-step", type=int, default=1800,
                     help="Шаг обратного разведчика (кадров). 1800@30fps ≈ 60с")
-    ap.add_argument("--refine-budget", type=int, default=6,
+    ap.add_argument("--refine-budget", type=int, default=10,
                     help="Сколько проб бинпоиска тратить на уточнение каждого вылета")
+    ap.add_argument("--refine-linear", type=int, default=4,
+                    help="Линейный доводчик после бинпоиска (кадров на команду)")
+    ap.add_argument("--refine-rollback", type=int, default=0,
+                    help="Опциональный rollback-скаут мелким шагом внутри окна (0=off)")
     ap.add_argument("--frame-step", type=int, default=600)
     ap.add_argument("--start-sec", type=float, default=0.0)
     ap.add_argument("--end-sec", type=float, default=0.0)
+    ap.add_argument("--start-frame", type=int, default=-1,
+                    help="Точный стартовый кадр (приоритет над --start-sec)")
+    ap.add_argument("--end-frame", type=int, default=-1,
+                    help="Точный конечный кадр (приоритет над --end-sec)")
+    ap.add_argument("--chunk-id", default="",
+                    help="Префикс для overlays/crops, чтобы не пересекаться между воркерами")
+    ap.add_argument("--eliminations", type=Path, default=None,
+                    help="Готовый eliminations.json — пропустить scout в forward-режиме")
     ap.add_argument("--ocr-lang", default="eng")
     ap.add_argument("--tess-cmd", default=None, help="Полный путь к tesseract.exe (Windows)")
     ap.add_argument("--overlay-every", type=int, default=1)
@@ -440,6 +489,10 @@ def main() -> int:
 
     start_f = int(args.start_sec * fps)
     end_f = int(args.end_sec * fps) if args.end_sec > 0 else total
+    if args.start_frame >= 0:
+        start_f = args.start_frame
+    if args.end_frame >= 0:
+        end_f = args.end_frame
     step = max(1, args.frame_step)
 
     # ── режимы scout / two-pass ────────────────────────────────────
@@ -447,13 +500,18 @@ def main() -> int:
         elim = scout_eliminations(cap, zones_scaled, start_f, end_f, fps,
                                   reverse_step=max(1, args.reverse_step),
                                   lang=args.ocr_lang,
-                                  refine_budget=max(1, args.refine_budget))
+                                  refine_budget=max(1, args.refine_budget),
+                                  refine_linear=max(0, args.refine_linear),
+                                  refine_rollback=max(0, args.refine_rollback))
         (args.out / "eliminations.json").write_text(
             json.dumps({
                 "video": str(args.video),
                 "fps": fps,
                 "mode": args.mode,
                 "reverse_step": args.reverse_step,
+                "refine_budget": args.refine_budget,
+                "refine_linear": args.refine_linear,
+                "refine_rollback": args.refine_rollback,
                 "teams": elim,
             }, ensure_ascii=False, indent=2),
             encoding="utf-8",
@@ -472,6 +530,23 @@ def main() -> int:
         if earliest > start_f:
             print(f"[hud_read][two-pass] forward-окно сужено до f{earliest}+")
             start_f = earliest
+    elif args.eliminations is not None and args.eliminations.exists():
+        # forward-воркер: подгружаем готовые тайминги вылетов
+        # чтобы пропускать elim-зоны у уже мёртвых команд.
+        try:
+            data = json.loads(args.eliminations.read_text(encoding="utf-8"))
+            elim_loaded: dict[int, dict[str, Any]] = {
+                int(k): v for k, v in data.get("teams", {}).items()
+            }
+            print(f"[hud_read] loaded eliminations for {len(elim_loaded)} teams "
+                  f"from {args.eliminations}")
+        except Exception as e:
+            print(f"[hud_read] eliminations.json read error: {e}")
+            elim_loaded = {}
+    else:
+        elim_loaded = {}
+
+    chunk_prefix = (args.chunk_id + "_") if args.chunk_id else ""
 
     timeline: list[dict[str, Any]] = []
     # stats[(tag,name)] = {"total":N,"ocr":N,"parsed":N,"values":[...], "hashes":[]}
@@ -540,7 +615,7 @@ def main() -> int:
                     st["hashes"].append(hsh)
                     crop_dir = args.out / "crops" / f"{tag}__{name.replace(' ', '_')}"
                     crop_dir.mkdir(parents=True, exist_ok=True)
-                    cv2.imwrite(str(crop_dir / f"f{f:07d}.png"), crop)
+                    cv2.imwrite(str(crop_dir / f"f{chunk_prefix}{f:07d}.png"), crop)
                     per_zone_value[zid] = hsh[:8]
                     val = hsh
                 else:
@@ -578,7 +653,7 @@ def main() -> int:
                     seen_per_field[key] += 1
                     crop_dir = args.out / "crops" / f"{tag}__{name.replace(' ', '_')}"
                     crop_dir.mkdir(parents=True, exist_ok=True)
-                    cv2.imwrite(str(crop_dir / f"f{f:07d}.png"), crop)
+                    cv2.imwrite(str(crop_dir / f"f{chunk_prefix}{f:07d}.png"), crop)
 
             # Голосование для статичных полей.
             if is_static_key(tag, name):
@@ -608,7 +683,7 @@ def main() -> int:
 
         if processed % max(1, args.overlay_every) == 0:
             ov = draw_overlay(frame, zones_scaled, per_zone_value)
-            cv2.imwrite(str(args.out / "overlays" / f"hud_{f:07d}.jpg"), ov,
+            cv2.imwrite(str(args.out / "overlays" / f"hud_{chunk_prefix}{f:07d}.jpg"), ov,
                         [cv2.IMWRITE_JPEG_QUALITY, 80])
 
         # ── живой лог по кадру ─────────────────────────────────────
@@ -649,12 +724,16 @@ def main() -> int:
           f"elapsed={time.time()-t0:.1f}s")
 
     # ── reports ─────────────────────────────────────────────────────
-    (args.out / "hud_timeline.json").write_text(
+    timeline_name = f"hud_timeline.{args.chunk_id}.json" if args.chunk_id else "hud_timeline.json"
+    (args.out / timeline_name).write_text(
         json.dumps({
             "video": str(args.video),
             "fps": fps,
             "frame_step": step,
             "zones_source": str(zones_path),
+            "chunk_id": args.chunk_id or None,
+            "start_frame": start_f,
+            "end_frame": end_f,
             "timeline": timeline,
         }, ensure_ascii=False, indent=2),
         encoding="utf-8",
@@ -692,7 +771,8 @@ def main() -> int:
             examples = ", ".join(str(v) for v in vals)
         lines.append(f"{tag:<10} {name:<26} {ok_pct:>4}% {parsed_pct:>7}%  {suggest:<22} {examples}")
 
-    (args.out / "report.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    report_name = f"report.{args.chunk_id}.txt" if args.chunk_id else "report.txt"
+    (args.out / report_name).write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines))
     print(f"\n[hud_read] OK → {args.out}")
     return 0

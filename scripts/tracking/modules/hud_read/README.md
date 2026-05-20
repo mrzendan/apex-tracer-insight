@@ -68,7 +68,10 @@ powershell -ExecutionPolicy Bypass -File scripts\tracking\modules\hud_read\run.p
 | `-Zones`          | см. выше | экспорт зон                             |
 | `-Mode`           | forward | `forward` / `scout` / `two-pass`         |
 | `-ReverseStep`    | 1800   | шаг обратного разведчика (≈60с @30fps)    |
-| `-RefineBudget`   | 6      | проб бинпоиска на каждый вылет            |
+| `-RefineBudget`   | 10     | проб бинпоиска на каждый вылет (Stage A)  |
+| `-RefineLinear`   | 4      | линейный доводчик после бинпоиска (Stage B), 0=off |
+| `-RefineRollback` | 0      | мелкий rollback-скаут внутри окна (Stage C), 0=off |
+| `-Workers`        | 0      | параллельных forward-процессов (0 = single) |
 | `-FrameStep`      | 600    | шаг по кадрам                             |
 | `-StartSec`       | 0      | начало окна (сек)                         |
 | `-EndSec`         | 0      | конец окна, 0 = до конца                  |
@@ -87,6 +90,25 @@ powershell -ExecutionPolicy Bypass -File scripts\tracking\modules\hud_read\run.p
   больше не OCR-ятся каждый кадр: после `StaticConfirm` совпадений (или
   `StaticMaxFrames` попыток) значение фиксируется и переиспользуется до
   конца прогона. Это резко ускоряет проход по VOD.
+- **Точность вылетов:** scout уточняет момент вылета каждой команды в
+  три этапа:
+  - Stage A — бинпоиск (`RefineBudget` проб), сужает окно до
+    `ReverseStep / 2^budget`. При 1800 / 2^10 ≈ 2 кадра.
+  - Stage B — линейный доводчик (`RefineLinear` шагов по 1 кадру), даёт
+    кадровую точность.
+  - Stage C — опциональный rollback-скаут (`RefineRollback`), помогает
+    если HUD «мерцает» (анимация перехода в eliminated).
+- **Параллелизация (`-Workers N`):** при N>0 запускается оркестратор
+  `orchestrate.py`. Он:
+    1. Запускает один scout-проход → `eliminations.json`.
+    2. Делит forward-окно на N равных блоков (с перекрытием в один
+       `FrameStep`).
+    3. Стартует N процессов `hud_read.py --mode forward
+       --start-frame X --end-frame Y --chunk-id i`, каждый пишет
+       `hud_timeline.<i>.json` и `report.<i>.txt`.
+    4. Мерджит результаты в `hud_timeline.json` + `report.txt`.
+  Каждый процесс держит свой OCR-кеш и калибровку PSM. Памяти
+  ≈150 MB/воркер. Рекомендация: `cpu_count // 2`.
 - **Режимы прохода:**
   - `forward` (дефолт) — обычный шаг от начала к концу, читает все зоны.
   - `scout` — обратный разведчик. Идёт от конца к началу шагом
