@@ -259,7 +259,9 @@ def _ring_score(mask: np.ndarray, cx: float, cy: float, r: float,
 def sample_window(cap: cv2.VideoCapture, minimap_rect: tuple[int, int, int, int],
                   t_lo: float, t_hi: float, fps: float,
                   hud_bad: list[tuple[float, float]],
-                  max_samples: int = 3) -> list[tuple[float, float, float, float]]:
+                  max_samples: int = 3,
+                  detector=detect_next_ring,
+                  ) -> list[tuple[float, float, float, float]]:
     """Сэмплит одно POV-окно. Возвращает список (t, cx_norm, cy_norm, r_norm)."""
     if t_hi <= t_lo:
         return []
@@ -278,7 +280,7 @@ def sample_window(cap: cv2.VideoCapture, minimap_rect: tuple[int, int, int, int]
         xx, yy = min(x, fw - 1), min(y, fh - 1)
         ww, hh = min(w, fw - xx), min(h, fh - yy)
         crop = frame[yy:yy + hh, xx:xx + ww]
-        det = detect_next_ring(crop)
+        det = detector(crop)
         if det is None:
             continue
         cx, cy, r = det
@@ -291,6 +293,7 @@ def sample_phase(
     t_lo: float, t_hi: float, fps: float,
     cut_ts: list[float], hud_bad: list[tuple[float, float]],
     max_samples_per_window: int = 3,
+    detector=detect_next_ring,
 ) -> tuple[list[tuple[float, float, float, float]],
            tuple[float, float] | None, int]:
     """Из всех POV-под-окон [t_lo..t_hi] выбираем самое согласованное.
@@ -304,7 +307,7 @@ def sample_phase(
     for win in subwins:
         samples = sample_window(
             cap, minimap_rect, win[0], win[1], fps, hud_bad,
-            max_samples=max_samples_per_window,
+            max_samples=max_samples_per_window, detector=detector,
         )
         if len(samples) < 2:
             # Один сэмпл нельзя оценить на согласованность — пропускаем,
