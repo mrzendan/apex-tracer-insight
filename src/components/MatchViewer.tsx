@@ -21,6 +21,7 @@ import { TeamLogo } from "@/components/admin/TeamLogo";
 import { getSlotColor } from "@/lib/team-colors";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { DensityToggle } from "@/components/DensityToggle";
+import { RingDebugOverlay } from "@/components/RingDebugOverlay";
 import { Users, Swords, Skull, ShieldAlert, Package, Circle, Flag } from "lucide-react";
 import damageIcon from "@/assets/icons/damage.svg";
 
@@ -429,6 +430,7 @@ export function MatchViewer({ initialGameId }: { initialGameId?: string }) {
             onEventClick={handleEventClick}
             ringPhases={ringPhases}
             teams={teams}
+            matchId={match.id}
           />
 
           <Timeline time={time} duration={durationSec} playing={playing} speed={speed}
@@ -732,6 +734,7 @@ function MapCanvas({
   selectedTeams, hoverTeam, showTrails, showLabels,
   mapImage, mapName, aliveTeams, totalKills, duration, deathTimes, ringIndex, ringCount, controls,
   focusRequest, onEventClick, ringPhases, teams,
+  matchId,
 }: {
   time: number; ring: RingPhase | null;
   trajectories: Record<string, { t: number; x: number; y: number }[]>;
@@ -756,6 +759,7 @@ function MapCanvas({
   onEventClick: (e: GameEvent) => void;
   ringPhases: RingPhase[];
   teams: Team[];
+  matchId: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const ringSegments = useMemo(() => buildRingSegments(ringPhases), [ringPhases]);
@@ -988,6 +992,7 @@ function MapCanvas({
             })}
 
           </svg>
+          <RingDebugOverlay matchId={matchId} scale={view.scale} />
         </div>
       </div>
 

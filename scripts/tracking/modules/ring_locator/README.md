@@ -36,6 +36,59 @@
    предыдущего (если оно уже измерено). Иначе фаза получает
    `geometry_confidence: "low"`.
 
+## Дебаг
+
+По умолчанию пишет `reports/debug/`:
+- `ring{N}_roi_f{frame}.jpg` — сырой кроп ROI.
+- `ring{N}_overlay_f{frame}.jpg` — кроп + найденная окружность + рамка
+  `map_bounds_in_roi` (если задана в zones).
+- `ring{N}_mask_f{frame}.png` — HSV-маска, по которой работал HoughCircles.
+- `_all_rings_on_roi.jpg` — последний кадр ROI с наложенными ВСЕМИ
+  6 окружностями (нумерация R1…R6) — эталон для калибровки UI.
+
+Отключить: `--no-debug`. Изменить папку: `--debug-dir <path>`.
+
+### Калибровка `map_bounds_in_roi`
+
+ROI «camera roi» (1050×1030) включает HUD-края и чёрные поля вокруг
+квадратной игровой карты. Нормализация `cx_norm = cx_px / roi_w` отдаёт
+координаты *внутри ROI*, а сайт рисует кольца поверх *чистого квадрата
+карты* — отсюда систематическое смещение.
+
+Решение: в `scripts/tracking/configs/zones.vod.json` на зоне
+`camera roi` добавь блок:
+
+```json
+"map_bounds_in_roi": { "x": 45, "y": 0, "w": 960, "h": 1030 }
+```
+
+— где `x,y,w,h` — координаты квадрата игровой карты ВНУТРИ ROI.
+Подбирай по `_all_rings_on_roi.jpg`: зелёная рамка должна точно
+совпадать с границами квадратной карты, а не с ROI целиком.
+
+После калибровки `ring_locator` дополнительно пишет `cx_map_norm /
+cy_map_norm / r_map_norm` в `ring_geometry.json` — это правильные
+координаты для фронта.
+
+### Сравнение Python vs UI одним кадром
+
+```powershell
+python scripts\tracking\modules\ring_locator\compare_to_ui.py `
+  --map-image src\assets\maps\storm-point.png
+```
+
+→ `reports/debug/compare.png`: слева — что увидел Python на ROI,
+справа — те же кольца на чистой PNG карты в системе `map_norm`.
+Если кольца совпали по форме/положению — `map_bounds_in_roi` подобран
+верно.
+
+### Дебаг-режим на сайте
+
+Открой `/games/m-test-g1?debug=1` — поверх карты появятся все 6 колец
+цветом по номеру, крестик-центр и подпись с координатами. В левом
+верхнем углу — переключатель `roi-norm ↔ map-norm`: видно, какая
+система рисует кольца правильно.
+
 ## Запуск
 
 ```powershell
