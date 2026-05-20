@@ -413,25 +413,45 @@ def main():
                 d = math.hypot(xi - xj, yi - yj)
                 if d <= agree_radius:
                     agree_pairs.append((mi, mj, round(d, 1)))
-        # категория
+        # категория: считаем размер максимальной клики методов,
+        # которые попарно согласились по координате.
         n = len(methods_present)
-        if n == 3 and len(agree_pairs) == 3:
-            conf = "HIGH"; agree = "3/3"
-        elif n >= 2 and len(agree_pairs) >= 1:
-            conf = "MED"; agree = f"{1 + len(agree_pairs)}/3"  # 2 или 3 участвуют
-            if n == 3 and len(agree_pairs) < 3:
-                agree = "2/3"
+        agreed_set: set[str] = set()
+        if len(agree_pairs) == 3:
+            agreed_set = set(methods_present)  # все три попарно сошлись
+        elif agree_pairs:
+            # 1-2 пары: берём наибольшую связную компоненту
+            from collections import defaultdict as _dd
+            adj: dict[str, set[str]] = _dd(set)
+            for a, b, _d in agree_pairs:
+                adj[a].add(b); adj[b].add(a)
+            seen: set[str] = set()
+            best: set[str] = set()
+            for node in adj:
+                if node in seen: continue
+                stack = [node]; comp: set[str] = set()
+                while stack:
+                    v = stack.pop()
+                    if v in comp: continue
+                    comp.add(v); seen.add(v)
+                    stack.extend(adj[v] - comp)
+                if len(comp) > len(best):
+                    best = comp
+            agreed_set = best
+        agreed_n = len(agreed_set)
+        if agreed_n >= 3:
+            conf = "HIGH"
+        elif agreed_n == 2:
+            conf = "MED"
         elif n >= 1:
-            conf = "LOW"; agree = f"{n}/3"
+            conf = "LOW"
         else:
-            conf = "MISS"; agree = "0/3"
+            conf = "MISS"
+        agree = f"{agreed_n}/{n}" if n else "0/0"
         # консенсус-координата
-        if agree_pairs:
-            agreed = set()
-            for a, b, _ in agree_pairs:
-                agreed.add(a); agreed.add(b)
-            xs = [bests[m]["med_xy"][0] for m in agreed]
-            ys = [bests[m]["med_xy"][1] for m in agreed]
+        if agreed_set:
+            xs = [bests[m]["med_xy"][0] for m in agreed_set]
+            ys = [bests[m]["med_xy"][1] for m in agreed_set]
             consensus = [round(sum(xs) / len(xs), 1),
                          round(sum(ys) / len(ys), 1)]
         elif methods_present:
