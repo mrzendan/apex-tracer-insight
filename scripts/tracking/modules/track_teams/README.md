@@ -11,6 +11,11 @@
 
 - `shared/canonical_maps/<map>.png` + `<map>.json` — карта и калибровка.
 - `config.example.yaml` (или свой) — единственный конфиг трекера.
+- (опц.) `shared/canonical_maps/<map>.minimap_affine.json` — аффинка
+  ROI миникарты → канонические пиксели. Нужна, только если используешь
+  `--anchors` от `motion_detect`. См. шаблон в `shared/canonical_maps/`.
+- (опц.) `modules/motion_detect/reports/motion_tracks.json` — стартовые
+  якоря, подаются через `--anchors`.
 - (опционально) `modules/find_cuts/reports/cuts.json` — на следующих
   итерациях, чтобы не трекать через каты камеры.
 
@@ -38,6 +43,12 @@ powershell -ExecutionPolicy Bypass -File scripts\tracking\modules\track_teams\ru
 | `-End`     | -1 | конец в секундах (-1 = до конца) |
 | `-NoPush`  | — | (только push.ps1) без коммита |
 
+`track_teams.py` дополнительно поддерживает `--anchors <motion_tracks.json>`
+— тогда треки инициализируются от консенсус-точек `motion_detect`
+(HIGH/MED — сразу alive-трек, LOW — подсказка, MISS — ждём детекцию).
+Чтобы это работало, у каждой команды в `config.yaml` должно быть поле
+`slot: <N>` (1..20, как в `hsv_presets.json`).
+
 Параметры самого `track_teams.py` (через `config.yaml`):
 
 | Секция | Что регулирует |
@@ -62,3 +73,45 @@ powershell -ExecutionPolicy Bypass -File scripts\tracking\modules\track_teams\ru
 `reports/tracks.json` — см. `shared/schema/tracks.schema.json` и
 `docs/tracking-lab.md` в корне репо. Файл загружается на
 `/admin/tracking-lab` (drag-and-drop) для визуализации.
+
+Рядом пишется sidecar `tracks.slots.json` с финальным `wiped_at_t` per slot
+(основной файл стримится, поэтому wiped попадают в `frames[*].wipes[]`,
+а финальная сводка — в sidecar). Фронт читает оба.
+
+## Метрика качества (ID-switches)
+
+Ручные GT-точки лежат в `assets/gt_anchors.json` (формат
+`{t, slot_id, world_xy}`). Прогон:
+
+```powershell
+python scripts/tracking/modules/track_teams/eval_id_switches.py `
+  --tracks scripts/tracking/modules/track_teams/reports/tracks.json `
+  --gt     scripts/tracking/modules/track_teams/assets/gt_anchors.json `
+  --out    scripts/tracking/modules/track_teams/reports/eval_id_switches.json
+```
+
+На выходе — `eval_id_switches.json/.txt` с coverage, медианной/p95 px-ошибкой
+и общим количеством ID-switches per slot. Цель — гнать в ноль на сегментах
+между POV-катами.
+
+## Wipe-детект
+
+Параметры в `config.yaml` (секция `tracking.wipe`):
+
+| ключ            | дефолт | что |
+|---|---|---|
+| `absence_sec`   | 45.0   | сколько секунд без детекции → считаем выбитыми |
+| `respect_cuts`  | true   | (TODO) не считать POV-кат за отсутствие |
+
+После `wiped_at_t` трек закрывается окончательно и не реанимируется
+ложными HSV-срабатываниями (типичный кейс: тёмная команда + декорация
+карты того же оттенка).
+
+## Что НЕ делаем здесь (возможные улучшения)
+
+- Поднять HIGH/MED для тёмных команд (5/9/11/14/16) в `motion_detect`
+  — template matching, time-aggregated HSV. Сейчас они идут как LOW
+  и стартуют от первой реальной детекции.
+- Использовать `cuts.json` в wipe-детекте (`respect_cuts` — заглушка).
+- Multi-instance треки на слот (сейчас один трек на слот; для late-game
+  с двумя выжившими игроками одной команды этого хватает).

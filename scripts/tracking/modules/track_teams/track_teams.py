@@ -42,6 +42,8 @@ class TeamCfg:
     hsv_lower2: Optional[np.ndarray] = None
     hsv_upper2: Optional[np.ndarray] = None
     color_hex: str = "#ffffff"
+    slot: Optional[int] = None       # 1..20, matches motion_detect/hsv_presets
+    slot_id: Optional[str] = None    # canonical "slot_<N>"; falls back to id
 
 
 @dataclass
@@ -62,6 +64,8 @@ def parse_teams(cfg: dict) -> list[TeamCfg]:
     out = []
     palette = ["#ef4444", "#3b82f6", "#eab308", "#22c55e", "#a855f7", "#ec4899", "#06b6d4", "#f97316"]
     for i, t in enumerate(cfg.get("teams", [])):
+        slot = t.get("slot")
+        slot_id = t.get("slot_id") or (f"slot_{int(slot)}" if slot is not None else str(t["id"]))
         out.append(TeamCfg(
             id=str(t["id"]),
             name=str(t.get("name", t["id"])),
@@ -70,6 +74,8 @@ def parse_teams(cfg: dict) -> list[TeamCfg]:
             hsv_lower2=np.array(t["hsv_lower2"], dtype=np.uint8) if "hsv_lower2" in t else None,
             hsv_upper2=np.array(t["hsv_upper2"], dtype=np.uint8) if "hsv_upper2" in t else None,
             color_hex=t.get("color", palette[i % len(palette)]),
+            slot=int(slot) if slot is not None else None,
+            slot_id=slot_id,
         ))
     return out
 
@@ -210,6 +216,67 @@ def map_point(H: np.ndarray, pt_xy: tuple[float, float]) -> tuple[float, float]:
     return float(w[0] / w[2]), float(w[1] / w[2])
 
 
+# --------------------- Anchors (from motion_detect) ----------------------
+
+def load_minimap_affine(map_name: str, base_dir: Path) -> Optional[np.ndarray]:
+    """Load minimap_px -> canonical_px affine. Returns 3x3 or None if no file."""
+    p = base_dir / f"{map_name}.minimap_affine.json"
+    if not p.exists():
+        return None
+    raw = json.loads(p.read_text(encoding="utf-8"))
+    pts = [{"canonical_px": q["minimap_px"], "world": q["canonical_px"]} for q in raw["points"]]
+    return fit_affine_px_to_world(pts)
+
+
+def load_anchors(path: Path,
+                 teams: list[TeamCfg],
+                 mini_affine: Optional[np.ndarray],
+                 cmap: "CanonicalMap") -> dict[str, dict]:
+    """Read motion_detect/reports/motion_tracks.json and convert each slot's
+    consensus_xy (minimap pixels) into canonical+world coordinates.
+
+    Returns { team_id: { 'slot': int, 'slot_id': str, 'conf': 'HIGH|MED|LOW|MISS',
+                          'world':(x,y), 'canonical_px':(x,y) } }.
+    Teams without a 'slot' field in config are skipped (no way to match)."""
+    if not path.exists():
+        print(f"[warn] anchors file {path} not found — стартую без motion-якорей")
+        return {}
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    # build slot -> best result
+    by_slot: dict[int, dict] = {}
+    for r in raw.get("results", []):
+        slot = r.get("slot")
+        if slot is None:
+            continue
+        prev = by_slot.get(slot)
+        order = {"HIGH": 0, "MED": 1, "LOW": 2, "MISS": 3}
+        if prev is None or order.get(r.get("confidence", "MISS"), 9) < order.get(prev.get("confidence", "MISS"), 9):
+            by_slot[slot] = r
+    out: dict[str, dict] = {}
+    if mini_affine is None:
+        print("[warn] нет minimap_affine.json для карты — anchor xy переведу как identity")
+    for t in teams:
+        if t.slot is None:
+            continue
+        r = by_slot.get(t.slot)
+        if r is None or not r.get("consensus_xy"):
+            out[t.id] = {"slot": t.slot, "slot_id": t.slot_id or f"slot_{t.slot}",
+                         "conf": "MISS", "world": None, "canonical_px": None}
+            continue
+        mx, my = r["consensus_xy"]
+        if mini_affine is not None:
+            cx, cy = map_point(mini_affine, (float(mx), float(my)))
+        else:
+            cx, cy = float(mx), float(my)
+        wx, wy = map_point(cmap.px_to_world, (cx, cy))
+        out[t.id] = {
+            "slot": t.slot, "slot_id": t.slot_id or f"slot_{t.slot}",
+            "conf": r.get("confidence", "MISS"),
+            "world": (wx, wy), "canonical_px": (cx, cy),
+        }
+    return out
+
+
 # ----------------------------- Detection ---------------------------------
 
 def detect_team_blobs(frame_bgr: np.ndarray, teams: list[TeamCfg], det_cfg: dict):
@@ -271,6 +338,9 @@ class Track:
     miss: int = 0
     state: str = "alive"
     last_conf: float = 1.0
+    slot_id: Optional[str] = None
+    last_seen_t: float = 0.0
+    wiped_at_t: Optional[float] = None
 
     def predict(self):
         self.x += self.vx
@@ -298,8 +368,29 @@ class WorldTracker:
         self.gate = float(cfg.get("gating_world_dist", 50.0))
         self.q = float(cfg.get("process_noise", 1.0))
         self.r = float(cfg.get("measurement_noise", 4.0))
+        # wipe detection
+        wcfg = cfg.get("wipe", {}) or {}
+        self.wipe_absence_sec = float(wcfg.get("absence_sec", 45.0))
+        self.wipe_respect_cuts = bool(wcfg.get("respect_cuts", True))
+        # cuts handled by main loop (it freezes last_seen_t around camera cuts)
+        self.slot_anchors: dict[str, dict] = {}  # team_id -> anchor info
+        self.cur_t: float = 0.0
+        self.new_wipes: list[dict] = []
 
-    def step(self, detections_world: list[dict]):
+    def set_anchors(self, anchors: dict[str, dict]):
+        self.slot_anchors = anchors or {}
+        for team_id, a in self.slot_anchors.items():
+            if a.get("conf") in ("HIGH", "MED") and a.get("world") is not None:
+                wx, wy = a["world"]
+                self.tracks[team_id] = Track(
+                    team_id=team_id, x=wx, y=wy,
+                    state="alive", last_conf=1.0 if a["conf"] == "HIGH" else 0.7,
+                    slot_id=a.get("slot_id"), last_seen_t=0.0,
+                )
+
+    def step(self, detections_world: list[dict], t: float):
+        self.cur_t = t
+        self.new_wipes = []
         # 1 predict
         for tr in self.tracks.values():
             tr.predict()
@@ -308,12 +399,27 @@ class WorldTracker:
                 tr.state = "low_conf"
             if tr.miss > self.max_gap:
                 tr.state = "lost"
+            # 1b wipe detection: long unbroken absence -> mark wiped
+            if (tr.wiped_at_t is None
+                    and tr.last_seen_t > 0
+                    and (t - tr.last_seen_t) >= self.wipe_absence_sec):
+                tr.wiped_at_t = round(t, 2)
+                tr.state = "lost"
+                self.new_wipes.append({
+                    "slot_id": tr.slot_id or tr.team_id,
+                    "team_id": tr.team_id,
+                    "t": tr.wiped_at_t,
+                    "last_world": [round(tr.x, 2), round(tr.y, 2)],
+                })
         # 2 group detections by team and pick closest to existing track or pick highest score
         by_team: dict[str, list[dict]] = {}
         for d in detections_world:
             by_team.setdefault(d["team_id"], []).append(d)
         for team_id, dets in by_team.items():
             tr = self.tracks.get(team_id)
+            if tr is not None and tr.wiped_at_t is not None:
+                # команда официально выбита — игнорим ложные детекции
+                continue
             chosen = None
             if tr is not None and tr.state != "lost":
                 dets_in_gate = [d for d in dets if math.hypot(d["world"][0] - tr.x, d["world"][1] - tr.y) <= self.gate]
@@ -324,9 +430,15 @@ class WorldTracker:
             mx, my = chosen["world"]
             angle = chosen.get("angle_world_deg")
             if tr is None or tr.state == "lost":
-                self.tracks[team_id] = Track(team_id=team_id, x=mx, y=my, angle=angle, last_conf=chosen.get("score", 1.0))
+                anchor = self.slot_anchors.get(team_id, {})
+                self.tracks[team_id] = Track(
+                    team_id=team_id, x=mx, y=my, angle=angle,
+                    last_conf=chosen.get("score", 1.0),
+                    slot_id=anchor.get("slot_id"), last_seen_t=t,
+                )
             else:
                 tr.update(mx, my, angle, chosen.get("score", 1.0), self.q, self.r)
+                tr.last_seen_t = t
 
     def snapshot(self) -> list[dict]:
         out = []
@@ -335,6 +447,7 @@ class WorldTracker:
                 continue
             out.append({
                 "team_id": tr.team_id,
+                "slot_id": tr.slot_id or tr.team_id,
                 "world": [round(tr.x, 2), round(tr.y, 2)],
                 "angle_world_deg": None if tr.angle is None else round(tr.angle, 1),
                 "state": tr.state,
@@ -355,6 +468,8 @@ def main():
     ap.add_argument("--end", type=float, default=-1.0)
     ap.add_argument("--preview", type=Path, default=None)
     ap.add_argument("--debug-frame", type=int, default=None)
+    ap.add_argument("--anchors", type=Path, default=None,
+                    help="motion_detect/reports/motion_tracks.json для инициализации треков")
     args = ap.parse_args()
 
     if not args.video.exists():
@@ -371,6 +486,16 @@ def main():
     reg = FrameRegistrar(cmap, cfg.get("registration", {}))
     det_cfg = cfg.get("detection", {})
     trk = WorldTracker(cfg.get("tracking", {}))
+    # anchors (motion_detect)
+    anchors_path = args.anchors
+    if anchors_path is None and cfg.get("anchors_file"):
+        anchors_path = (args.config.parent / cfg["anchors_file"]).resolve()
+    anchors_map: dict[str, dict] = {}
+    if anchors_path:
+        mini_affine = load_minimap_affine(cmap.name, canonical_dir)
+        anchors_map = load_anchors(Path(anchors_path), teams, mini_affine, cmap)
+        trk.set_anchors(anchors_map)
+        print(f"[info] anchors: {sum(1 for a in anchors_map.values() if a.get('conf') in ('HIGH','MED'))} HIGH/MED, {sum(1 for a in anchors_map.values() if a.get('conf') == 'LOW')} LOW")
     frame_step = int(args.frame_step or cfg.get("frame_step", 3))
 
     cap = cv2.VideoCapture(str(args.video))
@@ -403,8 +528,21 @@ def main():
         "canonical_size": [int(cmap.size[0]), int(cmap.size[1])],
         "world_bounds": cmap.world_bounds,
         "teams": [{"id": t.id, "name": t.name, "color": t.color_hex} for t in teams],
+        "slots": [
+            {
+                "slot_id": t.slot_id or t.id,
+                "slot": t.slot,
+                "team_id": t.id,
+                "name": t.name,
+                "color": t.color_hex,
+                "anchor_conf": (anchors_map.get(t.id, {}) or {}).get("conf", "MISS"),
+                "anchor_world": (lambda a: [round(a[0], 2), round(a[1], 2)] if a else None)(
+                    (anchors_map.get(t.id, {}) or {}).get("world")),
+                "wiped_at_t": None,
+            } for t in teams
+        ],
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
-        "schema_version": 1,
+        "schema_version": 2,
     }
     fout.write('{"meta":'); json.dump(meta, fout, ensure_ascii=False); fout.write(',"frames":[')
     first = True
@@ -461,7 +599,8 @@ def main():
                         "angle_world_deg": angle_world,
                         "score": b["score"],
                     })
-                trk.step(world_dets)
+                t_now = (frame_idx - start_frame) / fps
+                trk.step(world_dets, t_now)
                 tracks_world = []
                 # обогатим snapshot последними измеренными canonical_px / frame_px (для рендера)
                 snap = trk.snapshot()
@@ -483,6 +622,8 @@ def main():
                 "camera": cam,
                 "tracks": tracks_world,
             }
+            if H is not None and trk.new_wipes:
+                record["wipes"] = trk.new_wipes
             if not first:
                 fout.write(",")
             json.dump(record, fout, ensure_ascii=False)
@@ -514,6 +655,23 @@ def main():
             preview_writer.release()
         fout.write("]}")
         fout.close()
+    # sidecar: финальные wiped_at_t per slot (мета пишется стримом до накопления wipes)
+    slots_final = []
+    for t in teams:
+        tr = trk.tracks.get(t.id)
+        slots_final.append({
+            "slot_id": t.slot_id or t.id,
+            "slot": t.slot,
+            "team_id": t.id,
+            "name": t.name,
+            "color": t.color_hex,
+            "anchor_conf": (anchors_map.get(t.id, {}) or {}).get("conf", "MISS"),
+            "wiped_at_t": (tr.wiped_at_t if tr is not None else None),
+        })
+    (out_path.parent / (out_path.stem + ".slots.json")).write_text(
+        json.dumps({"slots": slots_final}, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
     print(f"[ok] processed {processed} frames -> {out_path}")
 
 
