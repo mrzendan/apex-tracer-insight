@@ -253,11 +253,146 @@ def draw_overlay(frame: np.ndarray, zones_scaled: list[dict], values: dict[str, 
     return out
 
 
+# ── scout (reverse) ──────────────────────────────────────────────────
+def read_frame(cap: cv2.VideoCapture, f: int) -> np.ndarray | None:
+    cap.set(cv2.CAP_PROP_POS_FRAMES, max(0, f))
+    ok, frame = cap.read()
+    return frame if ok else None
+
+
+def is_eliminated_at(cap: cv2.VideoCapture, f: int, zone: dict, lang: str) -> bool | None:
+    """True/False — определён ли elim в кадре, None — кадр не прочитался."""
+    frame = read_frame(cap, f)
+    if frame is None:
+        return None
+    x, y, w, h = zone["x"], zone["y"], zone["w"], zone["h"]
+    crop = frame[y:y + h, x:x + w]
+    if crop.size == 0:
+        return None
+    txt = ocr(crop, lang, digits_only=False, alnum_only=True,
+              calib_key=(zone["tag"], zone["name"]))
+    return bool(RE_ELIM.search(txt))
+
+
+def scout_eliminations(cap: cv2.VideoCapture, zones_scaled: list[dict],
+                       start_f: int, end_f: int, fps: float,
+                       reverse_step: int, lang: str,
+                       refine_budget: int = 6) -> dict[int, dict[str, Any]]:
+    """Идёт от end_f к start_f крупным шагом, читает только elim-зоны
+    у каждой команды. Возвращает {slot: {t_last_alive, f_first_dead, t_first_dead, ...}}.
+    Затем для каждой команды бинпоиском уточняет точный кадр перехода."""
+    elim_zones: dict[int, dict] = {}
+    for z in zones_scaled:
+        slot = team_slot(z["tag"])
+        if slot is not None and z["name"] == "eliminated":
+            elim_zones[slot] = z
+    if not elim_zones:
+        print("[hud_read][scout] zones 'eliminated' не найдены — нечего сканировать")
+        return {}
+
+    print(f"[hud_read][scout] reverse pass: {len(elim_zones)} teams, "
+          f"step={reverse_step} frames ({reverse_step/fps:.1f}s)")
+
+    # state[slot] = {"f_first_dead": int|None, "f_last_alive": int|None}
+    state: dict[int, dict[str, Any]] = {
+        s: {"f_first_dead": None, "f_last_alive": None} for s in elim_zones
+    }
+
+    total_iters = max(1, (end_f - start_f) // reverse_step + 1)
+    pbar = tqdm(total=total_iters, unit="f", desc="scout-rev", dynamic_ncols=True)
+    f = end_f - 1
+    while f >= start_f:
+        frame = read_frame(cap, f)
+        if frame is None:
+            f -= reverse_step
+            pbar.update(1)
+            continue
+        alive_count = 0
+        dead_count = 0
+        for slot, z in elim_zones.items():
+            st = state[slot]
+            # если уже знаем и f_last_alive, и f_first_dead — пропускаем
+            if st["f_last_alive"] is not None:
+                continue
+            x, y, w, h = z["x"], z["y"], z["w"], z["h"]
+            crop = frame[y:y + h, x:x + w]
+            txt = ocr(crop, lang, digits_only=False, alnum_only=True,
+                      calib_key=(z["tag"], z["name"]))
+            is_dead = bool(RE_ELIM.search(txt))
+            if is_dead:
+                if st["f_first_dead"] is None or f < st["f_first_dead"]:
+                    st["f_first_dead"] = f
+                dead_count += 1
+            else:
+                # первая встреча "жив" при движении назад = верхняя граница окна
+                if st["f_last_alive"] is None:
+                    st["f_last_alive"] = f
+                alive_count += 1
+        tqdm.write(f"scout f{f:>7} t={f/fps:6.1f}s  alive={alive_count} dead={dead_count} "
+                   f"resolved={sum(1 for s in state.values() if s['f_last_alive'] is not None)}/"
+                   f"{len(state)}")
+        pbar.update(1)
+        # все команды локализованы — выходим
+        if all(s["f_last_alive"] is not None or s["f_first_dead"] is None
+               for s in state.values()):
+            # есть команды, у которых f_first_dead тоже None (не вылетали) — это норм
+            pass
+        if all(s["f_last_alive"] is not None for s in state.values()):
+            break
+        f -= reverse_step
+    pbar.close()
+
+    # ── refine: бинпоиск точного кадра перехода alive→dead ──────────
+    print(f"[hud_read][scout] refine windows (budget={refine_budget} per team)")
+    for slot, st in state.items():
+        lo = st["f_last_alive"]
+        hi = st["f_first_dead"]
+        if lo is None or hi is None or hi <= lo + 1:
+            continue
+        z = elim_zones[slot]
+        steps = 0
+        while hi - lo > 1 and steps < refine_budget:
+            mid = (lo + hi) // 2
+            v = is_eliminated_at(cap, mid, z, lang)
+            if v is None:
+                break
+            if v:
+                hi = mid
+            else:
+                lo = mid
+            steps += 1
+        st["f_first_dead"] = hi
+        st["f_last_alive"] = lo
+        tqdm.write(f"  team {slot:>2}: elim at f~{hi} t~{hi/fps:.1f}s "
+                   f"(window ±{(hi-lo)} frames, {steps} probes)")
+
+    # привести к человеку
+    result: dict[int, dict[str, Any]] = {}
+    for slot, st in sorted(state.items()):
+        f_dead = st["f_first_dead"]
+        result[slot] = {
+            "f_first_dead": f_dead,
+            "t_first_dead": round(f_dead / fps, 2) if f_dead is not None else None,
+            "f_last_alive": st["f_last_alive"],
+            "t_last_alive": round(st["f_last_alive"] / fps, 2)
+                             if st["f_last_alive"] is not None else None,
+        }
+    return result
+
+
 # ── main loop ────────────────────────────────────────────────────────
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--video", required=True, type=Path)
     ap.add_argument("--zones", type=Path, default=None)
+    ap.add_argument("--mode", choices=("forward", "scout", "two-pass"),
+                    default="forward",
+                    help="forward = обычный проход; scout = только обратный поиск "
+                         "таймингов вылетов; two-pass = scout + forward")
+    ap.add_argument("--reverse-step", type=int, default=1800,
+                    help="Шаг обратного разведчика (кадров). 1800@30fps ≈ 60с")
+    ap.add_argument("--refine-budget", type=int, default=6,
+                    help="Сколько проб бинпоиска тратить на уточнение каждого вылета")
     ap.add_argument("--frame-step", type=int, default=600)
     ap.add_argument("--start-sec", type=float, default=0.0)
     ap.add_argument("--end-sec", type=float, default=0.0)
@@ -306,6 +441,37 @@ def main() -> int:
     start_f = int(args.start_sec * fps)
     end_f = int(args.end_sec * fps) if args.end_sec > 0 else total
     step = max(1, args.frame_step)
+
+    # ── режимы scout / two-pass ────────────────────────────────────
+    if args.mode in ("scout", "two-pass"):
+        elim = scout_eliminations(cap, zones_scaled, start_f, end_f, fps,
+                                  reverse_step=max(1, args.reverse_step),
+                                  lang=args.ocr_lang,
+                                  refine_budget=max(1, args.refine_budget))
+        (args.out / "eliminations.json").write_text(
+            json.dumps({
+                "video": str(args.video),
+                "fps": fps,
+                "mode": args.mode,
+                "reverse_step": args.reverse_step,
+                "teams": elim,
+            }, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        print(f"[hud_read][scout] eliminations.json → {args.out/'eliminations.json'}")
+        if args.mode == "scout":
+            cap.release()
+            return 0
+        # two-pass: сужаем диапазон forward-прохода до старта матча.
+        # старт = самый ранний f_last_alive (или 0).
+        earliest = min(
+            (v["f_last_alive"] for v in elim.values()
+             if v["f_last_alive"] is not None),
+            default=start_f,
+        )
+        if earliest > start_f:
+            print(f"[hud_read][two-pass] forward-окно сужено до f{earliest}+")
+            start_f = earliest
 
     timeline: list[dict[str, Any]] = []
     # stats[(tag,name)] = {"total":N,"ocr":N,"parsed":N,"values":[...], "hashes":[]}
