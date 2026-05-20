@@ -216,6 +216,67 @@ def map_point(H: np.ndarray, pt_xy: tuple[float, float]) -> tuple[float, float]:
     return float(w[0] / w[2]), float(w[1] / w[2])
 
 
+# --------------------- Anchors (from motion_detect) ----------------------
+
+def load_minimap_affine(map_name: str, base_dir: Path) -> Optional[np.ndarray]:
+    """Load minimap_px -> canonical_px affine. Returns 3x3 or None if no file."""
+    p = base_dir / f"{map_name}.minimap_affine.json"
+    if not p.exists():
+        return None
+    raw = json.loads(p.read_text(encoding="utf-8"))
+    pts = [{"canonical_px": q["minimap_px"], "world": q["canonical_px"]} for q in raw["points"]]
+    return fit_affine_px_to_world(pts)
+
+
+def load_anchors(path: Path,
+                 teams: list[TeamCfg],
+                 mini_affine: Optional[np.ndarray],
+                 cmap: "CanonicalMap") -> dict[str, dict]:
+    """Read motion_detect/reports/motion_tracks.json and convert each slot's
+    consensus_xy (minimap pixels) into canonical+world coordinates.
+
+    Returns { team_id: { 'slot': int, 'slot_id': str, 'conf': 'HIGH|MED|LOW|MISS',
+                          'world':(x,y), 'canonical_px':(x,y) } }.
+    Teams without a 'slot' field in config are skipped (no way to match)."""
+    if not path.exists():
+        print(f"[warn] anchors file {path} not found — стартую без motion-якорей")
+        return {}
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    # build slot -> best result
+    by_slot: dict[int, dict] = {}
+    for r in raw.get("results", []):
+        slot = r.get("slot")
+        if slot is None:
+            continue
+        prev = by_slot.get(slot)
+        order = {"HIGH": 0, "MED": 1, "LOW": 2, "MISS": 3}
+        if prev is None or order.get(r.get("confidence", "MISS"), 9) < order.get(prev.get("confidence", "MISS"), 9):
+            by_slot[slot] = r
+    out: dict[str, dict] = {}
+    if mini_affine is None:
+        print("[warn] нет minimap_affine.json для карты — anchor xy переведу как identity")
+    for t in teams:
+        if t.slot is None:
+            continue
+        r = by_slot.get(t.slot)
+        if r is None or not r.get("consensus_xy"):
+            out[t.id] = {"slot": t.slot, "slot_id": t.slot_id or f"slot_{t.slot}",
+                         "conf": "MISS", "world": None, "canonical_px": None}
+            continue
+        mx, my = r["consensus_xy"]
+        if mini_affine is not None:
+            cx, cy = map_point(mini_affine, (float(mx), float(my)))
+        else:
+            cx, cy = float(mx), float(my)
+        wx, wy = map_point(cmap.px_to_world, (cx, cy))
+        out[t.id] = {
+            "slot": t.slot, "slot_id": t.slot_id or f"slot_{t.slot}",
+            "conf": r.get("confidence", "MISS"),
+            "world": (wx, wy), "canonical_px": (cx, cy),
+        }
+    return out
+
+
 # ----------------------------- Detection ---------------------------------
 
 def detect_team_blobs(frame_bgr: np.ndarray, teams: list[TeamCfg], det_cfg: dict):
