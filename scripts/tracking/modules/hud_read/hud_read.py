@@ -656,6 +656,31 @@ def main() -> int:
     step = max(1, args.frame_step)
 
     # ── режимы scout / two-pass ────────────────────────────────────
+    do_rings = args.rings or args.rings_only or args.mode in ("scout", "two-pass")
+    # rings-only — короткий путь
+    if args.rings_only:
+        ring_res = scout_rings(
+            cap, zones_scaled, start_f, end_f, fps,
+            scout_step=max(1, args.ring_scout_step),
+            lang=args.ocr_lang,
+            refine_budget=max(1, args.ring_refine_budget),
+            refine_linear=max(0, args.ring_refine_linear),
+        )
+        (args.out / "rings.json").write_text(
+            json.dumps({
+                "video": str(args.video),
+                "fps": fps,
+                "scout_step": args.ring_scout_step,
+                "refine_budget": args.ring_refine_budget,
+                "refine_linear": args.ring_refine_linear,
+                **ring_res,
+            }, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        print(f"[hud_read][ring-scout] rings.json → {args.out/'rings.json'}")
+        cap.release()
+        return 0
+
     if args.mode in ("scout", "two-pass"):
         elim = scout_eliminations(cap, zones_scaled, start_f, end_f, fps,
                                   reverse_step=max(1, args.reverse_step),
@@ -677,6 +702,26 @@ def main() -> int:
             encoding="utf-8",
         )
         print(f"[hud_read][scout] eliminations.json → {args.out/'eliminations.json'}")
+        # Ring scout — встроен в scout/two-pass по умолчанию
+        ring_res = scout_rings(
+            cap, zones_scaled, start_f, end_f, fps,
+            scout_step=max(1, args.ring_scout_step),
+            lang=args.ocr_lang,
+            refine_budget=max(1, args.ring_refine_budget),
+            refine_linear=max(0, args.ring_refine_linear),
+        )
+        (args.out / "rings.json").write_text(
+            json.dumps({
+                "video": str(args.video),
+                "fps": fps,
+                "scout_step": args.ring_scout_step,
+                "refine_budget": args.ring_refine_budget,
+                "refine_linear": args.ring_refine_linear,
+                **ring_res,
+            }, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        print(f"[hud_read][ring-scout] rings.json → {args.out/'rings.json'}")
         if args.mode == "scout":
             cap.release()
             return 0
