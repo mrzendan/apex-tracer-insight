@@ -218,7 +218,11 @@
         ],
         "cx_map_norm": 0.3825,
         "cy_map_norm": 0.3885,
-        "r_map_norm": 0.3172
+        "r_map_norm": 0.3172,
+        "cx_zoom_norm": 0.3825,
+        "cy_zoom_norm": 0.3885,
+        "r_zoom_norm": 0.3172,
+        "map_zoom": 1.0
       },
       {
         "ring": 2,
@@ -242,7 +246,11 @@
         ],
         "cx_map_norm": 0.4825,
         "cy_map_norm": 0.2918,
-        "r_map_norm": 0.2801
+        "r_map_norm": 0.2801,
+        "cx_zoom_norm": 0.4825,
+        "cy_zoom_norm": 0.2918,
+        "r_zoom_norm": 0.2801,
+        "map_zoom": 1.0
       },
       {
         "ring": 3,
@@ -266,7 +274,11 @@
         ],
         "cx_map_norm": 0.385,
         "cy_map_norm": 0.2988,
-        "r_map_norm": 0.2753
+        "r_map_norm": 0.2753,
+        "cx_zoom_norm": 0.385,
+        "cy_zoom_norm": 0.2988,
+        "r_zoom_norm": 0.2753,
+        "map_zoom": 1.0
       },
       {
         "ring": 4,
@@ -290,7 +302,11 @@
         ],
         "cx_map_norm": 0.2925,
         "cy_map_norm": 0.4631,
-        "r_map_norm": 0.2059
+        "r_map_norm": 0.2059,
+        "cx_zoom_norm": 0.3962,
+        "cy_zoom_norm": 0.4816,
+        "r_zoom_norm": 0.103,
+        "map_zoom": 2.0
       },
       {
         "ring": 5,
@@ -314,7 +330,11 @@
         ],
         "cx_map_norm": 0.34,
         "cy_map_norm": 0.4258,
-        "r_map_norm": 0.2328
+        "r_map_norm": 0.2328,
+        "cx_zoom_norm": 0.4273,
+        "cy_zoom_norm": 0.4663,
+        "r_zoom_norm": 0.1058,
+        "map_zoom": 2.2
       },
       {
         "ring": 6,
@@ -338,7 +358,11 @@
         ],
         "cx_map_norm": 0.1975,
         "cy_map_norm": 0.0064,
-        "r_map_norm": 0.193
+        "r_map_norm": 0.193,
+        "cx_zoom_norm": 0.3713,
+        "cy_zoom_norm": 0.29,
+        "r_zoom_norm": 0.0821,
+        "map_zoom": 2.35
       }
     ],
     "map_bounds_in_roi": {
@@ -346,6 +370,18 @@
       "y": 0,
       "w": 960,
       "h": 1030
+    },
+    "map_zoom_correction": {
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "default_zoom": 1.0,
+      "per_ring": {
+        "4": 2.0,
+        "5": 2.2,
+        "6": 2.35
+      }
     }
   }
 }

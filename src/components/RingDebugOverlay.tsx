@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { testGameRingGeometry } from "@/lib/test-game-data";
 
-type CoordSystem = "roi-norm" | "map-norm";
+type CoordSystem = "roi-norm" | "map-norm" | "zoom-norm";
 
 /**
  * Дебаг-оверлей для калибровки геометрии колец. Включается флагом ?debug=1.
@@ -18,7 +18,7 @@ export function RingDebugOverlay({
   const enabled =
     typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).get("debug") === "1";
-  const [system, setSystem] = useState<CoordSystem>("roi-norm");
+  const [system, setSystem] = useState<CoordSystem>("zoom-norm");
 
   // Пока только m-test-g1 имеет реальную геометрию из ring_locator.
   const geom = matchId.startsWith("m-test") ? testGameRingGeometry : null;
@@ -41,6 +41,12 @@ export function RingDebugOverlay({
         return null;
       }
       return { cx: p.cx_map_norm, cy: p.cy_map_norm, r: p.r_map_norm };
+    }
+    if (system === "zoom-norm") {
+      if (p.cx_zoom_norm == null || p.cy_zoom_norm == null || p.r_zoom_norm == null) {
+        return null;
+      }
+      return { cx: p.cx_zoom_norm, cy: p.cy_zoom_norm, r: p.r_zoom_norm };
     }
     // roi-norm: то же, что сейчас рисует прод (cx_norm/cy_norm/r_norm).
     if (p.cx_norm == null || p.cy_norm == null || p.r_norm == null) return null;
@@ -119,18 +125,18 @@ export function RingDebugOverlay({
           </div>
         )}
         <div className="mt-1.5 flex gap-1">
-          {(["roi-norm", "map-norm"] as const).map((s) => (
+          {(["roi-norm", "map-norm", "zoom-norm"] as const).map((s) => (
             <button
               key={s}
               onClick={() => setSystem(s)}
-              disabled={s === "map-norm" && !mapBounds}
+              disabled={(s === "map-norm" || s === "zoom-norm") && !mapBounds}
               className={`text-mono rounded-sm border px-1.5 py-0.5 text-xs uppercase tracking-wider transition-colors ${
                 system === s
                   ? "border-primary bg-primary/15 text-primary"
                   : "border-border bg-surface text-muted-foreground hover:text-foreground"
-              } ${s === "map-norm" && !mapBounds ? "opacity-40" : ""}`}
-              title={s === "map-norm" && !mapBounds
-                ? "Нет cx_map_norm — добавь map_bounds_in_roi в zones.vod.json и перегенерируй"
+              } ${(s === "map-norm" || s === "zoom-norm") && !mapBounds ? "opacity-40" : ""}`}
+              title={(s === "map-norm" || s === "zoom-norm") && !mapBounds
+                ? "Нет нормализации карты — добавь map_bounds_in_roi в zones.vod.json и перегенерируй"
                 : undefined}
             >
               {s}
