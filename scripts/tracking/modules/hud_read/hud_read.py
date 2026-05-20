@@ -51,6 +51,9 @@ RE_RING = re.compile(r"RING\s*(\d+).*?(CLOSING|COUNTDOWN|CLOSED|OPEN)", re.I)
 # Раздельные «половинки» для случаев, когда OCR-плашки путает символы
 # (CLOS1NG, OOUNTDOWN и т.п.) и единый regex не срабатывает.
 RE_RING_NUM = re.compile(r"R[I1L]NG\s*([1-9])", re.I)
+# В Apex HUD во время COUNTDOWN буквального слова "COUNTDOWN" нет —
+# отображается "RING N IN M:SS". Детектим таймер MM:SS / M:SS.
+RE_RING_TIMER = re.compile(r"\b\d{1,2}\s*[:.]\s*\d{2}\b")
 RING_STATES = ("CLOSING", "COUNTDOWN", "CLOSED", "OPEN")
 RE_INT = re.compile(r"-?\d+")
 RE_ELIM = re.compile(r"ELIMIN", re.I)
@@ -301,24 +304,31 @@ def read_ring_at(cap: cv2.VideoCapture, f: int, zone: dict,
     if not txt:
         return None
     up = txt.upper()
-    # 1) сначала единый regex (когда OCR чистый);
-    m = RE_RING.search(up)
-    if m:
-        return {"ring": int(m.group(1)), "state": m.group(2).upper()}
-    # 2) fallback: ищем номер и состояние независимо + snap по словарю.
+    # Сначала номер кольца (CLOSING/CLOSED/COUNTDOWN все начинаются с "RING N").
     mn = RE_RING_NUM.search(up)
     if not mn:
         return None
-    state = None
-    for s in RING_STATES:
-        if s in up:
-            state = s
-            break
+    ring_n = int(mn.group(1))
+    # Приоритет состояний: CLOSED > CLOSING > COUNTDOWN (по таймеру/слову).
+    # 1) явные ключевые слова в OCR-выхлопе
+    state: str | None = None
+    if "CLOSED" in up:
+        state = "CLOSED"
+    elif "CLOSING" in up or "CLOS" in up:  # OCR любит ломать "CLOSING" → "CLOS1NG"/"CLOSNG"
+        # snap: проверим, что это именно CLOSING, а не CLOSED
+        snapped = snap_to_known(up, ["CLOSING", "CLOSED"], max_dist=2)
+        state = snapped or "CLOSING"
+    elif "COUNTDOWN" in up:
+        state = "COUNTDOWN"
+    # 2) если ничего из слов — но виден таймер MM:SS → это COUNTDOWN ("RING N IN M:SS")
+    if state is None and RE_RING_TIMER.search(up):
+        state = "COUNTDOWN"
+    # 3) последний шанс — fuzzy по словарю
     if state is None:
         state = snap_to_known(up, list(RING_STATES), max_dist=2)
     if state is None:
         return None
-    return {"ring": int(mn.group(1)), "state": state}
+    return {"ring": ring_n, "state": state}
 
 
 def _ring_state_key(rs: dict | None) -> tuple | None:
