@@ -70,6 +70,7 @@ function ZonesAdmin() {
   const zones: Zone[] = builtin ? store.zones[builtin.mode] : custom?.zones ?? [];
 
   const [sel, setSel] = useState<string | null>(zones[0]?.id ?? null);
+  const [selSet, setSelSet] = useState<Set<string>>(new Set());
   const [meta, setMeta] = useState<Record<string, ZoneMeta>>({});
   const [snap, setSnap] = useState(true);
   const [gridSize, setGridSize] = useState<5 | 10 | 20>(20);
@@ -88,12 +89,73 @@ function ZonesAdmin() {
   const importInputRef = useRef<HTMLInputElement | null>(null);
   const dragRef = useRef<
     | null
-    | { id: string; mode: "move" | "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw"; startX: number; startY: number; orig: Zone }
+    | { id: string; mode: "move" | "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw"; startX: number; startY: number; orig: Zone; origs?: Record<string, Zone> }
   >(null);
 
   const W = 1920, H = 1080;
   const bg = mode === "vod" ? vodBg : mode === "vod2" ? vodBg2 : cameraBg;
   const selZone = zones.find((z) => z.id === sel);
+
+  // Effective multi-selection (always includes the primary `sel`)
+  const selectedIds = useMemo(() => {
+    const s = new Set(selSet);
+    if (sel) s.add(sel);
+    return s;
+  }, [selSet, sel]);
+  const multi = selectedIds.size > 1;
+
+  const selectZone = (id: string, ctrl: boolean) => {
+    if (ctrl) {
+      setSelSet((prev) => {
+        const n = new Set(prev);
+        if (sel && sel !== id) n.add(sel);
+        if (n.has(id)) n.delete(id); else n.add(id);
+        return n;
+      });
+      setSel(id);
+    } else {
+      setSelSet(new Set());
+      setSel(id);
+    }
+  };
+
+  // ── Bulk actions on selectedIds ───────────────────────────────────
+  const bulkDelete = () => {
+    setZones((zs) => zs.filter((z) => !selectedIds.has(z.id)));
+    setSelSet(new Set());
+    setSel(null);
+  };
+  const bulkDuplicate = () => {
+    const map = new Map<string, string>();
+    const dups: Zone[] = [];
+    zones.forEach((z) => {
+      if (!selectedIds.has(z.id)) return;
+      const nid = newId();
+      map.set(z.id, nid);
+      dups.push({ ...z, id: nid, name: z.name + " copy", x: Math.min(W - z.w, z.x + 30), y: Math.min(H - z.h, z.y + 30) });
+    });
+    setZones((zs) => [...zs, ...dups]);
+    setSelSet(new Set(Array.from(map.values()).slice(0, -1)));
+    setSel(Array.from(map.values()).slice(-1)[0] ?? sel);
+  };
+  const bulkCopyJson = () => {
+    const subset = zones.filter((z) => selectedIds.has(z.id));
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(JSON.stringify(subset, null, 2)).catch(() => {});
+    }
+  };
+  const bulkSetTag = (tag: string) => {
+    setZones((zs) => zs.map((z) => (selectedIds.has(z.id) ? { ...z, tag: tag as Zone["tag"] } : z)));
+  };
+  const bulkDownload = () => {
+    const subset = zones.filter((z) => selectedIds.has(z.id));
+    const payload = { base: [W, H], mode, zones: subset };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `zones.${mode}.selection.json`; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
 
   const setZones = (next: Zone[] | ((zs: Zone[]) => Zone[])) => {
     const computed = typeof next === "function" ? (next as (zs: Zone[]) => Zone[])(zones) : next;
@@ -261,10 +323,28 @@ function ZonesAdmin() {
   const onPointerDown = (e: React.PointerEvent, zone: Zone, m: "move" | "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw") => {
     if (getMeta(zone.id).locked) return;
     e.stopPropagation();
+    // Ctrl/Cmd+click → toggle multi-selection, no drag
+    if ((e.ctrlKey || e.metaKey) && m === "move") {
+      selectZone(zone.id, true);
+      return;
+    }
     (e.target as Element).setPointerCapture?.(e.pointerId);
-    setSel(zone.id);
+    // If clicking a zone outside the current selection, reset to single-select.
+    if (!selectedIds.has(zone.id)) {
+      setSelSet(new Set());
+      setSel(zone.id);
+    } else {
+      setSel(zone.id);
+    }
     const p = toSvg(e.clientX, e.clientY);
-    dragRef.current = { id: zone.id, mode: m, startX: p.x, startY: p.y, orig: { ...zone } };
+    // Snapshot all selected zones for group-move
+    const origs: Record<string, Zone> = {};
+    if (m === "move") {
+      const ids = new Set(selSet);
+      ids.add(zone.id);
+      zones.forEach((z) => { if (ids.has(z.id) && !getMeta(z.id).locked) origs[z.id] = { ...z }; });
+    }
+    dragRef.current = { id: zone.id, mode: m, startX: p.x, startY: p.y, orig: { ...zone }, origs: m === "move" ? origs : undefined };
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
@@ -273,6 +353,17 @@ function ZonesAdmin() {
     const p = toSvg(e.clientX, e.clientY);
     const dx = p.x - d.startX;
     const dy = p.y - d.startY;
+    // Group move when multiple zones are selected
+    if (d.mode === "move" && d.origs && Object.keys(d.origs).length > 1) {
+      setZones((zs) => zs.map((z) => {
+        const o = d.origs![z.id];
+        if (!o) return z;
+        const nx = Math.max(0, Math.min(W - o.w, o.x + dx));
+        const ny = Math.max(0, Math.min(H - o.h, o.y + dy));
+        return { ...z, x: snapVal(nx), y: snapVal(ny) };
+      }));
+      return;
+    }
     let { x, y, w, h } = d.orig;
     const min = 20;
     if (d.mode === "move") {
