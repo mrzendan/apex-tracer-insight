@@ -190,6 +190,56 @@ def detect_next_ring(
     return norm
 
 
+def _red_mask(bgr: np.ndarray) -> np.ndarray:
+    """HSV-маска для красной окантовки уже закрытого кольца на миникарте.
+    Красный «обнимает» 0°, поэтому две полосы Hue."""
+    hsv = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
+    m1 = cv2.inRange(hsv, (0,   110,  90), (10,  255, 255))
+    m2 = cv2.inRange(hsv, (170, 110,  90), (180, 255, 255))
+    mask = m1 | m2
+    mask = cv2.morphologyEx(
+        mask, cv2.MORPH_CLOSE,
+        cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)),
+    )
+    return mask
+
+
+def detect_closed_red_ring(
+    minimap: np.ndarray,
+    return_debug: bool = False,
+):
+    """Найти красную окружность уже зафиксированного (закрытого) кольца.
+    Тот же контракт, что detect_next_ring."""
+    if minimap.size == 0:
+        return None
+    h, w = minimap.shape[:2]
+    mask = _red_mask(minimap)
+    blurred = cv2.GaussianBlur(mask, (5, 5), 1.5)
+    min_r = max(6, min(w, h) // 20)
+    max_r = max(min_r + 4, min(w, h) // 2)
+    circles = cv2.HoughCircles(
+        blurred, cv2.HOUGH_GRADIENT, dp=1.2,
+        minDist=max(20, min(w, h) // 3),
+        param1=80, param2=18, minRadius=min_r, maxRadius=max_r,
+    )
+    if circles is None:
+        return None
+    best, best_score = None, -1.0
+    for c in circles[0]:
+        cx, cy, r = float(c[0]), float(c[1]), float(c[2])
+        score = _ring_score(mask, cx, cy, r, n=72)
+        if score > best_score:
+            best_score = score
+            best = (cx, cy, r)
+    if best is None or best_score < 0.45:
+        return None
+    cx, cy, r = best
+    norm = (cx / w, cy / h, r / max(w, h))
+    if return_debug:
+        return (*norm, cx, cy, r, mask)
+    return norm
+
+
 def _ring_score(mask: np.ndarray, cx: float, cy: float, r: float,
                 n: int = 36) -> float:
     h, w = mask.shape[:2]
@@ -209,7 +259,9 @@ def _ring_score(mask: np.ndarray, cx: float, cy: float, r: float,
 def sample_window(cap: cv2.VideoCapture, minimap_rect: tuple[int, int, int, int],
                   t_lo: float, t_hi: float, fps: float,
                   hud_bad: list[tuple[float, float]],
-                  max_samples: int = 3) -> list[tuple[float, float, float, float]]:
+                  max_samples: int = 3,
+                  detector=detect_next_ring,
+                  ) -> list[tuple[float, float, float, float]]:
     """Сэмплит одно POV-окно. Возвращает список (t, cx_norm, cy_norm, r_norm)."""
     if t_hi <= t_lo:
         return []
@@ -228,7 +280,7 @@ def sample_window(cap: cv2.VideoCapture, minimap_rect: tuple[int, int, int, int]
         xx, yy = min(x, fw - 1), min(y, fh - 1)
         ww, hh = min(w, fw - xx), min(h, fh - yy)
         crop = frame[yy:yy + hh, xx:xx + ww]
-        det = detect_next_ring(crop)
+        det = detector(crop)
         if det is None:
             continue
         cx, cy, r = det
@@ -241,6 +293,7 @@ def sample_phase(
     t_lo: float, t_hi: float, fps: float,
     cut_ts: list[float], hud_bad: list[tuple[float, float]],
     max_samples_per_window: int = 3,
+    detector=detect_next_ring,
 ) -> tuple[list[tuple[float, float, float, float]],
            tuple[float, float] | None, int]:
     """Из всех POV-под-окон [t_lo..t_hi] выбираем самое согласованное.
@@ -254,7 +307,7 @@ def sample_phase(
     for win in subwins:
         samples = sample_window(
             cap, minimap_rect, win[0], win[1], fps, hud_bad,
-            max_samples=max_samples_per_window,
+            max_samples=max_samples_per_window, detector=detector,
         )
         if len(samples) < 2:
             # Один сэмпл нельзя оценить на согласованность — пропускаем,
@@ -295,6 +348,15 @@ def main() -> int:
                     help="папка для дебаг-картинок (по умолч. <out>/debug)")
     ap.add_argument("--no-debug", action="store_true",
                     help="отключить запись дебаг-картинок")
+    ap.add_argument("--method", choices=("red", "grey"), default="red",
+                    help="red — измеряем уже зафиксированное (красное) кольцо "
+                         "после CLOSING; grey — старый режим по серому next-ring")
+    ap.add_argument("--post-close-window", type=float, default=12.0,
+                    help="длина окна (сек) после конца CLOSING, в котором "
+                         "ищем красное кольцо")
+    ap.add_argument("--post-close-delay", type=float, default=1.5,
+                    help="задержка (сек) после CLOSING→COUNTDOWN перед "
+                         "первым сэмплом, чтобы анимация успокоилась")
     args = ap.parse_args()
 
     if args.zones:
@@ -316,6 +378,17 @@ def main() -> int:
     phases = rings_data.get("phases") or []
     derived = rings_data.get("derived") or {}
     median_countdown = derived.get("median_countdown")
+    transitions = rings_data.get("transitions") or []
+    # t_countdown_start[N] — момент CLOSING(N-1)→COUNTDOWN(N). После него
+    # ring N-1 уже зафиксировано красной окружностью.
+    countdown_start_by_ring: dict[int, float] = {}
+    for tr in transitions:
+        to = tr.get("to") or {}
+        if to.get("state") == "COUNTDOWN" and to.get("ring") is not None \
+           and tr.get("t") is not None:
+            countdown_start_by_ring.setdefault(int(to["ring"]), float(tr["t"]))
+    # Длительность видео (для последнего кольца).
+    video_duration: float | None = None
     debug_dir: Path | None = None
     if not args.no_debug:
         debug_dir = args.debug_dir or (args.out / "debug")
@@ -343,28 +416,49 @@ def main() -> int:
     cap = cv2.VideoCapture(str(args.video))
     if not cap.isOpened():
         raise SystemExit(f"не открылся видеофайл: {args.video}")
+    total_frames = cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0
+    if total_frames > 0 and fps > 0:
+        video_duration = float(total_frames) / fps
 
     phases_by_ring = {p["ring"]: p for p in phases}
     out_phases: list[dict[str, Any]] = []
     prev_geom: tuple[float, float, float] | None = None
+
+    detector = detect_closed_red_ring if args.method == "red" else detect_next_ring
+    print(f"[ring_locator] method={args.method} "
+          f"(post_close_delay={args.post_close_delay:.1f}s, "
+          f"window={args.post_close_window:.1f}s)")
 
     for ring_n in sorted(phases_by_ring):
         p = phases_by_ring[ring_n]
         t_close = p.get("t_closing_start")
         if t_close is None:
             continue
-        # Окно: между t_closed предыдущей фазы (=COUNTDOWN текущей)
-        # и t_closing_start текущей. Для R1 «предыдущей» нет —
-        # используем median_countdown из derived (или 30s fallback).
-        prev = phases_by_ring.get(ring_n - 1)
-        if prev and prev.get("t_closed") is not None:
-            t_lo = prev["t_closed"]
+        if args.method == "red":
+            # Окно после CLOSING(N)→COUNTDOWN(N+1): красная окружность
+            # стоит на месте и помечает реальную границу зоны N.
+            t_anchor = countdown_start_by_ring.get(ring_n + 1)
+            if t_anchor is None:
+                # Последнее кольцо: COUNTDOWN(N+1) не существует.
+                # Берём конец видео минус запас.
+                end = video_duration if video_duration else (t_close + 120.0)
+                t_lo = t_close + args.post_close_delay + 30.0
+                t_hi = max(t_lo + 1.0, end - 2.0)
+            else:
+                t_lo = t_anchor + args.post_close_delay
+                t_hi = t_lo + args.post_close_window
         else:
-            window = median_countdown if median_countdown else 30.0
-            t_lo = max(0.0, t_close - float(window))
-        t_hi = t_close - 0.5
+            # legacy: серое next-ring внутри COUNTDOWN текущей фазы.
+            prev = phases_by_ring.get(ring_n - 1)
+            if prev and prev.get("t_closed") is not None:
+                t_lo = prev["t_closed"]
+            else:
+                window = median_countdown if median_countdown else 30.0
+                t_lo = max(0.0, t_close - float(window))
+            t_hi = t_close - 0.5
         samples, chosen, n_sub = sample_phase(
             cap, minimap_rect, t_lo, t_hi, fps, cut_ts, hud_bad,
+            detector=detector,
         )
         if not samples:
             print(f"[ring_locator] R{ring_n}: нет валидных сэмплов "
@@ -438,7 +532,7 @@ def main() -> int:
                 crop = frame[yy:yy + hh2, xx:xx + ww2].copy()
                 cv2.imwrite(str(debug_dir / f"ring{ring_n}_roi_f{f_dbg}.jpg"),
                             crop, [cv2.IMWRITE_JPEG_QUALITY, 85])
-                det = detect_next_ring(crop, return_debug=True)
+                det = detector(crop, return_debug=True)
                 if det is not None:
                     _, _, _, dcx, dcy, dr, mask = det
                     cv2.imwrite(str(debug_dir / f"ring{ring_n}_mask_f{f_dbg}.png"),
