@@ -40,16 +40,6 @@ const elim = elimRaw as unknown as ElimFile;
 const rings = ringsRaw as unknown as RingsFile;
 const slotToTag = slotToTagRaw as unknown as Record<string, string>;
 
-/** Геометрия колец — fallback mock, если ring_locator ещё не отработал. */
-const RING_OFFSETS: { fx: number; fy: number }[] = [
-  { fx: 0.0,  fy: 0.0  },
-  { fx: 0.35, fy: -0.2 },
-  { fx: -0.3, fy: 0.25 },
-  { fx: 0.2,  fy: 0.3  },
-  { fx: -0.25,fy: -0.15},
-  { fx: 0.15, fy: 0.1  },
-];
-
 /** Длительность игры — последний наблюдавшийся "жив". */
 export const testGameDurationSec: number = Math.ceil(
   Object.values(elim.teams).reduce(
