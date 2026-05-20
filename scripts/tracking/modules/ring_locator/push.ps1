@@ -1,12 +1,12 @@
 param(
   [Parameter(Mandatory=$true)][string]$Video,
   [Parameter(Mandatory=$true)][string]$Rings,
+  [Parameter(Mandatory=$true)][string]$Zones,
   [string]$Cuts = "",
-  [string]$Minimap = "34,775,300,300",
-  [string]$Zones = "",
   [string]$MinimapZone = "camera roi",
+  [string]$Canonical = "storm_point",
+  [int]$MaxRing = 3,
   [string]$Out = "scripts/tracking/modules/ring_locator/reports",
-  [switch]$SyncUI,
   [switch]$NoPush
 )
 $ErrorActionPreference = "Stop"
@@ -24,21 +24,15 @@ $argsList = @(
   "scripts/tracking/modules/ring_locator/ring_locator.py",
   "--video", $Video,
   "--rings", $Rings,
+  "--zones", $Zones,
+  "--minimap-zone", $MinimapZone,
+  "--canonical", $Canonical,
+  "--max-ring", $MaxRing,
   "--out", $Out
 )
-if ($Zones) {
-  $argsList += @("--zones", $Zones, "--minimap-zone", $MinimapZone)
-} else {
-  $argsList += @("--minimap", $Minimap)
-}
 if ($Cuts) { $argsList += @("--cuts", $Cuts) }
 & python @argsList
 if ($LASTEXITCODE -ne 0) { throw "ring_locator упал (rc=$LASTEXITCODE)" }
-if ($SyncUI) {
-  & python "scripts/tracking/modules/hud_read/sync_to_ui.py" `
-    --ring-geometry "$Out/ring_geometry.json"
-  if ($LASTEXITCODE -ne 0) { throw "sync_to_ui упал (rc=$LASTEXITCODE)" }
-}
 if ($NoPush) { return }
 git add $Out
 git commit -m "ring_locator: run $(Get-Date -Format 'yyyy-MM-dd HH:mm')" | Out-Null
