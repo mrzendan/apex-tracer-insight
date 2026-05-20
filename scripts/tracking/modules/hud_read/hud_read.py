@@ -428,11 +428,23 @@ def main() -> int:
                          "таймингов вылетов; two-pass = scout + forward")
     ap.add_argument("--reverse-step", type=int, default=1800,
                     help="Шаг обратного разведчика (кадров). 1800@30fps ≈ 60с")
-    ap.add_argument("--refine-budget", type=int, default=6,
+    ap.add_argument("--refine-budget", type=int, default=10,
                     help="Сколько проб бинпоиска тратить на уточнение каждого вылета")
+    ap.add_argument("--refine-linear", type=int, default=4,
+                    help="Линейный доводчик после бинпоиска (кадров на команду)")
+    ap.add_argument("--refine-rollback", type=int, default=0,
+                    help="Опциональный rollback-скаут мелким шагом внутри окна (0=off)")
     ap.add_argument("--frame-step", type=int, default=600)
     ap.add_argument("--start-sec", type=float, default=0.0)
     ap.add_argument("--end-sec", type=float, default=0.0)
+    ap.add_argument("--start-frame", type=int, default=-1,
+                    help="Точный стартовый кадр (приоритет над --start-sec)")
+    ap.add_argument("--end-frame", type=int, default=-1,
+                    help="Точный конечный кадр (приоритет над --end-sec)")
+    ap.add_argument("--chunk-id", default="",
+                    help="Префикс для overlays/crops, чтобы не пересекаться между воркерами")
+    ap.add_argument("--eliminations", type=Path, default=None,
+                    help="Готовый eliminations.json — пропустить scout в forward-режиме")
     ap.add_argument("--ocr-lang", default="eng")
     ap.add_argument("--tess-cmd", default=None, help="Полный путь к tesseract.exe (Windows)")
     ap.add_argument("--overlay-every", type=int, default=1)
@@ -477,6 +489,10 @@ def main() -> int:
 
     start_f = int(args.start_sec * fps)
     end_f = int(args.end_sec * fps) if args.end_sec > 0 else total
+    if args.start_frame >= 0:
+        start_f = args.start_frame
+    if args.end_frame >= 0:
+        end_f = args.end_frame
     step = max(1, args.frame_step)
 
     # ── режимы scout / two-pass ────────────────────────────────────
@@ -484,13 +500,18 @@ def main() -> int:
         elim = scout_eliminations(cap, zones_scaled, start_f, end_f, fps,
                                   reverse_step=max(1, args.reverse_step),
                                   lang=args.ocr_lang,
-                                  refine_budget=max(1, args.refine_budget))
+                                  refine_budget=max(1, args.refine_budget),
+                                  refine_linear=max(0, args.refine_linear),
+                                  refine_rollback=max(0, args.refine_rollback))
         (args.out / "eliminations.json").write_text(
             json.dumps({
                 "video": str(args.video),
                 "fps": fps,
                 "mode": args.mode,
                 "reverse_step": args.reverse_step,
+                "refine_budget": args.refine_budget,
+                "refine_linear": args.refine_linear,
+                "refine_rollback": args.refine_rollback,
                 "teams": elim,
             }, ensure_ascii=False, indent=2),
             encoding="utf-8",
@@ -509,6 +530,23 @@ def main() -> int:
         if earliest > start_f:
             print(f"[hud_read][two-pass] forward-окно сужено до f{earliest}+")
             start_f = earliest
+    elif args.eliminations is not None and args.eliminations.exists():
+        # forward-воркер: подгружаем готовые тайминги вылетов
+        # чтобы пропускать elim-зоны у уже мёртвых команд.
+        try:
+            data = json.loads(args.eliminations.read_text(encoding="utf-8"))
+            elim_loaded: dict[int, dict[str, Any]] = {
+                int(k): v for k, v in data.get("teams", {}).items()
+            }
+            print(f"[hud_read] loaded eliminations for {len(elim_loaded)} teams "
+                  f"from {args.eliminations}")
+        except Exception as e:
+            print(f"[hud_read] eliminations.json read error: {e}")
+            elim_loaded = {}
+    else:
+        elim_loaded = {}
+
+    chunk_prefix = (args.chunk_id + "_") if args.chunk_id else ""
 
     timeline: list[dict[str, Any]] = []
     # stats[(tag,name)] = {"total":N,"ocr":N,"parsed":N,"values":[...], "hashes":[]}
@@ -645,7 +683,7 @@ def main() -> int:
 
         if processed % max(1, args.overlay_every) == 0:
             ov = draw_overlay(frame, zones_scaled, per_zone_value)
-            cv2.imwrite(str(args.out / "overlays" / f"hud_{f:07d}.jpg"), ov,
+            cv2.imwrite(str(args.out / "overlays" / f"hud_{chunk_prefix}{f:07d}.jpg"), ov,
                         [cv2.IMWRITE_JPEG_QUALITY, 80])
 
         # ── живой лог по кадру ─────────────────────────────────────
