@@ -822,7 +822,37 @@ def main():
 
     teams: list[TeamCfg] = []
     if anchors_path and Path(anchors_path).exists():
-        teams = teams_from_anchors(Path(anchors_path))
+        # Try to load manually calibrated HSV preset for this canonical map.
+        # Search order: configs/ next to YAML, then shared/configs, then
+        # motion_detect/configs (legacy location). Filename pattern:
+        # hsv_presets.<canonical_map_with_dashes>.json
+        cmap_name = cfg.get("canonical_map", "storm_point")
+        preset_basename = f"hsv_presets.{cmap_name.replace('_', '-')}.json"
+        preset_candidates = [
+            (args.config.parent / "configs" / preset_basename),
+            (Path(__file__).resolve().parents[2] / "configs" / preset_basename),
+            (Path(__file__).resolve().parents[1] / "motion_detect" / "configs" / preset_basename),
+        ]
+        hsv_preset: dict[int, dict] | None = None
+        preset_src: Path | None = None
+        for cand in preset_candidates:
+            if cand.exists():
+                try:
+                    raw_preset = json.loads(cand.read_text(encoding="utf-8"))
+                    hsv_preset = {
+                        int(t["slot"]): {"h": t["h"], "s": t["s"], "v": t["v"]}
+                        for t in raw_preset.get("teams", [])
+                        if t.get("slot") is not None and "h" in t and "s" in t and "v" in t
+                    }
+                    preset_src = cand
+                    break
+                except Exception as e:
+                    print(f"[warn] failed to parse hsv preset {cand}: {e}")
+        if preset_src:
+            print(f"[info] hsv_preset loaded: {preset_src} ({len(hsv_preset or {})} slots)")
+        else:
+            print(f"[info] hsv_preset not found for canonical_map={cmap_name} — using anchor-derived HSV")
+        teams = teams_from_anchors(Path(anchors_path), hsv_preset=hsv_preset)
         print(f"[info] teams: {len(teams)} auto-generated from anchors ({anchors_path})")
     if not teams:
         teams = parse_teams(cfg)
