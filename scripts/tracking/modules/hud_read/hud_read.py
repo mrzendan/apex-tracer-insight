@@ -44,6 +44,11 @@ KNOWN_MAPS = [
     "OLYMPUS", "BROKEN MOON", "E-DISTRICT",
 ]
 
+# Словарь известных тегов команд для конкретного матча.
+# Заполняется из configs/teams.<match-id>.json через --teams-vocab.
+# Используется как snap-цель для OCR (Левенштейн, max_dist зависит от длины).
+KNOWN_TEAMS: list[str] = []
+
 RE_MATCH = re.compile(r"MATCH\s+(\d+)", re.I)
 RE_TEAMS = re.compile(r"(\d+)\s*TEAMS?", re.I)
 RE_PLAYERS = re.compile(r"(\d+)\s*PLAYERS?", re.I)
@@ -236,7 +241,18 @@ def parse_field(tag: str, name: str, text: str) -> Any:
         snapped = snap_to_known(cleaned, KNOWN_MAPS, max_dist=3)
         return snapped or (cleaned or None)
     if name == "name":  # team tag, e.g. "TSM"
-        return re.sub(r"[^A-Z0-9 ]", "", text.upper()).strip() or None
+        cleaned = re.sub(r"[^A-Z0-9]", "", text.upper()).strip()
+        if not cleaned:
+            return None
+        # Apex теги: 2..5 символов. Всё остальное — почти всегда OCR-мусор.
+        if not (2 <= len(cleaned) <= 5):
+            return None
+        if KNOWN_TEAMS:
+            max_dist = 1 if len(cleaned) <= 3 else 2
+            snapped = snap_to_known(cleaned, KNOWN_TEAMS, max_dist=max_dist)
+            if snapped:
+                return snapped
+        return cleaned
     return text or None
 
 
@@ -977,6 +993,9 @@ def main() -> int:
                     help="Готовый eliminations.json — пропустить scout в forward-режиме")
     ap.add_argument("--ocr-lang", default="eng")
     ap.add_argument("--tess-cmd", default=None, help="Полный путь к tesseract.exe (Windows)")
+    ap.add_argument("--teams-vocab", type=Path, default=None,
+                    help="JSON со списком известных тегов команд "
+                         "(массив строк ИЛИ объект {\"teams\":[...]})")
     ap.add_argument("--overlay-every", type=int, default=1)
     ap.add_argument("--crop-first-n", type=int, default=3,
                     help="Сохранять кропы текстовых полей только для первых N кадров")
@@ -999,6 +1018,30 @@ def main() -> int:
 
     if args.tess_cmd and pytesseract is not None:
         pytesseract.pytesseract.tesseract_cmd = args.tess_cmd
+
+    # ── Словарь команд для snap OCR-результатов ────────────────────
+    global KNOWN_TEAMS
+    vocab_path = args.teams_vocab
+    if vocab_path is None:
+        # Авто-поиск: configs/teams.default.json рядом с модулем.
+        guess = MODULE_DIR / "configs" / "teams.default.json"
+        if guess.exists():
+            vocab_path = guess
+    if vocab_path and vocab_path.exists():
+        try:
+            raw = json.loads(vocab_path.read_text(encoding="utf-8"))
+            items = raw if isinstance(raw, list) else raw.get("teams", [])
+            KNOWN_TEAMS = [
+                re.sub(r"[^A-Z0-9]", "", str(s).upper()).strip()
+                for s in items
+                if isinstance(s, (str, int))
+            ]
+            KNOWN_TEAMS = [t for t in KNOWN_TEAMS if 2 <= len(t) <= 5]
+            print(f"[hud_read] team vocab: {vocab_path} ({len(KNOWN_TEAMS)} tags)")
+        except Exception as e:
+            print(f"[hud_read] team vocab read error: {e}")
+    else:
+        print("[hud_read] team vocab: <empty> (snap отключён)")
 
     zones_path = resolve_zones_path(args.zones)
     zones, (bw, bh) = load_zones(zones_path)
@@ -1378,6 +1421,41 @@ def main() -> int:
     report_name = f"report.{args.chunk_id}.txt" if args.chunk_id else "report.txt"
     (args.out / report_name).write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines))
+
+    # ── Дамп голосов OCR для тегов команд (для отладки snap-словаря) ──
+    # Файл team_tags_raw.json — по слотам top-N кандидатов с числом подтверждений.
+    tag_votes: dict[int, tuple[str, list[tuple[Any, int]]]] = {}
+    for (tag, name), ss in static_state.items():
+        slot = team_slot(tag)
+        if slot is None or name != "name":
+            continue
+        votes = sorted(ss.get("votes", {}).items(), key=lambda kv: -kv[1])
+        if votes:
+            tag_votes[slot] = (tag, votes[:5])
+    if tag_votes:
+        tags_name = f"team_tags_raw.{args.chunk_id}.json" if args.chunk_id else "team_tags_raw.json"
+        (args.out / tags_name).write_text(
+            json.dumps(
+                {
+                    "vocab": KNOWN_TEAMS,
+                    "vocab_path": str(vocab_path) if vocab_path else None,
+                    "slots": {
+                        str(s): {
+                            "locked": static_state[(tag, "name")]["locked"],
+                            "candidates": [
+                                {"value": v, "votes": n} for v, n in votes
+                            ],
+                        }
+                        for s, (tag, votes) in sorted(tag_votes.items())
+                    },
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+        print(f"[hud_read] team tag votes → {args.out / tags_name}")
+
     print(f"\n[hud_read] OK → {args.out}")
     return 0
 
