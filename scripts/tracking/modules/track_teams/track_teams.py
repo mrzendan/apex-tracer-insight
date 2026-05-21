@@ -471,11 +471,15 @@ class SlotTracker:
         self.pending_hits: int = 0
         # Time-aware motion model (canonical px / sec).
         motion = slot_cfg.get("motion", {}) or {}
-        self.v_max_px_s: float = float(motion.get("v_max_px_s", 40.0))
-        self.gate_slack_px: float = float(motion.get("gate_slack_px", 15.0))
-        self.gate_cap_px: float = float(motion.get("gate_cap_px", 280.0))
+        self.v_max_px_s: float = float(motion.get("v_max_px_s", 60.0))
+        self.gate_slack_px: float = float(motion.get("gate_slack_px", 20.0))
+        self.gate_cap_px: float = float(motion.get("gate_cap_px", 450.0))
         self.dt_cap_s: float = float(motion.get("dt_cap_s", 20.0))
         self.velocity_alpha: float = float(motion.get("velocity_alpha", 0.5))
+        # Adaptive: remember observed peak speed so "mobile" slots auto-widen the gate.
+        self.v_observed_peak_px_s: float = 0.0
+        self.v_observed_decay: float = float(motion.get("v_observed_decay", 0.97))
+        self.v_observed_boost: float = float(motion.get("v_observed_boost", 1.8))
         self.vx: float = 0.0
         self.vy: float = 0.0
         self.last_seen_t: Optional[float] = None
@@ -490,6 +494,8 @@ class SlotTracker:
         self.n_switches = 0
         self.score_sum = 0.0
         self.score_n = 0
+        # state_reason histogram for diagnostics.
+        self.reason_hist: dict[str, int] = {}
         # Telemetry
         self.state: str = "init"
         self.state_reason: str = "init"
@@ -587,7 +593,9 @@ class SlotTracker:
             dt = self.dt_cap_s
         else:
             dt = min(self.dt_cap_s, max(0.0, t_now - self.last_seen_t))
-        radius = min(self.gate_cap_px, self.v_max_px_s * dt + self.gate_slack_px)
+        # Adaptive v_max: take max of configured baseline and observed peak (with boost).
+        v_eff = max(self.v_max_px_s, self.v_observed_peak_px_s * self.v_observed_boost)
+        radius = min(self.gate_cap_px, v_eff * dt + self.gate_slack_px)
         # Predicted canonical position from last velocity (zero after miss).
         pred_cx = self.canonical_px[0] + (self.vx * dt if not self.canonical_px_stale else 0.0)
         pred_cy = self.canonical_px[1] + (self.vy * dt if not self.canonical_px_stale else 0.0)
@@ -681,6 +689,10 @@ class SlotTracker:
                 inst_vy = (new_cy - last_cy) / (t_now - self.last_seen_t)
                 self.vx = self.velocity_alpha * inst_vx + (1 - self.velocity_alpha) * self.vx
                 self.vy = self.velocity_alpha * inst_vy + (1 - self.velocity_alpha) * self.vy
+                # Track observed peak speed for adaptive gating.
+                inst_speed = math.hypot(inst_vx, inst_vy)
+                if inst_speed > self.v_observed_peak_px_s:
+                    self.v_observed_peak_px_s = inst_speed
             self.canonical_px = (new_cx, new_cy)
         self.last_frame_px = (det_fx, det_fy)
         self.state = "tracked"
@@ -699,6 +711,8 @@ class SlotTracker:
         self.lost_frames += 1
         self.consecutive_detections = 0
         self.confidence = max(0.1, self.confidence - 0.07)
+        # Slowly forget old peak so a one-off rocket ride doesn't keep gate huge forever.
+        self.v_observed_peak_px_s *= self.v_observed_decay
         if self.lost_frames > 5:
             # Slowly expand ROI to recover.
             self.roi_expand_px = min(self.max_roi_expand_px, self.roi_expand_px + self.roi_expand_step_px)
@@ -1057,6 +1071,10 @@ def main():
                     if s == "tracked":
                         st.score_sum += st.last_score
                         st.score_n += 1
+                    # Record dominant state_reason (strip numeric tails for grouping).
+                    rr = snap.get("state_reason", "") or ""
+                    rr_key = rr.split("(")[0].split("@")[0] or "?"
+                    st.reason_hist[rr_key] = st.reason_hist.get(rr_key, 0) + 1
                 # WorldTracker остаётся только для wipe-логики (длительное отсутствие).
                 # Feed it only confirmed (tracked) detections to avoid wipe-resets on hold.
                 tracked_dets = [d for d in world_dets if any(
@@ -1152,6 +1170,14 @@ def main():
         avg = (st.score_sum / st.score_n) if st.score_n else 0.0
         print(f"{t.id:<10}{st.n_tracked:>9}{st.n_low_conf:>10}{st.n_hold:>7}"
               f"{st.n_coast:>7}{st.n_lost:>7}{st.n_switches:>8}{avg:>8.2f}")
+    # Dominant state_reason per slot — what is actually failing where.
+    print("\n[summary] dominant state_reason per slot (top 3)")
+    print(f"{'slot':<10}{'v_peak_px/s':>13}  reasons")
+    for t in teams:
+        st = slot_trackers[t.id]
+        top = sorted(st.reason_hist.items(), key=lambda kv: -kv[1])[:3]
+        top_str = ", ".join(f"{k}={v}" for k, v in top)
+        print(f"{t.id:<10}{st.v_observed_peak_px_s:>13.1f}  {top_str}")
 
 
 if __name__ == "__main__":
