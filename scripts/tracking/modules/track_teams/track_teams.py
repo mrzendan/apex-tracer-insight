@@ -449,10 +449,13 @@ class SlotTracker:
 
     def __init__(self, team: TeamCfg, slot_cfg: dict, init_canonical_px: Optional[tuple[float, float]],
                  elim_t: Optional[float] = None,
-                 anchor_conf: str = "MISS", hud_alive: bool = False,
-                 init_frame_px: Optional[tuple[float, float]] = None):
+                 anchor_conf: str = "MISS", hud_alive: bool = False):
         self.team = team
         self.canonical_px: Optional[tuple[float, float]] = init_canonical_px
+        # Immutable copy of the seed anchor (canonical px). Used by the strict
+        # active-slot filter to verify detections actually land near the
+        # placard motion_detect originally locked onto.
+        self.init_canonical_px: Optional[tuple[float, float]] = init_canonical_px
         self.last_frame_px: Optional[tuple[float, float]] = None
         # ROI / detection
         self.roi_size: int = int(slot_cfg.get("roi_size", 220))
@@ -510,11 +513,11 @@ class SlotTracker:
         self.n_inactive: int = 0
         # Strict active-slot criteria (anti-fantom slots).
         # `activated` flips True only when K consecutive detections land within
-        # `near_anchor_radius_px` of the original anchor frame position
-        # (motion_detect placard). Lone false positives on other teams'
-        # placards do NOT count, so colors-not-in-this-match retire cleanly.
-        self.init_frame_px: Optional[tuple[float, float]] = init_frame_px
-        self.near_anchor_radius_px: float = float(slot_cfg.get("near_anchor_radius_px", 300.0))
+        # `near_anchor_radius_px` of the seed anchor (in CANONICAL pixels —
+        # invariant of camera zoom/pan). Lone false positives on other teams'
+        # placards project far from the seed in canonical space and never
+        # count, so colors-not-in-this-match retire cleanly.
+        self.near_anchor_radius_px: float = float(slot_cfg.get("near_anchor_radius_canonical_px", 400.0))
         self.min_consecutive_for_active: int = int(slot_cfg.get("min_consecutive_for_active", 3))
         self.near_anchor_consecutive: int = 0
         self.activated: bool = False
