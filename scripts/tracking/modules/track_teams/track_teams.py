@@ -1606,6 +1606,7 @@ def main():
         ],
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "schema_version": 2,
+        "da_strategy": da_strategy,
     }
     fout.write('{"meta":'); json.dump(meta, fout, ensure_ascii=False); fout.write(',"frames":[')
     first = True
