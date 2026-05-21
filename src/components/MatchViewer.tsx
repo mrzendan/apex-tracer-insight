@@ -398,7 +398,15 @@ export function MatchViewer({ initialGameId }: { initialGameId?: string }) {
             }
           />
           <div className="min-h-0 flex-1 overflow-y-auto p-2 scrollbar-slim">
-            {[...teams].sort((a, b) => a.placement - b.placement).map((t) => (
+            {[...teams]
+              .sort((a, b) => {
+                // Сортировка по слоту = по цветовой палитре (как в HUD VOD),
+                // а не по placement. Слот извлекаем из id `t-test-{slot}`.
+                const sa = Number(a.id.split("-").pop()) || 0;
+                const sb = Number(b.id.split("-").pop()) || 0;
+                return sa - sb;
+              })
+              .map((t) => (
               <TeamRow key={t.id} team={t} slotIndex={teams.indexOf(t)} active={selectedTeams.has(t.id)} hovered={hoverTeam === t.id}
                 onToggle={() => toggleTeam(t.id)}
                 onHover={(v) => setHoverTeam(v ? t.id : null)}
