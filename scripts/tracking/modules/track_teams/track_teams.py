@@ -689,6 +689,10 @@ class SlotTracker:
                 inst_vy = (new_cy - last_cy) / (t_now - self.last_seen_t)
                 self.vx = self.velocity_alpha * inst_vx + (1 - self.velocity_alpha) * self.vx
                 self.vy = self.velocity_alpha * inst_vy + (1 - self.velocity_alpha) * self.vy
+                # Track observed peak speed for adaptive gating.
+                inst_speed = math.hypot(inst_vx, inst_vy)
+                if inst_speed > self.v_observed_peak_px_s:
+                    self.v_observed_peak_px_s = inst_speed
             self.canonical_px = (new_cx, new_cy)
         self.last_frame_px = (det_fx, det_fy)
         self.state = "tracked"
