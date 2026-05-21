@@ -1604,6 +1604,8 @@ def main():
     da_weights = cfg.get("da_weights", {}) or {}
     da_debug_near_miss = bool(cfg.get("da_debug_near_miss", False))
     near_miss_counter: Counter = Counter() if da_debug_near_miss else None
+    late_game_cfg = cfg.get("late_game", {}) or {}
+    late_game_events: list[dict] = []
     minimap_bbox = None
     if da_strategy == "detect_first":
         zones_cfg_path = cfg.get("zones_file")
