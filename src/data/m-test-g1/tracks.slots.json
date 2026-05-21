@@ -16,7 +16,7 @@
       "name": "Team 2",
       "color": "#194061",
       "anchor_conf": "LOW",
-      "wiped_at_t": 250.25
+      "wiped_at_t": null
     },
     {
       "slot_id": "slot_3",
@@ -43,7 +43,7 @@
       "name": "Team 5",
       "color": "#7a4278",
       "anchor_conf": "LOW",
-      "wiped_at_t": 790.79
+      "wiped_at_t": null
     },
     {
       "slot_id": "slot_6",
@@ -61,7 +61,7 @@
       "name": "Team 7",
       "color": "#b12f8e",
       "anchor_conf": "LOW",
-      "wiped_at_t": 150.15
+      "wiped_at_t": 594.59
     },
     {
       "slot_id": "slot_8",
@@ -97,7 +97,7 @@
       "name": "Team 11",
       "color": "#974312",
       "anchor_conf": "LOW",
-      "wiped_at_t": 60.06
+      "wiped_at_t": 375.38
     },
     {
       "slot_id": "slot_12",
@@ -151,7 +151,7 @@
       "name": "Team 17",
       "color": "#718746",
       "anchor_conf": "LOW",
-      "wiped_at_t": 180.18
+      "wiped_at_t": null
     },
     {
       "slot_id": "slot_18",
