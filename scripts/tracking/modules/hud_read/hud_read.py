@@ -987,6 +987,16 @@ def main() -> int:
     ap.add_argument("--out", type=Path, default=MODULE_DIR / "reports")
     args = ap.parse_args()
 
+    # Структурный инвариант: hud_read всегда пишет в свой reports/.
+    # Если хочешь обновить UI — гоняй sync_to_ui.py, не --out src/data/...
+    out_resolved = args.out.resolve()
+    if "src" in out_resolved.parts and "data" in out_resolved.parts:
+        raise SystemExit(
+            f"[hud_read] --out не должен указывать в src/data/* "
+            f"(получено: {out_resolved}). Пиши в hud_read/reports/, "
+            f"потом синкай через sync_to_ui.py."
+        )
+
     if args.tess_cmd and pytesseract is not None:
         pytesseract.pytesseract.tesseract_cmd = args.tess_cmd
 
