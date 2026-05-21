@@ -1161,6 +1161,92 @@ class SlotTracker:
         }
 
 
+    # ---- detect-first API ---------------------------------------------------
+    def accept_observation(self, det: dict, t_now: float,
+                           det_source: str = "hungarian") -> dict:
+        """Применить уже-выбранную ассоциатором детекцию. det содержит
+        canonical_px, frame_px, area, color_score. Делает то же что update()
+        делает на хвосте после успешной HSV-детекции (смуссинг, EMA velocity,
+        активация near-anchor), но без поиска по ROI."""
+        # HUD/elim guards — те же, что в update().
+        if self.state == "inactive":
+            self.n_inactive += 1
+            return self._snapshot()
+        if not self.wiped and self.elim_t is not None and t_now >= self.elim_t:
+            self.wiped = True
+            self.state = "wiped"
+            self.state_reason = f"hud_wiped@{self.elim_t}"
+            return self._snapshot()
+        if self.wiped:
+            self.state = "wiped"
+            return self._snapshot()
+
+        cand_cx, cand_cy = det["canonical_px"]
+        det_fx, det_fy = det["frame_px"]
+
+        if self.canonical_px is not None:
+            last_cx, last_cy = self.canonical_px
+            dx = cand_cx - last_cx
+            dy = cand_cy - last_cy
+            dist = math.hypot(dx, dy)
+            step_budget = max(self.max_center_step_px, 200.0)
+            if dist > self.center_deadzone_px:
+                if dist > step_budget:
+                    scale = step_budget / max(1e-6, dist)
+                    dx *= scale
+                    dy *= scale
+                new_cx = last_cx + dx * self.center_smoothing_alpha
+                new_cy = last_cy + dy * self.center_smoothing_alpha
+                if self.last_seen_t is not None and (t_now - self.last_seen_t) > 1e-3:
+                    inst_vx = (new_cx - last_cx) / (t_now - self.last_seen_t)
+                    inst_vy = (new_cy - last_cy) / (t_now - self.last_seen_t)
+                    self.vx = self.velocity_alpha * inst_vx + (1 - self.velocity_alpha) * self.vx
+                    self.vy = self.velocity_alpha * inst_vy + (1 - self.velocity_alpha) * self.vy
+                    inst_speed = math.hypot(inst_vx, inst_vy)
+                    if inst_speed > self.v_observed_peak_px_s:
+                        self.v_observed_peak_px_s = inst_speed
+                self.canonical_px = (new_cx, new_cy)
+        else:
+            self.canonical_px = (cand_cx, cand_cy)
+
+        self.last_frame_px = (det_fx, det_fy)
+        self.state = "tracked"
+        self.canonical_px_stale = False
+        self.last_seen_t = t_now
+        self.state_reason = f"detect_first:{det_source}"
+        self.confidence = min(1.0, self.confidence * 0.6 + 0.4)
+        self.last_score = float(det.get("color_score", 0.5))
+        self.consecutive_detections += 1
+        self.lost_frames = 0
+        self.ever_detected = True
+        self.roi_expand_px = max(0, self.roi_expand_px - 20)
+        self._note_near_anchor_hit(cand_cx, cand_cy)
+        return self._snapshot()
+
+    def note_miss(self, t_now: float) -> dict:
+        """Слот не получил ассайн на этом кадре. Делегирует _on_miss и
+        возвращает snapshot — для совместимости с main loop."""
+        if self.state == "inactive":
+            self.n_inactive += 1
+            return self._snapshot()
+        if not self.wiped and self.elim_t is not None and t_now >= self.elim_t:
+            self.wiped = True
+            self.state = "wiped"
+            self.state_reason = f"hud_wiped@{self.elim_t}"
+            return self._snapshot()
+        if self.wiped:
+            self.state = "wiped"
+            return self._snapshot()
+        # Mirror update()'s out-of-frame/no-anchor short-circuit.
+        if self.canonical_px is None:
+            self.state = "lost"
+            self.state_reason = "no_anchor"
+            return self._snapshot()
+        self.state_reason = "no_assignment"
+        self._on_miss()
+        return self._snapshot()
+
+
 @dataclass
 class Track:
     team_id: str
