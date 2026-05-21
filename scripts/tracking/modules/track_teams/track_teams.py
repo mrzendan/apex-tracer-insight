@@ -1516,6 +1516,8 @@ def main():
     # ---- Detect-first → associate (new pipeline, opt-in) --------------------
     da_strategy = str(cfg.get("da_strategy", "per_slot_roi")).lower()
     da_weights = cfg.get("da_weights", {}) or {}
+    da_debug_near_miss = bool(cfg.get("da_debug_near_miss", False))
+    near_miss_counter: Counter = Counter() if da_debug_near_miss else None
     minimap_bbox = None
     if da_strategy == "detect_first":
         zones_cfg_path = cfg.get("zones_file")
