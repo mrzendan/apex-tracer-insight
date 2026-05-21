@@ -967,6 +967,33 @@ def main():
         print(f"[info] anchors: {sum(1 for a in anchors_map.values() if a.get('conf') in ('HIGH','MED'))} HIGH/MED, {sum(1 for a in anchors_map.values() if a.get('conf') == 'LOW')} LOW")
     frame_step = int(args.frame_step or cfg.get("frame_step", 3))
 
+    # ---- HUD eliminations (authoritative wipe times) -------------------------
+    elim_path = args.eliminations
+    if elim_path is None and cfg.get("eliminations_file"):
+        elim_path = (args.config.parent / cfg["eliminations_file"]).resolve()
+    if elim_path is None:
+        # Last-resort default: the standard hud_read output location.
+        guess = (Path(__file__).resolve().parents[1] / "hud_read" / "reports" / "eliminations.json")
+        if guess.exists():
+            elim_path = guess
+    elim_by_slot: dict[int, float] = {}
+    if elim_path and Path(elim_path).exists():
+        try:
+            raw_elim = json.loads(Path(elim_path).read_text(encoding="utf-8"))
+            for slot_key, info in (raw_elim.get("teams", {}) or {}).items():
+                try:
+                    s = int(slot_key)
+                except (TypeError, ValueError):
+                    continue
+                t_dead = info.get("t_first_dead")
+                if t_dead is not None:
+                    elim_by_slot[s] = float(t_dead)
+            print(f"[info] eliminations: {len(elim_by_slot)} slots with t_first_dead from {elim_path}")
+        except Exception as e:
+            print(f"[warn] failed to read eliminations {elim_path}: {e}")
+    else:
+        print("[info] eliminations: not provided — falling back to absence-based wipe detection")
+
     # Per-slot local trackers (the actual detection workhorse). They seed from
     # motion_detect anchors when available and project canonical → frame each step.
     slot_cfg = dict(det_cfg)  # inherit min/max area, morph_kernel as defaults
@@ -977,8 +1004,16 @@ def main():
         init_canon = None
         if a.get("canonical_px") is not None:
             init_canon = (float(a["canonical_px"][0]), float(a["canonical_px"][1]))
-        slot_trackers[t.id] = SlotTracker(t, slot_cfg, init_canon)
+        elim_t = elim_by_slot.get(t.slot) if t.slot is not None else None
+        slot_trackers[t.id] = SlotTracker(t, slot_cfg, init_canon, elim_t=elim_t)
     print(f"[info] slot trackers: {sum(1 for s in slot_trackers.values() if s.canonical_px is not None)}/{len(slot_trackers)} seeded with canonical anchor")
+    # Pre-seed WorldTracker with HUD wipe times so the sidecar reflects HUD truth
+    # instead of (often wrong / early) absence-based detection.
+    for t in teams:
+        if t.slot in elim_by_slot:
+            tr = trk.tracks.get(t.id)
+            if tr is not None:
+                tr.wiped_at_t = round(elim_by_slot[t.slot], 2)
 
     cap = cv2.VideoCapture(str(args.video))
     if not cap.isOpened():
