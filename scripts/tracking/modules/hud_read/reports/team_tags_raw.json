@@ -1,7 +1,7 @@
 {
   "vocab": [
     "BB",
-    "CINO",
+    "DINO",
     "SRC",
     "S2",
     "JDG",
@@ -11,7 +11,7 @@
     "THUG",
     "FREE",
     "OBVN",
-    "NIPC",
+    "NIP",
     "FXI",
     "CRT",
     "DKK",
@@ -47,18 +47,14 @@
         {
           "value": "FXI",
           "votes": 3
-        },
-        {
-          "value": "EE",
-          "votes": 1
         }
       ]
     },
     "4": {
-      "locked": "NIPC",
+      "locked": "NIP",
       "candidates": [
         {
-          "value": "NIPC",
+          "value": "NIP",
           "votes": 3
         }
       ]
@@ -73,10 +69,10 @@
       ]
     },
     "6": {
-      "locked": "820",
+      "locked": "S2",
       "candidates": [
         {
-          "value": "820",
+          "value": "S2",
           "votes": 3
         }
       ]
@@ -100,15 +96,11 @@
       ]
     },
     "9": {
-      "locked": "HH",
+      "locked": "TL",
       "candidates": [
         {
-          "value": "HH",
-          "votes": 3
-        },
-        {
           "value": "TL",
-          "votes": 2
+          "votes": 3
         }
       ]
     },
@@ -140,10 +132,10 @@
       ]
     },
     "13": {
-      "locked": "CINO",
+      "locked": "DINO",
       "candidates": [
         {
-          "value": "CINO",
+          "value": "DINO",
           "votes": 3
         }
       ]

@@ -50,7 +50,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "8f1d8fad7674383a",
@@ -70,7 +70,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "198e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -100,7 +100,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": null,
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -140,7 +140,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7b4fef29cdd",
           "hero_2": "1c3c1f978d8f9919",
           "hero_3": "8d8f8fad2706161e",
@@ -263,7 +263,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "8f1d8fad7674383a",
@@ -283,7 +283,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbcb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -353,7 +353,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f4fef29cdd",
           "hero_2": "5c1c1f978d8f9919",
           "hero_3": "8d8f8fad2706161e",
@@ -466,7 +466,7 @@
         },
         {
           "slot": 3,
-          "name": "EE",
+          "name": null,
           "hero_1": "8f8f9f273bfbde27",
           "hero_2": "0d0e0d071c0f6b4b",
           "hero_3": "191e0d05351d23bb",
@@ -476,7 +476,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -496,7 +496,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -566,7 +566,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6fef29cdd",
           "hero_2": "4c1c1f978d8f9919",
           "hero_3": "878f8fad2706161e",
@@ -689,7 +689,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e2c3c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "8f1d8fad7674383a",
@@ -709,7 +709,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "070f0d4f6d663c3c",
@@ -739,7 +739,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": null,
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -779,7 +779,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7b6fef29cdd",
           "hero_2": "1c1c1f978d8f9919",
           "hero_3": "858f8fad2706161e",
@@ -902,7 +902,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -922,7 +922,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "990e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -952,7 +952,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": null,
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -992,7 +992,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7b4fef29cdd",
           "hero_2": "1c1c1f978d8f9919",
           "hero_3": "8d8f8fad2786161e",
@@ -1115,7 +1115,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc7c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -1135,7 +1135,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -1165,7 +1165,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": null,
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -1205,7 +1205,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6fef29cdd",
           "hero_2": "5c1c1f978d8f9919",
           "hero_3": "878f8fad2706161e",
@@ -1328,7 +1328,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -1348,7 +1348,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "070f0d4f6d663c3c",
@@ -1378,7 +1378,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": null,
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -1418,7 +1418,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6fef29cdd",
           "hero_2": "1c3c9f978d8f9919",
           "hero_3": "8d8f8fad2786161e",
@@ -1541,7 +1541,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfcbc7439",
           "hero_3": "0f1d8fad7674383a",
@@ -1561,7 +1561,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "070f0d4f6d663c3c",
@@ -1591,7 +1591,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "8d0c090f1d0f4b5b",
@@ -1631,7 +1631,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7b6fef29cdd",
           "hero_2": "1c3c1f978d8f9919",
           "hero_3": "8f8f8fad2706161e",
@@ -1754,7 +1754,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "8f1d8fad7674383a",
@@ -1774,7 +1774,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -1804,7 +1804,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -1844,7 +1844,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f4fef29cdd",
           "hero_2": "1c3c1f978d8f9919",
           "hero_3": "8d8f8fad2706161e",
@@ -1967,7 +1967,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e2c3c",
           "hero_2": "051a0e1cfcbc7439",
           "hero_3": "0f1d8fad7674383a",
@@ -1987,7 +1987,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -2017,7 +2017,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -2057,7 +2057,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7b4fef29cdd",
           "hero_2": "1c1c9f978d8f9919",
           "hero_3": "8d8f8fad2706161e",
@@ -2180,7 +2180,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e2c3c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -2200,7 +2200,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -2230,7 +2230,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -2270,7 +2270,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "8fced7f4fef29cdd",
           "hero_2": "1c1c9f978d8f9919",
           "hero_3": "8f8f8fad2706161e",
@@ -2393,7 +2393,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e243c",
           "hero_2": "0d1a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -2413,7 +2413,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "198e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -2443,7 +2443,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -2483,7 +2483,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6fef29cdd",
           "hero_2": "1c1c1f978d8f9909",
           "hero_3": "8f8f8fad2706161e",
@@ -2606,7 +2606,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "8f1d8fad7674383a",
@@ -2626,7 +2626,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -2656,7 +2656,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -2696,7 +2696,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6fef29cdd",
           "hero_2": "1c1c1f978d8f9919",
           "hero_3": "8d8f8fad2706161e",
@@ -2819,7 +2819,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -2839,7 +2839,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -2869,7 +2869,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -2909,7 +2909,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f4fef29cdd",
           "hero_2": "1c1c1f978d8f9919",
           "hero_3": "8f8f8fad2706161e",
@@ -3032,7 +3032,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e2c3c",
           "hero_2": "051a0e1cfc7c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -3052,7 +3052,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -3082,7 +3082,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -3122,7 +3122,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6fef29cdd",
           "hero_2": "1c1c1f978d8f9919",
           "hero_3": "8f8f8fada706161e",
@@ -3245,7 +3245,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -3265,7 +3265,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "070f0d4f6d663c3c",
@@ -3295,7 +3295,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -3335,7 +3335,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6fef29cdd",
           "hero_2": "1c3c1f978d8f9919",
           "hero_3": "8f8f8fad2706161e",
@@ -3458,7 +3458,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -3478,7 +3478,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -3508,7 +3508,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -3548,7 +3548,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7b6fef29cdd",
           "hero_2": "1c3c1f978d8f9919",
           "hero_3": "858f8fad2786161e",
@@ -3671,7 +3671,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -3691,7 +3691,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "070f0d4f6d663c3c",
@@ -3721,7 +3721,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -3761,7 +3761,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f4fef29cdd",
           "hero_2": "1c3c1f978d8f9919",
           "hero_3": "8f8f8fad2706161e",
@@ -3884,7 +3884,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfcbc7439",
           "hero_3": "0f1d8fad7674383a",
@@ -3904,7 +3904,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbcb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -3934,7 +3934,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "8f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -3974,7 +3974,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7b6fef29cdd",
           "hero_2": "1c1c1f978d8f9919",
           "hero_3": "8f8f8fad2786161e",
@@ -4097,7 +4097,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e2c3c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -4117,7 +4117,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbcb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -4147,7 +4147,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -4187,7 +4187,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7b6fef29cdd",
           "hero_2": "1c3c1f978d8f9909",
           "hero_3": "878f8fad2706161e",
@@ -4310,7 +4310,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e2c3c",
           "hero_2": "051a0e1cfcbc7439",
           "hero_3": "0f1d8fad7674383a",
@@ -4330,7 +4330,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -4360,7 +4360,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -4400,7 +4400,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6fef29cdd",
           "hero_2": "1c1c1f978d8f9919",
           "hero_3": "8d8f8fad2706161e",
@@ -4523,7 +4523,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -4543,7 +4543,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -4573,7 +4573,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -4613,7 +4613,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6fef29cdd",
           "hero_2": "1c3c1f978d8f9909",
           "hero_3": "8f8f8fad2706161e",
@@ -4736,7 +4736,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e243c",
           "hero_2": "051a0e1cfc7c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -4756,7 +4756,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -4786,7 +4786,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -4826,7 +4826,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6fef29cdd",
           "hero_2": "1c1c9f978d8f9919",
           "hero_3": "8f8f8fad2706161e",
@@ -4949,7 +4949,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "0d1a0e1cfc7c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -4969,7 +4969,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbcb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "8f0f0d4f6d663c3c",
@@ -4999,7 +4999,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -5039,7 +5039,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f4faf29cdd",
           "hero_2": "1e3e1f878d8f9919",
           "hero_3": "87878fada786161e",
@@ -5162,7 +5162,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "0d1a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674381a",
@@ -5182,7 +5182,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbcb",
           "hero_2": "990e0d2d371923bb",
           "hero_3": "070f0d4f6d663c3c",
@@ -5212,7 +5212,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -5252,7 +5252,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f4fef29cdd",
           "hero_2": "5c1c1f978d8f9919",
           "hero_3": "858f8fad2706161e",
@@ -5375,7 +5375,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e2c3c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "8f1d8fad7674383a",
@@ -5395,7 +5395,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -5425,7 +5425,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -5465,7 +5465,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6fef29cdd",
           "hero_2": "1c3c1f978d8f9919",
           "hero_3": "8d8f8fad2706161e",
@@ -5588,7 +5588,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -5608,7 +5608,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -5638,7 +5638,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -5678,7 +5678,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f4fef29cdd",
           "hero_2": "1c3c9f978d8f9919",
           "hero_3": "8d8f8fad2782161e",
@@ -5801,7 +5801,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -5821,7 +5821,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcb5b",
           "hero_2": "190e0d2d371923ab",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -5851,7 +5851,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "4b4b4b4b4b4b4b4b",
           "hero_2": "2bababababababab",
           "hero_3": "3c3c3c3c3c3c3c3c",
@@ -5891,7 +5891,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6fef29cdd",
           "hero_2": "1c1c9f978d8f9919",
           "hero_3": "8d8f8fad2706161e",
@@ -6014,7 +6014,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -6034,7 +6034,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbcb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -6064,7 +6064,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -6104,7 +6104,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f4fef29cdd",
           "hero_2": "1c3c1f978d8f9919",
           "hero_3": "8f8f8fad2706161e",
@@ -6227,7 +6227,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc7c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -6247,7 +6247,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -6277,7 +6277,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -6317,7 +6317,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6fef29cdd",
           "hero_2": "1c1c1f978d8f9959",
           "hero_3": "8f8f8fad2706161e",
@@ -6440,7 +6440,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -6460,7 +6460,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -6490,7 +6490,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -6530,7 +6530,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6fef29cdd",
           "hero_2": "1c3c1f978d8f9919",
           "hero_3": "8f8f8fad2706161e",
@@ -6653,7 +6653,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "8f1d8fad7674383a",
@@ -6673,7 +6673,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbcb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "070f0d4f6d663c3c",
@@ -6703,7 +6703,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -6743,7 +6743,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7b6fef29cdd",
           "hero_2": "1c3c9f978d8f9959",
           "hero_3": "8d8f8fad2706161e",
@@ -6866,7 +6866,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e2c3c",
           "hero_2": "051a0e1cfc7c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -6886,7 +6886,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -6916,7 +6916,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "8d0c090f1d0f4b5b",
@@ -6956,7 +6956,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6fef29cdd",
           "hero_2": "1c3c1f978d8f9919",
           "hero_3": "8d8f8fad2706161e",
@@ -7079,7 +7079,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -7099,7 +7099,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -7129,7 +7129,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -7169,7 +7169,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6fef29cdd",
           "hero_2": "1c3c1f978d8f9919",
           "hero_3": "878f8fad2786161e",
@@ -7292,7 +7292,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "8f1d8fad7674383a",
@@ -7312,7 +7312,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "990e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -7342,7 +7342,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -7382,7 +7382,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f4fef69cdd",
           "hero_2": "1c1c9f978d8f9919",
           "hero_3": "8f8f8fad2786161e",
@@ -7505,7 +7505,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e2c3c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -7525,7 +7525,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "070f0d4f6d663c3c",
@@ -7555,7 +7555,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -7595,7 +7595,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6fef29cdd",
           "hero_2": "1c3c1f978d8f9919",
           "hero_3": "8f8f8fad2706161e",
@@ -7718,7 +7718,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "8f1d8fad7674383a",
@@ -7738,7 +7738,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -7768,7 +7768,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -7808,7 +7808,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7b4fef29cdd",
           "hero_2": "1c1c1f978d8f9909",
           "hero_3": "878f8fad2706161e",
@@ -7931,7 +7931,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -7951,7 +7951,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -7981,7 +7981,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -8021,7 +8021,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6fef29cdd",
           "hero_2": "1c1c1f978d8f9919",
           "hero_3": "8f8f8fad2706161e",
@@ -8144,7 +8144,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -8164,7 +8164,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "070f0d4f6d663c3c",
@@ -8194,7 +8194,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -8234,7 +8234,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f4fef29cdd",
           "hero_2": "1c3c1f978d8f9919",
           "hero_3": "8f8f8fad2706161e",
@@ -8357,7 +8357,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e2c3c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -8377,7 +8377,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -8407,7 +8407,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -8447,7 +8447,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6faf29cdd",
           "hero_2": "5c3c1f978d8f9949",
           "hero_3": "858f8fad2786161e",
@@ -8570,7 +8570,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -8590,7 +8590,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbcb",
           "hero_2": "990e0d2d371923bb",
           "hero_3": "070f0d4f6d663c3c",
@@ -8620,7 +8620,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -8660,7 +8660,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7b4fef29cdd",
           "hero_2": "1c1c1f978d8f9919",
           "hero_3": "8d8f8fad2706161e",
@@ -8783,7 +8783,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -8803,7 +8803,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -8833,7 +8833,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -8873,7 +8873,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7b6fef29cdd",
           "hero_2": "1c3c1f878d8f9919",
           "hero_3": "8d8f8fad2706161e",
@@ -8996,7 +8996,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e2c3c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -9016,7 +9016,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbcb",
           "hero_2": "198e0d2d371923bb",
           "hero_3": "070f0d4f6d663c3c",
@@ -9046,7 +9046,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -9086,7 +9086,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6fef29cdd",
           "hero_2": "1c1c1f978d8f9919",
           "hero_3": "8d8f8fad2706161e",
@@ -9209,7 +9209,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -9229,7 +9229,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -9259,7 +9259,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "870f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -9299,7 +9299,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f4fef29cdd",
           "hero_2": "1c3c1f978d8f9919",
           "hero_3": "8f8f8fad2706161e",
@@ -9422,7 +9422,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -9442,7 +9442,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -9472,7 +9472,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -9512,7 +9512,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6fef29cdd",
           "hero_2": "1c1c1f978d8f9919",
           "hero_3": "8d8f8fad2706161e",
@@ -9635,7 +9635,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -9655,7 +9655,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -9685,7 +9685,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -9725,7 +9725,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7b6fef29cdd",
           "hero_2": "1c3c9f978d8f9919",
           "hero_3": "8f8f8fad2706161e",
@@ -9848,7 +9848,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e2c3c",
           "hero_2": "051a0e1cfc7c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -9868,7 +9868,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -9898,7 +9898,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -9938,7 +9938,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7b6fef29cdd",
           "hero_2": "1c1c9f978d8f9919",
           "hero_3": "8d8f8fad2786161e",
@@ -10061,7 +10061,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -10081,7 +10081,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "990e0d2d371923bb",
           "hero_3": "070f0d4f6d663c3c",
@@ -10111,7 +10111,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -10151,7 +10151,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7b6fef29cdd",
           "hero_2": "1c1c1f978d8f9919",
           "hero_3": "8d8f8fad2786161e",
@@ -10274,7 +10274,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "0d1a0e1cfc7c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -10294,7 +10294,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "998e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -10324,7 +10324,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -10364,7 +10364,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6fef29cdd",
           "hero_2": "1c3c9f978d8f9919",
           "hero_3": "8f8f8fad2706161e",
@@ -10487,7 +10487,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "8f1d8fad7674383a",
@@ -10507,7 +10507,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbcb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "070f0d4f6d663c3c",
@@ -10537,7 +10537,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -10577,7 +10577,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "8fced7f4fef29cdd",
           "hero_2": "1c3c1f978d8f9919",
           "hero_3": "8d8f8fad2786161e",
@@ -10700,7 +10700,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfcbc7439",
           "hero_3": "8f1d8fad7674383a",
@@ -10720,7 +10720,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbcb",
           "hero_2": "990e0d2d371923bb",
           "hero_3": "070f0d4f6d663c3c",
@@ -10750,7 +10750,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -10790,7 +10790,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7b6fef29cdd",
           "hero_2": "1c1c1f978d8f9959",
           "hero_3": "8f8f8fad2786161e",
@@ -10913,7 +10913,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e2c3c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "8f1d8fad7674383a",
@@ -10933,7 +10933,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbcb",
           "hero_2": "990e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -10963,7 +10963,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -11003,7 +11003,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6fef29cdd",
           "hero_2": "1c3c1f978d8f9919",
           "hero_3": "858f8fad2786161e",
@@ -11126,7 +11126,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "8f9d8fadf674383a",
@@ -11146,7 +11146,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "070f0d4f6d663c3c",
@@ -11176,7 +11176,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -11216,7 +11216,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7b4fef29cdd",
           "hero_2": "1c3c1f978d8f9919",
           "hero_3": "8f8f8fad2786161e",
@@ -11339,7 +11339,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -11359,7 +11359,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbcb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "070f0d4f6d663c3c",
@@ -11389,7 +11389,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -11429,7 +11429,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f4fef29cdd",
           "hero_2": "1c3c1f978d8f9959",
           "hero_3": "8d8f8fad2706161e",
@@ -11552,7 +11552,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e2c3c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -11572,7 +11572,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "070f0d4f6d663c3c",
@@ -11602,7 +11602,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -11642,7 +11642,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7b6fef29cdd",
           "hero_2": "1c1c1f878d8f9909",
           "hero_3": "8f8f8fad2786161e",
@@ -11765,7 +11765,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -11785,7 +11785,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -11815,7 +11815,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -11855,7 +11855,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6fef29cdd",
           "hero_2": "5c3c1f978d8f9919",
           "hero_3": "878f8fad2706161e",
@@ -11978,7 +11978,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -11998,7 +11998,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbcb",
           "hero_2": "190e0d2d371923bb",
           "hero_3": "0f0f0d4f6d663c3c",
@@ -12028,7 +12028,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -12068,7 +12068,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6fef29cdd",
           "hero_2": "0e1c1f978d8f9919",
           "hero_3": "8d8f8fad2f86161e",
@@ -12191,7 +12191,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e243c",
           "hero_2": "0d1a0e1cfcbc7439",
           "hero_3": "0f1d8fad7674383a",
@@ -12211,7 +12211,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "8d8c890f1d0fcbdb",
           "hero_2": "990e0d2d371923bb",
           "hero_3": "070f0d4f6d663c3c",
@@ -12241,7 +12241,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "8d0c090f1d0f4b5b",
@@ -12281,7 +12281,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6faf29cdd",
           "hero_2": "1c1c1f978d8f9919",
           "hero_3": "8d8f8fad2706161e",
@@ -12404,7 +12404,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e2c3c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674381a",
@@ -12424,7 +12424,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fbff6ff6b60afbf7",
           "hero_2": "ffff6829a9e9fbfe",
           "hero_3": "bfffcfcfdfdfffff",
@@ -12454,7 +12454,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -12494,7 +12494,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7b4fef29cdd",
           "hero_2": "1c3c1f878d8f9919",
           "hero_3": "8f8f8fad2706161e",
@@ -12617,7 +12617,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -12637,7 +12637,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "cecec9cbc1663c3c",
@@ -12667,7 +12667,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -12707,7 +12707,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6fef29cdd",
           "hero_2": "1c3c1f978d8f9909",
           "hero_3": "8f8f8fad2706161e",
@@ -12830,7 +12830,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -12850,7 +12850,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "78eee9b99b1123bb",
           "hero_3": "4ecec9cbc1663c3c",
@@ -12880,7 +12880,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -12920,7 +12920,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f4fef29cdd",
           "hero_2": "1c1c1f978d8f9919",
           "hero_3": "8f8f8fad2706161e",
@@ -13043,7 +13043,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfcbc7439",
           "hero_3": "0f1d8fad7674383a",
@@ -13063,7 +13063,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "c6cec1cbc1663c3c",
@@ -13093,7 +13093,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -13133,7 +13133,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f4fef29cdd",
           "hero_2": "1c1c1f978d8f9919",
           "hero_3": "8f8f8fad2f86161e",
@@ -13256,7 +13256,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e243c",
           "hero_2": "0d1a0e1cfcbc7439",
           "hero_3": "0f1d8fad7674383a",
@@ -13276,7 +13276,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbccccca4bdb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "cecec9cbc1663c3c",
@@ -13306,7 +13306,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "8d0c090f1d0f4b4b",
@@ -13346,7 +13346,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f4fef29cdd",
           "hero_2": "1c1c1f978d8f9919",
           "hero_3": "858f8fad2706161e",
@@ -13469,7 +13469,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -13489,7 +13489,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "46cec9cbc1663c3c",
@@ -13519,7 +13519,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -13559,7 +13559,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f4fef29cdd",
           "hero_2": "1c1c9f978d8f9909",
           "hero_3": "858f8fad2706161e",
@@ -13682,7 +13682,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -13702,7 +13702,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbdb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "c6cec9cbc1663c3c",
@@ -13732,7 +13732,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -13772,7 +13772,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6fef29cdd",
           "hero_2": "5c3c9f978d8f9919",
           "hero_3": "878f8fad2706161e",
@@ -13895,7 +13895,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "8f1d8fad7674383a",
@@ -13915,7 +13915,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "78eee9b99b1123bb",
           "hero_3": "4ecec9cbc1663c3c",
@@ -13945,7 +13945,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -13985,7 +13985,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6fef29cdd",
           "hero_2": "1c3c9f978d8f9919",
           "hero_3": "8d8f8fad2786161e",
@@ -14108,7 +14108,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e2c3c",
           "hero_2": "051a0e1cfc7c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -14128,7 +14128,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "cecec1cbc1663c3c",
@@ -14158,7 +14158,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -14198,7 +14198,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6faf29cdd",
           "hero_2": "5c1c1f978d8f9919",
           "hero_3": "8f8f8fad2706161e",
@@ -14321,7 +14321,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e2c3c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -14341,7 +14341,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fcecc9cccccacbdb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "cecec1cbc1663c1c",
@@ -14371,7 +14371,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -14411,7 +14411,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7b6fef29cdd",
           "hero_2": "1c1c9f978d8f9959",
           "hero_3": "8f8f8fad2706161e",
@@ -14534,7 +14534,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -14554,7 +14554,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "4ecec1cbc1663c3c",
@@ -14584,7 +14584,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -14624,7 +14624,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6fef29cdd",
           "hero_2": "1c1c9f978d8f9919",
           "hero_3": "8d8f8fad2706161e",
@@ -14747,7 +14747,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "8f1d8fad7674383a",
@@ -14767,7 +14767,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbdb",
           "hero_2": "78eee9b99b1123bb",
           "hero_3": "46cec9cbc1663c3c",
@@ -14797,7 +14797,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -14837,7 +14837,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6fef29cdd",
           "hero_2": "1c3c1f978d8f9919",
           "hero_3": "8d8f8fad2706161e",
@@ -14960,7 +14960,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -14980,7 +14980,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbdb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "c6cec9cbc1663c3c",
@@ -15010,7 +15010,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -15050,7 +15050,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7b6fef29cdd",
           "hero_2": "1c3c9f978d8f9919",
           "hero_3": "8d8f8fad2706161e",
@@ -15173,7 +15173,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -15193,7 +15193,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "cecec9cbc1663c3c",
@@ -15223,7 +15223,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "8d0c090f1d0f4b5b",
@@ -15263,7 +15263,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7b4fef29cdd",
           "hero_2": "1c1c1f978d8f9919",
           "hero_3": "8f8f8fad2706161e",
@@ -15386,7 +15386,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -15406,7 +15406,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbdb",
           "hero_2": "78eee9b99b1123bb",
           "hero_3": "c6cec9cbc1663c3c",
@@ -15436,7 +15436,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -15476,7 +15476,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6fef29cdd",
           "hero_2": "1c3c1f978d8f9959",
           "hero_3": "8d8f8fad2706161e",
@@ -15599,7 +15599,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "8f1d8fad7674383a",
@@ -15619,7 +15619,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "786eeda99b1123bb",
           "hero_3": "46cec9cbc1663c1c",
@@ -15649,7 +15649,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -15689,7 +15689,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "87ced7f6fef29cdd",
           "hero_2": "1c1c1f978d8f9919",
           "hero_3": "8f8f8fad2706161e",
@@ -15812,7 +15812,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc7c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -15832,7 +15832,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "c6cec9cbc1663c3c",
@@ -15862,7 +15862,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -15902,7 +15902,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6ced7f4fef29cdd",
           "hero_2": "1c3c1f172d8e5919",
           "hero_3": "8d8f8fada786961e",
@@ -16025,7 +16025,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "8f1d8fad7674383a",
@@ -16045,7 +16045,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbdb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "c6cec9cbc1663c3c",
@@ -16075,7 +16075,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -16115,7 +16115,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eec7f6f6f29cdd",
           "hero_2": "1cfc4d65557d5849",
           "hero_3": "c44e4e485a52961e",
@@ -16238,7 +16238,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -16258,7 +16258,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "cecec9cbc1663c3c",
@@ -16288,7 +16288,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "8f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -16328,7 +16328,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eec7e6f6f09cdd",
           "hero_2": "0cfc6d65557d5849",
           "hero_3": "ccce4e485852961e",
@@ -16451,7 +16451,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc7c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -16471,7 +16471,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "78eee9b99b1123bb",
           "hero_3": "46cec1cbc1663c3c",
@@ -16501,7 +16501,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -16541,7 +16541,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eec7e6fef29cdd",
           "hero_2": "1cfc4d65557d4819",
           "hero_3": "4c4e4e485a52961e",
@@ -16664,7 +16664,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -16684,7 +16684,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "78eee9b99b1123bb",
           "hero_3": "4ecec9cbc1663c3c",
@@ -16714,7 +16714,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -16754,7 +16754,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eec7f6f6f09cdd",
           "hero_2": "0cfc6d65557d4809",
           "hero_3": "464e4e485a52961e",
@@ -16877,7 +16877,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc7c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -16897,7 +16897,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "78eee9b99b1123bb",
           "hero_3": "46cec9cbc1663c3c",
@@ -16927,7 +16927,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -16967,7 +16967,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eec7e6f6f09cdd",
           "hero_2": "1cfc6d65557d5859",
           "hero_3": "4d4e4e485a52961a",
@@ -17090,7 +17090,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -17110,7 +17110,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbdb",
           "hero_2": "786eedb99b1123bb",
           "hero_3": "c6cec9cbc1663c1c",
@@ -17140,7 +17140,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b4b",
@@ -17180,7 +17180,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "f6eed7f6f6f09cdd",
           "hero_2": "0efc4d65557d5809",
           "hero_3": "44464e485852961e",
@@ -17303,7 +17303,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -17323,7 +17323,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbdb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "4ecec9cbc1663c3c",
@@ -17353,7 +17353,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -17393,7 +17393,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eec7f6f6f09cdd",
           "hero_2": "4cf44d65557c5819",
           "hero_3": "46464e485a52d61e",
@@ -17516,7 +17516,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -17536,7 +17536,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "cecee9cbc1663c3c",
@@ -17566,7 +17566,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -17606,7 +17606,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "f6eec7f6f6f09cdd",
           "hero_2": "1cfc6d65557d4809",
           "hero_3": "4c4e4e485a52961e",
@@ -17729,7 +17729,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc7c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -17749,7 +17749,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "f86ee9b99b1123bb",
           "hero_3": "46cec9cbc1663c3c",
@@ -17779,7 +17779,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b4b",
@@ -17819,7 +17819,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eed7f6f6f29cdd",
           "hero_2": "0cfc4d65557d4809",
           "hero_3": "444e4e485a52961e",
@@ -17942,7 +17942,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -17962,7 +17962,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "786ee9a99b1123bb",
           "hero_3": "cecec1cbc1663c1c",
@@ -17992,7 +17992,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "870f0d4f6d663c3c",
           "hero_3": "8d0c090f1d0f4b5b",
@@ -18032,7 +18032,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "f6eec7e6f6f09cdd",
           "hero_2": "8cfc6d65557d5819",
           "hero_3": "4c4e4e485a52961e",
@@ -18155,7 +18155,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "8f1d8fad7674383a",
@@ -18175,7 +18175,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fcecc9cccccacbcb",
           "hero_2": "78eee9b99b1123bb",
           "hero_3": "c6cec9cbc1663c1c",
@@ -18205,7 +18205,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -18245,7 +18245,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eec7e6f6f09cdd",
           "hero_2": "8cfc4d65557d5809",
           "hero_3": "44464e485a52d61e",
@@ -18368,7 +18368,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -18388,7 +18388,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbdb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "4ecec9cbc1663c3c",
@@ -18418,7 +18418,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -18458,7 +18458,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eed7f6f6f09cdd",
           "hero_2": "1cfc6d65557d5809",
           "hero_3": "4c4e4e485852961e",
@@ -18581,7 +18581,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e2c3c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -18601,7 +18601,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "46cec9cbc1663c3c",
@@ -18631,7 +18631,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -18671,7 +18671,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eec7f6f6f09cdd",
           "hero_2": "9cfc4d65557d5859",
           "hero_3": "4c4e4e485852961e",
@@ -18794,7 +18794,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "8f1d8fad7674383a",
@@ -18814,7 +18814,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "4ecec9cbc1663c3c",
@@ -18844,7 +18844,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b4b",
@@ -18884,7 +18884,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eec7e6f6f09cdd",
           "hero_2": "1cfc6d65557d5859",
           "hero_3": "4c4e4e485852961e",
@@ -19007,7 +19007,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e243c",
           "hero_2": "0d1a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -19027,7 +19027,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "786ee9a99b1123bb",
           "hero_3": "46cec9cbc1663c3c",
@@ -19057,7 +19057,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -19097,7 +19097,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "f6eec7e6f6f09cdd",
           "hero_2": "4cfc4d65557d5819",
           "hero_3": "444e4e485852d61e",
@@ -19220,7 +19220,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -19240,7 +19240,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "78eee9b99b1123bb",
           "hero_3": "cecec1cbc1663c3c",
@@ -19270,7 +19270,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "8f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -19310,7 +19310,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eec7f6f6f29cdd",
           "hero_2": "0cfc4d65557d5819",
           "hero_3": "4c4e4e485852d61e",
@@ -19433,7 +19433,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfcbc7439",
           "hero_3": "0f1d8fad7674383a",
@@ -19453,7 +19453,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fcecc9cccccacbdb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "46cec1cbc1663c1c",
@@ -19483,7 +19483,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -19523,7 +19523,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eed7f6f6f29cdd",
           "hero_2": "0cfc6d65557d5859",
           "hero_3": "4dce4e585852961e",
@@ -19646,7 +19646,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "cfcececf6d6e2c3c",
           "hero_2": "859a8e1cfc7c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -19666,7 +19666,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbdb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "c6cec9cbc1663c1c",
@@ -19696,7 +19696,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b4b",
@@ -19736,7 +19736,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "f6eed7f6f6f09cdd",
           "hero_2": "8cfc5d65556d5849",
           "hero_3": "c64e4e585a52d61e",
@@ -19859,7 +19859,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -19879,7 +19879,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbdb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "c6cec1cbc1663c1c",
@@ -19909,7 +19909,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -19949,7 +19949,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eec7e6f6f09cdd",
           "hero_2": "8cfc6d65557d5809",
           "hero_3": "444e4e485852961e",
@@ -20072,7 +20072,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -20092,7 +20092,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbdb",
           "hero_2": "786eedb99b1123bb",
           "hero_3": "c6cec9cbc1663c3c",
@@ -20122,7 +20122,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -20162,7 +20162,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eec7e6f6f09cdd",
           "hero_2": "0c7c6d65557d5809",
           "hero_3": "4e4e4e485a52961e",
@@ -20285,7 +20285,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e2c3c",
           "hero_2": "051a0e1cfc7c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -20305,7 +20305,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbdb",
           "hero_2": "78eee9b99b1123bb",
           "hero_3": "46cec9cbc1663c3c",
@@ -20335,7 +20335,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -20375,7 +20375,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eec7e6f6f29cdd",
           "hero_2": "4cf46d65557d5849",
           "hero_3": "444e4e485a52921e",
@@ -20498,7 +20498,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -20518,7 +20518,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "786ee9a99b1123bb",
           "hero_3": "c6cec9cbc1663c3c",
@@ -20548,7 +20548,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -20588,7 +20588,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eed7e6f6f09cdd",
           "hero_2": "0cfc6d65557d5859",
           "hero_3": "4cce4e485a52961e",
@@ -20711,7 +20711,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e2c3c",
           "hero_2": "051a0e1cfcbc7439",
           "hero_3": "0f1d8fad7674383a",
@@ -20731,7 +20731,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbdb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "4ecec1cbc1663c3c",
@@ -20761,7 +20761,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -20801,7 +20801,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eec7f6f6f09cdd",
           "hero_2": "1c7c6d65556d5819",
           "hero_3": "44c64e485a52d61e",
@@ -20924,7 +20924,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "8f1d8fad7674383a",
@@ -20944,7 +20944,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "f86ee9b99b1123bb",
           "hero_3": "c6cec9cbc1663c3c",
@@ -20974,7 +20974,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "8d0c090f1d0f4b5b",
@@ -21014,7 +21014,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eec7e6f6f09cdd",
           "hero_2": "0cdc4d65557d5819",
           "hero_3": "4c4e4e485852961a",
@@ -21137,7 +21137,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -21157,7 +21157,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbdb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "46cec1cbc1663c1c",
@@ -21187,7 +21187,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b4b",
@@ -21227,7 +21227,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eec7e6f6f09cdd",
           "hero_2": "8efc5d65557d4809",
           "hero_3": "44464e485852d61e",
@@ -21350,7 +21350,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e243c",
           "hero_2": "051a0e1cfcbc7439",
           "hero_3": "0f1d8fad7674383a",
@@ -21370,7 +21370,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "46cec9cbc1663c1c",
@@ -21400,7 +21400,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "8d0c090f1d0f4b5b",
@@ -21440,7 +21440,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eed7f6f6f09cdd",
           "hero_2": "0cfc5d65557d5819",
           "hero_3": "44464e485852d61e",
@@ -21563,7 +21563,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -21583,7 +21583,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "f8eee9b99b1123bb",
           "hero_3": "c6cec9cbc1663c1c",
@@ -21613,7 +21613,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b4b",
@@ -21653,7 +21653,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "f6eec7f6f6f09cdd",
           "hero_2": "0cfc4d65557d5809",
           "hero_3": "444e4e585852961e",
@@ -21776,7 +21776,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc7c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -21796,7 +21796,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbdb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "c6cec1cbc1663c3c",
@@ -21826,7 +21826,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -21866,7 +21866,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eec7e6fef09cdd",
           "hero_2": "4cfc6d65557d5809",
           "hero_3": "c64e4e485852961e",
@@ -21989,7 +21989,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "0d1a0e1cfcbc7439",
           "hero_3": "0f1d8fad7674383a",
@@ -22009,7 +22009,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbdb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "4ecec9cbc1663c3c",
@@ -22039,7 +22039,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -22079,7 +22079,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eec7f6f6f09cdd",
           "hero_2": "0efc6d65557d5819",
           "hero_3": "4c4e4e485852961e",
@@ -22202,7 +22202,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e2c3c",
           "hero_2": "051a0e1cfc7c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -22222,7 +22222,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "4ecec9cbc1663c1c",
@@ -22252,7 +22252,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b4b",
@@ -22292,7 +22292,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "eeeec7f6f6f09cdd",
           "hero_2": "8cf44d65557d5819",
           "hero_3": "4c4e4e485852961e",
@@ -22415,7 +22415,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -22435,7 +22435,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "c6cec1cbc1663c1c",
@@ -22465,7 +22465,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -22505,7 +22505,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "f6eec7e6f6f09cdd",
           "hero_2": "8efc5d65557d5819",
           "hero_3": "4c4e4e485852961e",
@@ -22628,7 +22628,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfcbc7439",
           "hero_3": "0f1d8fad7674383a",
@@ -22648,7 +22648,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbdb",
           "hero_2": "786ee9a99b1123bb",
           "hero_3": "c6cec9cbc1663c3c",
@@ -22678,7 +22678,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -22718,7 +22718,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "f6eec7f6f6f09cdd",
           "hero_2": "1efc4d65557d4819",
           "hero_3": "444e4e485852961e",
@@ -22841,7 +22841,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "6c5c8fac7674383a",
@@ -22861,7 +22861,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "f8eee9b99b1123bb",
           "hero_3": "46cec1cbc1663c3c",
@@ -22891,7 +22891,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -22931,7 +22931,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "eeeec7e6f6f09cdd",
           "hero_2": "1c7c7d65557d4849",
           "hero_3": "44ce4e485a52961e",
@@ -23054,7 +23054,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -23074,7 +23074,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "c6cec9cbc1663c1c",
@@ -23104,7 +23104,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "8f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -23144,7 +23144,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eec7f6f6f09cdd",
           "hero_2": "1cfc5d65557d5819",
           "hero_3": "4c464e485852961e",
@@ -23267,7 +23267,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e243c",
           "hero_2": "0d1a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -23287,7 +23287,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbdb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "46cec9cbc166343c",
@@ -23317,7 +23317,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -23357,7 +23357,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "f6eed7f6f6f09cdd",
           "hero_2": "0cfe6d65557d5859",
           "hero_3": "4ece4e485852961e",
@@ -23480,7 +23480,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfcbc7439",
           "hero_3": "0f1d8fad7674383a",
@@ -23500,7 +23500,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "c6cec9cbc1663c3c",
@@ -23530,7 +23530,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -23570,7 +23570,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eed7f6f6f09cdd",
           "hero_2": "0c7c5d65557d5849",
           "hero_3": "44ce4e485852961e",
@@ -23693,7 +23693,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -23713,7 +23713,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "78eee9b99b1123bb",
           "hero_3": "46cec1cbc1663c3c",
@@ -23743,7 +23743,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -23783,7 +23783,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eec7e6f6f29cdd",
           "hero_2": "0cfc6d65557d5819",
           "hero_3": "444e4e485852d61a",
@@ -23906,7 +23906,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "878f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674381a",
@@ -23926,7 +23926,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbdb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "4ecec9cbc1663c3c",
@@ -23956,7 +23956,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -23996,7 +23996,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eec7e6f6f09cdd",
           "hero_2": "1cfc5d65557d5859",
           "hero_3": "44ce4e485852961e",
@@ -24119,7 +24119,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -24139,7 +24139,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbdb",
           "hero_2": "786eedb99b1123bb",
           "hero_3": "46cec9cbc1663c3c",
@@ -24169,7 +24169,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b4b",
@@ -24209,7 +24209,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "eeeec7e6f6f09cdd",
           "hero_2": "0cfc6d65557d5819",
           "hero_3": "4c464e485852961e",
@@ -24332,7 +24332,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "0d1a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -24352,7 +24352,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbdb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "cecec9cbc1663c3c",
@@ -24382,7 +24382,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -24422,7 +24422,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eed7f6f6f29cdd",
           "hero_2": "0cfc4d65557c5859",
           "hero_3": "4e4e4e485a52d61e",
@@ -24545,7 +24545,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "0f1d8fad7674383a",
@@ -24565,7 +24565,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbdb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "4ecec9cbc1663c3c",
@@ -24595,7 +24595,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "870f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -24635,7 +24635,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eec7f6f6f29cdd",
           "hero_2": "1cfe6d65557d5809",
           "hero_3": "4c4e4e485852961e",
@@ -24758,7 +24758,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfcbc7439",
           "hero_3": "0f1d8fad7674383a",
@@ -24778,7 +24778,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "f86ee9b99b1123bb",
           "hero_3": "c6cec9cbc1663c3c",
@@ -24808,7 +24808,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -24848,7 +24848,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eed7e6f6f09cdd",
           "hero_2": "5cfe4d65557d4849",
           "hero_3": "4ec64e585852961e",
@@ -24971,7 +24971,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e2c3c",
           "hero_2": "051a0e1cfc3c7439",
           "hero_3": "8f1d8fad7674383a",
@@ -24991,7 +24991,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbdb",
           "hero_2": "786ee9a99b1123bb",
           "hero_3": "4ecec9cbc1663c1c",
@@ -25021,7 +25021,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "8f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -25061,7 +25061,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eed7f6fef09cdd",
           "hero_2": "0ef46d65557d5819",
           "hero_3": "4c4e4e485852d61e",
@@ -25184,7 +25184,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfcbc7439",
           "hero_3": "8f1d8fad7674383a",
@@ -25204,7 +25204,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "78eee9b99b1123bb",
           "hero_3": "cecec9cbc1663c3c",
@@ -25234,7 +25234,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
@@ -25274,7 +25274,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "e6eec7f6f6f09cdd",
           "hero_2": "0cfe6d65557d5809",
           "hero_3": "4c4e4e485a52961e",
@@ -25397,7 +25397,7 @@
         },
         {
           "slot": 4,
-          "name": "NIPC",
+          "name": "NIP",
           "hero_1": "8f8f8fcf6d6e243c",
           "hero_2": "051a0e1cfcbc7439",
           "hero_3": "0f1d8fad7674383a",
@@ -25417,7 +25417,7 @@
         },
         {
           "slot": 6,
-          "name": "820",
+          "name": "S2",
           "hero_1": "fceccbcccccacbcb",
           "hero_2": "786ee9b99b1123bb",
           "hero_3": "c6cec9cbc1663c3c",
@@ -25447,7 +25447,7 @@
         },
         {
           "slot": 9,
-          "name": "HH",
+          "name": "TL",
           "hero_1": "eeaeb6aebadadea3",
           "hero_2": "8f8f8d4f6d663c3c",
           "hero_3": "7d4cc98e9c0f4b5b",
@@ -25487,7 +25487,7 @@
         },
         {
           "slot": 13,
-          "name": "CINO",
+          "name": "DINO",
           "hero_1": "f6eed7f6f6f09cdd",
           "hero_2": "4cfc4d65557d5819",
           "hero_3": "44464e485a52961e",
