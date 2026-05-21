@@ -711,6 +711,8 @@ class SlotTracker:
         self.lost_frames += 1
         self.consecutive_detections = 0
         self.confidence = max(0.1, self.confidence - 0.07)
+        # Slowly forget old peak so a one-off rocket ride doesn't keep gate huge forever.
+        self.v_observed_peak_px_s *= self.v_observed_decay
         if self.lost_frames > 5:
             # Slowly expand ROI to recover.
             self.roi_expand_px = min(self.max_roi_expand_px, self.roi_expand_px + self.roi_expand_step_px)
