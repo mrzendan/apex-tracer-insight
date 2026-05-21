@@ -448,7 +448,8 @@ class SlotTracker:
     """
 
     def __init__(self, team: TeamCfg, slot_cfg: dict, init_canonical_px: Optional[tuple[float, float]],
-                 elim_t: Optional[float] = None):
+                 elim_t: Optional[float] = None,
+                 anchor_conf: str = "MISS", hud_alive: bool = False):
         self.team = team
         self.canonical_px: Optional[tuple[float, float]] = init_canonical_px
         self.last_frame_px: Optional[tuple[float, float]] = None
@@ -496,6 +497,16 @@ class SlotTracker:
         # Authoritative wipe time from HUD (eliminations.json). When t_now >= elim_t,
         # the slot is force-wiped — no more detection work, not counted as `lost`.
         self.elim_t: Optional[float] = elim_t
+        # Active-slot filter: если за первые N processed-кадров слот так и не
+        # дал ни одной успешной детекции — помечаем как `inactive` и больше
+        # не тратим CPU/не плодим ложные плашки чужих команд похожего тона.
+        # Защищены: anchor HIGH/MED (motion_detect его реально видел) и
+        # HUD-alive (HUD подтверждает, что команда жива).
+        self.anchor_conf: str = anchor_conf
+        self.hud_alive: bool = hud_alive
+        self.inactive_after_misses: int = int(slot_cfg.get("inactive_after_misses", 60))
+        self.ever_detected: bool = False
+        self.n_inactive: int = 0
         # Telemetry counters (filled by run loop).
         self.n_tracked = 0
         self.n_low_conf = 0
@@ -644,6 +655,10 @@ class SlotTracker:
     # ---- main update -----------------------------------------------------
     def update(self, frame_bgr: np.ndarray, H: np.ndarray, t_now: float = 0.0) -> Optional[dict]:
         """Run one frame. Returns dict with canonical_px / frame_px / state, or None if untrackable yet."""
+        # Active-slot filter: once a slot is declared inactive, freeze it cheaply.
+        if self.state == "inactive":
+            self.n_inactive += 1
+            return self._snapshot()
         # HUD-authoritative wipe: as soon as the elimination timestamp is reached,
         # the slot is permanently wiped — skip all detection work to keep the report
         # clean and avoid burning CPU on a team that no longer exists on the map.
@@ -718,6 +733,7 @@ class SlotTracker:
                     self.vy = 0.0
                     self.roi_expand_px = 0
                     self.n_recovered += 1
+                    self.ever_detected = True
                     return self._snapshot()
             self._on_miss()
             return self._snapshot()
@@ -799,6 +815,7 @@ class SlotTracker:
         self.confidence = min(1.0, self.confidence * 0.6 + 0.4 + 0.0)
         self.consecutive_detections += 1
         self.lost_frames = 0
+        self.ever_detected = True
         # Gradually shrink expanded ROI back.
         self.roi_expand_px = max(0, self.roi_expand_px - 20)
         return self._snapshot()
@@ -821,6 +838,15 @@ class SlotTracker:
             self.state = "low_conf"
         else:
             self.state = "coast"
+        # Active-slot filter: never seen on screen + not protected -> retire.
+        if (not self.ever_detected
+                and self.inactive_after_misses > 0
+                and self.lost_frames >= self.inactive_after_misses
+                and self.anchor_conf not in ("HIGH", "MED")
+                and not self.hud_alive
+                and not self.wiped):
+            self.state = "inactive"
+            self.state_reason = f"never_detected_{self.lost_frames}f"
 
     def _snapshot(self) -> dict:
         return {
@@ -1104,7 +1130,12 @@ def main():
         if a.get("canonical_px") is not None:
             init_canon = (float(a["canonical_px"][0]), float(a["canonical_px"][1]))
         elim_t = elim_by_slot.get(t.slot) if t.slot is not None else None
-        slot_trackers[t.id] = SlotTracker(t, slot_cfg, init_canon, elim_t=elim_t)
+        anchor_conf = str(a.get("conf", "MISS"))
+        hud_alive = (t.slot is not None and t.slot in hud_alive_slots)
+        slot_trackers[t.id] = SlotTracker(
+            t, slot_cfg, init_canon, elim_t=elim_t,
+            anchor_conf=anchor_conf, hud_alive=hud_alive,
+        )
     print(f"[info] slot trackers: {sum(1 for s in slot_trackers.values() if s.canonical_px is not None)}/{len(slot_trackers)} seeded with canonical anchor")
     # Pre-seed WorldTracker with HUD wipe times so the sidecar reflects HUD truth
     # instead of (often wrong / early) absence-based detection.
@@ -1330,14 +1361,15 @@ def main():
     # Per-slot tracking summary (compare runs at a glance).
     print("\n[summary] per-slot state distribution")
     print(f"{'slot':<10}{'tracked':>9}{'low_conf':>10}{'hold':>7}{'coast':>7}{'lost':>7}"
-          f"{'wiped':>7}{'alive%':>8}{'switch':>8}{'avg_sc':>8}")
+          f"{'wiped':>7}{'inact':>7}{'alive%':>8}{'switch':>8}{'avg_sc':>8}")
     for t in teams:
         st = slot_trackers[t.id]
         avg = (st.score_sum / st.score_n) if st.score_n else 0.0
         alive = st.n_tracked + st.n_low_conf + st.n_hold + st.n_coast + st.n_lost
         alive_pct = (100.0 * (st.n_tracked + st.n_low_conf) / alive) if alive else 0.0
         print(f"{t.id:<10}{st.n_tracked:>9}{st.n_low_conf:>10}{st.n_hold:>7}"
-              f"{st.n_coast:>7}{st.n_lost:>7}{st.n_wiped:>7}{alive_pct:>7.1f}%"
+              f"{st.n_coast:>7}{st.n_lost:>7}{st.n_wiped:>7}{st.n_inactive:>7}"
+              f"{alive_pct:>7.1f}%"
               f"{st.n_switches:>8}{avg:>8.2f}")
     # Dominant state_reason per slot — what is actually failing where.
     print("\n[summary] dominant state_reason per slot (top 3)")
