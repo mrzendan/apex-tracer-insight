@@ -1414,8 +1414,9 @@ def main():
     # ---- Post-hoc active-slot cleanup ----------------------------------
     # A slot is "fantom" if after the full run:
     #   * never activated (no streak of K near-anchor detections), AND
-    #   * fewer than `min_tracked_for_active` tracked frames, AND
-    #   * was not HUD-wiped, anchor not HIGH/MED, not HUD-alive.
+    #   * либо мало tracked, либо tracked << wiped (ratio).
+    # HUD-alive больше НЕ защищает: команда может быть жива по HUD,
+    # но трек при этом висит на чужой плашке (ratio резко падает).
     # All its frame entries are rewritten to state=inactive and detection
     # fields are nulled, so downstream consumers see a clean "didn't play".
     fantom_team_ids: set[str] = set()
@@ -1423,16 +1424,16 @@ def main():
         st = slot_trackers[t.id]
         if st.activated:
             continue
-        if st.hud_alive:
-            continue
-        # HIGH/MED якорь больше НЕ защищает: motion_detect мог уверенно
-        # засидиться на чужой плашке. Признак фантома — реальное поведение
-        # по ходу матча: либо мало tracked, либо tracked << wiped.
         below_abs = st.n_tracked < st.min_tracked_for_active
         denom = st.n_tracked + st.n_wiped
         ratio = (st.n_tracked / denom) if denom > 0 else 0.0
         below_ratio = denom >= 30 and ratio < st.min_tracked_ratio_for_active
-        if not (below_abs or below_ratio):
+        # Для HUD-alive слотов оставляем только ratio-критерий
+        # (below_abs может ложно срабатывать на коротких записях).
+        if st.hud_alive:
+            if not below_ratio:
+                continue
+        elif not (below_abs or below_ratio):
             continue
         fantom_team_ids.add(t.id)
     if fantom_team_ids:
