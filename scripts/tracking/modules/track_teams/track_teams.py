@@ -1423,13 +1423,18 @@ def main():
         st = slot_trackers[t.id]
         if st.activated:
             continue
-        if st.wiped:
-            continue
         if st.anchor_conf in ("HIGH", "MED"):
             continue
         if st.hud_alive:
             continue
-        if st.n_tracked >= st.min_tracked_for_active:
+        # Абсолютный порог: мало tracked-кадров → фантом.
+        below_abs = st.n_tracked < st.min_tracked_for_active
+        # Относительный порог: tracked-доля от (tracked+wiped) низкая →
+        # слот всё время «дёргается» на чужих плакардах и сразу отваливается.
+        denom = st.n_tracked + st.n_wiped
+        ratio = (st.n_tracked / denom) if denom > 0 else 0.0
+        below_ratio = denom >= 20 and ratio < st.min_tracked_ratio_for_active
+        if not (below_abs or below_ratio):
             continue
         fantom_team_ids.add(t.id)
     if fantom_team_ids:
