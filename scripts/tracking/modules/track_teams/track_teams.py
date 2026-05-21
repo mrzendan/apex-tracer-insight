@@ -897,6 +897,9 @@ def main():
     ap.add_argument("--debug-frame", type=int, default=None)
     ap.add_argument("--anchors", type=Path, default=None,
                     help="motion_detect/reports/motion_tracks.json для инициализации треков")
+    ap.add_argument("--eliminations", type=Path, default=None,
+                    help="hud_read/reports/eliminations.json — точные t_first_dead по слоту, "
+                         "если задано, заменяет absence-based wipe детекцию")
     args = ap.parse_args()
 
     if not args.video.exists():
