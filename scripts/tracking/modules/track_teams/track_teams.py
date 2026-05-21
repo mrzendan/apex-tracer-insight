@@ -1703,7 +1703,8 @@ def main():
                     candidates = detect_candidates_in_minimap_roi(
                         frame, teams, minimap_bbox, H, det_cfg)
                     assigns = associate_hungarian(
-                        candidates, slot_trackers, t_now, da_weights)
+                        candidates, slot_trackers, t_now, da_weights,
+                        near_miss=near_miss_counter)
                     for t in teams:
                         st = slot_trackers[t.id]
                         det = assigns.get(t.id)
