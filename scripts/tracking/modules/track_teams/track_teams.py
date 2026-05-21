@@ -448,7 +448,8 @@ class SlotTracker:
     """
 
     def __init__(self, team: TeamCfg, slot_cfg: dict, init_canonical_px: Optional[tuple[float, float]],
-                 elim_t: Optional[float] = None):
+                 elim_t: Optional[float] = None,
+                 anchor_conf: str = "MISS", hud_alive: bool = False):
         self.team = team
         self.canonical_px: Optional[tuple[float, float]] = init_canonical_px
         self.last_frame_px: Optional[tuple[float, float]] = None
@@ -496,6 +497,16 @@ class SlotTracker:
         # Authoritative wipe time from HUD (eliminations.json). When t_now >= elim_t,
         # the slot is force-wiped — no more detection work, not counted as `lost`.
         self.elim_t: Optional[float] = elim_t
+        # Active-slot filter: если за первые N processed-кадров слот так и не
+        # дал ни одной успешной детекции — помечаем как `inactive` и больше
+        # не тратим CPU/не плодим ложные плашки чужих команд похожего тона.
+        # Защищены: anchor HIGH/MED (motion_detect его реально видел) и
+        # HUD-alive (HUD подтверждает, что команда жива).
+        self.anchor_conf: str = anchor_conf
+        self.hud_alive: bool = hud_alive
+        self.inactive_after_misses: int = int(slot_cfg.get("inactive_after_misses", 60))
+        self.ever_detected: bool = False
+        self.n_inactive: int = 0
         # Telemetry counters (filled by run loop).
         self.n_tracked = 0
         self.n_low_conf = 0
