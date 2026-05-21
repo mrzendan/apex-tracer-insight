@@ -209,6 +209,21 @@ def ocr(crop: np.ndarray, lang: str, digits_only: bool, alnum_only: bool = False
                 best_combo = (psm_i, prep_i)
     if calib_key is not None and best and best_combo is not None:
         _OCR_CALIB[calib_key] = best_combo
+    # Фолбэк для крошечных цифр (например, team_20.pts): если основной
+    # проход вернул пустоту для digits_only — пробуем сильный препроцесс
+    # (×6 апскейл + Otsu/adaptive) с psm=10/8/13. Калибровку не трогаем.
+    if digits_only and not best:
+        strong = preprocess_for_ocr_strong(crop)
+        wl = whitelist or "0123456789"
+        for psm in (10, 8, 13):
+            cfg = f"--psm {psm} --oem 1 -c tessedit_char_whitelist={wl}"
+            for prep in strong:
+                try:
+                    txt = pytesseract.image_to_string(prep, lang=lang, config=cfg).strip()
+                except Exception:
+                    txt = ""
+                if txt:
+                    return txt
     return best
 
 
