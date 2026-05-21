@@ -655,6 +655,10 @@ class SlotTracker:
     # ---- main update -----------------------------------------------------
     def update(self, frame_bgr: np.ndarray, H: np.ndarray, t_now: float = 0.0) -> Optional[dict]:
         """Run one frame. Returns dict with canonical_px / frame_px / state, or None if untrackable yet."""
+        # Active-slot filter: once a slot is declared inactive, freeze it cheaply.
+        if self.state == "inactive":
+            self.n_inactive += 1
+            return self._snapshot()
         # HUD-authoritative wipe: as soon as the elimination timestamp is reached,
         # the slot is permanently wiped — skip all detection work to keep the report
         # clean and avoid burning CPU on a team that no longer exists on the map.
