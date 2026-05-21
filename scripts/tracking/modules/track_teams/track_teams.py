@@ -1168,12 +1168,16 @@ def main():
         init_canon = None
         if a.get("canonical_px") is not None:
             init_canon = (float(a["canonical_px"][0]), float(a["canonical_px"][1]))
+        init_frame = None
+        if a.get("frame_px") is not None:
+            init_frame = (float(a["frame_px"][0]), float(a["frame_px"][1]))
         elim_t = elim_by_slot.get(t.slot) if t.slot is not None else None
         anchor_conf = str(a.get("conf", "MISS"))
         hud_alive = (t.slot is not None and t.slot in hud_alive_slots)
         slot_trackers[t.id] = SlotTracker(
             t, slot_cfg, init_canon, elim_t=elim_t,
             anchor_conf=anchor_conf, hud_alive=hud_alive,
+            init_frame_px=init_frame,
         )
     print(f"[info] slot trackers: {sum(1 for s in slot_trackers.values() if s.canonical_px is not None)}/{len(slot_trackers)} seeded with canonical anchor")
     # Pre-seed WorldTracker with HUD wipe times so the sidecar reflects HUD truth
