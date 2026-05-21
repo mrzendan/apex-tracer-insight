@@ -72,7 +72,7 @@ const slotToTag = lsGet(
 // ── Tracks (track_teams pipeline) ───────────────────────────────────
 type TrackPoint = {
   team_id: string;
-  world: [number, number];
+  world: [number, number] | null;
   state: string;
   confidence: number;
 };
@@ -101,8 +101,10 @@ export const testGameTrajectories: Record<string, { t: number; x: number; y: num
   const out: Record<string, { t: number; x: number; y: number }[]> = {};
   for (const fr of tracks.frames) {
     for (const tr of fr.tracks) {
-      // Skip "lost" — это последняя известная позиция, не реальное наблюдение.
-      if (tr.state === "lost") continue;
+      // Только реальные наблюдения. coast/hold/low_conf/lost — это stale-canonical,
+      // их не рисуем, иначе команды «залипают».
+      if (tr.state !== "tracked") continue;
+      if (!tr.world) continue;
       // slot_1 -> t-test-1
       const slotNum = tr.team_id.replace(/^slot_/, "");
       const key = `t-test-${slotNum}`;
