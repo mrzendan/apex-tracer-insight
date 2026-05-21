@@ -1542,6 +1542,37 @@ def main() -> int:
         )
         print(f"[hud_read] team tag votes → {args.out / tags_name}")
 
+    # ── Дамп сырых OCR-кандидатов для pts (диагностика проблемных слотов) ──
+    if pts_raw:
+        pts_name = f"pts_raw.{args.chunk_id}.json" if args.chunk_id else "pts_raw.json"
+        # Сводка по слотам: топ raw-строк и счётчики accepted/rejected.
+        from collections import Counter as _Counter
+        summary: dict[str, Any] = {}
+        for slot, entries in sorted(pts_raw.items()):
+            raw_counter: _Counter = _Counter(e["raw"] for e in entries)
+            parsed_counter: _Counter = _Counter(
+                str(e["parsed"]) for e in entries if e["parsed"] is not None
+            )
+            accepted = sum(1 for e in entries if e["parsed"] is not None)
+            summary[str(slot)] = {
+                "frames": len(entries),
+                "accepted": accepted,
+                "rejected": len(entries) - accepted,
+                "top_raw": [{"value": v, "count": n}
+                            for v, n in raw_counter.most_common(8)],
+                "top_parsed": [{"value": v, "count": n}
+                               for v, n in parsed_counter.most_common(5)],
+            }
+        (args.out / pts_name).write_text(
+            json.dumps(
+                {"slots": summary,
+                 "samples": {str(s): pts_raw[s][:20] for s in sorted(pts_raw)}},
+                ensure_ascii=False, indent=2,
+            ),
+            encoding="utf-8",
+        )
+        print(f"[hud_read] pts raw OCR dump → {args.out / pts_name}")
+
     print(f"\n[hud_read] OK → {args.out}")
     return 0
 
