@@ -182,16 +182,23 @@ def ocr(crop: np.ndarray, lang: str, digits_only: bool, alnum_only: bool = False
             cfg = f"--psm {psm} --oem 1"
             if whitelist:
                 cfg += f" -c tessedit_char_whitelist={whitelist}"
-            return pytesseract.image_to_string(prep, lang=lang, config=cfg).strip()
+            locked_txt = pytesseract.image_to_string(prep, lang=lang, config=cfg).strip()
         except Exception as e:  # pragma: no cover
             msg = str(e)
             if msg not in _OCR_ERRORS_SEEN:
                 _OCR_ERRORS_SEEN.add(msg)
                 print(f"[hud_read] tesseract error: {msg}", file=sys.stderr)
             return ""
-    best = ""
+        if locked_txt or not digits_only:
+            return locked_txt
+        # digits_only + пусто → проваливаемся в strong-фолбэк ниже
+        best = ""
+    else:
+        best = ""
     best_combo: Optional[tuple[int, int]] = None
     for prep_i, prep in enumerate(preps):
+        if locked is not None:
+            break  # уже пробовали залоченную комбу — сразу к strong-фолбэку
         for psm_i, psm in enumerate(psms):
             cfg = f"--psm {psm} --oem 1"
             if whitelist:
