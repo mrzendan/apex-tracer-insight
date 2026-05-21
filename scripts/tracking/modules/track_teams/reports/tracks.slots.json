@@ -61,7 +61,7 @@
       "name": "Team 7",
       "color": "#b12f8e",
       "anchor_conf": "LOW",
-      "wiped_at_t": 150.15
+      "wiped_at_t": 210.21
     },
     {
       "slot_id": "slot_8",
@@ -97,7 +97,7 @@
       "name": "Team 11",
       "color": "#974312",
       "anchor_conf": "LOW",
-      "wiped_at_t": 60.06
+      "wiped_at_t": 220.22
     },
     {
       "slot_id": "slot_12",
