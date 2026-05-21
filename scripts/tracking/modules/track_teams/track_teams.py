@@ -517,7 +517,7 @@ class SlotTracker:
         # invariant of camera zoom/pan). Lone false positives on other teams'
         # placards project far from the seed in canonical space and never
         # count, so colors-not-in-this-match retire cleanly.
-        self.near_anchor_radius_px: float = float(slot_cfg.get("near_anchor_radius_canonical_px", 400.0))
+        self.near_anchor_radius_px: float = float(slot_cfg.get("near_anchor_radius_canonical_px", 120.0))
         self.min_consecutive_for_active: int = int(slot_cfg.get("min_consecutive_for_active", 3))
         self.near_anchor_consecutive: int = 0
         self.activated: bool = False
@@ -528,7 +528,7 @@ class SlotTracker:
         # Если tracked-доля от (tracked+wiped) ниже этого порога — фантом,
         # даже если absolute tracked перевалил за min_tracked_for_active.
         self.min_tracked_ratio_for_active: float = float(
-            slot_cfg.get("min_tracked_ratio_for_active", 0.20))
+            slot_cfg.get("min_tracked_ratio_for_active", 0.25))
         # Telemetry counters (filled by run loop).
         self.n_tracked = 0
         self.n_low_conf = 0
@@ -1423,17 +1423,15 @@ def main():
         st = slot_trackers[t.id]
         if st.activated:
             continue
-        if st.anchor_conf in ("HIGH", "MED"):
-            continue
         if st.hud_alive:
             continue
-        # Абсолютный порог: мало tracked-кадров → фантом.
+        # HIGH/MED якорь больше НЕ защищает: motion_detect мог уверенно
+        # засидиться на чужой плашке. Признак фантома — реальное поведение
+        # по ходу матча: либо мало tracked, либо tracked << wiped.
         below_abs = st.n_tracked < st.min_tracked_for_active
-        # Относительный порог: tracked-доля от (tracked+wiped) низкая →
-        # слот всё время «дёргается» на чужих плакардах и сразу отваливается.
         denom = st.n_tracked + st.n_wiped
         ratio = (st.n_tracked / denom) if denom > 0 else 0.0
-        below_ratio = denom >= 20 and ratio < st.min_tracked_ratio_for_active
+        below_ratio = denom >= 30 and ratio < st.min_tracked_ratio_for_active
         if not (below_abs or below_ratio):
             continue
         fantom_team_ids.add(t.id)
