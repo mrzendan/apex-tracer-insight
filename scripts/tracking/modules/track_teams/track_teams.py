@@ -696,6 +696,29 @@ class SlotTracker:
         target_local = (fx - x0, fy - y0)
         det = self._find_in_roi(roi, target_local)
         if det is None:
+            # Full-frame recovery: ROI давно мажет — поищем плашку по всему
+            # кадру в окрестности предсказания. Не каждый кадр, чтобы не жечь CPU.
+            if (self.lost_frames >= self.recover_after_misses
+                    and (self.lost_frames - self.recover_after_misses)
+                        % max(1, self.recover_interval) == 0):
+                rec = self._recover_global(frame_bgr, H, (pred_cx, pred_cy))
+                if rec is not None:
+                    rcx, rcy, rccx, rccy, rarea = rec
+                    self.canonical_px = (rccx, rccy)
+                    self.last_frame_px = (rcx, rcy)
+                    self.state = "tracked"
+                    self.state_reason = "recovered_global"
+                    self.canonical_px_stale = False
+                    self.last_seen_t = t_now
+                    self.consecutive_detections = 1
+                    self.lost_frames = 0
+                    self.confidence = max(self.confidence, 0.5)
+                    self.last_score = 0.5
+                    self.vx = 0.0
+                    self.vy = 0.0
+                    self.roi_expand_px = 0
+                    self.n_recovered += 1
+                    return self._snapshot()
             self._on_miss()
             return self._snapshot()
         x, y, w, h, area = det
