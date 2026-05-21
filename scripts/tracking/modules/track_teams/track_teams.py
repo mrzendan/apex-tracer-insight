@@ -803,6 +803,8 @@ class WorldTracker:
         self.slot_anchors: dict[str, dict] = {}  # team_id -> anchor info
         self.cur_t: float = 0.0
         self.new_wipes: list[dict] = []
+        # HUD-confirmed alive team_ids — absence-based wipe MUST NOT fire for these.
+        self.hud_alive_protected: set[str] = set()
 
     def set_anchors(self, anchors: dict[str, dict]):
         self.slot_anchors = anchors or {}
@@ -829,6 +831,7 @@ class WorldTracker:
             # 1b wipe detection: long unbroken absence -> mark wiped
             if (tr.wiped_at_t is None
                     and tr.last_seen_t > 0
+                    and tr.team_id not in self.hud_alive_protected
                     and (t - tr.last_seen_t) >= self.wipe_absence_sec):
                 tr.wiped_at_t = round(t, 2)
                 tr.state = "lost"
@@ -988,6 +991,7 @@ def main():
                 elim_path = guess
                 break
     elim_by_slot: dict[int, float] = {}
+    hud_alive_slots: set[int] = set()   # slots HUD explicitly marks as alive at match end
     if elim_path and Path(elim_path).exists():
         try:
             raw_elim = json.loads(Path(elim_path).read_text(encoding="utf-8"))
@@ -999,7 +1003,9 @@ def main():
                 t_dead = info.get("t_first_dead")
                 if t_dead is not None:
                     elim_by_slot[s] = float(t_dead)
-            print(f"[info] eliminations: {len(elim_by_slot)} slots with t_first_dead from {elim_path}")
+                else:
+                    hud_alive_slots.add(s)
+            print(f"[info] eliminations: {len(elim_by_slot)} dead + {len(hud_alive_slots)} alive (HUD-confirmed) from {elim_path}")
         except Exception as e:
             print(f"[warn] failed to read eliminations {elim_path}: {e}")
     else:
@@ -1025,6 +1031,12 @@ def main():
             tr = trk.tracks.get(t.id)
             if tr is not None:
                 tr.wiped_at_t = round(elim_by_slot[t.slot], 2)
+        elif t.slot in hud_alive_slots:
+            # HUD says this team is alive at match end — protect from absence-fallback
+            # so a long off-minimap stretch (rotations, edges of map) doesn't fake a wipe.
+            trk.hud_alive_protected.add(t.id)
+    if hud_alive_slots:
+        print(f"[info] absence-wipe protected: {len(trk.hud_alive_protected)} teams (HUD-alive)")
 
     cap = cv2.VideoCapture(str(args.video))
     if not cap.isOpened():
