@@ -1421,6 +1421,41 @@ def main() -> int:
     report_name = f"report.{args.chunk_id}.txt" if args.chunk_id else "report.txt"
     (args.out / report_name).write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines))
+
+    # ── Дамп голосов OCR для тегов команд (для отладки snap-словаря) ──
+    # Файл team_tags_raw.json — по слотам top-N кандидатов с числом подтверждений.
+    tag_votes: dict[int, list[tuple[Any, int]]] = {}
+    for (tag, name), ss in static_state.items():
+        slot = team_slot(tag)
+        if slot is None or name != "name":
+            continue
+        votes = sorted(ss.get("votes", {}).items(), key=lambda kv: -kv[1])
+        if votes:
+            tag_votes[slot] = votes[:5]
+    if tag_votes:
+        tags_name = f"team_tags_raw.{args.chunk_id}.json" if args.chunk_id else "team_tags_raw.json"
+        (args.out / tags_name).write_text(
+            json.dumps(
+                {
+                    "vocab": KNOWN_TEAMS,
+                    "vocab_path": str(vocab_path) if vocab_path else None,
+                    "slots": {
+                        str(s): {
+                            "locked": static_state[(f"team_{s}", "name")]["locked"],
+                            "candidates": [
+                                {"value": v, "votes": n} for v, n in votes
+                            ],
+                        }
+                        for s, votes in sorted(tag_votes.items())
+                    },
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+        print(f"[hud_read] team tag votes → {args.out / tags_name}")
+
     print(f"\n[hud_read] OK → {args.out}")
     return 0
 
