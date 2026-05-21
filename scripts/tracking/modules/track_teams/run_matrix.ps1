@@ -38,7 +38,9 @@ function Invoke-One($tag, $config) {
               "--anchors", $Anchors, "--eliminations", $Eliminations)
   if ($FrameStep -gt 0) { $pyArgs += @("--frame-step", $FrameStep) }
   Write-Host "[matrix] $tag -> $out" -ForegroundColor Cyan
-  & python @pyArgs 2>&1 | Tee-Object -FilePath $log | Out-Null
+  $ErrorActionPreference = "Continue"
+  & python @pyArgs 2>&1 | Tee-Object -FilePath $log
+  $ErrorActionPreference = "Stop"
   if ($LASTEXITCODE -ne 0) {
     Write-Host "[matrix] $tag FAILED - see $log" -ForegroundColor Red
   } else {
