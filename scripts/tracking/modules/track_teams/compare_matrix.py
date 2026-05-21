@@ -41,7 +41,8 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dir", type=Path, required=True)
     args = ap.parse_args()
-    files = sorted(args.dir.glob("tracks_*.json"))
+    files = sorted(p for p in args.dir.glob("tracks_*.json")
+                   if not p.name.endswith(".slots.json"))
     if not files:
         print(f"[compare] нет файлов tracks_*.json в {args.dir}")
         return 2
