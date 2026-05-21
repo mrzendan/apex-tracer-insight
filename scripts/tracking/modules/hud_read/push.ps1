@@ -24,6 +24,8 @@ param(
   [int]$StaticConfirm = 3,
   [int]$StaticMaxFrames = 8,
   [string]$Out = "scripts/tracking/modules/hud_read/reports",
+  [switch]$DumpPts,
+  [string]$DigitTemplates = "",
   [switch]$SyncUI,
   [switch]$NoPush
 )
@@ -89,6 +91,8 @@ if ($Workers -gt 0) {
   if ($RingsOnly) { $argsList += "--rings-only" }
 }
 if ($TessCmd) { $argsList += @("--tess-cmd", $TessCmd) }
+if ($DumpPts) { $argsList += "--dump-pts" }
+if ($DigitTemplates) { $argsList += @("--digit-templates", $DigitTemplates) }
 & python @argsList
 if ($LASTEXITCODE -ne 0) { throw "hud_read упал (rc=$LASTEXITCODE)" }
 if ($SyncUI) {
