@@ -1,0 +1,26 @@
+# Hybrid: COLOR-блок из color_first (δ=5) + усиленный hysteresis из motion_first (eps=0.4).
+# Цель: сохранить выигрыш color_first на slot_10 и поднять восстановление slot_11 после wipe.
+canonical_map: storm_point
+frame_step: 60
+anchors_file: ../../motion_detect/reports/motion_tracks.json
+eliminations_file: ../../hud_read/reports/eliminations.json
+zones_file: ../../../configs/zones.vod.json
+
+da_strategy: detect_first
+da_weights:
+  beta_world: 1.0           # средний вес расстояния (компромисс color/motion)
+  gamma_shape: 0.3
+  delta_color_mismatch: 5.0 # блокируем кросс-цвет (из color_first)
+  eps_hysteresis: 0.4       # повышенная инерция прежнего ассайна (из motion_first)
+  gate_radius_mult: 1.2
+  fallback_gate_canonical_px: 220.0
+
+registration: { detector: sift, max_features: 4000, clahe: true, canonical_target_w: 1600,
+                match_ratio: 0.75, ransac_reproj_px: 5.0, min_inliers: 15,
+                roi: [0.21875, 0.0, 0.78125, 1.0] }
+detection: { min_area_px: 40, max_area_px: 2400, morph_kernel: 3 }
+slot_tracker: { roi_size: 220, min_tracked_for_active: 20, min_tracked_ratio_for_active: 0.20,
+                near_anchor_radius_canonical_px: 120.0 }
+tracking: { max_gap_frames: 30, gating_world_dist: 50.0, process_noise: 1.0, measurement_noise: 4.0 }
+
+da_debug_near_miss: true
