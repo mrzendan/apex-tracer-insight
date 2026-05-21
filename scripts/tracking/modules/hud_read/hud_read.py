@@ -72,6 +72,82 @@ RE_INT = re.compile(r"-?\d+")
 RE_ELIM = re.compile(r"ELIMIN", re.I)
 _OCR_ERRORS_SEEN: set[str] = set()
 
+# Эталоны цифр для template-matching fallback (грузим лениво из --digit-templates).
+_DIGIT_TPL: dict[str, np.ndarray] = {}
+_DIGIT_TPL_LOADED = False
+
+
+def load_digit_templates(path: Optional[Path]) -> None:
+    """Загружает эталоны 0.png..9.png. Бинаризует к {0,255} и инвертирует
+    при необходимости, чтобы цифра была чёрной на белом."""
+    global _DIGIT_TPL_LOADED
+    if _DIGIT_TPL_LOADED:
+        return
+    _DIGIT_TPL_LOADED = True
+    if not path or not path.is_dir():
+        return
+    for d in "0123456789":
+        p = path / f"{d}.png"
+        if not p.exists():
+            continue
+        img = cv2.imread(str(p), cv2.IMREAD_GRAYSCALE)
+        if img is None or img.size == 0:
+            continue
+        _, b = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        # хотим digit=чёрный, bg=белый
+        if b.mean() < 127:
+            b = cv2.bitwise_not(b)
+        _DIGIT_TPL[d] = b
+    if _DIGIT_TPL:
+        print(f"[hud_read] digit-templates loaded: {sorted(_DIGIT_TPL.keys())}", file=sys.stderr)
+
+
+def ocr_pts_templates(crop: np.ndarray, min_score: float = 0.55) -> str:
+    """Fallback: распознать pts через template matching цифр.
+    Возвращает строку цифр слева-направо или ''."""
+    if not _DIGIT_TPL or crop.size == 0:
+        return ""
+    h, w = crop.shape[:2]
+    # Нормализуем к высоте эталонов.
+    tpl_h = next(iter(_DIGIT_TPL.values())).shape[0]
+    if h <= 0:
+        return ""
+    scale = tpl_h / h
+    if scale <= 0 or scale > 20:
+        return ""
+    nh, nw = tpl_h, max(1, int(round(w * scale)))
+    big = cv2.resize(crop, (nw, nh), interpolation=cv2.INTER_CUBIC)
+    gray = cv2.cvtColor(big, cv2.COLOR_BGR2GRAY) if big.ndim == 3 else big
+    _, b = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    if b.mean() < 127:
+        b = cv2.bitwise_not(b)
+    # Скан слева-направо: для каждого x ищем лучшую цифру.
+    hits: list[tuple[int, str, float]] = []  # (x, digit, score)
+    for d, tpl in _DIGIT_TPL.items():
+        th, tw = tpl.shape[:2]
+        if b.shape[1] < tw or b.shape[0] < th:
+            continue
+        res = cv2.matchTemplate(b, tpl, cv2.TM_CCOEFF_NORMED)
+        # все пики >= min_score
+        ys, xs = np.where(res >= min_score)
+        for y, x in zip(ys, xs):
+            hits.append((int(x), d, float(res[y, x])))
+    if not hits:
+        return ""
+    # NMS по x: схлопываем близкие пики (< tpl_w*0.5), оставляя лучший.
+    hits.sort(key=lambda t: (t[0], -t[2]))
+    tw0 = next(iter(_DIGIT_TPL.values())).shape[1]
+    merged: list[tuple[int, str, float]] = []
+    for x, d, s in hits:
+        if merged and x - merged[-1][0] < tw0 * 0.5:
+            if s > merged[-1][2]:
+                merged[-1] = (x, d, s)
+            continue
+        merged.append((x, d, s))
+    merged.sort(key=lambda t: t[0])
+    return "".join(d for _, d, _ in merged)
+
+
 # Глобальные кеши, работают на протяжении всего прогона.
 # Кеш OCR по (tag, name, dhash(crop)) → последнее распарсенное value.
 _OCR_CACHE: dict[tuple[str, str, str], Any] = {}
