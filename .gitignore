@@ -53,3 +53,7 @@ Thumbs.db
 !scripts/tracking/debug_out/**
 !scripts/tracking/cuts_out/
 !scripts/tracking/cuts_out/**
+
+# --- Matrix-прогоны track_teams: коммитим логи и tracks_*.json ---
+!scripts/tracking/modules/track_teams/reports/matrix/
+!scripts/tracking/modules/track_teams/reports/matrix/**
