@@ -1946,6 +1946,16 @@ def main():
         for (winner, loser), n in near_miss_counter.most_common(20):
             print(f"  slot_{slot_by_id.get(winner)} <- "
                   f"slot_{slot_by_id.get(loser)}  ({winner} <- {loser})  n={n}")
+    # ---- Late-game gate-shrink diagnostics ------------------------------
+    if late_game_events:
+        print(f"[late-game] gate-shrink triggered on {len(late_game_events)} frames "
+              f"(cluster_threshold_px={late_game_cfg.get('cluster_threshold_px')}, "
+              f"shrink={late_game_cfg.get('gate_shrink')}):")
+        for ev in late_game_events[:10]:
+            print(f"  t={ev['t']:>7.1f}  median_d={ev['median_d']:>5.1f}  "
+                  f"n_live={ev['n_live']}")
+        if len(late_game_events) > 10:
+            print(f"  ... +{len(late_game_events) - 10} more")
     # ---- Post-hoc active-slot cleanup ----------------------------------
     # A slot is "fantom" if after the full run:
     #   * never activated (no streak of K near-anchor detections), AND
