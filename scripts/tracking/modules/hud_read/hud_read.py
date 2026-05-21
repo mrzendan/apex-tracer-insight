@@ -1277,6 +1277,9 @@ def main() -> int:
         if is_static:
             static_state[(tag, name)] = {"locked": None, "votes": defaultdict(int), "tries": 0}
 
+    # Сырая телеметрия OCR для pts — по слотам список (frame, raw_text, parsed).
+    pts_raw: dict[int, list[dict[str, Any]]] = defaultdict(list)
+
     def is_static_key(tag: str, name: str) -> bool:
         return (tag, name) in static_state
 
@@ -1302,6 +1305,11 @@ def main() -> int:
             crop = frame[y:y + h, x:x + w]
             st = stats[(tag, name)]
             st["total"] += 1
+
+            # Зоны, которые помечены как «только геометрия» — пропускаем OCR.
+            if (tag, name) in OCR_SKIP_ZONES:
+                per_zone_value[zid] = None
+                continue
 
             # Статичное поле уже зафиксировано — просто переиспользуем.
             if is_static_key(tag, name) and static_state[(tag, name)]["locked"] is not None:
