@@ -1504,8 +1504,10 @@ def main():
             print(f"[info] da_strategy=detect_first, minimap-ROI={minimap_bbox} "
                   f"(zones={zones_path})")
         if _hungarian is None:
-            print("[warn] scipy не установлен — fallback на жадный ассайн "
-                  "(`pip install scipy`)")
+            print("[info] associate=greedy(weight-aware) — scipy не установлен "
+                  "(для hungarian: `pip install scipy`)")
+        else:
+            print("[info] associate=hungarian (scipy)")
     else:
         print(f"[info] da_strategy={da_strategy} (старая логика)")
 
