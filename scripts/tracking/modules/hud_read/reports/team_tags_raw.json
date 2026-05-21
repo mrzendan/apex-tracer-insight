@@ -1,0 +1,215 @@
+{
+  "vocab": [
+    "BB",
+    "CINO",
+    "SRC",
+    "S2",
+    "JDG",
+    "GMBL",
+    "ELTE",
+    "STAL",
+    "THUG",
+    "FREE",
+    "OBVN",
+    "NIPC",
+    "FXI",
+    "CRT",
+    "DKK",
+    "MR",
+    "REV",
+    "ROC",
+    "SRO",
+    "TL"
+  ],
+  "vocab_path": "D:\\lovable\\lovable\\scripts\\tracking\\modules\\hud_read\\configs\\teams.default.json",
+  "slots": {
+    "1": {
+      "locked": "ELTE",
+      "candidates": [
+        {
+          "value": "ELTE",
+          "votes": 3
+        }
+      ]
+    },
+    "2": {
+      "locked": "FREE",
+      "candidates": [
+        {
+          "value": "FREE",
+          "votes": 3
+        }
+      ]
+    },
+    "3": {
+      "locked": "FXI",
+      "candidates": [
+        {
+          "value": "FXI",
+          "votes": 3
+        },
+        {
+          "value": "EE",
+          "votes": 1
+        }
+      ]
+    },
+    "4": {
+      "locked": "NIPC",
+      "candidates": [
+        {
+          "value": "NIPC",
+          "votes": 3
+        }
+      ]
+    },
+    "5": {
+      "locked": "OBVN",
+      "candidates": [
+        {
+          "value": "OBVN",
+          "votes": 3
+        }
+      ]
+    },
+    "6": {
+      "locked": "820",
+      "candidates": [
+        {
+          "value": "820",
+          "votes": 3
+        }
+      ]
+    },
+    "7": {
+      "locked": "SRC",
+      "candidates": [
+        {
+          "value": "SRC",
+          "votes": 3
+        }
+      ]
+    },
+    "8": {
+      "locked": "STAL",
+      "candidates": [
+        {
+          "value": "STAL",
+          "votes": 3
+        }
+      ]
+    },
+    "9": {
+      "locked": "HH",
+      "candidates": [
+        {
+          "value": "HH",
+          "votes": 3
+        },
+        {
+          "value": "TL",
+          "votes": 2
+        }
+      ]
+    },
+    "10": {
+      "locked": "THUG",
+      "candidates": [
+        {
+          "value": "THUG",
+          "votes": 3
+        }
+      ]
+    },
+    "11": {
+      "locked": "BB",
+      "candidates": [
+        {
+          "value": "BB",
+          "votes": 3
+        }
+      ]
+    },
+    "12": {
+      "locked": "CRT",
+      "candidates": [
+        {
+          "value": "CRT",
+          "votes": 3
+        }
+      ]
+    },
+    "13": {
+      "locked": "CINO",
+      "candidates": [
+        {
+          "value": "CINO",
+          "votes": 3
+        }
+      ]
+    },
+    "14": {
+      "locked": "DKK",
+      "candidates": [
+        {
+          "value": "DKK",
+          "votes": 3
+        }
+      ]
+    },
+    "15": {
+      "locked": "GMBL",
+      "candidates": [
+        {
+          "value": "GMBL",
+          "votes": 3
+        }
+      ]
+    },
+    "16": {
+      "locked": "JDG",
+      "candidates": [
+        {
+          "value": "JDG",
+          "votes": 3
+        }
+      ]
+    },
+    "17": {
+      "locked": "MR",
+      "candidates": [
+        {
+          "value": "MR",
+          "votes": 3
+        }
+      ]
+    },
+    "18": {
+      "locked": "REV",
+      "candidates": [
+        {
+          "value": "REV",
+          "votes": 3
+        }
+      ]
+    },
+    "19": {
+      "locked": "ROC",
+      "candidates": [
+        {
+          "value": "ROC",
+          "votes": 3
+        }
+      ]
+    },
+    "20": {
+      "locked": "SRC",
+      "candidates": [
+        {
+          "value": "SRC",
+          "votes": 3
+        }
+      ]
+    }
+  }
+}
