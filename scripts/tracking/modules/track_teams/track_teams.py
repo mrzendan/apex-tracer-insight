@@ -528,7 +528,7 @@ class SlotTracker:
         # Если tracked-доля от (tracked+wiped) ниже этого порога — фантом,
         # даже если absolute tracked перевалил за min_tracked_for_active.
         self.min_tracked_ratio_for_active: float = float(
-            slot_cfg.get("min_tracked_ratio_for_active", 0.25))
+            slot_cfg.get("min_tracked_ratio_for_active", 0.20))
         # Telemetry counters (filled by run loop).
         self.n_tracked = 0
         self.n_low_conf = 0
