@@ -1499,11 +1499,41 @@ def main() -> int:
                 if name == "pts":
                     _slot = team_slot(tag)
                     if _slot is not None:
+                        # Template-matching fallback: если Tesseract вернул пусто
+                        # ИЛИ распарсилось как одиночная цифра 1/7 (типовые false-чтения
+                        # двузначных значений у мелких pts), пробуем эталоны.
+                        tpl_used = False
+                        if _DIGIT_TPL and crop.size:
+                            need_tpl = (not txt) or (
+                                isinstance(val, int) and 0 <= val <= 9
+                            )
+                            if need_tpl:
+                                tpl_txt = ocr_pts_templates(crop)
+                                if tpl_txt:
+                                    tpl_val = parse_field(tag, name, tpl_txt)
+                                    # принимаем только если шаблон дал ≥ длины tesseract
+                                    if tpl_val is not None and (
+                                        not txt or len(tpl_txt) > len(txt)
+                                    ):
+                                        txt = tpl_txt
+                                        val = tpl_val
+                                        _OCR_CACHE[cache_key] = val
+                                        tpl_used = True
                         pts_raw[_slot].append({
                             "frame": f,
                             "raw": (txt or "").strip(),
                             "parsed": val,
+                            "via": "tpl" if tpl_used else "ocr",
                         })
+                        # Сохранить кропы pts для отладки/сбора эталонов.
+                        if args.dump_pts and crop.size:
+                            sd = args.out / "pts_crops" / f"slot_{_slot:02d}"
+                            sd.mkdir(parents=True, exist_ok=True)
+                            cv2.imwrite(str(sd / f"f{chunk_prefix}{f:07d}_raw.png"), crop)
+                            ch_, cw_ = crop.shape[:2]
+                            big = cv2.resize(crop, (cw_ * 4, ch_ * 4),
+                                             interpolation=cv2.INTER_CUBIC)
+                            cv2.imwrite(str(sd / f"f{chunk_prefix}{f:07d}_x4.png"), big)
                 if val is not None and val is not False:
                     st["parsed"] += 1
                 if val not in (None, "", False):
