@@ -43,10 +43,31 @@ type RingsV2File = {
   phases?: RingGeomV2Phase[];
 };
 
-const elim = elimRaw as unknown as ElimFile;
-const rings = ringsRaw as unknown as RingsFile;
-const ringsV2 = ringsV2Raw as unknown as RingsV2File;
-const slotToTag = slotToTagRaw as unknown as Record<string, string>;
+function lsGet<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const raw = window.localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+export const MTEST_LS_KEYS = {
+  tracks: "mtest:tracks",
+  rings: "mtest:rings",
+  ringsV2: "mtest:ringsV2",
+  eliminations: "mtest:eliminations",
+  slotToTag: "mtest:slotToTag",
+} as const;
+
+const elim = lsGet(MTEST_LS_KEYS.eliminations, elimRaw as unknown as ElimFile);
+const rings = lsGet(MTEST_LS_KEYS.rings, ringsRaw as unknown as RingsFile);
+const ringsV2 = lsGet(MTEST_LS_KEYS.ringsV2, ringsV2Raw as unknown as RingsV2File);
+const slotToTag = lsGet(
+  MTEST_LS_KEYS.slotToTag,
+  slotToTagRaw as unknown as Record<string, string>,
+);
 
 // ── Tracks (track_teams pipeline) ───────────────────────────────────
 type TrackPoint = {
@@ -63,7 +84,7 @@ type TracksFile = {
   };
   frames: TrackFrame[];
 };
-const tracks = tracksRaw as unknown as TracksFile;
+const tracks = lsGet(MTEST_LS_KEYS.tracks, tracksRaw as unknown as TracksFile);
 
 /** Длительность игры — последний наблюдавшийся "жив". */
 export const testGameDurationSec: number = Math.ceil(
