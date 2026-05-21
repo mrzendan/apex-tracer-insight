@@ -1,0 +1,41 @@
+# Baseline: старая логика (per-slot ROI scan). Контрольная точка матрицы.
+# Все остальные конфиги наследуют формат, меняют только da_strategy / da_weights / post-hoc.
+canonical_map: storm_point
+frame_step: 60
+anchors_file: ../../motion_detect/reports/motion_tracks.json
+eliminations_file: ../../hud_read/reports/eliminations.json
+zones_file: ../../../configs/zones.vod.json
+
+# Старая логика: оставляем default, явно для читаемости.
+da_strategy: per_slot_roi
+
+registration:
+  detector: sift
+  max_features: 4000
+  clahe: true
+  canonical_target_w: 1600
+  match_ratio: 0.75
+  ransac_reproj_px: 5.0
+  min_inliers: 15
+  roi: [0.21875, 0.0, 0.78125, 1.0]
+
+detection:
+  min_area_px: 40
+  max_area_px: 2400
+  morph_kernel: 3
+
+slot_tracker:
+  roi_size: 220
+  min_tracked_for_active: 20
+  min_tracked_ratio_for_active: 0.20
+  near_anchor_radius_canonical_px: 120.0
+
+tracking:
+  max_gap_frames: 30
+  gating_world_dist: 50.0
+  process_noise: 1.0
+  measurement_noise: 4.0
+
+output:
+  include_frame_px: true
+  include_canonical_px: true
