@@ -97,11 +97,14 @@ def _hex_to_hsv_center(hex_str: str) -> tuple[int, int, int]:
 
 def teams_from_anchors(path: Path, h_tol: int = 10,
                        s_min_floor: int = 60, v_min_floor: int = 60,
-                       s_drop: int = 80, v_drop: int = 80) -> list[TeamCfg]:
+                       s_drop: int = 80, v_drop: int = 80,
+                       hsv_preset: dict[int, dict] | None = None) -> list[TeamCfg]:
     """Build TeamCfg list directly from motion_detect/reports/motion_tracks.json.
     Each motion-detected slot becomes one team with HSV range derived from its
     hex color (H ± h_tol, S/V wide around the source). Hue wrap is handled with
-    hsv_lower2/hsv_upper2 like the YAML 'red' team."""
+    hsv_lower2/hsv_upper2 like the YAML 'red' team.
+    If `hsv_preset` is provided (slot -> {h:[lo,hi], s:[lo,hi], v:[lo,hi]}),
+    those manually-calibrated ranges take precedence over the derived ones."""
     raw = json.loads(Path(path).read_text(encoding="utf-8"))
     results = raw.get("results", [])
     out: list[TeamCfg] = []
@@ -110,26 +113,43 @@ def teams_from_anchors(path: Path, h_tol: int = 10,
         if slot is None:
             continue
         hex_str = r.get("hex", "#888888")
-        H, S, V = _hex_to_hsv_center(hex_str)
-        s_lo = max(s_min_floor, S - s_drop)
-        v_lo = max(v_min_floor, V - v_drop)
-        lo = hi = lo2 = hi2 = None
-        h_low = H - h_tol
-        h_high = H + h_tol
-        if h_low < 0:
-            lo  = np.array([0, s_lo, v_lo], dtype=np.uint8)
-            hi  = np.array([h_high, 255, 255], dtype=np.uint8)
-            lo2 = np.array([179 + h_low, s_lo, v_lo], dtype=np.uint8)
-            hi2 = np.array([179, 255, 255], dtype=np.uint8)
-        elif h_high > 179:
-            lo  = np.array([h_low, s_lo, v_lo], dtype=np.uint8)
-            hi  = np.array([179, 255, 255], dtype=np.uint8)
-            lo2 = np.array([0, s_lo, v_lo], dtype=np.uint8)
-            hi2 = np.array([h_high - 179, 255, 255], dtype=np.uint8)
-        else:
-            lo = np.array([h_low,  s_lo, v_lo], dtype=np.uint8)
-            hi = np.array([h_high, 255, 255], dtype=np.uint8)
         slot_int = int(slot)
+        lo = hi = lo2 = hi2 = None
+        preset_used = False
+        if hsv_preset and slot_int in hsv_preset:
+            p = hsv_preset[slot_int]
+            h_lo, h_hi = int(p["h"][0]), int(p["h"][1])
+            s_lo, s_hi = int(p["s"][0]), int(p["s"][1])
+            v_lo, v_hi = int(p["v"][0]), int(p["v"][1])
+            if h_lo <= h_hi:
+                lo = np.array([h_lo, s_lo, v_lo], dtype=np.uint8)
+                hi = np.array([h_hi, s_hi, v_hi], dtype=np.uint8)
+            else:
+                # hue wrap (e.g. red): split into two ranges
+                lo  = np.array([h_lo, s_lo, v_lo], dtype=np.uint8)
+                hi  = np.array([179,  s_hi, v_hi], dtype=np.uint8)
+                lo2 = np.array([0,    s_lo, v_lo], dtype=np.uint8)
+                hi2 = np.array([h_hi, s_hi, v_hi], dtype=np.uint8)
+            preset_used = True
+        else:
+            H, S, V = _hex_to_hsv_center(hex_str)
+            s_lo = max(s_min_floor, S - s_drop)
+            v_lo = max(v_min_floor, V - v_drop)
+            h_low = H - h_tol
+            h_high = H + h_tol
+            if h_low < 0:
+                lo  = np.array([0, s_lo, v_lo], dtype=np.uint8)
+                hi  = np.array([h_high, 255, 255], dtype=np.uint8)
+                lo2 = np.array([179 + h_low, s_lo, v_lo], dtype=np.uint8)
+                hi2 = np.array([179, 255, 255], dtype=np.uint8)
+            elif h_high > 179:
+                lo  = np.array([h_low, s_lo, v_lo], dtype=np.uint8)
+                hi  = np.array([179, 255, 255], dtype=np.uint8)
+                lo2 = np.array([0, s_lo, v_lo], dtype=np.uint8)
+                hi2 = np.array([h_high - 179, 255, 255], dtype=np.uint8)
+            else:
+                lo = np.array([h_low,  s_lo, v_lo], dtype=np.uint8)
+                hi = np.array([h_high, 255, 255], dtype=np.uint8)
         out.append(TeamCfg(
             id=f"slot_{slot_int}",
             name=str(r.get("team_name") or f"Team {slot_int}"),
@@ -139,6 +159,9 @@ def teams_from_anchors(path: Path, h_tol: int = 10,
             slot=slot_int,
             slot_id=f"slot_{slot_int}",
         ))
+    if hsv_preset:
+        used = sum(1 for r in results if r.get("slot") is not None and int(r["slot"]) in hsv_preset)
+        print(f"[info] hsv_preset: applied to {used}/{len(out)} slots (others use anchor-derived HSV)")
     return out
 
 
@@ -799,7 +822,37 @@ def main():
 
     teams: list[TeamCfg] = []
     if anchors_path and Path(anchors_path).exists():
-        teams = teams_from_anchors(Path(anchors_path))
+        # Try to load manually calibrated HSV preset for this canonical map.
+        # Search order: configs/ next to YAML, then shared/configs, then
+        # motion_detect/configs (legacy location). Filename pattern:
+        # hsv_presets.<canonical_map_with_dashes>.json
+        cmap_name = cfg.get("canonical_map", "storm_point")
+        preset_basename = f"hsv_presets.{cmap_name.replace('_', '-')}.json"
+        preset_candidates = [
+            (args.config.parent / "configs" / preset_basename),
+            (Path(__file__).resolve().parents[2] / "configs" / preset_basename),
+            (Path(__file__).resolve().parents[1] / "motion_detect" / "configs" / preset_basename),
+        ]
+        hsv_preset: dict[int, dict] | None = None
+        preset_src: Path | None = None
+        for cand in preset_candidates:
+            if cand.exists():
+                try:
+                    raw_preset = json.loads(cand.read_text(encoding="utf-8"))
+                    hsv_preset = {
+                        int(t["slot"]): {"h": t["h"], "s": t["s"], "v": t["v"]}
+                        for t in raw_preset.get("teams", [])
+                        if t.get("slot") is not None and "h" in t and "s" in t and "v" in t
+                    }
+                    preset_src = cand
+                    break
+                except Exception as e:
+                    print(f"[warn] failed to parse hsv preset {cand}: {e}")
+        if preset_src:
+            print(f"[info] hsv_preset loaded: {preset_src} ({len(hsv_preset or {})} slots)")
+        else:
+            print(f"[info] hsv_preset not found for canonical_map={cmap_name} — using anchor-derived HSV")
+        teams = teams_from_anchors(Path(anchors_path), hsv_preset=hsv_preset)
         print(f"[info] teams: {len(teams)} auto-generated from anchors ({anchors_path})")
     if not teams:
         teams = parse_teams(cfg)
