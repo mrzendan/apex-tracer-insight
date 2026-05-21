@@ -749,6 +749,7 @@ class SlotTracker:
                     self.roi_expand_px = 0
                     self.n_recovered += 1
                     self.ever_detected = True
+                    self._note_near_anchor_hit(rcx, rcy)
                     return self._snapshot()
             self._on_miss()
             return self._snapshot()
