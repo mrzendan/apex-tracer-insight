@@ -1141,8 +1141,12 @@ def main():
                 tracks_world = []
                 for snap in slot_snaps:
                     tr = wipe_states.get(snap["team_id"])
-                    if tr is not None and tr.wiped_at_t is not None:
-                        snap["state"] = "lost"
+                    # WorldTracker absence-wipe is a fallback only when SlotTracker
+                    # hasn't been told by HUD that the slot is gone. If SlotTracker
+                    # already marked wiped (via elim_t), keep its "wiped" state.
+                    if (tr is not None and tr.wiped_at_t is not None
+                            and snap.get("state") != "wiped"):
+                        snap["state"] = "wiped"
                         snap["state_reason"] = f"wiped@{tr.wiped_at_t}"
                         slot_trackers[snap["team_id"]].wiped = True
                     # world coord (from current canonical)
