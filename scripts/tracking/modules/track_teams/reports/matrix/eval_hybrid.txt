@@ -1,0 +1,58 @@
+GT points:        116
+Coverage:         85.3%
+px error median:  61.9
+px error p95:     172.5
+ID-switches total:30
+
+     slot_10  switches=6
+     slot_20  switches=5
+     slot_11  switches=3
+      slot_3  switches=2
+      slot_4  switches=2
+     slot_14  switches=2
+     slot_15  switches=2
+     slot_18  switches=2
+      slot_1  switches=1
+      slot_9  switches=1
+     slot_12  switches=1
+     slot_13  switches=1
+     slot_17  switches=1
+     slot_19  switches=1
+      slot_2  switches=0
+      slot_5  switches=0
+      slot_6  switches=0
+      slot_7  switches=0
+      slot_8  switches=0
+     slot_16  switches=0
+
+Switch events:
+  t=  660.7      slot_1  slot_1 -> slot_11
+  t=  660.7      slot_3  slot_3 -> slot_2
+  t=  660.7      slot_3  slot_2 -> slot_1
+  t=  660.7      slot_4  slot_4 -> slot_12
+  t=  660.7      slot_4  slot_12 -> slot_4
+  t=  660.7      slot_9  slot_7 -> slot_15
+  t=  300.3     slot_10  slot_9 -> slot_17
+  t=  300.3     slot_10  slot_17 -> slot_9
+  t=  300.3     slot_10  slot_9 -> slot_17
+  t=  300.3     slot_10  slot_17 -> slot_9
+  t=  660.7     slot_10  slot_9 -> slot_10
+  t=  660.7     slot_10  slot_10 -> slot_15
+  t=  179.2     slot_11  slot_9 -> slot_12
+  t=  540.5     slot_11  slot_12 -> slot_20
+  t=  540.5     slot_11  slot_20 -> slot_12
+  t=  660.7     slot_12  slot_12 -> slot_7
+  t=  120.1     slot_13  slot_11 -> slot_13
+  t=  660.7     slot_14  slot_15 -> slot_20
+  t=  660.7     slot_14  slot_20 -> slot_5
+  t=  120.1     slot_15  slot_16 -> slot_7
+  t=  660.7     slot_15  slot_7 -> slot_16
+  t=  660.7     slot_17  slot_17 -> slot_14
+  t=  120.1     slot_18  slot_4 -> slot_18
+  t=  660.7     slot_18  slot_18 -> slot_7
+  t=  660.7     slot_19  slot_19 -> slot_15
+  t=  300.3     slot_20  slot_20 -> slot_7
+  t=  300.3     slot_20  slot_7 -> slot_20
+  t=  419.4     slot_20  slot_20 -> slot_5
+  t=  419.4     slot_20  slot_5 -> slot_20
+  t=  419.4     slot_20  slot_20 -> slot_5
