@@ -1403,6 +1403,58 @@ def main():
         encoding="utf-8",
     )
     print(f"[ok] processed {processed} frames -> {out_path}")
+    # ---- Post-hoc active-slot cleanup ----------------------------------
+    # A slot is "fantom" if after the full run:
+    #   * never activated (no streak of K near-anchor detections), AND
+    #   * fewer than `min_tracked_for_active` tracked frames, AND
+    #   * was not HUD-wiped, anchor not HIGH/MED, not HUD-alive.
+    # All its frame entries are rewritten to state=inactive and detection
+    # fields are nulled, so downstream consumers see a clean "didn't play".
+    fantom_team_ids: set[str] = set()
+    for t in teams:
+        st = slot_trackers[t.id]
+        if st.activated:
+            continue
+        if st.wiped:
+            continue
+        if st.anchor_conf in ("HIGH", "MED"):
+            continue
+        if st.hud_alive:
+            continue
+        if st.n_tracked >= st.min_tracked_for_active:
+            continue
+        fantom_team_ids.add(t.id)
+    if fantom_team_ids:
+        print(f"[post-hoc] retiring {len(fantom_team_ids)} fantom slot(s): "
+              + ", ".join(sorted(slot_trackers[tid].team.slot_id or tid
+                                 for tid in fantom_team_ids)))
+        try:
+            doc = json.loads(out_path.read_text(encoding="utf-8"))
+            converted = 0
+            for fr in doc.get("frames", []):
+                for snap in fr.get("tracks", []):
+                    if snap.get("team_id") in fantom_team_ids and snap.get("state") != "wiped":
+                        prev = snap.get("state")
+                        snap["state"] = "inactive"
+                        snap["state_reason"] = "post_hoc_fantom"
+                        snap["canonical_px"] = None
+                        snap["frame_px"] = None
+                        snap["world"] = None
+                        snap["confidence"] = 0.0
+                        snap["score"] = 0.0
+                        converted += 1
+                        # Update telemetry: move count from old bucket to inactive.
+                        st = slot_trackers[snap["team_id"]]
+                        if prev == "tracked":   st.n_tracked = max(0, st.n_tracked - 1)
+                        elif prev == "low_conf": st.n_low_conf = max(0, st.n_low_conf - 1)
+                        elif prev == "hold":     st.n_hold = max(0, st.n_hold - 1)
+                        elif prev == "coast":    st.n_coast = max(0, st.n_coast - 1)
+                        elif prev == "lost":     st.n_lost = max(0, st.n_lost - 1)
+                        st.n_inactive += 1
+            out_path.write_text(json.dumps(doc, ensure_ascii=False), encoding="utf-8")
+            print(f"[post-hoc] rewrote {converted} frame entries -> inactive")
+        except Exception as e:
+            print(f"[warn] post-hoc cleanup failed: {e}")
     # Per-slot tracking summary (compare runs at a glance).
     print("\n[summary] per-slot state distribution")
     print(f"{'slot':<10}{'tracked':>9}{'low_conf':>10}{'hold':>7}{'coast':>7}{'lost':>7}"
