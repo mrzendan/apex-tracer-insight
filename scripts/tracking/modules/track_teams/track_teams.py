@@ -470,6 +470,13 @@ class SlotTracker:
         self.switch_confirm_frames: int = int(slot_cfg.get("switch_confirm_frames", 3))
         self.pending_canon: Optional[tuple[float, float]] = None
         self.pending_hits: int = 0
+        # Full-frame recovery: если ROI промахивается N+ кадров подряд,
+        # каждые `recover_interval` кадров ищем плашку по всему кадру
+        # в окрестности предсказания (`recover_gate_px` каноники).
+        self.recover_after_misses: int = int(slot_cfg.get("recover_after_misses", 10))
+        self.recover_interval: int = int(slot_cfg.get("recover_interval", 5))
+        self.recover_gate_px: float = float(slot_cfg.get("recover_gate_px", 600.0))
+        self.n_recovered: int = 0
         # Time-aware motion model (canonical px / sec).
         motion = slot_cfg.get("motion", {}) or {}
         self.v_max_px_s: float = float(motion.get("v_max_px_s", 60.0))
@@ -529,6 +536,12 @@ class SlotTracker:
         k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (self.morph_kernel, self.morph_kernel))
         mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, k)
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, k)
+        # Дополнительный сильный close, чтобы залить дырки от букв
+        # внутри плашки (NAME / RANK), иначе fill падает и shape-фильтр рубит.
+        kclose = cv2.getStructuringElement(
+            cv2.MORPH_ELLIPSE, (max(7, self.morph_kernel + 4),) * 2
+        )
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kclose)
         return mask
 
     def _effective_roi_size(self) -> int:
@@ -557,7 +570,9 @@ class SlotTracker:
                 continue
             aspect = w / max(1.0, h)
             fill = area / max(1.0, float(w * h))
-            if not (0.4 <= aspect <= 12.0 and fill >= 0.18):
+            # Плашки с текстом дают «дырявую» маску, fill часто 0.08..0.20.
+            # Аспект расширен под зум-аут (узкие плашки) и стрелки.
+            if not (0.25 <= aspect <= 16.0 and fill >= 0.08):
                 continue
             cand.append((x, y, w, h, float(area)))
         if not cand:
@@ -580,6 +595,50 @@ class SlotTracker:
                 best_score = score
                 best = (x, y, w, h, area)
         self.last_score = float(max(0.0, min(1.0, best_score)))
+        return best
+
+    # ---- full-frame recovery -------------------------------------------
+    def _recover_global(self, frame_bgr: np.ndarray, H: np.ndarray,
+                        pred_canon: tuple[float, float]
+                        ) -> Optional[tuple[float, float, float, float, float]]:
+        """Search the whole frame for a team-color blob near `pred_canon`.
+        Returns (frame_cx, frame_cy, canon_cx, canon_cy, area) or None."""
+        hsv = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2HSV)
+        m = cv2.inRange(hsv, self.team.hsv_lower, self.team.hsv_upper)
+        if self.team.hsv_lower2 is not None and self.team.hsv_upper2 is not None:
+            m |= cv2.inRange(hsv, self.team.hsv_lower2, self.team.hsv_upper2)
+        lab = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2LAB)
+        m_lab = cv2.inRange(lab, self.team.lab_lower, self.team.lab_upper)
+        mask = cv2.bitwise_and(m, m_lab)
+        if cv2.countNonZero(mask) < 8:
+            mask = m
+        k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (self.morph_kernel,) * 2)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, k)
+        kclose = cv2.getStructuringElement(
+            cv2.MORPH_ELLIPSE, (max(7, self.morph_kernel + 4),) * 2
+        )
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kclose)
+        cnts, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        best = None
+        best_d = 1e18
+        for c in cnts:
+            area = cv2.contourArea(c)
+            if area < self.min_area or area > self.max_area:
+                continue
+            x, y, w, h = cv2.boundingRect(c)
+            if w < 3 or h < 3:
+                continue
+            aspect = w / max(1.0, h)
+            fill = area / max(1.0, float(w * h))
+            if not (0.25 <= aspect <= 16.0 and fill >= 0.08):
+                continue
+            cx = x + w / 2.0
+            cy = y + h / 2.0
+            ccx, ccy = map_point(H, (cx, cy))
+            d = math.hypot(ccx - pred_canon[0], ccy - pred_canon[1])
+            if d < best_d and d <= self.recover_gate_px:
+                best_d = d
+                best = (cx, cy, ccx, ccy, float(area))
         return best
 
     # ---- main update -----------------------------------------------------
@@ -637,6 +696,29 @@ class SlotTracker:
         target_local = (fx - x0, fy - y0)
         det = self._find_in_roi(roi, target_local)
         if det is None:
+            # Full-frame recovery: ROI давно мажет — поищем плашку по всему
+            # кадру в окрестности предсказания. Не каждый кадр, чтобы не жечь CPU.
+            if (self.lost_frames >= self.recover_after_misses
+                    and (self.lost_frames - self.recover_after_misses)
+                        % max(1, self.recover_interval) == 0):
+                rec = self._recover_global(frame_bgr, H, (pred_cx, pred_cy))
+                if rec is not None:
+                    rcx, rcy, rccx, rccy, rarea = rec
+                    self.canonical_px = (rccx, rccy)
+                    self.last_frame_px = (rcx, rcy)
+                    self.state = "tracked"
+                    self.state_reason = "recovered_global"
+                    self.canonical_px_stale = False
+                    self.last_seen_t = t_now
+                    self.consecutive_detections = 1
+                    self.lost_frames = 0
+                    self.confidence = max(self.confidence, 0.5)
+                    self.last_score = 0.5
+                    self.vx = 0.0
+                    self.vy = 0.0
+                    self.roi_expand_px = 0
+                    self.n_recovered += 1
+                    return self._snapshot()
             self._on_miss()
             return self._snapshot()
         x, y, w, h, area = det

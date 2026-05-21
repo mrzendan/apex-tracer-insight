@@ -171,6 +171,68 @@ def render_panel(roi_bgr: np.ndarray, m_hsv, m_lab, mask, passed, rejected,
     return np.vstack([cap, canvas])
 
 
+def render_fullframe(frame_bgr: np.ndarray, team: TeamCfg, morph: int,
+                     min_a: float, max_a: float,
+                     roi_box: tuple[int, int, int, int],
+                     pred_xy: tuple[float, float],
+                     t_sec: float, frame_idx: int, state: str, reason: str,
+                     scale: float = 0.5) -> np.ndarray:
+    """Полный кадр (даунскейл) | full-frame HSV-маска | overlay с ROI-боксом
+    и всеми блобами цвета команды (зелёные / красные по shape-фильтру)."""
+    fh, fw = frame_bgr.shape[:2]
+    # full-frame HSV+LAB mask (без LAB — слишком широко, оставим только HSV для наглядности)
+    hsv = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2HSV)
+    m = cv2.inRange(hsv, team.hsv_lower, team.hsv_upper)
+    if team.hsv_lower2 is not None and team.hsv_upper2 is not None:
+        m |= cv2.inRange(hsv, team.hsv_lower2, team.hsv_upper2)
+    k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (morph, morph))
+    m = cv2.morphologyEx(m, cv2.MORPH_OPEN, k)
+    kclose = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,
+                                       (max(7, morph + 4),) * 2)
+    m = cv2.morphologyEx(m, cv2.MORPH_CLOSE, kclose)
+    passed_full, rejected_full = find_contours(m, min_a, max_a)
+
+    overlay = frame_bgr.copy()
+    bgr_hex = team.color_hex.lstrip("#")
+    tint = (int(bgr_hex[4:6], 16), int(bgr_hex[2:4], 16), int(bgr_hex[0:2], 16))
+    overlay[m > 0] = (0.5 * overlay[m > 0] + 0.5 * np.array(tint)).astype(np.uint8)
+    for x, y, w, h, area, _r in passed_full:
+        cv2.rectangle(overlay, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        cv2.putText(overlay, f"{int(area)}", (x, max(12, y - 4)),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+    for x, y, w, h, area, r in rejected_full:
+        cv2.rectangle(overlay, (x, y), (x + w, y + h), (0, 0, 255), 1)
+    # ROI box (yellow) + prediction crosshair
+    x0, y0, x1, y1 = roi_box
+    cv2.rectangle(overlay, (x0, y0), (x1, y1), (0, 255, 255), 3)
+    px, py = int(pred_xy[0]), int(pred_xy[1])
+    cv2.drawMarker(overlay, (px, py), (255, 255, 0), cv2.MARKER_CROSS, 28, 3)
+
+    def _scale(img):
+        return cv2.resize(img, (int(fw * scale), int(fh * scale)),
+                          interpolation=cv2.INTER_AREA)
+    panels = [_scale(frame_bgr),
+              _scale(cv2.cvtColor(m, cv2.COLOR_GRAY2BGR)),
+              _scale(overlay)]
+    labels = ["FULL frame", "FULL HSV mask", "overlay + ROI(yellow)"]
+    h, w = panels[0].shape[:2]
+    pad = 28
+    out_w = (w + 4) * len(panels)
+    canvas = np.full((h + pad, out_w, 3), 30, dtype=np.uint8)
+    for i, (p, lab) in enumerate(zip(panels, labels)):
+        xs = i * (w + 4)
+        canvas[pad:pad + h, xs:xs + w] = p
+        cv2.putText(canvas, lab, (xs + 4, 20), cv2.FONT_HERSHEY_SIMPLEX,
+                    0.5, (220, 220, 220), 1)
+    cap_h = 38
+    cap = np.full((cap_h, out_w, 3), 18, dtype=np.uint8)
+    line = (f"FULL  slot_{team.slot}  t={t_sec:.1f}s  frame={frame_idx}  "
+            f"state={state}  reason={reason}  full_blobs: passed={len(passed_full)} "
+            f"rejected={len(rejected_full)}")
+    cv2.putText(cap, line, (8, 24), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (255, 255, 255), 1)
+    return np.vstack([cap, canvas])
+
+
 def pick_events(frames: list[dict], slot_id: str, per_slot: int) -> list[dict]:
     """Pick up to `per_slot` representative events for a slot."""
     bad = []
@@ -229,6 +291,10 @@ def main():
                     help="через запятую: 2,4,11. Пусто = автовыбор WARN.")
     ap.add_argument("--per-slot", type=int, default=6)
     ap.add_argument("--roi-size", type=int, default=220)
+    ap.add_argument("--full-frame", action="store_true",
+                    help="К каждому событию добавить FULL-кадр + HSV-маска по всему кадру + ROI bbox.")
+    ap.add_argument("--anchors-preview", action="store_true",
+                    help="Только нарисовать кадр 0 со всеми anchors (slot+цвет+label) и выйти.")
     ap.add_argument("--out", type=Path,
                     default=THIS.parent / "reports" / "debug_masks")
     args = ap.parse_args()
@@ -250,6 +316,36 @@ def main():
     teams = build_teams(args.config, anchors_path)
     teams_by_slot_id = {t.slot_id: t for t in teams}
 
+    args.out.mkdir(parents=True, exist_ok=True)
+    cap = cv2.VideoCapture(str(args.video))
+    if not cap.isOpened():
+        sys.exit(f"[err] cannot open video: {args.video}")
+
+    # --- Anchors preview ---------------------------------------------------
+    if args.anchors_preview:
+        first_frame_idx = int(frames[0]["frame"])
+        cap.set(cv2.CAP_PROP_POS_FRAMES, first_frame_idx)
+        ok, frame = cap.read()
+        if not ok:
+            sys.exit("[err] cannot read first frame")
+        for tr in frames[0].get("tracks", []):
+            sid = tr.get("slot_id") or tr.get("team_id")
+            fp = tr.get("frame_px")
+            if fp is None: continue
+            team = teams_by_slot_id.get(sid)
+            hex_s = (team.color_hex if team else "#ffffff").lstrip("#")
+            color = (int(hex_s[4:6], 16), int(hex_s[2:4], 16), int(hex_s[0:2], 16))
+            x, y = int(fp[0]), int(fp[1])
+            cv2.circle(frame, (x, y), 14, color, 3)
+            cv2.circle(frame, (x, y), 4, (255, 255, 255), -1)
+            cv2.putText(frame, sid.replace("slot_", "#"), (x + 16, y + 6),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
+        out = args.out / "anchors_frame0.png"
+        cv2.imwrite(str(out), frame)
+        print(f"[debug_masks] anchors preview -> {out}")
+        cap.release()
+        return
+
     all_slot_ids = sorted({tr.get("slot_id") or tr.get("team_id")
                            for f in frames for tr in f.get("tracks", [])
                            if (tr.get("slot_id") or tr.get("team_id"))})
@@ -260,13 +356,9 @@ def main():
         print(f"[debug_masks] auto WARN slots: {wanted}")
     if not wanted:
         print("[debug_masks] nothing to do — no WARN slots and no --slots")
+        cap.release()
         return
 
-    args.out.mkdir(parents=True, exist_ok=True)
-
-    cap = cv2.VideoCapture(str(args.video))
-    if not cap.isOpened():
-        sys.exit(f"[err] cannot open video: {args.video}")
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     print(f"[debug_masks] video frames={total_frames}, will process {len(wanted)} slots")
 
@@ -315,6 +407,22 @@ def main():
                                  float(ev["t"]), fidx, ev.get("state", "?"),
                                  ev.get("state_reason", "?"), mode,
                                  (fx - x0, fy - y0))
+            if args.full_frame:
+                full_panel = render_fullframe(frame, team, morph, min_a, max_a,
+                                              (x0, y0, x1, y1), (fx, fy),
+                                              float(ev["t"]), fidx,
+                                              ev.get("state", "?"),
+                                              ev.get("state_reason", "?"))
+                # paste full_panel under ROI panel (after padding widths)
+                w_ff = full_panel.shape[1]
+                w_roi = panel.shape[1]
+                W = max(w_ff, w_roi)
+                def _pad(img, W):
+                    if img.shape[1] >= W: return img
+                    pad = np.full((img.shape[0], W - img.shape[1], 3), 30, dtype=np.uint8)
+                    return np.hstack([img, pad])
+                sep = np.full((6, W, 3), 60, dtype=np.uint8)
+                panel = np.vstack([_pad(panel, W), sep, _pad(full_panel, W)])
             reason_tag = (ev.get("state_reason") or "x").replace("/", "_").replace(" ", "_")[:24]
             out_name = f"{i:02d}_t{float(ev['t']):07.1f}_{ev.get('state','?')}_{reason_tag}.png"
             cv2.imwrite(str(sdir / out_name), panel)
