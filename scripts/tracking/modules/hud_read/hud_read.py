@@ -1361,6 +1361,15 @@ def main() -> int:
                     val = parse_field(tag, name, txt)
                     _OCR_CACHE[cache_key] = val
                     _OCR_CACHE_MISS += 1
+                # Сырой дамп для pts — диагностика проблемных слотов.
+                if name == "pts":
+                    _slot = team_slot(tag)
+                    if _slot is not None:
+                        pts_raw[_slot].append({
+                            "frame": f,
+                            "raw": (txt or "").strip(),
+                            "parsed": val,
+                        })
                 if val is not None and val is not False:
                     st["parsed"] += 1
                 if val not in (None, "", False):
