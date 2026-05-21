@@ -470,6 +470,13 @@ class SlotTracker:
         self.switch_confirm_frames: int = int(slot_cfg.get("switch_confirm_frames", 3))
         self.pending_canon: Optional[tuple[float, float]] = None
         self.pending_hits: int = 0
+        # Full-frame recovery: если ROI промахивается N+ кадров подряд,
+        # каждые `recover_interval` кадров ищем плашку по всему кадру
+        # в окрестности предсказания (`recover_gate_px` каноники).
+        self.recover_after_misses: int = int(slot_cfg.get("recover_after_misses", 10))
+        self.recover_interval: int = int(slot_cfg.get("recover_interval", 5))
+        self.recover_gate_px: float = float(slot_cfg.get("recover_gate_px", 600.0))
+        self.n_recovered: int = 0
         # Time-aware motion model (canonical px / sec).
         motion = slot_cfg.get("motion", {}) or {}
         self.v_max_px_s: float = float(motion.get("v_max_px_s", 60.0))
@@ -588,6 +595,50 @@ class SlotTracker:
                 best_score = score
                 best = (x, y, w, h, area)
         self.last_score = float(max(0.0, min(1.0, best_score)))
+        return best
+
+    # ---- full-frame recovery -------------------------------------------
+    def _recover_global(self, frame_bgr: np.ndarray, H: np.ndarray,
+                        pred_canon: tuple[float, float]
+                        ) -> Optional[tuple[float, float, float, float, float]]:
+        """Search the whole frame for a team-color blob near `pred_canon`.
+        Returns (frame_cx, frame_cy, canon_cx, canon_cy, area) or None."""
+        hsv = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2HSV)
+        m = cv2.inRange(hsv, self.team.hsv_lower, self.team.hsv_upper)
+        if self.team.hsv_lower2 is not None and self.team.hsv_upper2 is not None:
+            m |= cv2.inRange(hsv, self.team.hsv_lower2, self.team.hsv_upper2)
+        lab = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2LAB)
+        m_lab = cv2.inRange(lab, self.team.lab_lower, self.team.lab_upper)
+        mask = cv2.bitwise_and(m, m_lab)
+        if cv2.countNonZero(mask) < 8:
+            mask = m
+        k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (self.morph_kernel,) * 2)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, k)
+        kclose = cv2.getStructuringElement(
+            cv2.MORPH_ELLIPSE, (max(7, self.morph_kernel + 4),) * 2
+        )
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kclose)
+        cnts, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        best = None
+        best_d = 1e18
+        for c in cnts:
+            area = cv2.contourArea(c)
+            if area < self.min_area or area > self.max_area:
+                continue
+            x, y, w, h = cv2.boundingRect(c)
+            if w < 3 or h < 3:
+                continue
+            aspect = w / max(1.0, h)
+            fill = area / max(1.0, float(w * h))
+            if not (0.25 <= aspect <= 16.0 and fill >= 0.08):
+                continue
+            cx = x + w / 2.0
+            cy = y + h / 2.0
+            ccx, ccy = map_point(H, (cx, cy))
+            d = math.hypot(ccx - pred_canon[0], ccy - pred_canon[1])
+            if d < best_d and d <= self.recover_gate_px:
+                best_d = d
+                best = (cx, cy, ccx, ccy, float(area))
         return best
 
     # ---- main update -----------------------------------------------------
