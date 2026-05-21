@@ -447,7 +447,8 @@ class SlotTracker:
     Состояние хранится в canonical_px (потому что кадр двигается, а карта — нет).
     """
 
-    def __init__(self, team: TeamCfg, slot_cfg: dict, init_canonical_px: Optional[tuple[float, float]]):
+    def __init__(self, team: TeamCfg, slot_cfg: dict, init_canonical_px: Optional[tuple[float, float]],
+                 elim_t: Optional[float] = None):
         self.team = team
         self.canonical_px: Optional[tuple[float, float]] = init_canonical_px
         self.last_frame_px: Optional[tuple[float, float]] = None
@@ -485,12 +486,16 @@ class SlotTracker:
         self.last_seen_t: Optional[float] = None
         self.canonical_px_stale: bool = init_canonical_px is None
         self.wiped: bool = False
+        # Authoritative wipe time from HUD (eliminations.json). When t_now >= elim_t,
+        # the slot is force-wiped — no more detection work, not counted as `lost`.
+        self.elim_t: Optional[float] = elim_t
         # Telemetry counters (filled by run loop).
         self.n_tracked = 0
         self.n_low_conf = 0
         self.n_hold = 0
         self.n_coast = 0
         self.n_lost = 0
+        self.n_wiped = 0
         self.n_switches = 0
         self.score_sum = 0.0
         self.score_n = 0
@@ -580,9 +585,18 @@ class SlotTracker:
     # ---- main update -----------------------------------------------------
     def update(self, frame_bgr: np.ndarray, H: np.ndarray, t_now: float = 0.0) -> Optional[dict]:
         """Run one frame. Returns dict with canonical_px / frame_px / state, or None if untrackable yet."""
+        # HUD-authoritative wipe: as soon as the elimination timestamp is reached,
+        # the slot is permanently wiped — skip all detection work to keep the report
+        # clean and avoid burning CPU on a team that no longer exists on the map.
+        if not self.wiped and self.elim_t is not None and t_now >= self.elim_t:
+            self.wiped = True
+            self.state = "wiped"
+            self.state_reason = f"hud_wiped@{self.elim_t}"
+            return self._snapshot()
         if self.wiped:
-            self.state = "lost"
-            self.state_reason = "wiped"
+            self.state = "wiped"
+            if not self.state_reason.startswith("hud_wiped") and not self.state_reason.startswith("wiped"):
+                self.state_reason = "wiped"
             return self._snapshot()
         if self.canonical_px is None:
             self.state = "lost"
@@ -883,6 +897,9 @@ def main():
     ap.add_argument("--debug-frame", type=int, default=None)
     ap.add_argument("--anchors", type=Path, default=None,
                     help="motion_detect/reports/motion_tracks.json для инициализации треков")
+    ap.add_argument("--eliminations", type=Path, default=None,
+                    help="hud_read/reports/eliminations.json — точные t_first_dead по слоту, "
+                         "если задано, заменяет absence-based wipe детекцию")
     args = ap.parse_args()
 
     if not args.video.exists():
@@ -950,6 +967,33 @@ def main():
         print(f"[info] anchors: {sum(1 for a in anchors_map.values() if a.get('conf') in ('HIGH','MED'))} HIGH/MED, {sum(1 for a in anchors_map.values() if a.get('conf') == 'LOW')} LOW")
     frame_step = int(args.frame_step or cfg.get("frame_step", 3))
 
+    # ---- HUD eliminations (authoritative wipe times) -------------------------
+    elim_path = args.eliminations
+    if elim_path is None and cfg.get("eliminations_file"):
+        elim_path = (args.config.parent / cfg["eliminations_file"]).resolve()
+    if elim_path is None:
+        # Last-resort default: the standard hud_read output location.
+        guess = (Path(__file__).resolve().parents[1] / "hud_read" / "reports" / "eliminations.json")
+        if guess.exists():
+            elim_path = guess
+    elim_by_slot: dict[int, float] = {}
+    if elim_path and Path(elim_path).exists():
+        try:
+            raw_elim = json.loads(Path(elim_path).read_text(encoding="utf-8"))
+            for slot_key, info in (raw_elim.get("teams", {}) or {}).items():
+                try:
+                    s = int(slot_key)
+                except (TypeError, ValueError):
+                    continue
+                t_dead = info.get("t_first_dead")
+                if t_dead is not None:
+                    elim_by_slot[s] = float(t_dead)
+            print(f"[info] eliminations: {len(elim_by_slot)} slots with t_first_dead from {elim_path}")
+        except Exception as e:
+            print(f"[warn] failed to read eliminations {elim_path}: {e}")
+    else:
+        print("[info] eliminations: not provided — falling back to absence-based wipe detection")
+
     # Per-slot local trackers (the actual detection workhorse). They seed from
     # motion_detect anchors when available and project canonical → frame each step.
     slot_cfg = dict(det_cfg)  # inherit min/max area, morph_kernel as defaults
@@ -960,8 +1004,16 @@ def main():
         init_canon = None
         if a.get("canonical_px") is not None:
             init_canon = (float(a["canonical_px"][0]), float(a["canonical_px"][1]))
-        slot_trackers[t.id] = SlotTracker(t, slot_cfg, init_canon)
+        elim_t = elim_by_slot.get(t.slot) if t.slot is not None else None
+        slot_trackers[t.id] = SlotTracker(t, slot_cfg, init_canon, elim_t=elim_t)
     print(f"[info] slot trackers: {sum(1 for s in slot_trackers.values() if s.canonical_px is not None)}/{len(slot_trackers)} seeded with canonical anchor")
+    # Pre-seed WorldTracker with HUD wipe times so the sidecar reflects HUD truth
+    # instead of (often wrong / early) absence-based detection.
+    for t in teams:
+        if t.slot in elim_by_slot:
+            tr = trk.tracks.get(t.id)
+            if tr is not None:
+                tr.wiped_at_t = round(elim_by_slot[t.slot], 2)
 
     cap = cv2.VideoCapture(str(args.video))
     if not cap.isOpened():
@@ -1068,13 +1120,16 @@ def main():
                     elif s == "hold":     st.n_hold += 1
                     elif s == "coast":    st.n_coast += 1
                     elif s == "lost":     st.n_lost += 1
+                    elif s == "wiped":    st.n_wiped += 1
                     if s == "tracked":
                         st.score_sum += st.last_score
                         st.score_n += 1
                     # Record dominant state_reason (strip numeric tails for grouping).
-                    rr = snap.get("state_reason", "") or ""
-                    rr_key = rr.split("(")[0].split("@")[0] or "?"
-                    st.reason_hist[rr_key] = st.reason_hist.get(rr_key, 0) + 1
+                    # Skip wiped frames — they're not real misses and would dominate the histogram.
+                    if s != "wiped":
+                        rr = snap.get("state_reason", "") or ""
+                        rr_key = rr.split("(")[0].split("@")[0] or "?"
+                        st.reason_hist[rr_key] = st.reason_hist.get(rr_key, 0) + 1
                 # WorldTracker остаётся только для wipe-логики (длительное отсутствие).
                 # Feed it only confirmed (tracked) detections to avoid wipe-resets on hold.
                 tracked_dets = [d for d in world_dets if any(
@@ -1086,8 +1141,12 @@ def main():
                 tracks_world = []
                 for snap in slot_snaps:
                     tr = wipe_states.get(snap["team_id"])
-                    if tr is not None and tr.wiped_at_t is not None:
-                        snap["state"] = "lost"
+                    # WorldTracker absence-wipe is a fallback only when SlotTracker
+                    # hasn't been told by HUD that the slot is gone. If SlotTracker
+                    # already marked wiped (via elim_t), keep its "wiped" state.
+                    if (tr is not None and tr.wiped_at_t is not None
+                            and snap.get("state") != "wiped"):
+                        snap["state"] = "wiped"
                         snap["state_reason"] = f"wiped@{tr.wiped_at_t}"
                         slot_trackers[snap["team_id"]].wiped = True
                     # world coord (from current canonical)
@@ -1164,12 +1223,16 @@ def main():
     print(f"[ok] processed {processed} frames -> {out_path}")
     # Per-slot tracking summary (compare runs at a glance).
     print("\n[summary] per-slot state distribution")
-    print(f"{'slot':<10}{'tracked':>9}{'low_conf':>10}{'hold':>7}{'coast':>7}{'lost':>7}{'switch':>8}{'avg_sc':>8}")
+    print(f"{'slot':<10}{'tracked':>9}{'low_conf':>10}{'hold':>7}{'coast':>7}{'lost':>7}"
+          f"{'wiped':>7}{'alive%':>8}{'switch':>8}{'avg_sc':>8}")
     for t in teams:
         st = slot_trackers[t.id]
         avg = (st.score_sum / st.score_n) if st.score_n else 0.0
+        alive = st.n_tracked + st.n_low_conf + st.n_hold + st.n_coast + st.n_lost
+        alive_pct = (100.0 * (st.n_tracked + st.n_low_conf) / alive) if alive else 0.0
         print(f"{t.id:<10}{st.n_tracked:>9}{st.n_low_conf:>10}{st.n_hold:>7}"
-              f"{st.n_coast:>7}{st.n_lost:>7}{st.n_switches:>8}{avg:>8.2f}")
+              f"{st.n_coast:>7}{st.n_lost:>7}{st.n_wiped:>7}{alive_pct:>7.1f}%"
+              f"{st.n_switches:>8}{avg:>8.2f}")
     # Dominant state_reason per slot — what is actually failing where.
     print("\n[summary] dominant state_reason per slot (top 3)")
     print(f"{'slot':<10}{'v_peak_px/s':>13}  reasons")

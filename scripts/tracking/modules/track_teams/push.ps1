@@ -4,6 +4,7 @@ param(
   [string]$Config = "scripts/tracking/modules/track_teams/config.example.yaml",
   [string]$Out = "scripts/tracking/modules/track_teams/reports/tracks.json",
   [string]$Anchors = "scripts/tracking/modules/motion_detect/reports/motion_tracks.json",
+  [string]$Eliminations = "scripts/tracking/modules/hud_read/reports/eliminations.json",
   [int]$FrameStep = 0,
   [double]$Start = 0,
   [double]$End = -1,
@@ -22,6 +23,12 @@ if ($Anchors -and (Test-Path $Anchors)) {
   Write-Host "[track_teams] using anchors: $Anchors" -ForegroundColor Cyan
 } else {
   Write-Host "[track_teams] no anchors file (looked at: $Anchors) - starting without motion anchors" -ForegroundColor Yellow
+}
+if ($Eliminations -and (Test-Path $Eliminations)) {
+  $args += @("--eliminations", $Eliminations)
+  Write-Host "[track_teams] using eliminations: $Eliminations" -ForegroundColor Cyan
+} else {
+  Write-Host "[track_teams] no eliminations file (looked at: $Eliminations) - absence-based wipe fallback" -ForegroundColor Yellow
 }
 $logPath = Join-Path (Split-Path $Out -Parent) "run.log"
 New-Item -ItemType Directory -Force -Path (Split-Path $logPath -Parent) | Out-Null
