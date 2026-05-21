@@ -238,13 +238,22 @@ export function MatchViewer({ initialGameId }: { initialGameId?: string }) {
     const out: Record<string, number> = {};
     for (const e of events) {
       if (e.type !== "wipe") continue;
-      // Label shape: "<KILLER> wipes <VICTIM> [— note]"
-      const m = /wipes\s+([A-Za-z0-9]+)/i.exec(e.label);
-      const victimTag = m?.[1];
-      if (!victimTag) continue;
-      const victim = teamByTag.get(victimTag);
-      if (!victim) continue;
-      if (out[victim.id] === undefined || e.t < out[victim.id]) out[victim.id] = e.t;
+      // Prefer structured fields (teamId / team tag) — the wipe event IS the
+      // elimination of `e.team` itself (HUD-sourced). Fall back to label
+      // parsing for legacy mock events shaped like "<KILLER> wipes <VICTIM>".
+      let victimId: string | undefined;
+      if (e.teamId) {
+        victimId = e.teamId;
+      } else if (e.team) {
+        victimId = teamByTag.get(e.team)?.id;
+      }
+      if (!victimId) {
+        const m = /wipes\s+([A-Za-z0-9]+)/i.exec(e.label);
+        const victimTag = m?.[1];
+        if (victimTag) victimId = teamByTag.get(victimTag)?.id;
+      }
+      if (!victimId) continue;
+      if (out[victimId] === undefined || e.t < out[victimId]) out[victimId] = e.t;
     }
     // Fallback: teams marked dead in static data but with no wipe event get a
     // synthetic death time derived from placement (lower placement → later death).
@@ -255,7 +264,7 @@ export function MatchViewer({ initialGameId }: { initialGameId?: string }) {
       out[t.id] = Math.round(durationSec * k);
     }
     return out;
-  }, [teamByTag, durationSec]);
+  }, [teamByTag, durationSec, events, teams]);
 
   /** Per-team alive state at the current `time`. */
   const liveAlive = useMemo<Record<string, boolean>>(() => {

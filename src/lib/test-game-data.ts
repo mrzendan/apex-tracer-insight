@@ -7,6 +7,7 @@ import ringsRaw from "@/data/m-test-g1/rings.json";
 import ringsV2Raw from "@/data/m-test-g1/ring_geometry_v2.json";
 import slotToTagRaw from "@/data/m-test-g1/slot-to-tag.json";
 import tracksRaw from "@/data/m-test-g1/tracks.json";
+import hudTimelineRaw from "@/data/m-test-g1/hud_timeline.json";
 import type { GameEvent, RingPhase, Team } from "./mock-match";
 
 type ElimTeam = {
@@ -59,9 +60,27 @@ export const MTEST_LS_KEYS = {
   ringsV2: "mtest:ringsV2",
   eliminations: "mtest:eliminations",
   slotToTag: "mtest:slotToTag",
+  hudTimeline: "mtest:hudTimeline",
 } as const;
 
-const elim = lsGet(MTEST_LS_KEYS.eliminations, elimRaw as unknown as ElimFile);
+// HUD timeline теперь содержит встроенный блок `eliminations` — это
+// единый источник истины для HUD-смертей. Отдельный eliminations.json
+// остаётся только как fallback для старых выгрузок.
+type HudTimelineFile = {
+  eliminations?: { teams?: Record<string, ElimTeam> };
+};
+const hudTimeline = lsGet(
+  MTEST_LS_KEYS.hudTimeline,
+  hudTimelineRaw as unknown as HudTimelineFile,
+);
+const elimStandalone = lsGet(
+  MTEST_LS_KEYS.eliminations,
+  elimRaw as unknown as ElimFile,
+);
+const elim: ElimFile = {
+  fps: elimStandalone.fps,
+  teams: hudTimeline.eliminations?.teams ?? elimStandalone.teams,
+};
 const rings = lsGet(MTEST_LS_KEYS.rings, ringsRaw as unknown as RingsFile);
 const ringsV2 = lsGet(MTEST_LS_KEYS.ringsV2, ringsV2Raw as unknown as RingsV2File);
 const slotToTag = lsGet(
@@ -196,6 +215,8 @@ export const testGameEvents: GameEvent[] = (() => {
       t: Math.round(t.t_first_dead),
       type: "wipe",
       team: tag,
+      teamId: `t-test-${slot}`,
+      slot: Number(slot),
       label: `${tag} eliminated`,
     });
   }
