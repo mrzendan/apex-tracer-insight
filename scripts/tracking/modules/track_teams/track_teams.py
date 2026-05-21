@@ -980,7 +980,9 @@ def main():
         # Fallback: synced UI copy (src/data/<match>/eliminations.json) — useful
         # when hud_read was run with --out pointing into src/data and the
         # canonical reports/ slot is empty.
-        repo_root = Path(__file__).resolve().parents[3]
+        # __file__ = <repo>/scripts/tracking/modules/track_teams/track_teams.py
+        # parents: [0]=track_teams [1]=modules [2]=tracking [3]=scripts [4]=<repo>
+        repo_root = Path(__file__).resolve().parents[4]
         for guess in sorted((repo_root / "src" / "data").glob("*/eliminations.json")):
             if guess.exists():
                 elim_path = guess
