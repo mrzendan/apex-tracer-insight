@@ -1476,7 +1476,12 @@ def main() -> int:
     for (tag, name), st in sorted(stats.items()):
         tot = st["total"] or 1
         is_img = name in IMAGE_NAMES
-        if is_img:
+        if (tag, name) in OCR_SKIP_ZONES:
+            ok_pct = 0
+            parsed_pct = 0
+            suggest = "SKIP (geometry only)"
+            examples = ""
+        elif is_img:
             uniq = len(set(st["hashes"]))
             ok_pct = 100 if st["hashes"] else 0
             parsed_pct = ok_pct
