@@ -645,14 +645,22 @@ def associate_hungarian(
 
 
 def _associate_greedy(candidates, slot_trackers, t_now, weights):
-    """Жадный fallback без scipy."""
+    """Жадный fallback без scipy. Учитывает те же веса, что и hungarian,
+    чтобы варианты конфигов (color_first/motion_first/...) реально различались
+    даже когда scipy не установлен."""
     assigned_cands: set[int] = set()
     result: dict[str, dict] = {}
-    # Сортируем slot'ы по приоритету: активированные первыми.
-    slots = sorted(slot_trackers.values(),
-                   key=lambda s: (0 if getattr(s, "activated", False) else 1))
+    beta = float(weights.get("beta_world", 1.0))
+    gamma = float(weights.get("gamma_shape", 0.3))
+    delta = float(weights.get("delta_color_mismatch", 0.5))
+    eps = float(weights.get("eps_hysteresis", 0.2))
+    gate_mult = float(weights.get("gate_radius_mult", 1.0))
     fallback_gate_px = float(weights.get("fallback_gate_canonical_px", 200.0))
-    for st in slots:
+    # δ ≥ 1.0 — фактически запрет кросс-цвета (как color_first.yaml).
+    allow_cross_color = delta < 1.0
+    # Считаем (cost, slot, cand_j) по всем парам, сортируем и жадно назначаем.
+    pairs: list[tuple[float, "SlotTracker", int]] = []
+    for st in slot_trackers.values():
         if st.state in ("wiped", "inactive") or st.wiped:
             continue
         if st.canonical_px is not None:
@@ -664,20 +672,33 @@ def _associate_greedy(candidates, slot_trackers, t_now, weights):
             radius = fallback_gate_px
         else:
             continue
-        best_j = -1; best_d = 1e9
+        radius *= gate_mult
         for j, cand in enumerate(candidates):
-            if j in assigned_cands:
-                continue
-            if cand["team_id"] != st.team.id:
+            same_color = cand["team_id"] == st.team.id
+            if not same_color and not allow_cross_color:
                 continue
             cx, cy = cand["canonical_px"]
             d = math.hypot(cx - pred[0], cy - pred[1])
-            if d > radius or d > best_d:
+            if d > radius:
                 continue
-            best_d = d; best_j = j
-        if best_j >= 0:
-            assigned_cands.add(best_j)
-            result[st.team.id] = candidates[best_j]
+            world_term = d / max(1.0, radius)
+            shape_pen = 1.0 - min(1.0, max(0.0, cand.get("color_score", 1.0)))
+            color_mismatch = 0.0 if same_color else delta
+            c = beta * world_term + gamma * shape_pen + color_mismatch
+            lfp = getattr(st, "last_frame_px", None)
+            if lfp is not None:
+                cfx, cfy = cand["frame_px"]
+                if math.hypot(cfx - lfp[0], cfy - lfp[1]) < 25.0:
+                    c -= eps
+            pairs.append((max(0.0, c), st, j))
+    pairs.sort(key=lambda p: p[0])
+    used_slots: set[str] = set()
+    for c, st, j in pairs:
+        if j in assigned_cands or st.team.id in used_slots:
+            continue
+        assigned_cands.add(j)
+        used_slots.add(st.team.id)
+        result[st.team.id] = candidates[j]
     return result
 
 
