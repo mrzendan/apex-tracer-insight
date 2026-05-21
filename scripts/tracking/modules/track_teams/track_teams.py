@@ -593,7 +593,9 @@ class SlotTracker:
             dt = self.dt_cap_s
         else:
             dt = min(self.dt_cap_s, max(0.0, t_now - self.last_seen_t))
-        radius = min(self.gate_cap_px, self.v_max_px_s * dt + self.gate_slack_px)
+        # Adaptive v_max: take max of configured baseline and observed peak (with boost).
+        v_eff = max(self.v_max_px_s, self.v_observed_peak_px_s * self.v_observed_boost)
+        radius = min(self.gate_cap_px, v_eff * dt + self.gate_slack_px)
         # Predicted canonical position from last velocity (zero after miss).
         pred_cx = self.canonical_px[0] + (self.vx * dt if not self.canonical_px_stale else 0.0)
         pred_cy = self.canonical_px[1] + (self.vy * dt if not self.canonical_px_stale else 0.0)
