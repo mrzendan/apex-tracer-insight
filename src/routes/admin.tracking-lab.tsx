@@ -47,6 +47,8 @@ type TracksFile = {
 
 const DEFAULT_PALETTE = ["#ef4444", "#3b82f6", "#eab308", "#22c55e", "#a855f7", "#ec4899", "#06b6d4", "#f97316"];
 
+type GtAnchor = { t: number; slot_id: string; world_xy: [number, number] };
+
 function TrackingLabPage() {
   const [data, setData] = useState<TracksFile | null>(null);
   const [mapUrl, setMapUrl] = useState<string | null>(null);
@@ -56,6 +58,9 @@ function TrackingLabPage() {
   const [speed, setSpeed] = useState(1);
   const [hiddenTeams, setHiddenTeams] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
+  const [gtMode, setGtMode] = useState(false);
+  const [gtSlot, setGtSlot] = useState<string>("");
+  const [gtAnchors, setGtAnchors] = useState<GtAnchor[]>([]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const rafRef = useRef<number | null>(null);
@@ -115,6 +120,41 @@ function TrackingLabPage() {
       else if (f.type.startsWith("image/")) onMapFile(f);
     }
   }, [onTracksFile, onVideoFile, onMapFile]);
+
+  // canvas click → add GT anchor (only in gtMode)
+  const onCanvasClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!gtMode || !data || !frame) return;
+    if (!gtSlot) { setError("Выбери слот в правой панели перед кликом по карте"); return; }
+    const cnv = e.currentTarget;
+    const rect = cnv.getBoundingClientRect();
+    const cw = cnv.width, ch = cnv.height;
+    const dw = rect.width, dh = rect.height;
+    const scale = Math.min(dw / cw, dh / ch);
+    const sw = cw * scale, sh = ch * scale;
+    const ox = (dw - sw) / 2, oy = (dh - sh) / 2;
+    const px = (e.clientX - rect.left - ox) / scale;
+    const py = (e.clientY - rect.top - oy) / scale;
+    if (px < 0 || py < 0 || px > cw || py > ch) return;
+    setError(null);
+    setGtAnchors((prev) => [...prev, {
+      t: +frame.t.toFixed(2),
+      slot_id: gtSlot,
+      world_xy: [Math.round(px), Math.round(py)],
+    }]);
+  }, [gtMode, gtSlot, data, frame]);
+
+  const exportGtJson = useCallback(() => {
+    if (!data) return;
+    const payload = {
+      _note: "GT anchors for ID-switch evaluation. Merge into scripts/tracking/modules/track_teams/assets/gt_anchors.json",
+      video: data.meta.video,
+      points: gtAnchors,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = "gt_anchors.json"; a.click();
+    URL.revokeObjectURL(url);
+  }, [data, gtAnchors]);
 
   // playback loop
   useEffect(() => {
@@ -203,8 +243,25 @@ function TrackingLabPage() {
         ctx.textAlign = "center";
         ctx.fillText(t.team_id, x, y + 10);
       }
+      // GT anchors overlay (all of them, highlight current slot)
+      for (const a of gtAnchors) {
+        const meta = teamMeta[a.slot_id];
+        const color = meta?.color ?? "#ffffff";
+        const [x, y] = a.world_xy;
+        ctx.beginPath();
+        ctx.arc(x, y, 10, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.strokeStyle = a.slot_id === gtSlot ? "#fff" : "#000";
+        ctx.lineWidth = a.slot_id === gtSlot ? 4 : 2;
+        ctx.stroke();
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 14px ui-sans-serif, system-ui";
+        ctx.textAlign = "left";
+        ctx.fillText(`${a.slot_id} @${a.t.toFixed(1)}s`, x + 14, y + 5);
+      }
     }
-  }, [data, frame, mapUrl, hiddenTeams, teamMeta]);
+  }, [data, frame, mapUrl, hiddenTeams, teamMeta, gtAnchors, gtSlot]);
 
   // analytics aggregates
   const zoomSeries = useMemo(() => data?.frames.map((f) => f.camera.zoom ?? 0) ?? [], [data]);
@@ -257,7 +314,16 @@ function TrackingLabPage() {
         <div className="grid min-h-0 flex-1 grid-cols-[1fr_320px] overflow-hidden">
           <div className="relative flex min-h-0 flex-col overflow-hidden bg-black">
             <div className="relative flex-1 overflow-hidden">
-              <canvas ref={canvasRef} className="absolute inset-0 h-full w-full object-contain" />
+              <canvas
+                ref={canvasRef}
+                onClick={onCanvasClick}
+                className={`absolute inset-0 h-full w-full object-contain ${gtMode ? "cursor-crosshair" : ""}`}
+              />
+              {gtMode && (
+                <div className="absolute left-3 top-3 rounded-sm border border-primary/40 bg-primary/15 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary">
+                  GT picker · slot: {gtSlot || "—"} · добавлено: {gtAnchors.length}
+                </div>
+              )}
               {videoUrl && (
                 <video ref={videoRef} src={videoUrl} muted className="absolute bottom-3 right-3 h-44 w-auto rounded border border-border opacity-90" />
               )}
@@ -275,7 +341,25 @@ function TrackingLabPage() {
 
           <aside className="flex min-h-0 flex-col gap-4 overflow-y-auto border-l border-border bg-surface p-3 text-xs">
             <MetaBox data={data} frame={frame} lowConfCount={lowConfCount} />
-            <TeamsBox teamMeta={teamMeta} hidden={hiddenTeams} setHidden={setHiddenTeams} frame={frame} />
+            <GtPickerBox
+              gtMode={gtMode}
+              setGtMode={setGtMode}
+              gtSlot={gtSlot}
+              setGtSlot={setGtSlot}
+              gtAnchors={gtAnchors}
+              setGtAnchors={setGtAnchors}
+              exportGtJson={exportGtJson}
+              teamMeta={teamMeta}
+            />
+            <TeamsBox
+              teamMeta={teamMeta}
+              hidden={hiddenTeams}
+              setHidden={setHiddenTeams}
+              frame={frame}
+              gtMode={gtMode}
+              gtSlot={gtSlot}
+              setGtSlot={setGtSlot}
+            />
             <Sparkline label="zoom" values={zoomSeries} cursor={frameIdx} color="#22d3ee" />
             <Sparkline label="ransac inliers" values={inlierSeries} cursor={frameIdx} color="#a855f7" />
           </aside>
@@ -344,39 +428,137 @@ function Row({ k, v }: { k: string; v: string }) {
 }
 
 function TeamsBox({
-  teamMeta, hidden, setHidden, frame,
+  teamMeta, hidden, setHidden, frame, gtMode, gtSlot, setGtSlot,
 }: {
   teamMeta: Record<string, TeamMeta & { color: string }>;
   hidden: Set<string>;
   setHidden: (s: Set<string>) => void;
   frame: Frame | null;
+  gtMode: boolean;
+  gtSlot: string;
+  setGtSlot: (s: string) => void;
 }) {
   const teams = Object.values(teamMeta);
   if (teams.length === 0) return null;
   const stateById = new Map(frame?.tracks.map((t) => [t.team_id, t.state] as const) ?? []);
   return (
     <div className="rounded-sm border border-border bg-background p-3">
-      <div className="label-eyebrow mb-2 text-xs text-muted-foreground">Teams</div>
+      <div className="label-eyebrow mb-2 flex items-center justify-between text-xs text-muted-foreground">
+        <span>Teams</span>
+        <span className="normal-case tracking-normal">
+          {gtMode ? "клик по строке = выбрать слот · глаз = скрыть" : "клик по глазу = скрыть на карте"}
+        </span>
+      </div>
       <div className="flex flex-col gap-1">
         {teams.map((t) => {
           const isHidden = hidden.has(t.id);
           const st = stateById.get(t.id);
+          const isSelected = gtMode && gtSlot === t.id;
           return (
-            <button key={t.id} onClick={() => {
-              const next = new Set(hidden);
-              if (isHidden) next.delete(t.id); else next.add(t.id);
-              setHidden(next);
-            }}
-              className={`flex items-center justify-between rounded-sm border border-border px-2 py-1 text-left ${isHidden ? "opacity-40" : ""}`}>
+            <div
+              key={t.id}
+              onClick={() => { if (gtMode) setGtSlot(t.id); }}
+              className={`flex items-center justify-between rounded-sm border px-2 py-1 text-left ${
+                isSelected ? "border-primary bg-primary/15" : "border-border"
+              } ${isHidden ? "opacity-40" : ""} ${gtMode ? "cursor-pointer" : ""}`}
+            >
               <span className="flex items-center gap-2">
                 <span className="inline-block h-3 w-3 rounded-sm" style={{ background: t.color }} />
                 <span className="font-semibold">{t.name ?? t.id}</span>
               </span>
-              <span className="text-mono text-xs text-muted-foreground">{st ?? "—"}</span>
-            </button>
+              <span className="flex items-center gap-2">
+                <span className="text-mono text-xs text-muted-foreground">{st ?? "—"}</span>
+                <button
+                  type="button"
+                  title={isHidden ? "Показать" : "Скрыть"}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const next = new Set(hidden);
+                    if (isHidden) next.delete(t.id); else next.add(t.id);
+                    setHidden(next);
+                  }}
+                  className="rounded-sm border border-border bg-muted px-1.5 py-0.5 text-xs hover:bg-muted/70"
+                >
+                  {isHidden ? "👁‍🗨" : "👁"}
+                </button>
+              </span>
+            </div>
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function GtPickerBox({
+  gtMode, setGtMode, gtSlot, setGtSlot, gtAnchors, setGtAnchors, exportGtJson, teamMeta,
+}: {
+  gtMode: boolean;
+  setGtMode: (b: boolean) => void;
+  gtSlot: string;
+  setGtSlot: (s: string) => void;
+  gtAnchors: GtAnchor[];
+  setGtAnchors: (a: GtAnchor[]) => void;
+  exportGtJson: () => void;
+  teamMeta: Record<string, TeamMeta & { color: string }>;
+}) {
+  const teamIds = Object.keys(teamMeta).sort();
+  return (
+    <div className="rounded-sm border border-border bg-background p-3">
+      <div className="label-eyebrow mb-2 flex items-center justify-between text-xs text-muted-foreground">
+        <span>GT picker</span>
+        <button
+          onClick={() => setGtMode(!gtMode)}
+          className={`rounded-sm border px-2 py-0.5 text-xs font-semibold uppercase tracking-wider ${
+            gtMode ? "border-primary bg-primary/20 text-primary" : "border-border bg-muted text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          {gtMode ? "on" : "off"}
+        </button>
+      </div>
+      {gtMode && (
+        <div className="flex flex-col gap-2">
+          <div className="text-xs text-muted-foreground">
+            1) выбери слот ниже или в списке Teams · 2) скрабь таймлайн · 3) кликай по позиции команды на карте
+          </div>
+          <select
+            value={gtSlot}
+            onChange={(e) => setGtSlot(e.target.value)}
+            className="rounded-sm border border-border bg-muted px-2 py-1 text-xs"
+          >
+            <option value="">— выбери слот —</option>
+            {teamIds.map((id) => (
+              <option key={id} value={id}>{teamMeta[id]?.name ?? id} ({id})</option>
+            ))}
+          </select>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-mono text-xs">точек: {gtAnchors.length}</span>
+            <div className="flex gap-1">
+              <button
+                onClick={() => setGtAnchors(gtAnchors.slice(0, -1))}
+                disabled={!gtAnchors.length}
+                className="rounded-sm border border-border bg-muted px-2 py-0.5 text-xs hover:bg-muted/70 disabled:opacity-40"
+              >
+                undo
+              </button>
+              <button
+                onClick={() => setGtAnchors([])}
+                disabled={!gtAnchors.length}
+                className="rounded-sm border border-border bg-muted px-2 py-0.5 text-xs hover:bg-muted/70 disabled:opacity-40"
+              >
+                clear
+              </button>
+              <button
+                onClick={exportGtJson}
+                disabled={!gtAnchors.length}
+                className="rounded-sm border border-primary/40 bg-primary/15 px-2 py-0.5 text-xs font-semibold text-primary hover:bg-primary/25 disabled:opacity-40"
+              >
+                export json
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
