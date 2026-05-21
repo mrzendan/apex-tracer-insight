@@ -188,7 +188,7 @@ def snap_to_known(text: str, vocab: list[str], max_dist: int = 2) -> str | None:
     """Возвращает ближайшее слово из vocab по расстоянию Левенштейна, либо None."""
     if not text:
         return None
-    t = re.sub(r"[^A-Z' -]", "", text.upper()).strip()
+    t = re.sub(r"[^A-Z0-9' -]", "", text.upper()).strip()
     if not t:
         return None
     if t in vocab:
@@ -208,12 +208,55 @@ def snap_to_known(text: str, vocab: list[str], max_dist: int = 2) -> str | None:
                 cur.append(min(cur[-1] + 1, prev[j] + 1, prev[j - 1] + (ca != cb)))
             prev = cur
         return prev[-1]
+    # Расширяем кандидата через таблицу типовых OCR-конфьюжнов
+    # (буква↔цифра, похожие глифы). Каждый вариант пробуем как t.
+    variants = _ocr_confusion_variants(t)
     best, best_d = None, max_dist + 1
-    for w in vocab:
-        d = lev(t, w)
-        if d < best_d:
-            best, best_d = w, d
+    for cand in variants:
+        if cand in vocab:
+            return cand
+        for w in vocab:
+            d = lev(cand, w)
+            if d < best_d:
+                best, best_d = w, d
     return best
+
+
+# Типовые ошибки Tesseract на HUD-шрифте Apex. Двунаправленные пары.
+_OCR_CONFUSIONS: dict[str, str] = {
+    "0": "O", "O": "0",
+    "1": "I", "I": "1",
+    "5": "S", "S": "5",
+    "8": "B", "B": "8",
+    "2": "Z", "Z": "2",
+    "6": "G", "G": "6",
+    "D": "O",  # DINO часто читается как CINO/OINO — D→O редко, D→C чаще, но C→D добавим обратно
+    "C": "D",
+}
+
+
+def _ocr_confusion_variants(text: str, max_swaps: int = 2) -> list[str]:
+    """Возвращает text + все варианты с ≤max_swaps заменами по таблице конфьюжнов.
+    Длинные строки не раздуваем — режем до 32 вариантов."""
+    out: list[str] = [text]
+    seen = {text}
+    frontier = [text]
+    for _ in range(max_swaps):
+        next_frontier: list[str] = []
+        for s in frontier:
+            for i, ch in enumerate(s):
+                rep = _OCR_CONFUSIONS.get(ch)
+                if rep is None:
+                    continue
+                v = s[:i] + rep + s[i + 1:]
+                if v not in seen:
+                    seen.add(v)
+                    out.append(v)
+                    next_frontier.append(v)
+                    if len(out) >= 32:
+                        return out
+        frontier = next_frontier
+    return out
 
 
 def parse_field(tag: str, name: str, text: str) -> Any:
@@ -233,7 +276,16 @@ def parse_field(tag: str, name: str, text: str) -> Any:
         return {"ring": int(m.group(1)), "state": m.group(2).upper()}
     if name == "pts":
         m = RE_INT.search(text)
-        return int(m.group(0)) if m else None
+        if not m:
+            return None
+        try:
+            v = int(m.group(0))
+        except ValueError:
+            return None
+        # Apex score: 0..100 в матче. Всё за пределами — мусор от тёмной/мелкой плашки.
+        if v < 0 or v > 100:
+            return None
+        return v
     if name == "eliminated":
         return bool(RE_ELIM.search(text))
     if name == "map name":
@@ -248,10 +300,13 @@ def parse_field(tag: str, name: str, text: str) -> Any:
         if not (2 <= len(cleaned) <= 5):
             return None
         if KNOWN_TEAMS:
-            max_dist = 1 if len(cleaned) <= 3 else 2
+            # len==2 → max 1 (иначе "EE"→"TL"); len>=3 → max 2 (нужно для "820"→"S2", "JDDG"→"JDG").
+            max_dist = 1 if len(cleaned) <= 2 else 2
             snapped = snap_to_known(cleaned, KNOWN_TEAMS, max_dist=max_dist)
-            if snapped:
-                return snapped
+            # Если словарь задан — отвергаем чтения, не попавшие в snap.
+            # Так HH (3 голоса, snap=None) проиграет TL (2 голоса, snap=TL)
+            # при голосовании в static_state.
+            return snapped
         return cleaned
     return text or None
 
