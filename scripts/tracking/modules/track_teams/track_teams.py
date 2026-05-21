@@ -1170,6 +1170,14 @@ def main():
         avg = (st.score_sum / st.score_n) if st.score_n else 0.0
         print(f"{t.id:<10}{st.n_tracked:>9}{st.n_low_conf:>10}{st.n_hold:>7}"
               f"{st.n_coast:>7}{st.n_lost:>7}{st.n_switches:>8}{avg:>8.2f}")
+    # Dominant state_reason per slot — what is actually failing where.
+    print("\n[summary] dominant state_reason per slot (top 3)")
+    print(f"{'slot':<10}{'v_peak_px/s':>13}  reasons")
+    for t in teams:
+        st = slot_trackers[t.id]
+        top = sorted(st.reason_hist.items(), key=lambda kv: -kv[1])[:3]
+        top_str = ", ".join(f"{k}={v}" for k, v in top)
+        print(f"{t.id:<10}{st.v_observed_peak_px_s:>13.1f}  {top_str}")
 
 
 if __name__ == "__main__":
