@@ -266,6 +266,10 @@ export type GameEvent = {
   t: number;
   type: "kill" | "knock" | "ring" | "care" | "wipe" | "endgame";
   team?: string;
+  /** Stable team id (e.g. "t-test-1") — preferred over `team` (tag) for joins. */
+  teamId?: string;
+  /** HUD slot (1..20) if event originated from a HUD source. */
+  slot?: number;
   label: string;
 };
 
