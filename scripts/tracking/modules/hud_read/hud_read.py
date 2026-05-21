@@ -1110,6 +1110,12 @@ def main() -> int:
     ap.add_argument("--static-max-frames", type=int, default=8,
                     help="Максимум попыток на статичное поле, после — фиксируем мажоритарное значение")
     ap.add_argument("--out", type=Path, default=MODULE_DIR / "reports")
+    ap.add_argument("--dump-pts", action="store_true",
+                    help="Сохранять ВСЕ кропы pts-зон команд в reports/pts_crops/slot_NN/ "
+                         "(raw + 4× апскейл). Нужно для отладки team_20 и сбора эталонов цифр.")
+    ap.add_argument("--digit-templates", type=Path, default=None,
+                    help="Папка с эталонами цифр 0.png..9.png (бинарные, белый фон). "
+                         "Если задана — используется как fallback для pts, когда Tesseract вернул пусто/мусор.")
     args = ap.parse_args()
 
     # Структурный инвариант: hud_read всегда пишет в свой reports/.
