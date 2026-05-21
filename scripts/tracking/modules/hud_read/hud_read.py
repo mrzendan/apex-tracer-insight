@@ -300,7 +300,8 @@ def parse_field(tag: str, name: str, text: str) -> Any:
         if not (2 <= len(cleaned) <= 5):
             return None
         if KNOWN_TEAMS:
-            max_dist = 1 if len(cleaned) <= 3 else 2
+            # len==2 → max 1 (иначе "EE"→"TL"); len>=3 → max 2 (нужно для "820"→"S2", "JDDG"→"JDG").
+            max_dist = 1 if len(cleaned) <= 2 else 2
             snapped = snap_to_known(cleaned, KNOWN_TEAMS, max_dist=max_dist)
             # Если словарь задан — отвергаем чтения, не попавшие в snap.
             # Так HH (3 голоса, snap=None) проиграет TL (2 голоса, snap=TL)
