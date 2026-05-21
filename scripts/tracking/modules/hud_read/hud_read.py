@@ -1238,6 +1238,16 @@ def main() -> int:
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / "overlays").mkdir(exist_ok=True)
     (args.out / "crops").mkdir(exist_ok=True)
+    if args.dump_pts:
+        (args.out / "pts_crops").mkdir(exist_ok=True)
+
+    # Загружаем эталоны цифр (если папка не задана — авто-поиск рядом с модулем).
+    digit_tpl_path = args.digit_templates
+    if digit_tpl_path is None:
+        guess = MODULE_DIR / "configs" / "digits"
+        if guess.is_dir():
+            digit_tpl_path = guess
+    load_digit_templates(digit_tpl_path)
 
     cap = cv2.VideoCapture(str(args.video))
     if not cap.isOpened():
