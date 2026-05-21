@@ -733,6 +733,7 @@ class SlotTracker:
                     self.vy = 0.0
                     self.roi_expand_px = 0
                     self.n_recovered += 1
+                    self.ever_detected = True
                     return self._snapshot()
             self._on_miss()
             return self._snapshot()
@@ -814,6 +815,7 @@ class SlotTracker:
         self.confidence = min(1.0, self.confidence * 0.6 + 0.4 + 0.0)
         self.consecutive_detections += 1
         self.lost_frames = 0
+        self.ever_detected = True
         # Gradually shrink expanded ROI back.
         self.roi_expand_px = max(0, self.roi_expand_px - 20)
         return self._snapshot()
@@ -836,6 +838,15 @@ class SlotTracker:
             self.state = "low_conf"
         else:
             self.state = "coast"
+        # Active-slot filter: never seen on screen + not protected -> retire.
+        if (not self.ever_detected
+                and self.inactive_after_misses > 0
+                and self.lost_frames >= self.inactive_after_misses
+                and self.anchor_conf not in ("HIGH", "MED")
+                and not self.hud_alive
+                and not self.wiped):
+            self.state = "inactive"
+            self.state_reason = f"never_detected_{self.lost_frames}f"
 
     def _snapshot(self) -> dict:
         return {
