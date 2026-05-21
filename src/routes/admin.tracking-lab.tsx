@@ -600,14 +600,22 @@ function GtPickerBox({
             <span className="text-xs text-muted-foreground">import gt_anchors.json</span>
             <div className="flex gap-1">
               <button
-                onClick={() => { importRef.current?.dataset.mode = "merge"; importRef.current?.click(); }}
+                onClick={() => {
+                  if (!importRef.current) return;
+                  importRef.current.dataset.mode = "merge";
+                  importRef.current.click();
+                }}
                 className="rounded-sm border border-border bg-muted px-2 py-0.5 text-xs hover:bg-muted/70"
                 title="Добавить точки из файла к текущим (без дубликатов)"
               >
                 merge
               </button>
               <button
-                onClick={() => { importRef.current?.dataset.mode = "replace"; importRef.current?.click(); }}
+                onClick={() => {
+                  if (!importRef.current) return;
+                  importRef.current.dataset.mode = "replace";
+                  importRef.current.click();
+                }}
                 className="rounded-sm border border-border bg-muted px-2 py-0.5 text-xs hover:bg-muted/70"
                 title="Заменить текущие точки на содержимое файла"
               >
