@@ -28,10 +28,11 @@ def main() -> int:
     ap.add_argument("--ring-geometry", type=Path, default=None,
                     help="Опц. ring_geometry.json из ring_locator — "
                          "будет вмёржен в rings.json как поле 'geometry'.")
-    ap.add_argument("--tracks-reports", type=Path, default=None,
-                    help="Опц. путь к scripts/tracking/modules/track_teams/reports — "
+    ap.add_argument("--tracks-reports", type=Path, default=Path("auto"),
+                    help="Путь к scripts/tracking/modules/track_teams/reports — "
                          "копирует tracks.json и tracks.slots.json в --out. "
-                         "Пусто или 'auto' → стандартное расположение в репо.")
+                         "По умолчанию 'auto' → стандартное расположение в репо. "
+                         "Передай 'skip' (или пустую строку), чтобы отключить.")
     args = ap.parse_args()
 
     args.out.mkdir(parents=True, exist_ok=True)
@@ -49,7 +50,7 @@ def main() -> int:
 
     # tracks.json / tracks.slots.json из track_teams (опц.)
     tracks_dir = args.tracks_reports
-    if tracks_dir is not None:
+    if tracks_dir is not None and str(tracks_dir).lower() not in ("skip", ""):
         if str(tracks_dir).lower() == "auto":
             tracks_dir = REPO_ROOT / "scripts" / "tracking" / "modules" / "track_teams" / "reports"
         for name in ("tracks.json", "tracks.slots.json"):

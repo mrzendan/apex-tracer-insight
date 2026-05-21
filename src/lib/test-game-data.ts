@@ -99,13 +99,24 @@ export const testGameDurationSec: number = Math.ceil(
 export const testGameTrajectories: Record<string, { t: number; x: number; y: number }[]> = (() => {
   const [W, H] = tracks.meta.canonical_size ?? [2048, 2048];
   const out: Record<string, { t: number; x: number; y: number }[]> = {};
+  // SOURCE OF TRUTH для alive/dead — eliminations.json (HUD).
+  // tracks.slots.json.wiped_at_t игнорируем: track_teams часто закрывает
+  // живые команды по absence-fallback (см. логи). Точки трекаются
+  // вплоть до t_first_dead из HUD (или до конца матча, если жива).
+  const deadAt: Record<string, number> = {};
+  for (const [slot, t] of Object.entries(elim.teams)) {
+    if (t.t_first_dead != null) deadAt[`slot_${slot}`] = t.t_first_dead;
+  }
   for (const fr of tracks.frames) {
     for (const tr of fr.tracks) {
-      // Только реальные наблюдения. coast/hold/low_conf/lost — это stale-canonical,
-      // их не рисуем, иначе команды «залипают».
-      if (tr.state !== "tracked") continue;
       if (!tr.world) continue;
-      // slot_1 -> t-test-1
+      // Не рисуем точки после реальной смерти по HUD.
+      const dead = deadAt[tr.team_id];
+      if (dead != null && fr.t > dead) continue;
+      // Принимаем tracked + coast + hold + low_conf — это валидные позиции
+      // (coast/low_conf = Kalman-extrapolation, ещё ок).
+      // lost/wiped из track_teams отбрасываем — там нет world или он stale.
+      if (tr.state === "lost" || tr.state === "wiped") continue;
       const slotNum = tr.team_id.replace(/^slot_/, "");
       const key = `t-test-${slotNum}`;
       const x = tr.world[0] / W;
