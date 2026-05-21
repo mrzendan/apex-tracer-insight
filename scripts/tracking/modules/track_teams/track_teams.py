@@ -548,6 +548,8 @@ def associate_hungarian(
     slot_trackers: dict,
     t_now: float,
     weights: dict,
+    near_miss: Optional[Counter] = None,
+    near_miss_threshold: float = 0.25,
 ) -> dict[str, dict]:
     """Глобальное назначение кандидатов слотам венгерским алгоритмом.
 
@@ -570,7 +572,9 @@ def associate_hungarian(
         return {}
     if _hungarian is None:
         # Fallback: жадный по cost, чтобы скрипт работал без scipy.
-        return _associate_greedy(candidates, slot_trackers, t_now, weights)
+        return _associate_greedy(candidates, slot_trackers, t_now, weights,
+                                 near_miss=near_miss,
+                                 near_miss_threshold=near_miss_threshold)
 
     slots = list(slot_trackers.values())
     n_slots = len(slots)
@@ -642,10 +646,23 @@ def associate_hungarian(
             continue
         st = slots[r]
         result[st.team.id] = candidates[c]
+        # Near-miss: кто ещё хотел этого же кандидата?
+        if near_miss is not None:
+            win_c = cost[r, c]
+            col = cost[:, c]
+            for ri in range(n_slots):
+                if ri == r or col[ri] >= INF / 2:
+                    continue
+                # Конкурент «рядом» — в пределах threshold от победителя.
+                if col[ri] <= win_c + max(0.05, near_miss_threshold):
+                    loser = slots[ri]
+                    near_miss[(st.team.id, loser.team.id)] += 1
     return result
 
 
-def _associate_greedy(candidates, slot_trackers, t_now, weights):
+def _associate_greedy(candidates, slot_trackers, t_now, weights,
+                       near_miss: Optional[Counter] = None,
+                       near_miss_threshold: float = 0.25):
     """Жадный fallback без scipy. Учитывает те же веса, что и hungarian,
     чтобы варианты конфигов (color_first/motion_first/...) реально различались
     даже когда scipy не установлен."""
@@ -693,6 +710,11 @@ def _associate_greedy(candidates, slot_trackers, t_now, weights):
                     c -= eps
             pairs.append((max(0.0, c), st, j))
     pairs.sort(key=lambda p: p[0])
+    # Для near-miss: для каждого cand_j собираем минимальный cost каждого слота.
+    per_cand_costs: dict[int, list[tuple[float, str]]] = {}
+    if near_miss is not None:
+        for c, st, j in pairs:
+            per_cand_costs.setdefault(j, []).append((c, st.team.id))
     used_slots: set[str] = set()
     for c, st, j in pairs:
         if j in assigned_cands or st.team.id in used_slots:
@@ -700,6 +722,12 @@ def _associate_greedy(candidates, slot_trackers, t_now, weights):
         assigned_cands.add(j)
         used_slots.add(st.team.id)
         result[st.team.id] = candidates[j]
+        if near_miss is not None:
+            for other_c, other_sid in per_cand_costs.get(j, []):
+                if other_sid == st.team.id:
+                    continue
+                if other_c <= c + max(0.05, near_miss_threshold):
+                    near_miss[(st.team.id, other_sid)] += 1
     return result
 
 
