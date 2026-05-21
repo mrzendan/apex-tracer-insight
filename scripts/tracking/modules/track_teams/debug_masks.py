@@ -320,10 +320,17 @@ def main():
             cv2.imwrite(str(sdir / out_name), panel)
             thumbs.append(panel)
         if thumbs:
-            # vstack with thin separators
-            sep = np.full((4, thumbs[0].shape[1], 3), 60, dtype=np.uint8)
+            # ROI у края кадра может быть уже -> паддим до общей ширины.
+            max_w = max(t.shape[1] for t in thumbs)
+            padded = []
+            for t in thumbs:
+                if t.shape[1] < max_w:
+                    pad = np.full((t.shape[0], max_w - t.shape[1], 3), 30, dtype=np.uint8)
+                    t = np.hstack([t, pad])
+                padded.append(t)
+            sep = np.full((4, max_w, 3), 60, dtype=np.uint8)
             stack = []
-            for t in thumbs: stack += [t, sep]
+            for t in padded: stack += [t, sep]
             summary = np.vstack(stack[:-1])
             cv2.imwrite(str(sdir / "summary.png"), summary)
             print(f"[debug_masks] {sid}: {len(thumbs)} panels  -> {sdir}")
