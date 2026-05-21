@@ -1,162 +1,115 @@
-## Что уже видно по коду
 
-1. **Главная причина неправильного тайминга смерти на карте найдена.**
-   `MATCH FEED` строится из `eliminations.json` и показывает корректные события вида:
-   ```text
-   ELTE eliminated
-   ```
-   Но `MatchViewer` для карты пытается извлечь смерть регуляркой только из старого формата:
-   ```text
-   <KILLER> wipes <VICTIM>
-   ```
-   Поэтому реальные wipe-события не попадают в `deathTimes`, и карта использует fallback по placement. Отсюда команда “умирает” в другом тайминге.
+# Рефакторинг track_teams.py: «detect-first → associate»
 
-2. **Почему видно только 8–9 команд:**
-   карта рисует команду только если у неё есть хотя бы одна валидная точка трека до текущего времени. Сейчас `tracks.json` содержит 20 slot-id, но большая часть точек имеет состояния `wiped/lost`, которые фронт отбрасывает. Нужно отдельно проверить: это ошибка `track_teams`, фильтра на фронте или рассинхрон времени между `tracks` и HUD.
+Прежде чем кодить — фиксируем архитектуру, чтобы не сломать существующий формат `tracks.json` и интеграции (`hud_read`, post-hoc, UI).
 
-3. **Риск stale-данных:**
-   `MTestDataIO` может подменять встроенные JSON через `localStorage`. Даже после обновления git-файлов сайт может показывать старый локальный override, если он был загружен раньше.
+## Текущая логика (что меняем)
 
-## План исправления
+Сейчас `SlotTracker.update()` вызывается **по очереди для каждого слота**:
+- проецирует canonical → frame через `H`, ищет цвет своей команды в ROI вокруг прошлой точки,
+- если не нашёл — coast / hold / lost.
 
-### 1. Сделать `hud_timeline.json` единым источником HUD-смертей
+Проблема: seed «прилипает» к чужой плашке или HUD-зоне → фантом стоит почти неподвижно, и его не убрать ratio-фильтром, если HUD говорит «жив».
 
-Изменить pipeline так, чтобы после scout/two-pass данные из `eliminations.json` встраивались прямо в `hud_timeline.json`, например:
+## Новая логика
 
-```json
-{
-  "timeline": [...],
-  "eliminations": {
-    "1": {
-      "f_first_dead": 62070,
-      "t_first_dead": 1035.53,
-      "f_last_alive": 62069,
-      "t_last_alive": 1035.52,
-      "source": "scout"
-    }
-  }
-}
-```
-
-После этого `eliminations.json` можно оставить только как debug-artifact в `reports/`, но фронт больше не должен от него зависеть.
-
-### 2. Обновить `sync_to_ui.py`
-
-- При синхронизации читать `hud_read/reports/eliminations.json`.
-- Вмерживать его в `hud_timeline.json` перед копированием в `src/data/m-test-g1/`.
-- Не копировать `eliminations.json` в UI как runtime-источник.
-- Добавить в консольный вывод краткий sanity-check:
-  ```text
-  HUD timeline teams: 20
-  eliminations embedded: 20 slots / 15 dead / 5 alive
-  tracks ids: 20
-  ```
-
-### 3. Переписать гидрацию фронта
-
-В `src/lib/test-game-data.ts`:
-
-- импортировать смерти из `hud_timeline.eliminations`, а не из отдельного `eliminations.json`;
-- `testGameEvents` строить из этого embedded-блока;
-- `testGameTeams.alive`, placement и `testGameDurationSec` строить из него же;
-- `testGameTrajectories` фильтровать по тому же источнику.
-
-Итог: Feed, left team list, alive counter и карта используют один и тот же death-source.
-
-### 4. Исправить `deathTimes` в `MatchViewer`
-
-Сейчас карта ломается из-за парсинга label. Нужно убрать зависимость от текста label.
-
-Варианты:
-
-- быстрый безопасный фикс: для wipe-события считать `e.team` eliminated-командой, если label заканчивается на `eliminated`;
-- лучше: расширить `GameEvent` полем `teamId` или `slot`, чтобы карта не парсила human-readable text.
-
-Я бы сделал второй вариант:
-
-```ts
-type GameEvent = {
-  t: number;
-  type: ...;
-  team?: string;
-  teamId?: string;
-  slot?: number;
-  label: string;
-}
-```
-
-Тогда `deathTimes` берёт `e.teamId` напрямую.
-
-### 5. Добавить debug-панель/лог для рассинхрона
-
-Для `/games/m-test-g1` добавить dev/debug блок, который показывает по каждой команде:
+Каждый кадр:
 
 ```text
-slot | tag | hud death | event death | track first | track last | visible points | states
+1. detect_all(frame, H, teams)
+     для КАЖДОГО slot'а строим HSV-маску → находим все кандидаты в minimap-ROI
+     возвращаем плоский список {slot_hint, frame_px, world_px, area, mask_quality, color_score}
+
+2. associate(candidates, prev_slot_state, anchors, t)
+     стоимость = α·color_dist + β·world_dist_to_prediction + γ·shape_penalty
+     - Венгерский алгоритм (scipy.optimize.linear_sum_assignment)
+     - один кандидат → максимум один slot
+     - предсказание = последняя tracked точка + калмановское движение
+     - для незаассайненных slot'ов: hold/coast/lost как раньше
+
+3. validate(assignments)
+     - motion-gate: если v < min_v И recent_movement_score низкий → low_conf
+     - conflict-gate: если два slot'а стабильно в одной точке — оба low_conf, retire худшего
 ```
 
-Это позволит сразу видеть:
+Сохраняем без изменений:
+- `FrameRegistrar`, homography
+- HSV-загрузка из `hsv_presets.storm-point.json`
+- `load_anchors` + seed
+- HUD eliminations и `hud_alive_slots`
+- Формат `tracks.json` (schema_version: 2) и `slot-to-tag`
+- Post-hoc retire (как страховка, но с новыми порогами)
+- Telemetry: `n_tracked / n_wiped / state_reason / v_peak`
 
-- есть ли у команды трек;
-- почему она не рисуется;
-- где расходятся HUD death и track death;
-- сколько точек выкинул фильтр.
+## Что меняется в коде
 
-Можно сделать это скрытым в существующем `Data I/O`, чтобы не портить основной UI.
+`scripts/tracking/modules/track_teams/track_teams.py`:
 
-### 6. Жёсткий CLI-debug перед коммитом
+| секция | действие |
+|---|---|
+| `class SlotTracker` (450–917) | оставляем как **состояние слота** (Kalman, EMA HSV, счётчики), но `update()` больше не ищет — принимает готовый detection |
+| `SlotTracker._find_in_roi`, `_recover_global` | удаляем (их работу делает новый detector) |
+| **новый** `class FrameDetector` | строит HSV-маски всех 20 команд за один проход на minimap-ROI, возвращает candidates |
+| **новый** `def associate_hungarian(...)` | строит cost-матрицу slots×candidates, scipy `linear_sum_assignment` |
+| `main()` loop (1259–1388) | вместо цикла `for t in teams: st.update(...)` → `dets = detector.detect(frame, H); assigns = associate(dets, slot_trackers, t_now); for slot, det in assigns: st.accept(det) or st.miss()` |
+| post-hoc filter | оставляем, но снижаем порог `min_v_peak_for_alive=1.0 px/s`, retire HUD-alive если `v_peak < 1.0 AND tracked < 30` |
 
-Добавить отдельный скрипт, например:
+`requirements.txt`: добавить `scipy` (если ещё нет, для `linear_sum_assignment`).
 
-```text
-scripts/tracking/debug_match_data.py
+`scripts/tracking/modules/track_teams/configs/`:
+- `da.baseline.yaml` — копия текущего конфига (контроль)
+- `da.color_first.yaml` — высокий вес color_dist
+- `da.motion_first.yaml` — высокий вес world_dist (доверяем калману)
+- `da.strict_shape.yaml` — узкий size-gate из `team_profiles.json`
+- `da.aggressive_retire.yaml` — низкий порог motion-gate, лёгкая retire
+
+## 5 параллельных тестов
+
+`scripts/tracking/modules/track_teams/run_matrix.ps1` — запускает 5 прогонов на одно видео в отдельные `tracks_<tag>.json` + `run_<tag>.log`. Видео read-only, конфликта нет.
+
+| tag | конфиг | гипотеза проверяет |
+|---|---|---|
+| `baseline` | текущая логика (без detect-first) | контроль, чтобы знать «стало лучше или хуже» |
+| `color_first` | α=2.0 β=0.5 γ=0.3 | помогает ли приоритет цвета на похожих оттенках |
+| `motion_first` | α=0.5 β=2.0 γ=0.3 | помогает ли доверие к калману (для slot_4/10 с малым движением) |
+| `strict_shape` | size-gate ±20% от `team_profiles` | убирает ли строгая фильтрация по размеру плашки HUD-шум |
+| `aggressive_retire` | post-hoc `min_v_peak=2.0, min_tracked=40, ratio<0.30` | сколько ложно-живых слотов уйдёт в retire |
+
+Скрипт после прогонов автоматически печатает сравнительную таблицу:
+
 ```
-
-Он будет сравнивать:
-
-- `hud_timeline.eliminations`
-- `tracks.json`
-- `tracks.slots.json`
-- `slot-to-tag.json`
-
-И печатать таблицу проблем:
-
-```text
-slot  tag   hud_dead  track_last  drawable_pts  verdict
-1     ELTE  1035.53   1028.00     14            OK
-4     NIPC  alive     220.00      0             BAD: no drawable track after early game
+slot    baseline  color  motion  shape  aggro
+slot_4    12.6%   34.1%  41.2%   28.0%  retired
+slot_9    28.6%   55.0%  60.3%   48.1%  35.0%
 ...
 ```
 
-Это важнее, чем визуально гадать по сайту.
+## Что писать в `tracks.json`
 
-### 7. Проверить проблему “8–9 команд” отдельно
+Формат не ломаем. В `meta` добавляется поле `da_strategy: "detect_first"`, в каждом snapshot слота — `det_source: "hungarian" | "predicted" | "anchor_recovery"` для диагностики. UI игнорирует неизвестные поля.
 
-После фикса death-source нужно выяснить, почему треки не видны:
+## Порядок реализации
 
-- если `track_teams` реально помечает живые команды как `wiped` слишком рано — чинить tracker/state-machine;
-- если точки есть, но фронт слишком жёстко фильтрует `wiped/lost` — ослабить фильтр или использовать `last known position` до HUD death;
-- если время трека сдвинуто относительно HUD — добавить offset/calibration.
+1. Добавить `scipy` в `requirements.txt`, проверить импорт.
+2. Написать `FrameDetector` + unit-тест на одном кадре (`--debug-frame`).
+3. Написать `associate_hungarian` + симуляция: 20 фейковых dets vs 20 slots.
+4. Срезать `SlotTracker.update()` до `accept(det) / miss()`, переключить main loop.
+5. Прогон baseline + новой версии на коротком окне (60 сек), глазами сверить.
+6. Подкрутить пороги, добавить motion-gate в post-hoc.
+7. Написать `run_matrix.ps1` + конфиги 5 тестов.
+8. Запустить матрицу на полном VOD, прислать тебе сравнительный отчёт.
 
-### 8. Про скриншоты и кредиты
+## Технические заметки
 
-Точный расход кредитов я не вижу: он зависит от платформенного тарифа, модели и размера изображения. Но общий принцип такой:
+- `scipy.optimize.linear_sum_assignment` — O(n³), для 20×~40 кандидатов это <1мс на кадр.
+- Cost ∈ [0, 1]; недопустимые пары (вне ROI / цвет совсем не тот) = `inf` → не ассайнятся.
+- При <20 кандидатов часть slot'ов остаётся неассайненной → fallback на старую логику (hold/coast/lost).
+- HUD-alive больше не даёт иммунитет от retire; даёт только защиту от **absence-based wipe** (это уже есть).
 
-- **обычные browser screenshots** для проверки UI — почти бесплатная/техническая операция;
-- **AI-анализ изображения** дороже текста, особенно если часто отправлять большие кадры;
-- для нашей задачи лучше не гонять AI по каждому кадру.
+## Риски
 
-Оптимальный подход:
+- Сломать формат `tracks.json` → UI перестанет рисовать треки. Mitigation: schema_version=2 не трогаем, новые поля только добавляем.
+- Венгерский ассайн может «прыгать» между похожими по цвету командами при близких dets. Mitigation: гистерезис — пред. ассайн получает бонус -0.2 к стоимости.
+- 5 тестов прогоняются последовательно (PowerShell foreach), не параллельно — на одной машине параллельный SIFT упрётся в CPU. Уточни: хочешь параллельно (нужно 5×RAM/CPU) или последовательно (≈30 мин × 5 = 2.5ч)?
 
-1. Генерировать debug-кадры локально скриптом: трансляция + наложенный трекинг + HUD labels.
-2. Сравнивать массово численно: координаты, времена, visible points, состояния.
-3. AI/визуальный анализ использовать редко: например 10–20 ключевых моментов матча — старт, перед смертью, после смерти, спорные команды.
-
-Так мы не сожжём кредиты на постоянный vision-анализ и получим более воспроизводимый дебаг.
-
-## Проверка после реализации
-
-- `MATCH FEED` и карта должны использовать одинаковые wipe-times.
-- Команда должна становиться tombstone ровно на `hud_timeline.eliminations[slot].t_first_dead`.
-- Debug table должен показать 20 команд, их death-time и количество drawable track points.
-- Если после этого всё ещё видно 8–9 команд — причина будет уже локализована в `track_teams`, а не во фронте.
+Подтверди план — начинаю с шага 1.

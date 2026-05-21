@@ -29,6 +29,10 @@ import cv2
 import numpy as np
 import yaml
 from tqdm import tqdm
+try:
+    from scipy.optimize import linear_sum_assignment as _hungarian
+except ImportError:  # pragma: no cover
+    _hungarian = None
 
 
 # ----------------------------- Config & maps -----------------------------
@@ -433,6 +437,248 @@ def detect_team_blobs(frame_bgr: np.ndarray, teams: list[TeamCfg], det_cfg: dict
                 "score": float(area / max_a),
             })
     return out
+
+
+# ============== Detect-first → associate (new pipeline) =================
+#
+# Старый путь (`SlotTracker.update`) сканирует кадр по очереди для каждого
+# слота вокруг его предыдущей точки. Это надёжно для медленных слотов, но
+# легко «прилипает» к чужой плашке: seed на чужой команде → фантом сидит
+# неподвижно, post-hoc-фильтр его не убирает, если HUD говорит «жив».
+#
+# Новый путь:
+#   1. detect_candidates_in_minimap_roi(frame, teams) — одной HSV-операцией
+#      на minimap-ROI находим ВСЕ blob'ы цвета каждой команды.
+#   2. associate_hungarian(candidates, slot_trackers, H, t_now) — строим
+#      cost-матрицу и решаем глобальный ассайн scipy.linear_sum_assignment.
+#      Один кандидат → максимум один slot, нет «приклеивания» нескольких
+#      слотов к одной точке.
+#   3. Для назначенных пар вызываем SlotTracker.accept_observation(...);
+#      для остальных слотов — note_miss().
+#
+# Включается флагом `da_strategy: detect_first` в конфиге. Без флага работает
+# старая логика (baseline).
+
+def load_minimap_roi_bbox(zones_path: Optional[Path]) -> Optional[tuple[int, int, int, int]]:
+    """Возвращает (x, y, w, h) первой зоны с tag='minimap' в zones.vod.json.
+    None если файла нет или нет такой зоны."""
+    if zones_path is None or not Path(zones_path).exists():
+        return None
+    try:
+        raw = json.loads(Path(zones_path).read_text(encoding="utf-8"))
+        for z in raw.get("zones", []):
+            if z.get("tag") == "minimap":
+                return (int(z["x"]), int(z["y"]), int(z["w"]), int(z["h"]))
+    except Exception as e:
+        print(f"[warn] failed to read zones {zones_path}: {e}")
+    return None
+
+
+def detect_candidates_in_minimap_roi(
+    frame_bgr: np.ndarray,
+    teams: list[TeamCfg],
+    minimap_bbox: Optional[tuple[int, int, int, int]],
+    H: np.ndarray,
+    det_cfg: dict,
+) -> list[dict]:
+    """Для каждого слота строим HSV-маску внутри minimap-ROI и достаём blob'ы.
+    Возвращает плоский список:
+      { team_id, frame_px:(x,y), canonical_px:(cx,cy),
+        area, color_score (доля площади контура в маске),
+        bbox:(x,y,w,h) }
+    color_score ∈ (0..1] — пропорция площади blob'а от его bbox, выше = плотнее заливка.
+    """
+    fh, fw = frame_bgr.shape[:2]
+    if minimap_bbox is None:
+        x0, y0, x1, y1 = 0, 0, fw, fh
+    else:
+        mx, my, mw, mh = minimap_bbox
+        # zones.vod.json в base 1920x1080 — переведём в фактический размер кадра.
+        sx = fw / 1920.0
+        sy = fh / 1080.0
+        x0 = max(0, int(mx * sx))
+        y0 = max(0, int(my * sy))
+        x1 = min(fw, int((mx + mw) * sx))
+        y1 = min(fh, int((my + mh) * sy))
+    if x1 - x0 < 8 or y1 - y0 < 8:
+        return []
+    roi = frame_bgr[y0:y1, x0:x1]
+    hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+    k = int(det_cfg.get("morph_kernel", 3))
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k))
+    min_a = float(det_cfg.get("min_area_px", 40))
+    max_a = float(det_cfg.get("max_area_px", 2400))
+    out: list[dict] = []
+    for t in teams:
+        mask = cv2.inRange(hsv, t.hsv_lower, t.hsv_upper)
+        if t.hsv_lower2 is not None and t.hsv_upper2 is not None:
+            mask |= cv2.inRange(hsv, t.hsv_lower2, t.hsv_upper2)
+        if k > 1:
+            mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+            mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+        cnts, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        for c in cnts:
+            area = float(cv2.contourArea(c))
+            if area < min_a or area > max_a:
+                continue
+            x, y, w, h = cv2.boundingRect(c)
+            M = cv2.moments(c)
+            if M["m00"] == 0:
+                continue
+            local_cx = M["m10"] / M["m00"]
+            local_cy = M["m01"] / M["m00"]
+            det_fx = x0 + local_cx
+            det_fy = y0 + local_cy
+            cand_cx, cand_cy = map_point(H, (det_fx, det_fy))
+            color_score = area / max(1.0, float(w * h))
+            out.append({
+                "team_id": t.id,
+                "frame_px": (det_fx, det_fy),
+                "canonical_px": (cand_cx, cand_cy),
+                "area": area,
+                "color_score": float(color_score),
+                "bbox": (int(x0 + x), int(y0 + y), int(w), int(h)),
+            })
+    return out
+
+
+def associate_hungarian(
+    candidates: list[dict],
+    slot_trackers: dict,
+    t_now: float,
+    weights: dict,
+) -> dict[str, dict]:
+    """Глобальное назначение кандидатов слотам венгерским алгоритмом.
+
+    Cost(slot, cand):
+        gate-check: cand доступен слоту только если cand.canonical_px попадает
+        в motion-gate слота вокруг предсказания (или вокруг init_canonical_px
+        для не-активированных слотов). Иначе cost = +inf.
+
+        cost = β·norm(world_dist_to_prediction) + γ·shape_penalty + δ·color_mismatch_hint
+               − ε·hysteresis(prev_assigned == cand.team_id)
+
+        color_mismatch_hint = 0 если cand.team_id == slot.team.id (то же
+        семейство цвета — кандидата произвёл цветовой match именно этого
+        слота), иначе 0.5 (помечено как «чужой цвет», но допустимо если
+        размер/позиция совпадают).
+
+    Возвращает {team_id: cand_dict} только для назначенных пар.
+    """
+    if not candidates or not slot_trackers:
+        return {}
+    if _hungarian is None:
+        # Fallback: жадный по cost, чтобы скрипт работал без scipy.
+        return _associate_greedy(candidates, slot_trackers, t_now, weights)
+
+    slots = list(slot_trackers.values())
+    n_slots = len(slots)
+    n_cands = len(candidates)
+    INF = 1e6
+    cost = np.full((n_slots, n_cands), INF, dtype=np.float64)
+
+    beta = float(weights.get("beta_world", 1.0))
+    gamma = float(weights.get("gamma_shape", 0.3))
+    delta = float(weights.get("delta_color_mismatch", 0.5))
+    eps = float(weights.get("eps_hysteresis", 0.2))
+    gate_mult = float(weights.get("gate_radius_mult", 1.0))
+    fallback_gate_px = float(weights.get("fallback_gate_canonical_px", 200.0))
+
+    for i, st in enumerate(slots):
+        if st.state in ("wiped", "inactive"):
+            continue
+        if st.wiped:
+            continue
+        # Prediction in canonical px.
+        if st.canonical_px is not None and st.last_seen_t is not None:
+            dt = min(getattr(st, "dt_cap_s", 20.0),
+                     max(0.0, t_now - st.last_seen_t))
+            v_eff = max(getattr(st, "v_max_px_s", 60.0),
+                        getattr(st, "v_observed_peak_px_s", 0.0)
+                        * getattr(st, "v_observed_boost", 1.8))
+            radius = min(getattr(st, "gate_cap_px", 450.0),
+                         v_eff * dt + getattr(st, "gate_slack_px", 20.0))
+            pred_cx = st.canonical_px[0] + (
+                st.vx * dt if not st.canonical_px_stale else 0.0)
+            pred_cy = st.canonical_px[1] + (
+                st.vy * dt if not st.canonical_px_stale else 0.0)
+        elif st.init_canonical_px is not None:
+            pred_cx, pred_cy = st.init_canonical_px
+            radius = fallback_gate_px
+        else:
+            # Нет ни seed, ни истории — нечего ассайнить.
+            continue
+        radius *= gate_mult
+
+        for j, cand in enumerate(candidates):
+            cand_cx, cand_cy = cand["canonical_px"]
+            d = math.hypot(cand_cx - pred_cx, cand_cy - pred_cy)
+            if d > radius:
+                continue
+            world_term = d / max(1.0, radius)
+            # shape_penalty: blob со слишком низким color_score штрафуем.
+            shape_pen = 1.0 - min(1.0, max(0.0, cand["color_score"]))
+            color_mismatch = 0.0 if cand["team_id"] == st.team.id else delta
+            c = beta * world_term + gamma * shape_pen + color_mismatch
+            # Hysteresis: предыдущий tracked-blob этого же слота получает скидку
+            if getattr(st, "last_frame_px", None) is not None:
+                lfx, lfy = st.last_frame_px
+                cfx, cfy = cand["frame_px"]
+                if math.hypot(cfx - lfx, cfy - lfy) < 25.0:
+                    c -= eps
+            cost[i, j] = max(0.0, c)
+
+    # Pad to square so unmatched rows/cols are allowed.
+    n = max(n_slots, n_cands)
+    pad = np.full((n, n), INF / 2, dtype=np.float64)
+    pad[:n_slots, :n_cands] = cost
+    row_ind, col_ind = _hungarian(pad)
+    result: dict[str, dict] = {}
+    for r, c in zip(row_ind, col_ind):
+        if r >= n_slots or c >= n_cands:
+            continue
+        if cost[r, c] >= INF / 2:
+            continue
+        st = slots[r]
+        result[st.team.id] = candidates[c]
+    return result
+
+
+def _associate_greedy(candidates, slot_trackers, t_now, weights):
+    """Жадный fallback без scipy."""
+    assigned_cands: set[int] = set()
+    result: dict[str, dict] = {}
+    # Сортируем slot'ы по приоритету: активированные первыми.
+    slots = sorted(slot_trackers.values(),
+                   key=lambda s: (0 if getattr(s, "activated", False) else 1))
+    fallback_gate_px = float(weights.get("fallback_gate_canonical_px", 200.0))
+    for st in slots:
+        if st.state in ("wiped", "inactive") or st.wiped:
+            continue
+        if st.canonical_px is not None:
+            pred = st.canonical_px
+            radius = min(getattr(st, "gate_cap_px", 450.0),
+                         getattr(st, "v_max_px_s", 60.0) * 1.0 + 50.0)
+        elif st.init_canonical_px is not None:
+            pred = st.init_canonical_px
+            radius = fallback_gate_px
+        else:
+            continue
+        best_j = -1; best_d = 1e9
+        for j, cand in enumerate(candidates):
+            if j in assigned_cands:
+                continue
+            if cand["team_id"] != st.team.id:
+                continue
+            cx, cy = cand["canonical_px"]
+            d = math.hypot(cx - pred[0], cy - pred[1])
+            if d > radius or d > best_d:
+                continue
+            best_d = d; best_j = j
+        if best_j >= 0:
+            assigned_cands.add(best_j)
+            result[st.team.id] = candidates[best_j]
+    return result
 
 
 # ------------------------------ Tracker ----------------------------------
@@ -915,6 +1161,92 @@ class SlotTracker:
         }
 
 
+    # ---- detect-first API ---------------------------------------------------
+    def accept_observation(self, det: dict, t_now: float,
+                           det_source: str = "hungarian") -> dict:
+        """Применить уже-выбранную ассоциатором детекцию. det содержит
+        canonical_px, frame_px, area, color_score. Делает то же что update()
+        делает на хвосте после успешной HSV-детекции (смуссинг, EMA velocity,
+        активация near-anchor), но без поиска по ROI."""
+        # HUD/elim guards — те же, что в update().
+        if self.state == "inactive":
+            self.n_inactive += 1
+            return self._snapshot()
+        if not self.wiped and self.elim_t is not None and t_now >= self.elim_t:
+            self.wiped = True
+            self.state = "wiped"
+            self.state_reason = f"hud_wiped@{self.elim_t}"
+            return self._snapshot()
+        if self.wiped:
+            self.state = "wiped"
+            return self._snapshot()
+
+        cand_cx, cand_cy = det["canonical_px"]
+        det_fx, det_fy = det["frame_px"]
+
+        if self.canonical_px is not None:
+            last_cx, last_cy = self.canonical_px
+            dx = cand_cx - last_cx
+            dy = cand_cy - last_cy
+            dist = math.hypot(dx, dy)
+            step_budget = max(self.max_center_step_px, 200.0)
+            if dist > self.center_deadzone_px:
+                if dist > step_budget:
+                    scale = step_budget / max(1e-6, dist)
+                    dx *= scale
+                    dy *= scale
+                new_cx = last_cx + dx * self.center_smoothing_alpha
+                new_cy = last_cy + dy * self.center_smoothing_alpha
+                if self.last_seen_t is not None and (t_now - self.last_seen_t) > 1e-3:
+                    inst_vx = (new_cx - last_cx) / (t_now - self.last_seen_t)
+                    inst_vy = (new_cy - last_cy) / (t_now - self.last_seen_t)
+                    self.vx = self.velocity_alpha * inst_vx + (1 - self.velocity_alpha) * self.vx
+                    self.vy = self.velocity_alpha * inst_vy + (1 - self.velocity_alpha) * self.vy
+                    inst_speed = math.hypot(inst_vx, inst_vy)
+                    if inst_speed > self.v_observed_peak_px_s:
+                        self.v_observed_peak_px_s = inst_speed
+                self.canonical_px = (new_cx, new_cy)
+        else:
+            self.canonical_px = (cand_cx, cand_cy)
+
+        self.last_frame_px = (det_fx, det_fy)
+        self.state = "tracked"
+        self.canonical_px_stale = False
+        self.last_seen_t = t_now
+        self.state_reason = f"detect_first:{det_source}"
+        self.confidence = min(1.0, self.confidence * 0.6 + 0.4)
+        self.last_score = float(det.get("color_score", 0.5))
+        self.consecutive_detections += 1
+        self.lost_frames = 0
+        self.ever_detected = True
+        self.roi_expand_px = max(0, self.roi_expand_px - 20)
+        self._note_near_anchor_hit(cand_cx, cand_cy)
+        return self._snapshot()
+
+    def note_miss(self, t_now: float) -> dict:
+        """Слот не получил ассайн на этом кадре. Делегирует _on_miss и
+        возвращает snapshot — для совместимости с main loop."""
+        if self.state == "inactive":
+            self.n_inactive += 1
+            return self._snapshot()
+        if not self.wiped and self.elim_t is not None and t_now >= self.elim_t:
+            self.wiped = True
+            self.state = "wiped"
+            self.state_reason = f"hud_wiped@{self.elim_t}"
+            return self._snapshot()
+        if self.wiped:
+            self.state = "wiped"
+            return self._snapshot()
+        # Mirror update()'s out-of-frame/no-anchor short-circuit.
+        if self.canonical_px is None:
+            self.state = "lost"
+            self.state_reason = "no_anchor"
+            return self._snapshot()
+        self.state_reason = "no_assignment"
+        self._on_miss()
+        return self._snapshot()
+
+
 @dataclass
 class Track:
     team_id: str
@@ -1131,6 +1463,31 @@ def main():
         print(f"[info] anchors: {sum(1 for a in anchors_map.values() if a.get('conf') in ('HIGH','MED'))} HIGH/MED, {sum(1 for a in anchors_map.values() if a.get('conf') == 'LOW')} LOW")
     frame_step = int(args.frame_step or cfg.get("frame_step", 3))
 
+    # ---- Detect-first → associate (new pipeline, opt-in) --------------------
+    da_strategy = str(cfg.get("da_strategy", "per_slot_roi")).lower()
+    da_weights = cfg.get("da_weights", {}) or {}
+    minimap_bbox = None
+    if da_strategy == "detect_first":
+        zones_cfg_path = cfg.get("zones_file")
+        if zones_cfg_path:
+            zones_path = (args.config.parent / zones_cfg_path).resolve()
+        else:
+            # default: shared zones.vod.json
+            zones_path = (Path(__file__).resolve().parents[2]
+                          / "configs" / "zones.vod.json")
+        minimap_bbox = load_minimap_roi_bbox(zones_path)
+        if minimap_bbox is None:
+            print(f"[warn] da_strategy=detect_first но minimap-ROI не найдена "
+                  f"({zones_path}) — буду сканировать весь кадр")
+        else:
+            print(f"[info] da_strategy=detect_first, minimap-ROI={minimap_bbox} "
+                  f"(zones={zones_path})")
+        if _hungarian is None:
+            print("[warn] scipy не установлен — fallback на жадный ассайн "
+                  "(`pip install scipy`)")
+    else:
+        print(f"[info] da_strategy={da_strategy} (старая логика)")
+
     # ---- HUD eliminations (authoritative wipe times) -------------------------
     elim_path = args.eliminations
     if elim_path is None and cfg.get("eliminations_file"):
@@ -1249,6 +1606,7 @@ def main():
         ],
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "schema_version": 2,
+        "da_strategy": da_strategy,
     }
     fout.write('{"meta":'); json.dump(meta, fout, ensure_ascii=False); fout.write(',"frames":[')
     first = True
@@ -1287,12 +1645,30 @@ def main():
                 t_now = (frame_idx - start_frame) / fps
                 world_dets: list[dict] = []
                 slot_snaps: list[dict] = []
+                if da_strategy == "detect_first":
+                    candidates = detect_candidates_in_minimap_roi(
+                        frame, teams, minimap_bbox, H, det_cfg)
+                    assigns = associate_hungarian(
+                        candidates, slot_trackers, t_now, da_weights)
+                    for t in teams:
+                        st = slot_trackers[t.id]
+                        det = assigns.get(t.id)
+                        if det is not None:
+                            snap = st.accept_observation(det, t_now)
+                        else:
+                            snap = st.note_miss(t_now)
+                        if snap is None:
+                            continue
+                        slot_snaps.append(snap)
+                else:
+                    for t in teams:
+                        st = slot_trackers[t.id]
+                        snap = st.update(frame, H, t_now=t_now)
+                        if snap is None:
+                            continue
+                        slot_snaps.append(snap)
                 for t in teams:
                     st = slot_trackers[t.id]
-                    snap = st.update(frame, H, t_now=t_now)
-                    if snap is None:
-                        continue
-                    slot_snaps.append(snap)
                     # Only emit world detections for actually observed states.
                     if st.canonical_px is not None and st.state == "tracked":
                         wx, wy = map_point(cmap.px_to_world, st.canonical_px)
@@ -1302,6 +1678,9 @@ def main():
                             "score": st.last_score,
                             "angle_world_deg": None,
                         })
+                # Telemetry pass on slot_snaps.
+                for snap in slot_snaps:
+                    st = slot_trackers[snap["team_id"]]
                     # Telemetry.
                     s = snap.get("state", "")
                     if s == "tracked":   st.n_tracked += 1
