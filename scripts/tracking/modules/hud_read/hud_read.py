@@ -33,6 +33,14 @@ IMAGE_NAMES = {"logo", "hero 1", "hero 2", "hero 3"}
 # Поля, состоящие только из цифр.
 DIGIT_NAMES = {"pts", "game number", "number of teams alive", "number of players alive"}
 
+# Зоны, которые НЕ должны OCR-иться (используются только как геометрия).
+# Например, minimap.camera roi нужна ring_locator/track_teams; OCR по ней
+# даёт длинные «стихи» названий команд внутри миникарты и сильно засоряет
+# отчёт + замедляет проход.
+OCR_SKIP_ZONES: set[tuple[str, str]] = {
+    ("minimap", "camera roi"),
+}
+
 # Поля, которые в матче не меняются — достаточно зафиксировать первые стабильные значения.
 # Для команд "name"/"logo" и для HUD "map name"/"game number".
 STATIC_TEAM_NAMES = {"name", "logo"}
@@ -282,8 +290,9 @@ def parse_field(tag: str, name: str, text: str) -> Any:
             v = int(m.group(0))
         except ValueError:
             return None
-        # Apex score: 0..100 в матче. Всё за пределами — мусор от тёмной/мелкой плашки.
-        if v < 0 or v > 100:
+        # Apex score: реально 0..~120 в матче. Берём 0..199 как мягкий sanity-фильтр —
+        # отсекаем явный OCR-мусор, но не теряем валидные значения.
+        if v < 0 or v > 199:
             return None
         return v
     if name == "eliminated":
@@ -1268,6 +1277,9 @@ def main() -> int:
         if is_static:
             static_state[(tag, name)] = {"locked": None, "votes": defaultdict(int), "tries": 0}
 
+    # Сырая телеметрия OCR для pts — по слотам список (frame, raw_text, parsed).
+    pts_raw: dict[int, list[dict[str, Any]]] = defaultdict(list)
+
     def is_static_key(tag: str, name: str) -> bool:
         return (tag, name) in static_state
 
@@ -1293,6 +1305,11 @@ def main() -> int:
             crop = frame[y:y + h, x:x + w]
             st = stats[(tag, name)]
             st["total"] += 1
+
+            # Зоны, которые помечены как «только геометрия» — пропускаем OCR.
+            if (tag, name) in OCR_SKIP_ZONES:
+                per_zone_value[zid] = None
+                continue
 
             # Статичное поле уже зафиксировано — просто переиспользуем.
             if is_static_key(tag, name) and static_state[(tag, name)]["locked"] is not None:
@@ -1344,6 +1361,15 @@ def main() -> int:
                     val = parse_field(tag, name, txt)
                     _OCR_CACHE[cache_key] = val
                     _OCR_CACHE_MISS += 1
+                # Сырой дамп для pts — диагностика проблемных слотов.
+                if name == "pts":
+                    _slot = team_slot(tag)
+                    if _slot is not None:
+                        pts_raw[_slot].append({
+                            "frame": f,
+                            "raw": (txt or "").strip(),
+                            "parsed": val,
+                        })
                 if val is not None and val is not False:
                     st["parsed"] += 1
                 if val not in (None, "", False):
@@ -1450,7 +1476,12 @@ def main() -> int:
     for (tag, name), st in sorted(stats.items()):
         tot = st["total"] or 1
         is_img = name in IMAGE_NAMES
-        if is_img:
+        if (tag, name) in OCR_SKIP_ZONES:
+            ok_pct = 0
+            parsed_pct = 0
+            suggest = "SKIP (geometry only)"
+            examples = ""
+        elif is_img:
             uniq = len(set(st["hashes"]))
             ok_pct = 100 if st["hashes"] else 0
             parsed_pct = ok_pct
@@ -1510,6 +1541,37 @@ def main() -> int:
             encoding="utf-8",
         )
         print(f"[hud_read] team tag votes → {args.out / tags_name}")
+
+    # ── Дамп сырых OCR-кандидатов для pts (диагностика проблемных слотов) ──
+    if pts_raw:
+        pts_name = f"pts_raw.{args.chunk_id}.json" if args.chunk_id else "pts_raw.json"
+        # Сводка по слотам: топ raw-строк и счётчики accepted/rejected.
+        from collections import Counter as _Counter
+        summary: dict[str, Any] = {}
+        for slot, entries in sorted(pts_raw.items()):
+            raw_counter: _Counter = _Counter(e["raw"] for e in entries)
+            parsed_counter: _Counter = _Counter(
+                str(e["parsed"]) for e in entries if e["parsed"] is not None
+            )
+            accepted = sum(1 for e in entries if e["parsed"] is not None)
+            summary[str(slot)] = {
+                "frames": len(entries),
+                "accepted": accepted,
+                "rejected": len(entries) - accepted,
+                "top_raw": [{"value": v, "count": n}
+                            for v, n in raw_counter.most_common(8)],
+                "top_parsed": [{"value": v, "count": n}
+                               for v, n in parsed_counter.most_common(5)],
+            }
+        (args.out / pts_name).write_text(
+            json.dumps(
+                {"slots": summary,
+                 "samples": {str(s): pts_raw[s][:20] for s in sorted(pts_raw)}},
+                ensure_ascii=False, indent=2,
+            ),
+            encoding="utf-8",
+        )
+        print(f"[hud_read] pts raw OCR dump → {args.out / pts_name}")
 
     print(f"\n[hud_read] OK → {args.out}")
     return 0
