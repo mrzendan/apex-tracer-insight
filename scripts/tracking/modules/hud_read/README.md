@@ -38,6 +38,25 @@
 - **macOS** — `brew install tesseract`.
 - **Linux** — `sudo apt install tesseract-ocr`.
 
+## Запуск из PowerShell — ловушка с backtick
+
+PowerShell использует обратный апостроф (`` ` ``) как символ продолжения
+строки. **Никогда не ставь его на последней строке** — иначе после
+успешного завершения скрипта PS получит «хвост» как отдельную команду и
+выдаст ошибку вида `Имя "-Mode" не распознано...` уже **после** `git push`.
+
+Правильно:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\tracking\modules\hud_read\push.ps1 `
+  -Video scripts\tracking\game_sp.mp4 `
+  -TessCmd "C:\Program Files\Tesseract-OCR\tesseract.exe" `
+  -Mode forward
+```
+
+Обрати внимание: у `-Mode forward` (последняя строка) **нет** backtick в
+конце. Кавычки вокруг `forward` не нужны.
+
 ## Запуск
 
 ```powershell
