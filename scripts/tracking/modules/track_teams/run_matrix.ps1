@@ -58,11 +58,6 @@ if ($Parallel) {
       $env:PYTHONUTF8 = "1"
       $out = "$outDir/tracks_$tag.json"
       $log = "$outDir/run_$tag.log"
-      $pyArgs = @("scripts/tracking/modules/track_teams/track_teams.py",
-                  "--video", $Video, "--config", $config, "--out", $out,
-                  "--start", $Start, "--end", $End,
-                  "--anchors", $Anchors, "--eliminations", $Eliminations)
-      if ($FrameStep -gt 0) { $pyArgs += @("--frame-step", $FrameStep) }
       $extra = ""
       if ($FrameStep -gt 0) { $extra = " --frame-step $FrameStep" }
       $cmd = "python scripts/tracking/modules/track_teams/track_teams.py --video `"$Video`" --config `"$config`" --out `"$out`" --start $Start --end $End --anchors `"$Anchors`" --eliminations `"$Eliminations`"$extra > `"$log`" 2>&1"
