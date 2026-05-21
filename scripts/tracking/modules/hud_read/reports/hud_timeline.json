@@ -13,8 +13,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 212,
+        "number_of_players_alive": 0,
         "ring_status": null
       },
       "teams": [
@@ -214,7 +214,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f21cf",
-          "pts": null,
+          "pts": 1,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -226,8 +226,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 212,
+        "number_of_players_alive": 312,
         "ring_status": null
       },
       "teams": [
@@ -439,8 +439,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 2107,
+        "number_of_players_alive": 0,
         "ring_status": null
       },
       "teams": [
@@ -652,8 +652,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 212,
+        "number_of_players_alive": 0,
         "ring_status": null
       },
       "teams": [
@@ -853,7 +853,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f29cf",
-          "pts": null,
+          "pts": 1,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -865,8 +865,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 212,
+        "number_of_players_alive": 0,
         "ring_status": null
       },
       "teams": [
@@ -1066,7 +1066,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "8f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f218f",
-          "pts": null,
+          "pts": 1,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -1078,8 +1078,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 2127,
+        "number_of_players_alive": 312,
         "ring_status": null
       },
       "teams": [
@@ -1129,7 +1129,7 @@
           "hero_1": "1b0f282bb7112b3b",
           "hero_2": "090d011d1f1f431f",
           "hero_3": "051d1c5cddfd793a",
-          "pts": null,
+          "pts": 27,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -1279,7 +1279,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f21cf",
-          "pts": null,
+          "pts": 1,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -1291,8 +1291,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 212,
+        "number_of_players_alive": 0,
         "ring_status": null
       },
       "teams": [
@@ -1504,8 +1504,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 212,
+        "number_of_players_alive": 0,
         "ring_status": null
       },
       "teams": [
@@ -1705,7 +1705,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f21cf",
-          "pts": null,
+          "pts": 1,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -1717,8 +1717,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 2127,
+        "number_of_players_alive": 0,
         "ring_status": null
       },
       "teams": [
@@ -1930,8 +1930,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 212,
+        "number_of_players_alive": 0,
         "ring_status": null
       },
       "teams": [
@@ -1981,7 +1981,7 @@
           "hero_1": "1b0f282bb7112b3b",
           "hero_2": "890d011d1f1f431f",
           "hero_3": "051d1c5cddfd793a",
-          "pts": null,
+          "pts": 27,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -2131,7 +2131,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f23cf",
-          "pts": null,
+          "pts": 1,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -2143,8 +2143,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 212,
+        "number_of_players_alive": 0,
         "ring_status": null
       },
       "teams": [
@@ -2356,8 +2356,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 2497,
+        "number_of_players_alive": 1,
         "ring_status": null
       },
       "teams": [
@@ -2557,7 +2557,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f29cf",
-          "pts": null,
+          "pts": 1,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -2569,8 +2569,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 212,
+        "number_of_players_alive": 37,
         "ring_status": null
       },
       "teams": [
@@ -2782,8 +2782,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 212,
+        "number_of_players_alive": 13,
         "ring_status": null
       },
       "teams": [
@@ -2983,7 +2983,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f21cb",
-          "pts": null,
+          "pts": 1,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -2995,8 +2995,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 2497,
+        "number_of_players_alive": 53,
         "ring_status": null
       },
       "teams": [
@@ -3208,8 +3208,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 212,
+        "number_of_players_alive": 53,
         "ring_status": null
       },
       "teams": [
@@ -3421,8 +3421,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 2497,
+        "number_of_players_alive": 573,
         "ring_status": null
       },
       "teams": [
@@ -3634,8 +3634,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 212,
+        "number_of_players_alive": 3,
         "ring_status": null
       },
       "teams": [
@@ -3847,8 +3847,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 2497,
+        "number_of_players_alive": 53,
         "ring_status": null
       },
       "teams": [
@@ -4048,7 +4048,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f21cf",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -4060,8 +4060,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 212,
+        "number_of_players_alive": 53,
         "ring_status": null
       },
       "teams": [
@@ -4261,7 +4261,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f21cb",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -4273,8 +4273,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 212,
+        "number_of_players_alive": 53,
         "ring_status": null
       },
       "teams": [
@@ -4324,7 +4324,7 @@
           "hero_1": "1b0f282bb7112b3b",
           "hero_2": "090d011d1f1f431f",
           "hero_3": "051d1c5cddfd793a",
-          "pts": null,
+          "pts": 27,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -4474,7 +4474,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bfad6d2e91",
           "hero_3": "0c0e000e8f8f21cf",
-          "pts": null,
+          "pts": 1,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -4486,8 +4486,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 22,
+        "number_of_players_alive": 53,
         "ring_status": null
       },
       "teams": [
@@ -4537,7 +4537,7 @@
           "hero_1": "190f282bb7112b3b",
           "hero_2": "090d011d1f1f431f",
           "hero_3": "051d1c5cddfd7938",
-          "pts": null,
+          "pts": 27,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -4687,7 +4687,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f21cb",
-          "pts": null,
+          "pts": 1,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -4699,8 +4699,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 212,
+        "number_of_players_alive": 573,
         "ring_status": null
       },
       "teams": [
@@ -4900,7 +4900,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f21cf",
-          "pts": null,
+          "pts": 1,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -4912,8 +4912,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 2138,
+        "number_of_players_alive": 573,
         "ring_status": null
       },
       "teams": [
@@ -4963,7 +4963,7 @@
           "hero_1": "1b0f282bb7112b3b",
           "hero_2": "090d011d1f1f431f",
           "hero_3": "051d1c5cddfd793a",
-          "pts": null,
+          "pts": 27,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -5023,7 +5023,7 @@
           "hero_1": "878fafe5e5a6a69e",
           "hero_2": "0f0f47a4fa761c1e",
           "hero_3": "070f1f363beb6f07",
-          "pts": null,
+          "pts": 35,
           "logo": "0010303068686c6c",
           "eliminated": false
         },
@@ -5125,8 +5125,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 212,
+        "number_of_players_alive": 37,
         "ring_status": null
       },
       "teams": [
@@ -5338,8 +5338,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 212,
+        "number_of_players_alive": 7,
         "ring_status": null
       },
       "teams": [
@@ -5539,7 +5539,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f23cf",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -5551,8 +5551,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 212,
+        "number_of_players_alive": 57,
         "ring_status": null
       },
       "teams": [
@@ -5764,8 +5764,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 212,
+        "number_of_players_alive": 37,
         "ring_status": null
       },
       "teams": [
@@ -5845,7 +5845,7 @@
           "hero_1": "4b4b4b4b4b4b4b4b",
           "hero_2": "abababababababab",
           "hero_3": "3c3c3c3c3c3c3c3c",
-          "pts": null,
+          "pts": 4,
           "logo": "0038383c34343800",
           "eliminated": false
         },
@@ -5965,7 +5965,7 @@
           "hero_1": "9c9c9c9c9c9c9c9c",
           "hero_2": "9b9b9b9b9b9b9b9b",
           "hero_3": "6969696969696969",
-          "pts": null,
+          "pts": 1,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -5977,8 +5977,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 22,
+        "number_of_players_alive": 27,
         "ring_status": null
       },
       "teams": [
@@ -6178,7 +6178,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f21cb",
-          "pts": null,
+          "pts": 1,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -6190,8 +6190,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 22,
+        "number_of_players_alive": 315,
         "ring_status": null
       },
       "teams": [
@@ -6403,8 +6403,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 2497,
+        "number_of_players_alive": 13,
         "ring_status": null
       },
       "teams": [
@@ -6604,7 +6604,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f29cb",
-          "pts": null,
+          "pts": 1,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -6616,8 +6616,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 212,
+        "number_of_players_alive": 13,
         "ring_status": null
       },
       "teams": [
@@ -6817,7 +6817,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f23cf",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -6829,8 +6829,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 219,
+        "number_of_players_alive": 53,
         "ring_status": null
       },
       "teams": [
@@ -7030,7 +7030,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f23cf",
-          "pts": null,
+          "pts": 1,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -7042,8 +7042,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 22,
+        "number_of_players_alive": 57,
         "ring_status": null
       },
       "teams": [
@@ -7243,7 +7243,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f21cf",
-          "pts": null,
+          "pts": 1,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -7256,7 +7256,7 @@
         "map_name": "STORM POINT",
         "game_number": 4,
         "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_players_alive": 315,
         "ring_status": null
       },
       "teams": [
@@ -7456,7 +7456,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f21cf",
-          "pts": null,
+          "pts": 1,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -7468,8 +7468,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 53,
         "ring_status": null
       },
       "teams": [
@@ -7669,7 +7669,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f21cf",
-          "pts": null,
+          "pts": 1,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -7681,8 +7681,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 513,
         "ring_status": null
       },
       "teams": [
@@ -7882,7 +7882,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "8f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f21cf",
-          "pts": null,
+          "pts": 1,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -7894,8 +7894,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 43,
         "ring_status": null
       },
       "teams": [
@@ -8095,7 +8095,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f29cf",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -8107,8 +8107,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 33,
         "ring_status": null
       },
       "teams": [
@@ -8320,8 +8320,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 53,
         "ring_status": null
       },
       "teams": [
@@ -8533,8 +8533,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 513,
         "ring_status": null
       },
       "teams": [
@@ -8734,7 +8734,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f21cf",
-          "pts": null,
+          "pts": 1,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -8746,8 +8746,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 33,
         "ring_status": null
       },
       "teams": [
@@ -8959,8 +8959,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 53,
         "ring_status": null
       },
       "teams": [
@@ -9160,7 +9160,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f21cf",
-          "pts": null,
+          "pts": 1,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -9172,8 +9172,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 13,
         "ring_status": null
       },
       "teams": [
@@ -9373,7 +9373,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bead6d2e91",
           "hero_3": "0c8e010e8f8f21cf",
-          "pts": null,
+          "pts": 1,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -9385,8 +9385,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 53,
         "ring_status": null
       },
       "teams": [
@@ -9586,7 +9586,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f21cb",
-          "pts": null,
+          "pts": 1,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -9598,8 +9598,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 315,
         "ring_status": null
       },
       "teams": [
@@ -9811,8 +9811,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 13,
         "ring_status": null
       },
       "teams": [
@@ -10012,7 +10012,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f21cb",
-          "pts": null,
+          "pts": 1,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -10024,8 +10024,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 53,
         "ring_status": null
       },
       "teams": [
@@ -10238,7 +10238,7 @@
         "map_name": "STORM POINT",
         "game_number": 4,
         "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_players_alive": 53,
         "ring_status": null
       },
       "teams": [
@@ -10450,8 +10450,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 513,
         "ring_status": null
       },
       "teams": [
@@ -10651,7 +10651,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f21cf",
-          "pts": null,
+          "pts": 1,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -10664,7 +10664,7 @@
         "map_name": "STORM POINT",
         "game_number": 4,
         "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_players_alive": 315,
         "ring_status": null
       },
       "teams": [
@@ -10877,7 +10877,7 @@
         "map_name": "STORM POINT",
         "game_number": 4,
         "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_players_alive": 33,
         "ring_status": null
       },
       "teams": [
@@ -11089,8 +11089,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 315,
         "ring_status": null
       },
       "teams": [
@@ -11290,7 +11290,7 @@
           "hero_1": "c6efede5a6a6be9e",
           "hero_2": "6e5f57beed5d6e51",
           "hero_3": "8c8e818e8f8f23cb",
-          "pts": null,
+          "pts": 1,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -11302,8 +11302,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 55,
         "ring_status": null
       },
       "teams": [
@@ -11503,7 +11503,7 @@
           "hero_1": "c6efede5a6a6be9e",
           "hero_2": "6e5f57beed5d6e51",
           "hero_3": "8c8e818e8f8f23cf",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -11515,8 +11515,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 55,
         "ring_status": null
       },
       "teams": [
@@ -11716,7 +11716,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555557d6e51",
           "hero_3": "7c6e5858580b23cf",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -11728,8 +11728,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 0,
         "ring_status": null
       },
       "teams": [
@@ -11941,8 +11941,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 17,
+        "number_of_players_alive": 213,
         "ring_status": null
       },
       "teams": [
@@ -12154,8 +12154,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 7,
+        "number_of_players_alive": 415,
         "ring_status": null
       },
       "teams": [
@@ -12355,7 +12355,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "3c6e5958580f21cf",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -12367,8 +12367,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 413,
         "ring_status": null
       },
       "teams": [
@@ -12568,7 +12568,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555557d6e51",
           "hero_3": "7c6e5958580f21cb",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -12580,8 +12580,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 13,
+        "number_of_players_alive": 5,
         "ring_status": null
       },
       "teams": [
@@ -12631,7 +12631,7 @@
           "hero_1": "1b0f282bb7112b3b",
           "hero_2": "090d011d1f1f431f",
           "hero_3": "051d1c5cddfd793a",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -12793,8 +12793,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 7,
         "ring_status": null
       },
       "teams": [
@@ -12844,7 +12844,7 @@
           "hero_1": "1b0f282bb7112b3b",
           "hero_2": "890d011d1f1f431f",
           "hero_3": "051d1c5cddfd793a",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -12884,7 +12884,7 @@
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
-          "pts": null,
+          "pts": 21,
           "logo": "2070707870787820",
           "eliminated": false
         },
@@ -12994,7 +12994,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555557d6e51",
           "hero_3": "bc6e5858580b21cb",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -13006,8 +13006,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 45,
         "ring_status": null
       },
       "teams": [
@@ -13057,7 +13057,7 @@
           "hero_1": "9b0f282bb7112b3b",
           "hero_2": "090d011d1f1f431f",
           "hero_3": "051d1c5cddfd7938",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -13097,7 +13097,7 @@
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
-          "pts": null,
+          "pts": 21,
           "logo": "2070707870787820",
           "eliminated": false
         },
@@ -13207,7 +13207,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "7c6e5958580b218b",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -13219,8 +13219,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 43,
         "ring_status": null
       },
       "teams": [
@@ -13270,7 +13270,7 @@
           "hero_1": "1b0f282bb7112b3b",
           "hero_2": "090d011d1f1f431f",
           "hero_3": "051d1c5cddfd793a",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -13310,7 +13310,7 @@
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "8d0c090f1d0f4b4b",
-          "pts": null,
+          "pts": 21,
           "logo": "2070707870787820",
           "eliminated": false
         },
@@ -13380,7 +13380,7 @@
           "hero_1": "8787afe5a4a6b69e",
           "hero_2": "09169595bb99b395",
           "hero_3": "070f17363d6d6f03",
-          "pts": null,
+          "pts": 30,
           "logo": "0000243870390000",
           "eliminated": false
         },
@@ -13420,7 +13420,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555557d6e51",
           "hero_3": "3c6e5958580f218f",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -13432,8 +13432,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 13,
+        "number_of_players_alive": 43,
         "ring_status": null
       },
       "teams": [
@@ -13483,7 +13483,7 @@
           "hero_1": "1b0f282bb7112b3b",
           "hero_2": "890d011d1f1f431f",
           "hero_3": "051d1c5cddfd793a",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -13523,7 +13523,7 @@
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
-          "pts": null,
+          "pts": 21,
           "logo": "2070707870787820",
           "eliminated": false
         },
@@ -13633,7 +13633,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "7c6e5958590f218f",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -13645,8 +13645,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 437,
         "ring_status": null
       },
       "teams": [
@@ -13696,7 +13696,7 @@
           "hero_1": "1b0f282bb7112b3b",
           "hero_2": "090d011d1f1f431f",
           "hero_3": "051d1c5cddfd793a",
-          "pts": null,
+          "pts": 31,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -13846,7 +13846,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "7cee5958580b29cb",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -13858,8 +13858,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 27,
         "ring_status": null
       },
       "teams": [
@@ -13909,7 +13909,7 @@
           "hero_1": "1b0f282bb7112b3b",
           "hero_2": "090d011d1f1f431f",
           "hero_3": "051d1c5cddfd793a",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -13949,7 +13949,7 @@
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
-          "pts": null,
+          "pts": 21,
           "logo": "2070707870787820",
           "eliminated": false
         },
@@ -14059,7 +14059,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "7c6e5958580b21cf",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -14072,7 +14072,7 @@
         "map_name": "STORM POINT",
         "game_number": 4,
         "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_players_alive": 43,
         "ring_status": null
       },
       "teams": [
@@ -14122,7 +14122,7 @@
           "hero_1": "1b0f282bb7112b3b",
           "hero_2": "890d011d1f1f431f",
           "hero_3": "051d1c5cddfd793a",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -14162,7 +14162,7 @@
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
-          "pts": null,
+          "pts": 21,
           "logo": "2070707870787820",
           "eliminated": false
         },
@@ -14272,7 +14272,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "7c6e5958580b29cb",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -14284,8 +14284,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 5,
         "ring_status": null
       },
       "teams": [
@@ -14335,7 +14335,7 @@
           "hero_1": "1b0f282bb7112b3b",
           "hero_2": "090d011d1f1f431f",
           "hero_3": "051d1c5cddfd7938",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -14497,8 +14497,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 43,
         "ring_status": null
       },
       "teams": [
@@ -14548,7 +14548,7 @@
           "hero_1": "1b0f282bb7112b3b",
           "hero_2": "090d011d1f1f431f",
           "hero_3": "051d1c5cddfd793a",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -14698,7 +14698,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555557d6e51",
           "hero_3": "3c6e5958580b21cb",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -14711,7 +14711,7 @@
         "map_name": "STORM POINT",
         "game_number": 4,
         "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_players_alive": 43,
         "ring_status": null
       },
       "teams": [
@@ -14761,7 +14761,7 @@
           "hero_1": "1b0f282bb7112b3b",
           "hero_2": "890d011d1f1f431f",
           "hero_3": "051d1c5cddfd793a",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -14801,7 +14801,7 @@
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
-          "pts": null,
+          "pts": 21,
           "logo": "2070707870787820",
           "eliminated": false
         },
@@ -14911,7 +14911,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555557d6e51",
           "hero_3": "7c6e5958580b23cf",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -14923,8 +14923,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 27,
         "ring_status": null
       },
       "teams": [
@@ -14974,7 +14974,7 @@
           "hero_1": "1b0f282bb7112b3b",
           "hero_2": "090d011d1d1f431f",
           "hero_3": "051d1c5cddfd793a",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -15014,7 +15014,7 @@
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
-          "pts": null,
+          "pts": 21,
           "logo": "2070707870787820",
           "eliminated": false
         },
@@ -15124,7 +15124,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "fc6e5958580b21cb",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -15136,8 +15136,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 27,
         "ring_status": null
       },
       "teams": [
@@ -15187,7 +15187,7 @@
           "hero_1": "1b0f282bb7112b3b",
           "hero_2": "090d011d1f1f431f",
           "hero_3": "051d1c5cddfd793a",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -15227,7 +15227,7 @@
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "8d0c090f1d0f4b5b",
-          "pts": null,
+          "pts": 21,
           "logo": "2070707870787820",
           "eliminated": false
         },
@@ -15337,7 +15337,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "7c6e5958580f21cb",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -15349,8 +15349,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 43,
         "ring_status": null
       },
       "teams": [
@@ -15400,7 +15400,7 @@
           "hero_1": "1b0f282bb7112b3b",
           "hero_2": "090d011d1d1f431f",
           "hero_3": "051d1c5cddfd793a",
-          "pts": null,
+          "pts": 31,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -15440,7 +15440,7 @@
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
-          "pts": null,
+          "pts": 21,
           "logo": "2070707870787820",
           "eliminated": false
         },
@@ -15510,7 +15510,7 @@
           "hero_1": "8787afe5a4a6b69e",
           "hero_2": "09169595bb99b395",
           "hero_3": "870f17363d6d6f03",
-          "pts": null,
+          "pts": 30,
           "logo": "0000243870390000",
           "eliminated": false
         },
@@ -15550,7 +15550,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555557d6e51",
           "hero_3": "3c6e5958580f21cf",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -15562,8 +15562,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 12,
+        "number_of_players_alive": 45,
         "ring_status": null
       },
       "teams": [
@@ -15613,7 +15613,7 @@
           "hero_1": "1b0f282bb7112b3b",
           "hero_2": "090d011d1f1f431f",
           "hero_3": "851d9c5cdcfc793a",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -15653,7 +15653,7 @@
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
-          "pts": null,
+          "pts": 21,
           "logo": "2070707870787820",
           "eliminated": false
         },
@@ -15776,7 +15776,7 @@
         "map_name": "STORM POINT",
         "game_number": 4,
         "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_players_alive": 43,
         "ring_status": null
       },
       "teams": [
@@ -15826,7 +15826,7 @@
           "hero_1": "1b0f282bb7112b3b",
           "hero_2": "78ccc11d1e1e431f",
           "hero_3": "859c9c5cdcfc793a",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -15866,7 +15866,7 @@
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
-          "pts": null,
+          "pts": 21,
           "logo": "2070707870787820",
           "eliminated": false
         },
@@ -15896,7 +15896,7 @@
           "hero_1": "878f9fb6bbefef83",
           "hero_2": "3c6e4d460e8f2b0b",
           "hero_3": "878fade565a6361e",
-          "pts": null,
+          "pts": 1,
           "logo": "2828707868687010",
           "eliminated": false
         },
@@ -15926,7 +15926,7 @@
           "hero_1": "f6eed7b6fdedefc3",
           "hero_2": "8787afe5a4a6b69e",
           "hero_3": "09169595bb99b395",
-          "pts": null,
+          "pts": 8,
           "logo": "1030796868683050",
           "eliminated": false
         },
@@ -15976,7 +15976,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "3c6e5958580b218f",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -15988,8 +15988,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 13,
+        "number_of_players_alive": 315,
         "ring_status": null
       },
       "teams": [
@@ -16039,7 +16039,7 @@
           "hero_1": "58eecaccec132b3b",
           "hero_2": "78cccb8a8a1a431f",
           "hero_3": "859c949090f4792a",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -16079,7 +16079,7 @@
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
-          "pts": null,
+          "pts": 21,
           "logo": "2070707870787820",
           "eliminated": false
         },
@@ -16109,7 +16109,7 @@
           "hero_1": "878f9fb6bbefef83",
           "hero_2": "3c6e4d460e8f2b0b",
           "hero_3": "878fade56526361e",
-          "pts": null,
+          "pts": 1,
           "logo": "2828707868687010",
           "eliminated": false
         },
@@ -16139,7 +16139,7 @@
           "hero_1": "f6eed7e6f6f1efc3",
           "hero_2": "6666e7655535b69e",
           "hero_3": "697e75595959b395",
-          "pts": null,
+          "pts": 8,
           "logo": "1030796868683050",
           "eliminated": false
         },
@@ -16189,7 +16189,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "eedf6555555d6e51",
           "hero_3": "3c6e5958580b21cb",
-          "pts": null,
+          "pts": 1,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -16201,8 +16201,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 75,
         "ring_status": null
       },
       "teams": [
@@ -16252,7 +16252,7 @@
           "hero_1": "dacecaccec132b3b",
           "hero_2": "78cccb8a8a1a431f",
           "hero_3": "85dc949090b47938",
-          "pts": null,
+          "pts": 31,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -16292,7 +16292,7 @@
           "hero_1": "8faf372f3bdade23",
           "hero_2": "8f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
-          "pts": null,
+          "pts": 21,
           "logo": "2070707870787820",
           "eliminated": false
         },
@@ -16322,7 +16322,7 @@
           "hero_1": "878f97b6bbefef83",
           "hero_2": "3c6e4d460e8f2b0b",
           "hero_3": "878fade56526361e",
-          "pts": null,
+          "pts": 1,
           "logo": "2828707868687010",
           "eliminated": false
         },
@@ -16414,8 +16414,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 7,
         "ring_status": null
       },
       "teams": [
@@ -16465,7 +16465,7 @@
           "hero_1": "5aeecaccee132b3b",
           "hero_2": "78cccb8a8a9a431f",
           "hero_3": "859c949090f47938",
-          "pts": null,
+          "pts": 5,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -16505,7 +16505,7 @@
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
-          "pts": null,
+          "pts": 21,
           "logo": "2070707870787820",
           "eliminated": false
         },
@@ -16535,7 +16535,7 @@
           "hero_1": "878f97b6bbefef83",
           "hero_2": "3d6e4d460e8f2b0b",
           "hero_3": "878fafe56526361e",
-          "pts": null,
+          "pts": 1,
           "logo": "2828707868687010",
           "eliminated": false
         },
@@ -16565,7 +16565,7 @@
           "hero_1": "f6eed7f6fef5efc3",
           "hero_2": "666667655525b61e",
           "hero_3": "69f675595959b395",
-          "pts": null,
+          "pts": 8,
           "logo": "1030796868683050",
           "eliminated": false
         },
@@ -16615,7 +16615,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "7c6e5958580b218f",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -16627,8 +16627,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 54,
         "ring_status": null
       },
       "teams": [
@@ -16678,7 +16678,7 @@
           "hero_1": "d8eecaccec132b3b",
           "hero_2": "78cccb8a8a1a431f",
           "hero_3": "859c949090f4793a",
-          "pts": null,
+          "pts": 5,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -16718,7 +16718,7 @@
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
-          "pts": null,
+          "pts": 21,
           "logo": "2070707870787820",
           "eliminated": false
         },
@@ -16748,7 +16748,7 @@
           "hero_1": "878f97b6bbefef83",
           "hero_2": "7c6e4d460e8f2b0b",
           "hero_3": "878fade565a6361e",
-          "pts": null,
+          "pts": 1,
           "logo": "2828707868687010",
           "eliminated": false
         },
@@ -16828,7 +16828,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555557d6e51",
           "hero_3": "3c6e5858580b21cb",
-          "pts": null,
+          "pts": 1,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -16840,8 +16840,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 2,
+        "number_of_players_alive": 27,
         "ring_status": null
       },
       "teams": [
@@ -16891,7 +16891,7 @@
           "hero_1": "5aeecaccec132b3b",
           "hero_2": "78cccb8a8a1a4317",
           "hero_3": "85dc949090b47928",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -16931,7 +16931,7 @@
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
-          "pts": null,
+          "pts": 21,
           "logo": "2070707870787820",
           "eliminated": false
         },
@@ -16961,7 +16961,7 @@
           "hero_1": "878f97b6bbefef83",
           "hero_2": "3c6e4d460e8f2b0b",
           "hero_3": "878fade56526361e",
-          "pts": null,
+          "pts": 1,
           "logo": "2828707868687010",
           "eliminated": false
         },
@@ -17053,8 +17053,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 34,
         "ring_status": null
       },
       "teams": [
@@ -17104,7 +17104,7 @@
           "hero_1": "daeecaccec132b3b",
           "hero_2": "78cccb8a8a1a431f",
           "hero_3": "85dc949090f4793a",
-          "pts": null,
+          "pts": 31,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -17144,7 +17144,7 @@
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b4b",
-          "pts": null,
+          "pts": 21,
           "logo": "2070707870787820",
           "eliminated": false
         },
@@ -17174,7 +17174,7 @@
           "hero_1": "878f97b6bbefef83",
           "hero_2": "3c6e4d460e8f2b0b",
           "hero_3": "878fade565a6361e",
-          "pts": null,
+          "pts": 1,
           "logo": "2828707868687010",
           "eliminated": false
         },
@@ -17254,7 +17254,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "7c6e5958580b21cb",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -17317,7 +17317,7 @@
           "hero_1": "5aeecaccec132b3b",
           "hero_2": "78cccb8a8a1a431f",
           "hero_3": "859c949090f4793a",
-          "pts": null,
+          "pts": 31,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -17387,7 +17387,7 @@
           "hero_1": "878f97b6bbefef83",
           "hero_2": "7c6e4d460e8f2b0b",
           "hero_3": "878fade565a6361e",
-          "pts": null,
+          "pts": 1,
           "logo": "2828707868687010",
           "eliminated": false
         },
@@ -17467,7 +17467,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "7c6e5958580b21cb",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -17479,8 +17479,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 27,
         "ring_status": null
       },
       "teams": [
@@ -17530,7 +17530,7 @@
           "hero_1": "58eecaccec132b3b",
           "hero_2": "78cccb8a8a1a4317",
           "hero_3": "859c949090f4793a",
-          "pts": null,
+          "pts": 5,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -17600,7 +17600,7 @@
           "hero_1": "878f97b6bbefef83",
           "hero_2": "3c6e4d460e8f2b0b",
           "hero_3": "878fade56526361e",
-          "pts": null,
+          "pts": 1,
           "logo": "2828707868687010",
           "eliminated": false
         },
@@ -17680,7 +17680,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "7c6e5958590b21cf",
-          "pts": null,
+          "pts": 1,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -17692,8 +17692,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 6,
         "ring_status": null
       },
       "teams": [
@@ -17743,7 +17743,7 @@
           "hero_1": "daeecaccec132b3b",
           "hero_2": "78cccb8a8a9a431f",
           "hero_3": "859c949090f47928",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -17783,7 +17783,7 @@
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b4b",
-          "pts": null,
+          "pts": 21,
           "logo": "2070707870787820",
           "eliminated": false
         },
@@ -17813,7 +17813,7 @@
           "hero_1": "878f97b6bbefef83",
           "hero_2": "7c6e4d460e8f2b0b",
           "hero_3": "878fade565a6361e",
-          "pts": null,
+          "pts": 1,
           "logo": "2828707868687010",
           "eliminated": false
         },
@@ -17893,7 +17893,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "3c6e5958580f29cf",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -17905,8 +17905,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 12,
+        "number_of_players_alive": 27,
         "ring_status": null
       },
       "teams": [
@@ -17956,7 +17956,7 @@
           "hero_1": "d8eecaccec132b3b",
           "hero_2": "f8cccb8a8a1a431f",
           "hero_3": "859c949090f4792a",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -17996,7 +17996,7 @@
           "hero_1": "8faf372f3bdade23",
           "hero_2": "870f0d4f6d663c3c",
           "hero_3": "8d0c090f1d0f4b5b",
-          "pts": null,
+          "pts": 21,
           "logo": "2070707870787820",
           "eliminated": false
         },
@@ -18026,7 +18026,7 @@
           "hero_1": "878f97b6bbefef83",
           "hero_2": "3c6e4d460e8f2b0b",
           "hero_3": "878fade56526361e",
-          "pts": null,
+          "pts": 1,
           "logo": "2828707868687010",
           "eliminated": false
         },
@@ -18066,7 +18066,7 @@
           "hero_1": "8787afe5a4a6b69e",
           "hero_2": "09169595bb99b395",
           "hero_3": "070f17363d6d6f03",
-          "pts": null,
+          "pts": 50,
           "logo": "0000243870390000",
           "eliminated": false
         },
@@ -18106,7 +18106,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "eedf6555557d6e51",
           "hero_3": "3c6e5858580b29cf",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -18118,8 +18118,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 7,
         "ring_status": null
       },
       "teams": [
@@ -18169,7 +18169,7 @@
           "hero_1": "d8eecaccec132b3b",
           "hero_2": "78cccb8a8a1a431f",
           "hero_3": "85dc949090b4793a",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -18209,7 +18209,7 @@
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
-          "pts": null,
+          "pts": 21,
           "logo": "2070707870787820",
           "eliminated": false
         },
@@ -18239,7 +18239,7 @@
           "hero_1": "878f97b6bbefef83",
           "hero_2": "3c6e4d460e8f2b0b",
           "hero_3": "878fade565a6361e",
-          "pts": null,
+          "pts": 1,
           "logo": "2828707868687010",
           "eliminated": false
         },
@@ -18319,7 +18319,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "eedf6555557d6e51",
           "hero_3": "7c6e5958584f21cb",
-          "pts": null,
+          "pts": 1,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -18331,8 +18331,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 34,
         "ring_status": null
       },
       "teams": [
@@ -18382,7 +18382,7 @@
           "hero_1": "5aeecaccec132b3b",
           "hero_2": "78cccb8a8a1a431f",
           "hero_3": "859c949090f47938",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -18452,7 +18452,7 @@
           "hero_1": "878f97b6bbefef83",
           "hero_2": "3c6e4d460e8f2b0b",
           "hero_3": "878fade56526361e",
-          "pts": null,
+          "pts": 1,
           "logo": "2828707868687010",
           "eliminated": false
         },
@@ -18532,7 +18532,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "3c6e5958590f21cb",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -18544,8 +18544,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 12,
+        "number_of_players_alive": 7,
         "ring_status": null
       },
       "teams": [
@@ -18595,7 +18595,7 @@
           "hero_1": "daeecaccec132b3b",
           "hero_2": "f8cccb8a8a1a431f",
           "hero_3": "859c949090f4793a",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -18635,7 +18635,7 @@
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
-          "pts": null,
+          "pts": 21,
           "logo": "2070707870787820",
           "eliminated": false
         },
@@ -18665,7 +18665,7 @@
           "hero_1": "878f97b6bbefef83",
           "hero_2": "3d6e4d660e8f2b0b",
           "hero_3": "878fade56526361e",
-          "pts": null,
+          "pts": 1,
           "logo": "2828707868687010",
           "eliminated": false
         },
@@ -18745,7 +18745,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "3c6e5858580f21cb",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -18757,8 +18757,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 5,
         "ring_status": null
       },
       "teams": [
@@ -18808,7 +18808,7 @@
           "hero_1": "5aeecaccec132b3b",
           "hero_2": "78cccb8a8a9a431f",
           "hero_3": "859c949090f4793a",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -18878,7 +18878,7 @@
           "hero_1": "878f97b6bbefef83",
           "hero_2": "3c6e4d660e8f2b0b",
           "hero_3": "878fade565a6361e",
-          "pts": null,
+          "pts": 1,
           "logo": "2828707868687010",
           "eliminated": false
         },
@@ -18908,7 +18908,7 @@
           "hero_1": "f6eedff6fef5efc3",
           "hero_2": "66666d655525b69e",
           "hero_3": "697675595959b395",
-          "pts": null,
+          "pts": 8,
           "logo": "1030796868683050",
           "eliminated": false
         },
@@ -18958,7 +18958,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "7c6e5958580b21cb",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -18971,7 +18971,7 @@
         "map_name": "STORM POINT",
         "game_number": 4,
         "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_players_alive": 57,
         "ring_status": null
       },
       "teams": [
@@ -19021,7 +19021,7 @@
           "hero_1": "daeecaccec132b3b",
           "hero_2": "78cccb8a8a9a4317",
           "hero_3": "85dc949090b4793a",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -19061,7 +19061,7 @@
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
-          "pts": null,
+          "pts": 21,
           "logo": "2070707870787820",
           "eliminated": false
         },
@@ -19091,7 +19091,7 @@
           "hero_1": "878f97b6bbefef83",
           "hero_2": "3c6e4d460e8f2f0b",
           "hero_3": "878fafe56526361e",
-          "pts": null,
+          "pts": 1,
           "logo": "2828707868687010",
           "eliminated": false
         },
@@ -19131,7 +19131,7 @@
           "hero_1": "8787afe5a4a6b69e",
           "hero_2": "09169595bb99b395",
           "hero_3": "870f17363d6d6f03",
-          "pts": null,
+          "pts": 50,
           "logo": "0000243870390000",
           "eliminated": false
         },
@@ -19171,7 +19171,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555557d6e51",
           "hero_3": "7c6e5958584b29cb",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -19183,7 +19183,7 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
+        "number_of_teams_alive": 1,
         "number_of_players_alive": null,
         "ring_status": null
       },
@@ -19234,7 +19234,7 @@
           "hero_1": "5aeecaccec132b3b",
           "hero_2": "78cccb8a8a1a431f",
           "hero_3": "859c949090f47938",
-          "pts": null,
+          "pts": 5,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -19274,7 +19274,7 @@
           "hero_1": "8faf372f3bdade23",
           "hero_2": "8f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
-          "pts": null,
+          "pts": 21,
           "logo": "2070707870787820",
           "eliminated": false
         },
@@ -19304,7 +19304,7 @@
           "hero_1": "878f97b6bbefef83",
           "hero_2": "3c6e4d460e8f2b0b",
           "hero_3": "878fade565a6361e",
-          "pts": null,
+          "pts": 1,
           "logo": "2828707868687010",
           "eliminated": false
         },
@@ -19384,7 +19384,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555557d6e51",
           "hero_3": "3c6e5958590b218b",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -19396,7 +19396,7 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
+        "number_of_teams_alive": 1,
         "number_of_players_alive": null,
         "ring_status": null
       },
@@ -19447,7 +19447,7 @@
           "hero_1": "5aeecaccec132b3b",
           "hero_2": "78cccb8a8a1a431f",
           "hero_3": "859c949090f47938",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -19487,7 +19487,7 @@
           "hero_1": "8faf372f3bdade23",
           "hero_2": "070f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
-          "pts": null,
+          "pts": 21,
           "logo": "2070707870787820",
           "eliminated": false
         },
@@ -19517,7 +19517,7 @@
           "hero_1": "878f97b6bbefef83",
           "hero_2": "3c6e4d460e8f2b0b",
           "hero_3": "878fade565a6361e",
-          "pts": null,
+          "pts": 1,
           "logo": "2828707868687010",
           "eliminated": false
         },
@@ -19609,8 +19609,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 3,
         "ring_status": null
       },
       "teams": [
@@ -19660,7 +19660,7 @@
           "hero_1": "58eecaccec132b3b",
           "hero_2": "78cccb8a8a1a4b17",
           "hero_3": "859c949090f4792a",
-          "pts": null,
+          "pts": 31,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -19700,7 +19700,7 @@
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b4b",
-          "pts": null,
+          "pts": 21,
           "logo": "2070707870787820",
           "eliminated": false
         },
@@ -19730,7 +19730,7 @@
           "hero_1": "878f97b6bbefef83",
           "hero_2": "3d6e4d660e8f2b0b",
           "hero_3": "878fade565a6361e",
-          "pts": null,
+          "pts": 1,
           "logo": "2828707868687010",
           "eliminated": false
         },
@@ -19770,7 +19770,7 @@
           "hero_1": "8787ade5a4a6b69e",
           "hero_2": "09169595bfd9b395",
           "hero_3": "070f1f363d6d6f03",
-          "pts": null,
+          "pts": 50,
           "logo": "0000243870390000",
           "eliminated": false
         },
@@ -19822,7 +19822,7 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
+        "number_of_teams_alive": 1,
         "number_of_players_alive": null,
         "ring_status": null
       },
@@ -19873,7 +19873,7 @@
           "hero_1": "58eecaccec132b3b",
           "hero_2": "78cccb8a8a1a431f",
           "hero_3": "859c949090f47938",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -19913,7 +19913,7 @@
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
-          "pts": null,
+          "pts": 21,
           "logo": "2070707870787820",
           "eliminated": false
         },
@@ -19943,7 +19943,7 @@
           "hero_1": "878f97b6bbefef83",
           "hero_2": "3c6e4d660e8f2b0b",
           "hero_3": "878fade56526361e",
-          "pts": null,
+          "pts": 1,
           "logo": "2828707868687010",
           "eliminated": false
         },
@@ -20036,7 +20036,7 @@
         "map_name": "STORM POINT",
         "game_number": 4,
         "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_players_alive": 23,
         "ring_status": null
       },
       "teams": [
@@ -20086,7 +20086,7 @@
           "hero_1": "5aeecaccec132b3b",
           "hero_2": "78cccb8a8a1a431f",
           "hero_3": "859d949090f4793a",
-          "pts": null,
+          "pts": 5,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -20126,7 +20126,7 @@
           "hero_1": "8faf372f3bdade23",
           "hero_2": "0f0f0d4f6d663c3c",
           "hero_3": "0d0c090f1d0f4b5b",
-          "pts": null,
+          "pts": 21,
           "logo": "2070707870787820",
           "eliminated": false
         },
@@ -20156,7 +20156,7 @@
           "hero_1": "878f9fb6bbefef83",
           "hero_2": "3c6e4d460e8f2b0b",
           "hero_3": "878fade56526361e",
-          "pts": null,
+          "pts": 1,
           "logo": "2828707868687010",
           "eliminated": false
         },
@@ -20236,7 +20236,7 @@
           "hero_1": "e6efe5e6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "3c6e5958580f21cb",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -20248,8 +20248,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 212,
+        "number_of_players_alive": 573,
         "ring_status": null
       },
       "teams": [
@@ -20279,7 +20279,7 @@
           "hero_1": "fffdeeb9bdebf5ed",
           "hero_2": "7f7fbfca2a2a7fff",
           "hero_3": "fffefea6a6a7dfbf",
-          "pts": null,
+          "pts": 4,
           "logo": "0020383838342020",
           "eliminated": true
         },
@@ -20299,7 +20299,7 @@
           "hero_1": "5aeecaccec132b3b",
           "hero_2": "78cccb8a8a1a431f",
           "hero_3": "859c949090f4793a",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -20399,7 +20399,7 @@
           "hero_1": "f6eed7f6f6f1efc3",
           "hero_2": "6666e5655525b61e",
           "hero_3": "697675595959b395",
-          "pts": null,
+          "pts": 8,
           "logo": "1030796868683050",
           "eliminated": false
         },
@@ -20449,7 +20449,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "7c6e5858580b21cb",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -20461,8 +20461,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 215,
         "ring_status": null
       },
       "teams": [
@@ -20512,7 +20512,7 @@
           "hero_1": "daeecaccec132b3b",
           "hero_2": "78cccb8a8a9a4b1b",
           "hero_3": "85dc949090f4793a",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -20674,8 +20674,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 212,
+        "number_of_players_alive": 573,
         "ring_status": null
       },
       "teams": [
@@ -20725,7 +20725,7 @@
           "hero_1": "daeecaccec132b3b",
           "hero_2": "78cccb8a8a1a4317",
           "hero_3": "859c949090f47918",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -20835,7 +20835,7 @@
           "hero_1": "8787afe5a4a6b69e",
           "hero_2": "09169595bbd9b395",
           "hero_3": "070f17363d6d6f03",
-          "pts": null,
+          "pts": 51,
           "logo": "0000243870390000",
           "eliminated": false
         },
@@ -20888,7 +20888,7 @@
         "map_name": "STORM POINT",
         "game_number": 4,
         "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_players_alive": 25,
         "ring_status": null
       },
       "teams": [
@@ -20938,7 +20938,7 @@
           "hero_1": "5aeccaccec132b3b",
           "hero_2": "78cccb8a8a1a4317",
           "hero_3": "859c949090f47918",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -21048,7 +21048,7 @@
           "hero_1": "8787afe5a4a6b69e",
           "hero_2": "09169595bbd9b395",
           "hero_3": "070f1f363d6d6f03",
-          "pts": null,
+          "pts": 51,
           "logo": "0000243870390000",
           "eliminated": false
         },
@@ -21088,7 +21088,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555557d6e51",
           "hero_3": "3c6e5958580f23cb",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -21100,8 +21100,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 25,
         "ring_status": null
       },
       "teams": [
@@ -21151,7 +21151,7 @@
           "hero_1": "d8eecaccec132b3b",
           "hero_2": "78cccb8a8a1a431f",
           "hero_3": "85dc949090f4793a",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -21261,7 +21261,7 @@
           "hero_1": "8787afe5a4a6b69e",
           "hero_2": "09169595bb99b395",
           "hero_3": "878f17363d6d6f03",
-          "pts": null,
+          "pts": 51,
           "logo": "0000243870390000",
           "eliminated": false
         },
@@ -21301,7 +21301,7 @@
           "hero_1": "e6efe5e6f6a6be9e",
           "hero_2": "eedf6555557d6e51",
           "hero_3": "3c6e5858584b21cf",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -21313,8 +21313,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 27,
+        "number_of_players_alive": 25,
         "ring_status": null
       },
       "teams": [
@@ -21364,7 +21364,7 @@
           "hero_1": "d8eecaccec132b3b",
           "hero_2": "78cccb8a8a1a431f",
           "hero_3": "859c949090f47918",
-          "pts": null,
+          "pts": 31,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -21474,7 +21474,7 @@
           "hero_1": "8787afe5a4a6b69e",
           "hero_2": "09169595bb99b395",
           "hero_3": "070f1f363d6d6f03",
-          "pts": null,
+          "pts": 51,
           "logo": "0000243870390000",
           "eliminated": false
         },
@@ -21526,8 +21526,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 2,
+        "number_of_players_alive": 25,
         "ring_status": null
       },
       "teams": [
@@ -21577,7 +21577,7 @@
           "hero_1": "daeecaccec132b3b",
           "hero_2": "78cccb8a8a9a431f",
           "hero_3": "85dc949090f4793a",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -21687,7 +21687,7 @@
           "hero_1": "8787afe5a4a6b69e",
           "hero_2": "09169595bb99b395",
           "hero_3": "070f17363d6d6f03",
-          "pts": null,
+          "pts": 51,
           "logo": "0000243870390000",
           "eliminated": false
         },
@@ -21739,8 +21739,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 2,
+        "number_of_players_alive": 25,
         "ring_status": null
       },
       "teams": [
@@ -21790,7 +21790,7 @@
           "hero_1": "58eecaccec13233b",
           "hero_2": "78cccb8a8a1a431f",
           "hero_3": "85dc949090f4793a",
-          "pts": null,
+          "pts": 31,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -21952,8 +21952,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 2,
+        "number_of_players_alive": 25,
         "ring_status": null
       },
       "teams": [
@@ -22003,7 +22003,7 @@
           "hero_1": "daeecaccec132b3b",
           "hero_2": "78cccb8a8a1a431f",
           "hero_3": "859c949090f4793a",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -22113,7 +22113,7 @@
           "hero_1": "878fafe5a4a6b69e",
           "hero_2": "09169595bbd9b395",
           "hero_3": "070f1f363d6d6f03",
-          "pts": null,
+          "pts": 51,
           "logo": "0000243870390000",
           "eliminated": false
         },
@@ -22166,7 +22166,7 @@
         "map_name": "STORM POINT",
         "game_number": 4,
         "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_players_alive": 23,
         "ring_status": null
       },
       "teams": [
@@ -22216,7 +22216,7 @@
           "hero_1": "5aeecaccec132b3b",
           "hero_2": "78cccb8a8a1a431f",
           "hero_3": "859c949090f47928",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -22326,7 +22326,7 @@
           "hero_1": "8787afe5a4a6b69e",
           "hero_2": "09169595bb99b395",
           "hero_3": "070f17363d6d6f03",
-          "pts": null,
+          "pts": 51,
           "logo": "0000243870390000",
           "eliminated": false
         },
@@ -22378,8 +22378,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 2,
+        "number_of_players_alive": 22,
         "ring_status": null
       },
       "teams": [
@@ -22429,7 +22429,7 @@
           "hero_1": "d8eecaccec132b3b",
           "hero_2": "78cccb8a8a1a431f",
           "hero_3": "859c949090f4793a",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -22539,7 +22539,7 @@
           "hero_1": "8787afe5a4a6b69e",
           "hero_2": "09169595bb99b395",
           "hero_3": "070f17363d6d6f03",
-          "pts": null,
+          "pts": 51,
           "logo": "0000243870390000",
           "eliminated": false
         },
@@ -22579,7 +22579,7 @@
           "hero_1": "e6efe5e6f6a6be9e",
           "hero_2": "6edf6555557d6e51",
           "hero_3": "7cee5958594b21cf",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -22591,8 +22591,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 27,
+        "number_of_players_alive": 25,
         "ring_status": null
       },
       "teams": [
@@ -22642,7 +22642,7 @@
           "hero_1": "5aeecaccec132b3b",
           "hero_2": "78cccb8a8a1a431f",
           "hero_3": "859d949090b47938",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -22752,7 +22752,7 @@
           "hero_1": "8787afe5a4a6b69e",
           "hero_2": "09169595bbd9b395",
           "hero_3": "070f17363d6d6f03",
-          "pts": null,
+          "pts": 51,
           "logo": "0000243870390000",
           "eliminated": false
         },
@@ -22792,7 +22792,7 @@
           "hero_1": "e6efe5e6f6a6be9e",
           "hero_2": "6edf6555557d6e51",
           "hero_3": "7c6e5858584b21cb",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -22804,8 +22804,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 7,
+        "number_of_players_alive": 230,
         "ring_status": null
       },
       "teams": [
@@ -22855,7 +22855,7 @@
           "hero_1": "d8eecaccec132b3b",
           "hero_2": "78cccb8a8a1a4317",
           "hero_3": "85dc949090f47938",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -23017,8 +23017,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 7,
+        "number_of_players_alive": 215,
         "ring_status": null
       },
       "teams": [
@@ -23068,7 +23068,7 @@
           "hero_1": "58eecaccee13233b",
           "hero_2": "78cccb8a8a1a431f",
           "hero_3": "85dc949090f47938",
-          "pts": null,
+          "pts": 31,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -23230,8 +23230,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 7,
+        "number_of_players_alive": 215,
         "ring_status": null
       },
       "teams": [
@@ -23281,7 +23281,7 @@
           "hero_1": "d8eecaccec132b3b",
           "hero_2": "78cccb8a8a1a4317",
           "hero_3": "85dc949090f47938",
-          "pts": null,
+          "pts": 31,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -23431,7 +23431,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "3c6e5958580f21cb",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -23443,8 +23443,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 7,
+        "number_of_players_alive": 0,
         "ring_status": null
       },
       "teams": [
@@ -23494,7 +23494,7 @@
           "hero_1": "daeecaccec132b3b",
           "hero_2": "78cccb8a8a1a431f",
           "hero_3": "859c949090f4793a",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -23656,8 +23656,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 7,
+        "number_of_players_alive": 0,
         "ring_status": null
       },
       "teams": [
@@ -23707,7 +23707,7 @@
           "hero_1": "daeecaccec132b3b",
           "hero_2": "78cccb8a8a1a431f",
           "hero_3": "85dc949090b47928",
-          "pts": null,
+          "pts": 5,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -23857,7 +23857,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555557d6e51",
           "hero_3": "3c6e5958580f218b",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -23869,8 +23869,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 7,
+        "number_of_players_alive": 215,
         "ring_status": null
       },
       "teams": [
@@ -23920,7 +23920,7 @@
           "hero_1": "daeecaccec132b3b",
           "hero_2": "78cccb8a8a1a431f",
           "hero_3": "859c949090f4793a",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -24070,7 +24070,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555557d6e51",
           "hero_3": "7c6e5858580f238f",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -24082,8 +24082,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 7,
+        "number_of_players_alive": 215,
         "ring_status": null
       },
       "teams": [
@@ -24133,7 +24133,7 @@
           "hero_1": "daeecaccee132b3b",
           "hero_2": "78cccb8a8a1a431f",
           "hero_3": "859c949090f47938",
-          "pts": null,
+          "pts": 31,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -24283,7 +24283,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "eedf6555555d6e51",
           "hero_3": "7c6e5958580b21cb",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -24295,8 +24295,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 7,
+        "number_of_players_alive": 0,
         "ring_status": null
       },
       "teams": [
@@ -24346,7 +24346,7 @@
           "hero_1": "5aeecaccec132b3b",
           "hero_2": "78cccb8a8a1a4317",
           "hero_3": "859c949090b4793a",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -24496,7 +24496,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "eedf6555555d6e51",
           "hero_3": "bc6e5958580b218f",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -24509,7 +24509,7 @@
         "map_name": "STORM POINT",
         "game_number": 4,
         "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_players_alive": 17,
         "ring_status": null
       },
       "teams": [
@@ -24559,7 +24559,7 @@
           "hero_1": "5aeecaccec132b3b",
           "hero_2": "78cccb8a8a1a431b",
           "hero_3": "859c949090f4793a",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -24659,7 +24659,7 @@
           "hero_1": "f6eed7f6f6f1efc3",
           "hero_2": "6666ef655525b69e",
           "hero_3": "697675595959b395",
-          "pts": null,
+          "pts": 8,
           "logo": "1030796868683050",
           "eliminated": false
         },
@@ -24709,7 +24709,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "3c6e5858580f23cf",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -24772,7 +24772,7 @@
           "hero_1": "daeecaccec132b3b",
           "hero_2": "78cccb8a8a1a431f",
           "hero_3": "85dc949090f4793a",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -24882,7 +24882,7 @@
           "hero_1": "8787afe5a4a6b69e",
           "hero_2": "09169595bb99b395",
           "hero_3": "070f1f363d6d6f03",
-          "pts": null,
+          "pts": 33,
           "logo": "0000243870390000",
           "eliminated": false
         },
@@ -24922,7 +24922,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555557d6e51",
           "hero_3": "7c6e5958590b218f",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -24935,7 +24935,7 @@
         "map_name": "STORM POINT",
         "game_number": 4,
         "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_players_alive": 15,
         "ring_status": null
       },
       "teams": [
@@ -24985,7 +24985,7 @@
           "hero_1": "daeecaccec132b3b",
           "hero_2": "78cccb8a8a9a431f",
           "hero_3": "859c949090f47938",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -25135,7 +25135,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555557d6e51",
           "hero_3": "3c6e5958580f23cf",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -25147,8 +25147,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 1,
         "ring_status": null
       },
       "teams": [
@@ -25198,7 +25198,7 @@
           "hero_1": "5aeecaccec132b3b",
           "hero_2": "78cccb8a8a1a431f",
           "hero_3": "85dc949090b47928",
-          "pts": null,
+          "pts": 5,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -25348,7 +25348,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "3c6e5958580b218f",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -25360,8 +25360,8 @@
       "hud": {
         "map_name": "STORM POINT",
         "game_number": 4,
-        "number_of_teams_alive": null,
-        "number_of_players_alive": null,
+        "number_of_teams_alive": 1,
+        "number_of_players_alive": 15,
         "ring_status": null
       },
       "teams": [
@@ -25411,7 +25411,7 @@
           "hero_1": "daeecaccec132b3b",
           "hero_2": "78cccb8a8a1a4317",
           "hero_3": "859c949090b47938",
-          "pts": null,
+          "pts": 51,
           "logo": "103030386c6c6cd5",
           "eliminated": false
         },
@@ -25511,7 +25511,7 @@
           "hero_1": "f6eed7f6fef1efc3",
           "hero_2": "6666ef655525b61e",
           "hero_3": "297675595959b395",
-          "pts": null,
+          "pts": 8,
           "logo": "1030796868683050",
           "eliminated": false
         },
@@ -25561,7 +25561,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "3c6e5958580b21cf",
-          "pts": null,
+          "pts": 7,
           "logo": "3030303028282828",
           "eliminated": true
         }

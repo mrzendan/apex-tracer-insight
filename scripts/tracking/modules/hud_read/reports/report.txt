@@ -5,8 +5,8 @@ zones: scripts\tracking\configs\zones.vod.json
 tag        name                         ok%  parsed%  suggest  examples
 hud        game number                 100%     100%  OK                     4, 4, 4
 hud        map name                    100%     100%  OK                     STORM POINT, STORM POINT, STORM POINT
-hud        number of players alive      40%       0%  TIGHTEN                
-hud        number of teams alive        58%       0%  TIGHTEN                
+hud        number of players alive      96%      96%  OK                     312, 312, 1, 37, 13
+hud        number of teams alive        94%      88%  OK                     212, 212, 2107, 212, 212
 hud        ring status                  92%       0%  TIGHTEN                
 minimap    camera roi                    0%       0%  SKIP (geometry only)   
 team_1     eliminated                  100%       0%  TIGHTEN                
@@ -29,14 +29,14 @@ team_11    hero 2                      100%     100%  OK                     26 
 team_11    hero 3                      100%     100%  OK                     28 unique hashes / 120 frames
 team_11    logo                        100%     100%  STATIC?  (zone might be misaligned) 6 unique hashes / 120 frames
 team_11    name                        100%     100%  OK                     BB, BB, BB
-team_11    pts                          99%      99%  OK                     16, 16, 16, 16, 16
+team_11    pts                         100%     100%  OK                     16, 16, 16, 16, 16
 team_12    eliminated                  100%       0%  TIGHTEN                
 team_12    hero 1                      100%     100%  OK                     7 unique hashes / 120 frames
 team_12    hero 2                      100%     100%  OK                     21 unique hashes / 120 frames
 team_12    hero 3                      100%     100%  OK                     8 unique hashes / 120 frames
 team_12    logo                        100%     100%  OK                     7 unique hashes / 120 frames
 team_12    name                        100%     100%  OK                     CRT, CRT, CRT
-team_12    pts                          92%      82%  OK                     3, 3, 3, 3, 3
+team_12    pts                         100%     100%  OK                     3, 3, 3, 3, 3
 team_13    eliminated                   97%      38%  TIGHTEN                True, True, True, True, True
 team_13    hero 1                      100%     100%  OK                     24 unique hashes / 120 frames
 team_13    hero 2                      100%     100%  OK                     62 unique hashes / 120 frames
@@ -57,14 +57,14 @@ team_15    hero 2                      100%     100%  OK                     32 
 team_15    hero 3                      100%     100%  OK                     25 unique hashes / 120 frames
 team_15    logo                        100%     100%  OK                     8 unique hashes / 120 frames
 team_15    name                        100%     100%  OK                     GMBL, GMBL, GMBL
-team_15    pts                          94%      94%  OK                     5, 5, 5, 5, 5
+team_15    pts                         100%     100%  OK                     5, 5, 5, 5, 5
 team_16    eliminated                   99%       0%  TIGHTEN                
 team_16    hero 1                      100%     100%  STATIC?  (zone might be misaligned) 6 unique hashes / 120 frames
 team_16    hero 2                      100%     100%  OK                     7 unique hashes / 120 frames
 team_16    hero 3                      100%     100%  OK                     10 unique hashes / 120 frames
 team_16    logo                        100%     100%  OK                     8 unique hashes / 120 frames
 team_16    name                        100%     100%  OK                     JDG, JDG, JDG
-team_16    pts                          91%      88%  OK                     26, 26, 26, 26, 26
+team_16    pts                         100%     100%  OK                     26, 26, 26, 26, 26
 team_17    eliminated                   99%       4%  TIGHTEN                True, True, True, True, True
 team_17    hero 1                      100%     100%  OK                     21 unique hashes / 120 frames
 team_17    hero 2                      100%     100%  OK                     14 unique hashes / 120 frames
@@ -99,14 +99,14 @@ team_20    hero 2                      100%     100%  OK                     10 
 team_20    hero 3                      100%     100%  OK                     65 unique hashes / 120 frames
 team_20    logo                        100%     100%  STATIC?  (zone might be misaligned) 1 unique hashes / 120 frames
 team_20    name                        100%     100%  OK                     SRC, SRC, SRC
-team_20    pts                          42%       2%  TIGHTEN                
+team_20    pts                          78%      67%  OK                     1, 1, 1, 1, 1
 team_3     eliminated                   99%      21%  TIGHTEN                True, True, True, True, True
 team_3     hero 1                      100%     100%  OK                     22 unique hashes / 120 frames
 team_3     hero 2                      100%     100%  OK                     37 unique hashes / 120 frames
 team_3     hero 3                      100%     100%  OK                     9 unique hashes / 120 frames
 team_3     logo                        100%     100%  OK                     7 unique hashes / 120 frames
 team_3     name                        100%      99%  OK                     FXI, FXI, FXI
-team_3     pts                          99%      99%  OK                     3, 3, 3, 3, 3
+team_3     pts                         100%     100%  OK                     3, 3, 3, 3, 3
 team_4     eliminated                  100%       0%  TIGHTEN                
 team_4     hero 1                      100%     100%  STATIC?  (zone might be misaligned) 5 unique hashes / 120 frames
 team_4     hero 2                      100%     100%  OK                     7 unique hashes / 120 frames
@@ -120,7 +120,7 @@ team_5     hero 2                      100%     100%  OK                     14 
 team_5     hero 3                      100%     100%  OK                     18 unique hashes / 120 frames
 team_5     logo                        100%     100%  STATIC?  (zone might be misaligned) 4 unique hashes / 120 frames
 team_5     name                        100%     100%  OK                     OBVN, OBVN, OBVN
-team_5     pts                          57%      45%  OK                     27, 27, 27, 27, 27
+team_5     pts                         100%     100%  OK                     27, 27, 27, 27, 27
 team_6     eliminated                  100%       0%  TIGHTEN                
 team_6     hero 1                      100%     100%  OK                     9 unique hashes / 120 frames
 team_6     hero 2                      100%     100%  OK                     13 unique hashes / 120 frames
@@ -141,11 +141,11 @@ team_8     hero 2                      100%     100%  OK                     33 
 team_8     hero 3                      100%     100%  OK                     19 unique hashes / 120 frames
 team_8     logo                        100%     100%  OK                     7 unique hashes / 120 frames
 team_8     name                        100%     100%  OK                     STAL, STAL, STAL
-team_8     pts                          99%      99%  OK                     16, 16, 16, 16, 16
+team_8     pts                         100%     100%  OK                     16, 16, 16, 16, 16
 team_9     eliminated                   99%       0%  TIGHTEN                
 team_9     hero 1                      100%     100%  STATIC?  (zone might be misaligned) 3 unique hashes / 120 frames
 team_9     hero 2                      100%     100%  STATIC?  (zone might be misaligned) 6 unique hashes / 120 frames
 team_9     hero 3                      100%     100%  STATIC?  (zone might be misaligned) 6 unique hashes / 120 frames
 team_9     logo                        100%     100%  OK                     7 unique hashes / 120 frames
 team_9     name                        100%      96%  OK                     TL, TL, TL
-team_9     pts                          79%      76%  OK                     20, 20, 20, 20, 20
+team_9     pts                          99%      99%  OK                     20, 20, 20, 20, 20
