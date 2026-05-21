@@ -276,7 +276,16 @@ def parse_field(tag: str, name: str, text: str) -> Any:
         return {"ring": int(m.group(1)), "state": m.group(2).upper()}
     if name == "pts":
         m = RE_INT.search(text)
-        return int(m.group(0)) if m else None
+        if not m:
+            return None
+        try:
+            v = int(m.group(0))
+        except ValueError:
+            return None
+        # Apex score: 0..100 в матче. Всё за пределами — мусор от тёмной/мелкой плашки.
+        if v < 0 or v > 100:
+            return None
+        return v
     if name == "eliminated":
         return bool(RE_ELIM.search(text))
     if name == "map name":
@@ -293,8 +302,10 @@ def parse_field(tag: str, name: str, text: str) -> Any:
         if KNOWN_TEAMS:
             max_dist = 1 if len(cleaned) <= 3 else 2
             snapped = snap_to_known(cleaned, KNOWN_TEAMS, max_dist=max_dist)
-            if snapped:
-                return snapped
+            # Если словарь задан — отвергаем чтения, не попавшие в snap.
+            # Так HH (3 голоса, snap=None) проиграет TL (2 голоса, snap=TL)
+            # при голосовании в static_state.
+            return snapped
         return cleaned
     return text or None
 
