@@ -471,11 +471,15 @@ class SlotTracker:
         self.pending_hits: int = 0
         # Time-aware motion model (canonical px / sec).
         motion = slot_cfg.get("motion", {}) or {}
-        self.v_max_px_s: float = float(motion.get("v_max_px_s", 40.0))
-        self.gate_slack_px: float = float(motion.get("gate_slack_px", 15.0))
-        self.gate_cap_px: float = float(motion.get("gate_cap_px", 280.0))
+        self.v_max_px_s: float = float(motion.get("v_max_px_s", 60.0))
+        self.gate_slack_px: float = float(motion.get("gate_slack_px", 20.0))
+        self.gate_cap_px: float = float(motion.get("gate_cap_px", 450.0))
         self.dt_cap_s: float = float(motion.get("dt_cap_s", 20.0))
         self.velocity_alpha: float = float(motion.get("velocity_alpha", 0.5))
+        # Adaptive: remember observed peak speed so "mobile" slots auto-widen the gate.
+        self.v_observed_peak_px_s: float = 0.0
+        self.v_observed_decay: float = float(motion.get("v_observed_decay", 0.97))
+        self.v_observed_boost: float = float(motion.get("v_observed_boost", 1.8))
         self.vx: float = 0.0
         self.vy: float = 0.0
         self.last_seen_t: Optional[float] = None
@@ -490,6 +494,8 @@ class SlotTracker:
         self.n_switches = 0
         self.score_sum = 0.0
         self.score_n = 0
+        # state_reason histogram for diagnostics.
+        self.reason_hist: dict[str, int] = {}
         # Telemetry
         self.state: str = "init"
         self.state_reason: str = "init"
