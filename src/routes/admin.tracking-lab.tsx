@@ -503,6 +503,45 @@ function GtPickerBox({
   teamMeta: Record<string, TeamMeta & { color: string }>;
 }) {
   const teamIds = Object.keys(teamMeta).sort();
+  const importRef = useRef<HTMLInputElement>(null);
+
+  const onImport = (file: File, mode: "replace" | "merge") => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(String(reader.result));
+        const rawPoints = Array.isArray(parsed) ? parsed : parsed?.points;
+        if (!Array.isArray(rawPoints)) throw new Error("ожидался массив points");
+        const cleaned: GtAnchor[] = [];
+        for (const p of rawPoints) {
+          if (
+            p && typeof p.slot_id === "string" &&
+            typeof p.t === "number" &&
+            Array.isArray(p.world_xy) && p.world_xy.length === 2 &&
+            typeof p.world_xy[0] === "number" && typeof p.world_xy[1] === "number"
+          ) {
+            cleaned.push({ t: p.t, slot_id: p.slot_id, world_xy: [p.world_xy[0], p.world_xy[1]] });
+          }
+        }
+        if (!cleaned.length) throw new Error("в файле нет валидных точек");
+        if (mode === "replace") {
+          setGtAnchors(cleaned);
+        } else {
+          const key = (a: GtAnchor) => `${a.slot_id}|${a.t.toFixed(2)}|${a.world_xy[0]}|${a.world_xy[1]}`;
+          const seen = new Set(gtAnchors.map(key));
+          const merged = [...gtAnchors];
+          for (const a of cleaned) if (!seen.has(key(a))) merged.push(a);
+          setGtAnchors(merged);
+        }
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        // eslint-disable-next-line no-alert
+        window.alert(`Не удалось импортировать gt_anchors.json: ${msg}`);
+      }
+    };
+    reader.readAsText(file);
+  };
+
   return (
     <div className="rounded-sm border border-border bg-background p-3">
       <div className="label-eyebrow mb-2 flex items-center justify-between text-xs text-muted-foreground">
@@ -555,6 +594,45 @@ function GtPickerBox({
               >
                 export json
               </button>
+            </div>
+          </div>
+          <div className="flex items-center justify-between gap-2 border-t border-border/60 pt-2">
+            <span className="text-xs text-muted-foreground">import gt_anchors.json</span>
+            <div className="flex gap-1">
+              <button
+                onClick={() => {
+                  if (!importRef.current) return;
+                  importRef.current.dataset.mode = "merge";
+                  importRef.current.click();
+                }}
+                className="rounded-sm border border-border bg-muted px-2 py-0.5 text-xs hover:bg-muted/70"
+                title="Добавить точки из файла к текущим (без дубликатов)"
+              >
+                merge
+              </button>
+              <button
+                onClick={() => {
+                  if (!importRef.current) return;
+                  importRef.current.dataset.mode = "replace";
+                  importRef.current.click();
+                }}
+                className="rounded-sm border border-border bg-muted px-2 py-0.5 text-xs hover:bg-muted/70"
+                title="Заменить текущие точки на содержимое файла"
+              >
+                replace
+              </button>
+              <input
+                ref={importRef}
+                type="file"
+                accept=".json,application/json"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  const mode = (e.target.dataset.mode as "merge" | "replace") || "merge";
+                  if (f) onImport(f, mode);
+                  e.target.value = "";
+                }}
+              />
             </div>
           </div>
         </div>
