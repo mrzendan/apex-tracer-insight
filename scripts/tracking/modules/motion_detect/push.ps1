@@ -10,7 +10,7 @@
 param(
   [Parameter(Mandatory=$true)][string]$Video,
   [string]$Cuts = "scripts/tracking/modules/find_cuts/reports/cuts.json",
-  [string]$HsvPresets = "scripts/tracking/modules/motion_detect/configs/hsv_presets.worlds-edge.json",
+  [string]$HsvPresets = "scripts/tracking/configs/hsv_presets.worlds-edge.json",
   [string]$Zones = "scripts/tracking/modules/motion_detect/configs/zones.vod.json",
   [string]$ZoneTag = "minimap",
   [double]$StartSec = 60,
