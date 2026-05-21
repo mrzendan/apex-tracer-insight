@@ -803,6 +803,8 @@ class WorldTracker:
         self.slot_anchors: dict[str, dict] = {}  # team_id -> anchor info
         self.cur_t: float = 0.0
         self.new_wipes: list[dict] = []
+        # HUD-confirmed alive team_ids — absence-based wipe MUST NOT fire for these.
+        self.hud_alive_protected: set[str] = set()
 
     def set_anchors(self, anchors: dict[str, dict]):
         self.slot_anchors = anchors or {}
@@ -829,6 +831,7 @@ class WorldTracker:
             # 1b wipe detection: long unbroken absence -> mark wiped
             if (tr.wiped_at_t is None
                     and tr.last_seen_t > 0
+                    and tr.team_id not in self.hud_alive_protected
                     and (t - tr.last_seen_t) >= self.wipe_absence_sec):
                 tr.wiped_at_t = round(t, 2)
                 tr.state = "lost"
