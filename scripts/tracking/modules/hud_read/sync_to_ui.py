@@ -48,6 +48,33 @@ def main() -> int:
         copied.append(name)
         print(f"[sync_to_ui] {src} → {dst}")
 
+    # Встраиваем eliminations прямо в hud_timeline.json — единый источник
+    # HUD-смертей для фронта. eliminations.json остаётся как debug-artifact
+    # в out/, но UI его больше не использует.
+    elim_src = args.reports / "eliminations.json"
+    tl_dst = args.out / "hud_timeline.json"
+    if elim_src.exists() and tl_dst.exists():
+        try:
+            elim = json.loads(elim_src.read_text(encoding="utf-8"))
+            tl = json.loads(tl_dst.read_text(encoding="utf-8"))
+            tl["eliminations"] = {
+                "source": "scout",
+                "fps": elim.get("fps"),
+                "mode": elim.get("mode"),
+                "teams": elim.get("teams", {}),
+            }
+            tl_dst.write_text(
+                json.dumps(tl, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+            teams_e = elim.get("teams", {})
+            dead = sum(1 for v in teams_e.values() if v.get("t_first_dead") is not None)
+            alive = len(teams_e) - dead
+            print(f"[sync_to_ui] embedded eliminations → hud_timeline.json "
+                  f"({len(teams_e)} slots / {dead} dead / {alive} alive)")
+        except Exception as e:
+            print(f"[sync_to_ui] не смог встроить eliminations: {e}")
+
     # tracks.json / tracks.slots.json из track_teams (опц.)
     tracks_dir = args.tracks_reports
     if tracks_dir is not None and str(tracks_dir).lower() not in ("skip", ""):
