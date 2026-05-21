@@ -1034,11 +1034,12 @@ def main():
                 slot_snaps: list[dict] = []
                 for t in teams:
                     st = slot_trackers[t.id]
-                    snap = st.update(frame, H)
+                    snap = st.update(frame, H, t_now=t_now)
                     if snap is None:
                         continue
                     slot_snaps.append(snap)
-                    if st.canonical_px is not None and st.state in ("tracked", "hold", "low_conf"):
+                    # Only emit world detections for actually observed states.
+                    if st.canonical_px is not None and st.state == "tracked":
                         wx, wy = map_point(cmap.px_to_world, st.canonical_px)
                         world_dets.append({
                             "team_id": t.id,
@@ -1046,6 +1047,16 @@ def main():
                             "score": st.last_score,
                             "angle_world_deg": None,
                         })
+                    # Telemetry.
+                    s = snap.get("state", "")
+                    if s == "tracked":   st.n_tracked += 1
+                    elif s == "low_conf": st.n_low_conf += 1
+                    elif s == "hold":     st.n_hold += 1
+                    elif s == "coast":    st.n_coast += 1
+                    elif s == "lost":     st.n_lost += 1
+                    if s == "tracked":
+                        st.score_sum += st.last_score
+                        st.score_n += 1
                 # WorldTracker остаётся только для wipe-логики (длительное отсутствие).
                 # Feed it only confirmed (tracked) detections to avoid wipe-resets on hold.
                 tracked_dets = [d for d in world_dets if any(
@@ -1060,10 +1071,18 @@ def main():
                     if tr is not None and tr.wiped_at_t is not None:
                         snap["state"] = "lost"
                         snap["state_reason"] = f"wiped@{tr.wiped_at_t}"
+                        slot_trackers[snap["team_id"]].wiped = True
                     # world coord (from current canonical)
-                    if snap.get("canonical_px") is not None:
+                    # Don't expose stale positions as if they were observations.
+                    st_obj = slot_trackers.get(snap["team_id"])
+                    if (snap.get("canonical_px") is not None
+                            and snap.get("state") == "tracked"
+                            and st_obj is not None
+                            and not st_obj.canonical_px_stale):
                         wx, wy = map_point(cmap.px_to_world, snap["canonical_px"])
                         snap["world"] = [round(wx, 2), round(wy, 2)]
+                    else:
+                        snap["world"] = None
                     tracks_world.append(snap)
 
             record = {
