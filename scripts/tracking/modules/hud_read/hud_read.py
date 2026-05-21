@@ -1424,14 +1424,14 @@ def main() -> int:
 
     # ── Дамп голосов OCR для тегов команд (для отладки snap-словаря) ──
     # Файл team_tags_raw.json — по слотам top-N кандидатов с числом подтверждений.
-    tag_votes: dict[int, list[tuple[Any, int]]] = {}
+    tag_votes: dict[int, tuple[str, list[tuple[Any, int]]]] = {}
     for (tag, name), ss in static_state.items():
         slot = team_slot(tag)
         if slot is None or name != "name":
             continue
         votes = sorted(ss.get("votes", {}).items(), key=lambda kv: -kv[1])
         if votes:
-            tag_votes[slot] = votes[:5]
+            tag_votes[slot] = (tag, votes[:5])
     if tag_votes:
         tags_name = f"team_tags_raw.{args.chunk_id}.json" if args.chunk_id else "team_tags_raw.json"
         (args.out / tags_name).write_text(
@@ -1441,12 +1441,12 @@ def main() -> int:
                     "vocab_path": str(vocab_path) if vocab_path else None,
                     "slots": {
                         str(s): {
-                            "locked": static_state[(f"team_{s}", "name")]["locked"],
+                            "locked": static_state[(tag, "name")]["locked"],
                             "candidates": [
                                 {"value": v, "votes": n} for v, n in votes
                             ],
                         }
-                        for s, votes in sorted(tag_votes.items())
+                        for s, (tag, votes) in sorted(tag_votes.items())
                     },
                 },
                 ensure_ascii=False,
