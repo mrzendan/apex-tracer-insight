@@ -11,6 +11,8 @@ param(
   [string]$Slots   = "",
   [int]$PerSlot    = 6,
   [int]$RoiSize    = 220,
+  [switch]$FullFrame,
+  [switch]$AnchorsPreview,
   [switch]$NoPush
 )
 $ErrorActionPreference = "Stop"
@@ -33,6 +35,8 @@ $pyArgs = @(
 )
 if (Test-Path $Anchors) { $pyArgs += @("--anchors", $Anchors) }
 if ($Slots) { $pyArgs += @("--slots", $Slots) }
+if ($FullFrame) { $pyArgs += @("--full-frame") }
+if ($AnchorsPreview) { $pyArgs += @("--anchors-preview") }
 
 & python @pyArgs
 if ($LASTEXITCODE -ne 0) { throw "debug_masks.py failed (exit=$LASTEXITCODE)" }
