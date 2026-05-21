@@ -2,241 +2,217 @@
   "tracks_file": "reports/matrix/tracks_strict_shape.json",
   "gt_file": "assets/gt_anchors.json",
   "gt_points": 116,
-  "coverage_pct": 76.7,
-  "px_error_med": 41.9,
-  "px_error_p95": 161.7,
-  "id_switches_total": 44,
+  "coverage_pct": 78.4,
+  "px_error_med": 51.6,
+  "px_error_p95": 166.4,
+  "id_switches_total": 41,
   "id_switches_per_slot": {
-    "slot_1": 1,
+    "slot_1": 2,
     "slot_2": 0,
     "slot_3": 2,
-    "slot_4": 2,
+    "slot_4": 1,
     "slot_5": 1,
     "slot_6": 0,
     "slot_7": 0,
     "slot_8": 0,
     "slot_9": 2,
     "slot_10": 5,
-    "slot_11": 7,
+    "slot_11": 8,
     "slot_12": 1,
-    "slot_13": 2,
+    "slot_13": 1,
     "slot_14": 1,
-    "slot_15": 2,
+    "slot_15": 0,
     "slot_16": 0,
     "slot_17": 1,
     "slot_18": 3,
-    "slot_19": 3,
-    "slot_20": 11
+    "slot_19": 1,
+    "slot_20": 12
   },
   "switch_events": [
     {
       "slot_id": "slot_1",
-      "t": 660.66,
+      "t": 120.12,
       "from": "slot_1",
-      "to": "slot_20"
+      "to": "slot_2"
+    },
+    {
+      "slot_id": "slot_1",
+      "t": 660.66,
+      "from": "slot_2",
+      "to": "slot_1"
     },
     {
       "slot_id": "slot_3",
       "t": 120.12,
       "from": "slot_3",
-      "to": "slot_6"
+      "to": "slot_12"
     },
     {
       "slot_id": "slot_3",
       "t": 660.66,
-      "from": "slot_6",
-      "to": "slot_3"
-    },
-    {
-      "slot_id": "slot_4",
-      "t": 660.66,
-      "from": "slot_4",
+      "from": "slot_12",
       "to": "slot_8"
     },
     {
       "slot_id": "slot_4",
       "t": 660.66,
-      "from": "slot_8",
-      "to": "slot_4"
+      "from": "slot_4",
+      "to": "slot_17"
     },
     {
       "slot_id": "slot_5",
       "t": 660.66,
-      "from": "slot_13",
-      "to": "slot_6"
+      "from": "slot_7",
+      "to": "slot_5"
     },
     {
       "slot_id": "slot_9",
       "t": 660.66,
-      "from": "slot_8",
-      "to": "slot_1"
+      "from": "slot_7",
+      "to": "slot_16"
     },
     {
       "slot_id": "slot_9",
       "t": 660.66,
-      "from": "slot_1",
-      "to": "slot_9"
+      "from": "slot_16",
+      "to": "slot_20"
     },
     {
       "slot_id": "slot_10",
       "t": 300.3,
       "from": "slot_17",
-      "to": "slot_12"
+      "to": "slot_11"
     },
     {
       "slot_id": "slot_10",
       "t": 300.3,
-      "from": "slot_12",
+      "from": "slot_11",
       "to": "slot_17"
     },
     {
       "slot_id": "slot_10",
       "t": 300.3,
       "from": "slot_17",
-      "to": "slot_12"
+      "to": "slot_11"
     },
     {
       "slot_id": "slot_10",
       "t": 660.66,
-      "from": "slot_12",
+      "from": "slot_11",
+      "to": "slot_13"
+    },
+    {
+      "slot_id": "slot_10",
+      "t": 660.66,
+      "from": "slot_13",
       "to": "slot_16"
-    },
-    {
-      "slot_id": "slot_10",
-      "t": 660.66,
-      "from": "slot_16",
-      "to": "slot_1"
     },
     {
       "slot_id": "slot_11",
       "t": 300.3,
       "from": "slot_9",
-      "to": "slot_12"
+      "to": "slot_11"
     },
     {
       "slot_id": "slot_11",
       "t": 419.42,
-      "from": "slot_12",
-      "to": "slot_8"
+      "from": "slot_11",
+      "to": "slot_16"
     },
     {
       "slot_id": "slot_11",
       "t": 419.42,
-      "from": "slot_8",
-      "to": "slot_13"
+      "from": "slot_16",
+      "to": "slot_6"
     },
     {
       "slot_id": "slot_11",
       "t": 419.42,
-      "from": "slot_13",
-      "to": "slot_8"
+      "from": "slot_6",
+      "to": "slot_16"
     },
     {
       "slot_id": "slot_11",
-      "t": 540.54,
-      "from": "slot_8",
-      "to": "slot_20"
-    },
-    {
-      "slot_id": "slot_11",
-      "t": 540.54,
-      "from": "slot_20",
+      "t": 419.42,
+      "from": "slot_16",
       "to": "slot_6"
     },
     {
       "slot_id": "slot_11",
       "t": 540.54,
       "from": "slot_6",
-      "to": "slot_8"
+      "to": "slot_20"
+    },
+    {
+      "slot_id": "slot_11",
+      "t": 540.54,
+      "from": "slot_20",
+      "to": "slot_2"
+    },
+    {
+      "slot_id": "slot_11",
+      "t": 540.54,
+      "from": "slot_2",
+      "to": "slot_13"
     },
     {
       "slot_id": "slot_12",
       "t": 660.66,
       "from": "slot_12",
-      "to": "slot_6"
-    },
-    {
-      "slot_id": "slot_13",
-      "t": 120.12,
-      "from": "slot_13",
-      "to": "slot_18"
+      "to": "slot_3"
     },
     {
       "slot_id": "slot_13",
       "t": 660.66,
-      "from": "slot_18",
-      "to": "slot_17"
+      "from": "slot_13",
+      "to": "slot_15"
     },
     {
       "slot_id": "slot_14",
       "t": 660.66,
       "from": "slot_14",
-      "to": "slot_15"
-    },
-    {
-      "slot_id": "slot_15",
-      "t": 120.12,
-      "from": "slot_16",
-      "to": "slot_8"
-    },
-    {
-      "slot_id": "slot_15",
-      "t": 660.66,
-      "from": "slot_8",
-      "to": "slot_1"
+      "to": "slot_13"
     },
     {
       "slot_id": "slot_17",
       "t": 660.66,
       "from": "slot_17",
-      "to": "slot_14"
+      "to": "slot_8"
     },
     {
       "slot_id": "slot_18",
       "t": 120.12,
       "from": "slot_4",
-      "to": "slot_3"
+      "to": "slot_11"
     },
     {
       "slot_id": "slot_18",
       "t": 660.66,
-      "from": "slot_3",
+      "from": "slot_11",
       "to": "slot_18"
     },
     {
       "slot_id": "slot_18",
       "t": 660.66,
       "from": "slot_18",
+      "to": "slot_5"
+    },
+    {
+      "slot_id": "slot_19",
+      "t": 660.66,
+      "from": "slot_19",
       "to": "slot_6"
-    },
-    {
-      "slot_id": "slot_19",
-      "t": 660.66,
-      "from": "slot_19",
-      "to": "slot_4"
-    },
-    {
-      "slot_id": "slot_19",
-      "t": 660.66,
-      "from": "slot_4",
-      "to": "slot_19"
-    },
-    {
-      "slot_id": "slot_19",
-      "t": 660.66,
-      "from": "slot_19",
-      "to": "slot_9"
     },
     {
       "slot_id": "slot_20",
       "t": 120.12,
       "from": "slot_20",
-      "to": "slot_10"
+      "to": "slot_9"
     },
     {
       "slot_id": "slot_20",
       "t": 179.18,
-      "from": "slot_10",
+      "from": "slot_9",
       "to": "slot_20"
     },
     {
@@ -247,20 +223,20 @@
     },
     {
       "slot_id": "slot_20",
-      "t": 300.3,
+      "t": 179.18,
       "from": "slot_9",
-      "to": "slot_7"
-    },
-    {
-      "slot_id": "slot_20",
-      "t": 300.3,
-      "from": "slot_7",
       "to": "slot_20"
     },
     {
       "slot_id": "slot_20",
       "t": 300.3,
       "from": "slot_20",
+      "to": "slot_12"
+    },
+    {
+      "slot_id": "slot_20",
+      "t": 300.3,
+      "from": "slot_12",
       "to": "slot_9"
     },
     {
@@ -271,7 +247,7 @@
     },
     {
       "slot_id": "slot_20",
-      "t": 419.42,
+      "t": 300.3,
       "from": "slot_20",
       "to": "slot_9"
     },
@@ -279,19 +255,25 @@
       "slot_id": "slot_20",
       "t": 419.42,
       "from": "slot_9",
-      "to": "slot_3"
+      "to": "slot_13"
     },
     {
       "slot_id": "slot_20",
       "t": 419.42,
-      "from": "slot_3",
+      "from": "slot_13",
+      "to": "slot_12"
+    },
+    {
+      "slot_id": "slot_20",
+      "t": 419.42,
+      "from": "slot_12",
       "to": "slot_20"
     },
     {
       "slot_id": "slot_20",
       "t": 419.42,
       "from": "slot_20",
-      "to": "slot_3"
+      "to": "slot_12"
     }
   ]
 }
