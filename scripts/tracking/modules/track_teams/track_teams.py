@@ -29,6 +29,7 @@ import cv2
 import numpy as np
 import yaml
 from tqdm import tqdm
+from collections import Counter
 try:
     from scipy.optimize import linear_sum_assignment as _hungarian
 except ImportError:  # pragma: no cover
@@ -547,6 +548,8 @@ def associate_hungarian(
     slot_trackers: dict,
     t_now: float,
     weights: dict,
+    near_miss: Optional[Counter] = None,
+    near_miss_threshold: float = 0.25,
 ) -> dict[str, dict]:
     """Глобальное назначение кандидатов слотам венгерским алгоритмом.
 
@@ -569,7 +572,9 @@ def associate_hungarian(
         return {}
     if _hungarian is None:
         # Fallback: жадный по cost, чтобы скрипт работал без scipy.
-        return _associate_greedy(candidates, slot_trackers, t_now, weights)
+        return _associate_greedy(candidates, slot_trackers, t_now, weights,
+                                 near_miss=near_miss,
+                                 near_miss_threshold=near_miss_threshold)
 
     slots = list(slot_trackers.values())
     n_slots = len(slots)
@@ -641,10 +646,23 @@ def associate_hungarian(
             continue
         st = slots[r]
         result[st.team.id] = candidates[c]
+        # Near-miss: кто ещё хотел этого же кандидата?
+        if near_miss is not None:
+            win_c = cost[r, c]
+            col = cost[:, c]
+            for ri in range(n_slots):
+                if ri == r or col[ri] >= INF / 2:
+                    continue
+                # Конкурент «рядом» — в пределах threshold от победителя.
+                if col[ri] <= win_c + max(0.05, near_miss_threshold):
+                    loser = slots[ri]
+                    near_miss[(st.team.id, loser.team.id)] += 1
     return result
 
 
-def _associate_greedy(candidates, slot_trackers, t_now, weights):
+def _associate_greedy(candidates, slot_trackers, t_now, weights,
+                       near_miss: Optional[Counter] = None,
+                       near_miss_threshold: float = 0.25):
     """Жадный fallback без scipy. Учитывает те же веса, что и hungarian,
     чтобы варианты конфигов (color_first/motion_first/...) реально различались
     даже когда scipy не установлен."""
@@ -692,6 +710,11 @@ def _associate_greedy(candidates, slot_trackers, t_now, weights):
                     c -= eps
             pairs.append((max(0.0, c), st, j))
     pairs.sort(key=lambda p: p[0])
+    # Для near-miss: для каждого cand_j собираем минимальный cost каждого слота.
+    per_cand_costs: dict[int, list[tuple[float, str]]] = {}
+    if near_miss is not None:
+        for c, st, j in pairs:
+            per_cand_costs.setdefault(j, []).append((c, st.team.id))
     used_slots: set[str] = set()
     for c, st, j in pairs:
         if j in assigned_cands or st.team.id in used_slots:
@@ -699,6 +722,12 @@ def _associate_greedy(candidates, slot_trackers, t_now, weights):
         assigned_cands.add(j)
         used_slots.add(st.team.id)
         result[st.team.id] = candidates[j]
+        if near_miss is not None:
+            for other_c, other_sid in per_cand_costs.get(j, []):
+                if other_sid == st.team.id:
+                    continue
+                if other_c <= c + max(0.05, near_miss_threshold):
+                    near_miss[(st.team.id, other_sid)] += 1
     return result
 
 
@@ -1487,6 +1516,8 @@ def main():
     # ---- Detect-first → associate (new pipeline, opt-in) --------------------
     da_strategy = str(cfg.get("da_strategy", "per_slot_roi")).lower()
     da_weights = cfg.get("da_weights", {}) or {}
+    da_debug_near_miss = bool(cfg.get("da_debug_near_miss", False))
+    near_miss_counter: Counter = Counter() if da_debug_near_miss else None
     minimap_bbox = None
     if da_strategy == "detect_first":
         zones_cfg_path = cfg.get("zones_file")
@@ -1672,7 +1703,8 @@ def main():
                     candidates = detect_candidates_in_minimap_roi(
                         frame, teams, minimap_bbox, H, det_cfg)
                     assigns = associate_hungarian(
-                        candidates, slot_trackers, t_now, da_weights)
+                        candidates, slot_trackers, t_now, da_weights,
+                        near_miss=near_miss_counter)
                     for t in teams:
                         st = slot_trackers[t.id]
                         det = assigns.get(t.id)
@@ -1813,6 +1845,13 @@ def main():
         encoding="utf-8",
     )
     print(f"[ok] processed {processed} frames -> {out_path}")
+    # ---- Near-miss diagnostics -----------------------------------------
+    if near_miss_counter is not None and near_miss_counter:
+        slot_by_id = {t.id: (t.slot or "?") for t in teams}
+        print(f"[near-miss] top conflicts (winner_slot <- loser_slot : count):")
+        for (winner, loser), n in near_miss_counter.most_common(20):
+            print(f"  slot_{slot_by_id.get(winner)} <- "
+                  f"slot_{slot_by_id.get(loser)}  ({winner} <- {loser})  n={n}")
     # ---- Post-hoc active-slot cleanup ----------------------------------
     # A slot is "fantom" if after the full run:
     #   * never activated (no streak of K near-anchor detections), AND

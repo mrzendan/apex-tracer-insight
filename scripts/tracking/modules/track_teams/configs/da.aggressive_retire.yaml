@@ -21,4 +21,5 @@ slot_tracker:
   min_tracked_ratio_for_active: 0.30   # было 0.20
   near_anchor_radius_canonical_px: 100.0
 tracking: { max_gap_frames: 30, gating_world_dist: 50.0, process_noise: 1.0, measurement_noise: 4.0 }
-output: { include_frame_px: true, include_canonical_px: true }
+
+da_debug_near_miss: true
