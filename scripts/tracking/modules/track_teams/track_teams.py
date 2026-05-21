@@ -529,6 +529,12 @@ class SlotTracker:
         k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (self.morph_kernel, self.morph_kernel))
         mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, k)
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, k)
+        # Дополнительный сильный close, чтобы залить дырки от букв
+        # внутри плашки (NAME / RANK), иначе fill падает и shape-фильтр рубит.
+        kclose = cv2.getStructuringElement(
+            cv2.MORPH_ELLIPSE, (max(7, self.morph_kernel + 4),) * 2
+        )
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kclose)
         return mask
 
     def _effective_roi_size(self) -> int:
@@ -557,7 +563,9 @@ class SlotTracker:
                 continue
             aspect = w / max(1.0, h)
             fill = area / max(1.0, float(w * h))
-            if not (0.4 <= aspect <= 12.0 and fill >= 0.18):
+            # Плашки с текстом дают «дырявую» маску, fill часто 0.08..0.20.
+            # Аспект расширен под зум-аут (узкие плашки) и стрелки.
+            if not (0.25 <= aspect <= 16.0 and fill >= 0.08):
                 continue
             cand.append((x, y, w, h, float(area)))
         if not cand:
