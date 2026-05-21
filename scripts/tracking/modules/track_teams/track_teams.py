@@ -524,7 +524,11 @@ class SlotTracker:
         # Post-hoc cleanup threshold: if a slot finished the run with fewer than
         # this many `tracked` frames AND was never activated, all its entries
         # are rewritten to `inactive` in tracks.json.
-        self.min_tracked_for_active: int = int(slot_cfg.get("min_tracked_for_active", 8))
+        self.min_tracked_for_active: int = int(slot_cfg.get("min_tracked_for_active", 20))
+        # Если tracked-доля от (tracked+wiped) ниже этого порога — фантом,
+        # даже если absolute tracked перевалил за min_tracked_for_active.
+        self.min_tracked_ratio_for_active: float = float(
+            slot_cfg.get("min_tracked_ratio_for_active", 0.20))
         # Telemetry counters (filled by run loop).
         self.n_tracked = 0
         self.n_low_conf = 0
@@ -880,8 +884,12 @@ class SlotTracker:
         activation streak. Far hits (chasing some other team's placard
         whose canonical projection is elsewhere on the map) reset the streak."""
         if self.init_canonical_px is None:
-            # No seed → fall back to any-detection counting.
-            self.near_anchor_consecutive += 1
+            # No seed anchor: motion_detect не видел этот слот вообще
+            # (anchor MISS). Любая «детекция» здесь — это зацеп за чужой
+            # плакард похожего тона. Активировать НЕЛЬЗЯ — пусть слот
+            # уйдёт в inactive по misses / post-hoc.
+            self.near_anchor_consecutive = 0
+            return
         else:
             d = math.hypot(cand_cx - self.init_canonical_px[0],
                            cand_cy - self.init_canonical_px[1])
