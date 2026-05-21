@@ -1845,6 +1845,13 @@ def main():
         encoding="utf-8",
     )
     print(f"[ok] processed {processed} frames -> {out_path}")
+    # ---- Near-miss diagnostics -----------------------------------------
+    if near_miss_counter is not None and near_miss_counter:
+        slot_by_id = {t.id: (t.slot or "?") for t in teams}
+        print(f"[near-miss] top conflicts (winner_slot <- loser_slot : count):")
+        for (winner, loser), n in near_miss_counter.most_common(20):
+            print(f"  slot_{slot_by_id.get(winner)} <- "
+                  f"slot_{slot_by_id.get(loser)}  ({winner} <- {loser})  n={n}")
     # ---- Post-hoc active-slot cleanup ----------------------------------
     # A slot is "fantom" if after the full run:
     #   * never activated (no streak of K near-anchor detections), AND
