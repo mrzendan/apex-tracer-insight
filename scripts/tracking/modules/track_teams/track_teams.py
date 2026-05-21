@@ -452,6 +452,10 @@ class SlotTracker:
                  anchor_conf: str = "MISS", hud_alive: bool = False):
         self.team = team
         self.canonical_px: Optional[tuple[float, float]] = init_canonical_px
+        # Immutable copy of the seed anchor (canonical px). Used by the strict
+        # active-slot filter to verify detections actually land near the
+        # placard motion_detect originally locked onto.
+        self.init_canonical_px: Optional[tuple[float, float]] = init_canonical_px
         self.last_frame_px: Optional[tuple[float, float]] = None
         # ROI / detection
         self.roi_size: int = int(slot_cfg.get("roi_size", 220))
@@ -507,6 +511,20 @@ class SlotTracker:
         self.inactive_after_misses: int = int(slot_cfg.get("inactive_after_misses", 60))
         self.ever_detected: bool = False
         self.n_inactive: int = 0
+        # Strict active-slot criteria (anti-fantom slots).
+        # `activated` flips True only when K consecutive detections land within
+        # `near_anchor_radius_px` of the seed anchor (in CANONICAL pixels —
+        # invariant of camera zoom/pan). Lone false positives on other teams'
+        # placards project far from the seed in canonical space and never
+        # count, so colors-not-in-this-match retire cleanly.
+        self.near_anchor_radius_px: float = float(slot_cfg.get("near_anchor_radius_canonical_px", 400.0))
+        self.min_consecutive_for_active: int = int(slot_cfg.get("min_consecutive_for_active", 3))
+        self.near_anchor_consecutive: int = 0
+        self.activated: bool = False
+        # Post-hoc cleanup threshold: if a slot finished the run with fewer than
+        # this many `tracked` frames AND was never activated, all its entries
+        # are rewritten to `inactive` in tracks.json.
+        self.min_tracked_for_active: int = int(slot_cfg.get("min_tracked_for_active", 8))
         # Telemetry counters (filled by run loop).
         self.n_tracked = 0
         self.n_low_conf = 0
@@ -734,6 +752,7 @@ class SlotTracker:
                     self.roi_expand_px = 0
                     self.n_recovered += 1
                     self.ever_detected = True
+                    self._note_near_anchor_hit(rccx, rccy)
                     return self._snapshot()
             self._on_miss()
             return self._snapshot()
@@ -816,6 +835,8 @@ class SlotTracker:
         self.consecutive_detections += 1
         self.lost_frames = 0
         self.ever_detected = True
+        # cand_cx/cand_cy = detection projected back to canonical (computed above).
+        self._note_near_anchor_hit(cand_cx, cand_cy)
         # Gradually shrink expanded ROI back.
         self.roi_expand_px = max(0, self.roi_expand_px - 20)
         return self._snapshot()
@@ -823,6 +844,8 @@ class SlotTracker:
     def _on_miss(self) -> None:
         self.lost_frames += 1
         self.consecutive_detections = 0
+        # A single miss breaks the "consecutive near-anchor hits" streak.
+        self.near_anchor_consecutive = 0
         self.confidence = max(0.1, self.confidence - 0.07)
         # Slowly forget old peak so a one-off rocket ride doesn't keep gate huge forever.
         self.v_observed_peak_px_s *= self.v_observed_decay
@@ -839,7 +862,10 @@ class SlotTracker:
         else:
             self.state = "coast"
         # Active-slot filter: never seen on screen + not protected -> retire.
-        if (not self.ever_detected
+        # Tightened: use `activated` (requires K consecutive near-anchor hits),
+        # not just any single detection. Lone false positives on other teams'
+        # placards no longer keep a fantom slot alive forever.
+        if (not self.activated
                 and self.inactive_after_misses > 0
                 and self.lost_frames >= self.inactive_after_misses
                 and self.anchor_conf not in ("HIGH", "MED")
@@ -847,6 +873,25 @@ class SlotTracker:
                 and not self.wiped):
             self.state = "inactive"
             self.state_reason = f"never_detected_{self.lost_frames}f"
+
+    def _note_near_anchor_hit(self, cand_cx: float, cand_cy: float) -> None:
+        """Detection projected to canonical (cand_cx, cand_cy) succeeded.
+        If it's close enough to the seed anchor, count it toward the
+        activation streak. Far hits (chasing some other team's placard
+        whose canonical projection is elsewhere on the map) reset the streak."""
+        if self.init_canonical_px is None:
+            # No seed → fall back to any-detection counting.
+            self.near_anchor_consecutive += 1
+        else:
+            d = math.hypot(cand_cx - self.init_canonical_px[0],
+                           cand_cy - self.init_canonical_px[1])
+            if d <= self.near_anchor_radius_px:
+                self.near_anchor_consecutive += 1
+            else:
+                self.near_anchor_consecutive = 0
+        if (not self.activated
+                and self.near_anchor_consecutive >= self.min_consecutive_for_active):
+            self.activated = True
 
     def _snapshot(self) -> dict:
         return {
@@ -1358,6 +1403,58 @@ def main():
         encoding="utf-8",
     )
     print(f"[ok] processed {processed} frames -> {out_path}")
+    # ---- Post-hoc active-slot cleanup ----------------------------------
+    # A slot is "fantom" if after the full run:
+    #   * never activated (no streak of K near-anchor detections), AND
+    #   * fewer than `min_tracked_for_active` tracked frames, AND
+    #   * was not HUD-wiped, anchor not HIGH/MED, not HUD-alive.
+    # All its frame entries are rewritten to state=inactive and detection
+    # fields are nulled, so downstream consumers see a clean "didn't play".
+    fantom_team_ids: set[str] = set()
+    for t in teams:
+        st = slot_trackers[t.id]
+        if st.activated:
+            continue
+        if st.wiped:
+            continue
+        if st.anchor_conf in ("HIGH", "MED"):
+            continue
+        if st.hud_alive:
+            continue
+        if st.n_tracked >= st.min_tracked_for_active:
+            continue
+        fantom_team_ids.add(t.id)
+    if fantom_team_ids:
+        print(f"[post-hoc] retiring {len(fantom_team_ids)} fantom slot(s): "
+              + ", ".join(sorted(slot_trackers[tid].team.slot_id or tid
+                                 for tid in fantom_team_ids)))
+        try:
+            doc = json.loads(out_path.read_text(encoding="utf-8"))
+            converted = 0
+            for fr in doc.get("frames", []):
+                for snap in fr.get("tracks", []):
+                    if snap.get("team_id") in fantom_team_ids and snap.get("state") != "wiped":
+                        prev = snap.get("state")
+                        snap["state"] = "inactive"
+                        snap["state_reason"] = "post_hoc_fantom"
+                        snap["canonical_px"] = None
+                        snap["frame_px"] = None
+                        snap["world"] = None
+                        snap["confidence"] = 0.0
+                        snap["score"] = 0.0
+                        converted += 1
+                        # Update telemetry: move count from old bucket to inactive.
+                        st = slot_trackers[snap["team_id"]]
+                        if prev == "tracked":   st.n_tracked = max(0, st.n_tracked - 1)
+                        elif prev == "low_conf": st.n_low_conf = max(0, st.n_low_conf - 1)
+                        elif prev == "hold":     st.n_hold = max(0, st.n_hold - 1)
+                        elif prev == "coast":    st.n_coast = max(0, st.n_coast - 1)
+                        elif prev == "lost":     st.n_lost = max(0, st.n_lost - 1)
+                        st.n_inactive += 1
+            out_path.write_text(json.dumps(doc, ensure_ascii=False), encoding="utf-8")
+            print(f"[post-hoc] rewrote {converted} frame entries -> inactive")
+        except Exception as e:
+            print(f"[warn] post-hoc cleanup failed: {e}")
     # Per-slot tracking summary (compare runs at a glance).
     print("\n[summary] per-slot state distribution")
     print(f"{'slot':<10}{'tracked':>9}{'low_conf':>10}{'hold':>7}{'coast':>7}{'lost':>7}"
