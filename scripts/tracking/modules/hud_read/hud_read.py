@@ -993,6 +993,9 @@ def main() -> int:
                     help="Готовый eliminations.json — пропустить scout в forward-режиме")
     ap.add_argument("--ocr-lang", default="eng")
     ap.add_argument("--tess-cmd", default=None, help="Полный путь к tesseract.exe (Windows)")
+    ap.add_argument("--teams-vocab", type=Path, default=None,
+                    help="JSON со списком известных тегов команд "
+                         "(массив строк ИЛИ объект {\"teams\":[...]})")
     ap.add_argument("--overlay-every", type=int, default=1)
     ap.add_argument("--crop-first-n", type=int, default=3,
                     help="Сохранять кропы текстовых полей только для первых N кадров")
@@ -1015,6 +1018,30 @@ def main() -> int:
 
     if args.tess_cmd and pytesseract is not None:
         pytesseract.pytesseract.tesseract_cmd = args.tess_cmd
+
+    # ── Словарь команд для snap OCR-результатов ────────────────────
+    global KNOWN_TEAMS
+    vocab_path = args.teams_vocab
+    if vocab_path is None:
+        # Авто-поиск: configs/teams.default.json рядом с модулем.
+        guess = MODULE_DIR / "configs" / "teams.default.json"
+        if guess.exists():
+            vocab_path = guess
+    if vocab_path and vocab_path.exists():
+        try:
+            raw = json.loads(vocab_path.read_text(encoding="utf-8"))
+            items = raw if isinstance(raw, list) else raw.get("teams", [])
+            KNOWN_TEAMS = [
+                re.sub(r"[^A-Z0-9]", "", str(s).upper()).strip()
+                for s in items
+                if isinstance(s, (str, int))
+            ]
+            KNOWN_TEAMS = [t for t in KNOWN_TEAMS if 2 <= len(t) <= 5]
+            print(f"[hud_read] team vocab: {vocab_path} ({len(KNOWN_TEAMS)} tags)")
+        except Exception as e:
+            print(f"[hud_read] team vocab read error: {e}")
+    else:
+        print("[hud_read] team vocab: <empty> (snap отключён)")
 
     zones_path = resolve_zones_path(args.zones)
     zones, (bw, bh) = load_zones(zones_path)
