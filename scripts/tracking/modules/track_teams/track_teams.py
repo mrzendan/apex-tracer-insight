@@ -1530,6 +1530,7 @@ def main():
     reg = FrameRegistrar(cmap, cfg.get("registration", {}))
     det_cfg = cfg.get("detection", {})
     trk = WorldTracker(cfg.get("tracking", {}))
+    trk.set_canonical_size((cmap.size[0], cmap.size[1]))
     anchors_map: dict[str, dict] = {}
     if anchors_path:
         mini_affine = load_minimap_affine(cmap.name, canonical_dir)
