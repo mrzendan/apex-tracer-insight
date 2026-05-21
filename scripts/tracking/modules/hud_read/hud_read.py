@@ -135,6 +135,26 @@ def preprocess_for_ocr(crop: np.ndarray) -> np.ndarray:
     return pad(th1), pad(th2)
 
 
+def preprocess_for_ocr_strong(crop: np.ndarray) -> tuple[np.ndarray, ...]:
+    """Агрессивный фолбэк для крошечных цифр (team_20.pts и т.п.):
+    апскейл x6, лёгкий blur + Otsu, инверсия, дополнительно adaptive threshold.
+    Возвращает несколько вариантов препроцесса для прогона через tesseract."""
+    if crop.size == 0:
+        return ()
+    h, w = crop.shape[:2]
+    scale = 6
+    big = cv2.resize(crop, (w * scale, h * scale), interpolation=cv2.INTER_CUBIC)
+    gray = cv2.cvtColor(big, cv2.COLOR_BGR2GRAY) if big.ndim == 3 else big
+    blur = cv2.GaussianBlur(gray, (3, 3), 0)
+    _, ot = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    ot_inv = cv2.bitwise_not(ot)
+    ad = cv2.adaptiveThreshold(blur, 255, cv2.ADAPTIVE_THRESH_MEAN_C,
+                               cv2.THRESH_BINARY, 25, 8)
+    pad = lambda im: cv2.copyMakeBorder(im, 12, 12, 12, 12,
+                                        cv2.BORDER_CONSTANT, value=255)
+    return pad(ot), pad(ot_inv), pad(ad)
+
+
 def ocr(crop: np.ndarray, lang: str, digits_only: bool, alnum_only: bool = False,
         calib_key: Optional[tuple[str, str]] = None) -> str:
     if pytesseract is None or crop.size == 0:
