@@ -582,18 +582,22 @@ def associate_hungarian(
     INF = 1e6
     cost = np.full((n_slots, n_cands), INF, dtype=np.float64)
 
-    beta = float(weights.get("beta_world", 1.0))
-    gamma = float(weights.get("gamma_shape", 0.3))
-    delta = float(weights.get("delta_color_mismatch", 0.5))
-    eps = float(weights.get("eps_hysteresis", 0.2))
-    gate_mult = float(weights.get("gate_radius_mult", 1.0))
-    fallback_gate_px = float(weights.get("fallback_gate_canonical_px", 200.0))
+    # Per-slot weight overrides + dynamic late-game gate shrink (see _eff_w).
+    overrides = weights.get("slot_overrides") or {}
+    dyn_gate_shrink = float(weights.get("_dyn_gate_shrink", 1.0))
 
     for i, st in enumerate(slots):
         if st.state in ("wiped", "inactive"):
             continue
         if st.wiped:
             continue
+        w = _eff_w(weights, overrides, getattr(st.team, "slot", None))
+        beta = float(w.get("beta_world", 1.0))
+        gamma = float(w.get("gamma_shape", 0.3))
+        delta = float(w.get("delta_color_mismatch", 0.5))
+        eps = float(w.get("eps_hysteresis", 0.2))
+        gate_mult = float(w.get("gate_radius_mult", 1.0)) * dyn_gate_shrink
+        fallback_gate_px = float(w.get("fallback_gate_canonical_px", 200.0))
         # Prediction in canonical px.
         if st.canonical_px is not None and st.last_seen_t is not None:
             dt = min(getattr(st, "dt_cap_s", 20.0),
@@ -668,19 +672,22 @@ def _associate_greedy(candidates, slot_trackers, t_now, weights,
     даже когда scipy не установлен."""
     assigned_cands: set[int] = set()
     result: dict[str, dict] = {}
-    beta = float(weights.get("beta_world", 1.0))
-    gamma = float(weights.get("gamma_shape", 0.3))
-    delta = float(weights.get("delta_color_mismatch", 0.5))
-    eps = float(weights.get("eps_hysteresis", 0.2))
-    gate_mult = float(weights.get("gate_radius_mult", 1.0))
-    fallback_gate_px = float(weights.get("fallback_gate_canonical_px", 200.0))
-    # δ ≥ 1.0 — фактически запрет кросс-цвета (как color_first.yaml).
-    allow_cross_color = delta < 1.0
+    overrides = weights.get("slot_overrides") or {}
+    dyn_gate_shrink = float(weights.get("_dyn_gate_shrink", 1.0))
     # Считаем (cost, slot, cand_j) по всем парам, сортируем и жадно назначаем.
     pairs: list[tuple[float, "SlotTracker", int]] = []
     for st in slot_trackers.values():
         if st.state in ("wiped", "inactive") or st.wiped:
             continue
+        w = _eff_w(weights, overrides, getattr(st.team, "slot", None))
+        beta = float(w.get("beta_world", 1.0))
+        gamma = float(w.get("gamma_shape", 0.3))
+        delta = float(w.get("delta_color_mismatch", 0.5))
+        eps = float(w.get("eps_hysteresis", 0.2))
+        gate_mult = float(w.get("gate_radius_mult", 1.0)) * dyn_gate_shrink
+        fallback_gate_px = float(w.get("fallback_gate_canonical_px", 200.0))
+        # δ ≥ 1.0 — фактически запрет кросс-цвета (как color_first.yaml).
+        allow_cross_color = delta < 1.0
         if st.canonical_px is not None:
             pred = st.canonical_px
             radius = min(getattr(st, "gate_cap_px", 450.0),
