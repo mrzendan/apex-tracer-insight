@@ -469,6 +469,27 @@ class SlotTracker:
         self.switch_confirm_frames: int = int(slot_cfg.get("switch_confirm_frames", 3))
         self.pending_canon: Optional[tuple[float, float]] = None
         self.pending_hits: int = 0
+        # Time-aware motion model (canonical px / sec).
+        motion = slot_cfg.get("motion", {}) or {}
+        self.v_max_px_s: float = float(motion.get("v_max_px_s", 40.0))
+        self.gate_slack_px: float = float(motion.get("gate_slack_px", 15.0))
+        self.gate_cap_px: float = float(motion.get("gate_cap_px", 280.0))
+        self.dt_cap_s: float = float(motion.get("dt_cap_s", 20.0))
+        self.velocity_alpha: float = float(motion.get("velocity_alpha", 0.5))
+        self.vx: float = 0.0
+        self.vy: float = 0.0
+        self.last_seen_t: Optional[float] = None
+        self.canonical_px_stale: bool = init_canonical_px is None
+        self.wiped: bool = False
+        # Telemetry counters (filled by run loop).
+        self.n_tracked = 0
+        self.n_low_conf = 0
+        self.n_hold = 0
+        self.n_coast = 0
+        self.n_lost = 0
+        self.n_switches = 0
+        self.score_sum = 0.0
+        self.score_n = 0
         # Telemetry
         self.state: str = "init"
         self.state_reason: str = "init"
@@ -551,12 +572,25 @@ class SlotTracker:
         return best
 
     # ---- main update -----------------------------------------------------
-    def update(self, frame_bgr: np.ndarray, H: np.ndarray) -> Optional[dict]:
+    def update(self, frame_bgr: np.ndarray, H: np.ndarray, t_now: float = 0.0) -> Optional[dict]:
         """Run one frame. Returns dict with canonical_px / frame_px / state, or None if untrackable yet."""
+        if self.wiped:
+            self.state = "lost"
+            self.state_reason = "wiped"
+            return self._snapshot()
         if self.canonical_px is None:
             self.state = "lost"
             self.state_reason = "no_anchor"
             return None
+        # dt since last confirmed observation — drives the motion budget.
+        if self.last_seen_t is None:
+            dt = self.dt_cap_s
+        else:
+            dt = min(self.dt_cap_s, max(0.0, t_now - self.last_seen_t))
+        radius = min(self.gate_cap_px, self.v_max_px_s * dt + self.gate_slack_px)
+        # Predicted canonical position from last velocity (zero after miss).
+        pred_cx = self.canonical_px[0] + (self.vx * dt if not self.canonical_px_stale else 0.0)
+        pred_cy = self.canonical_px[1] + (self.vy * dt if not self.canonical_px_stale else 0.0)
         # Project canonical → frame via H_inv to find ROI center.
         try:
             H_inv = np.linalg.inv(H)
@@ -564,7 +598,7 @@ class SlotTracker:
             self.state = "lost"
             self.state_reason = "H_singular"
             return None
-        fx, fy = map_point(H_inv, self.canonical_px)
+        fx, fy = map_point(H_inv, (pred_cx, pred_cy))
         fh, fw = frame_bgr.shape[:2]
         if not (0 <= fx < fw and 0 <= fy < fh):
             self.state = "lost"
@@ -589,10 +623,17 @@ class SlotTracker:
         det_fy = y0 + y + h / 2.0
         # Project back to canonical
         cand_cx, cand_cy = map_point(H, (det_fx, det_fy))
-        # Anti-jump confirmation in canonical space
+        # Time-aware gating: must lie within motion budget around prediction.
+        dist_pred = math.hypot(cand_cx - pred_cx, cand_cy - pred_cy)
+        if dist_pred > radius:
+            self.state_reason = f"out_of_gate({dist_pred:.0f}>{radius:.0f}px,dt={dt:.1f}s)"
+            self._on_miss()
+            return self._snapshot()
+        # Anti-jump confirmation in canonical space (relative to last KNOWN pos).
         last_cx, last_cy = self.canonical_px
         jump = math.hypot(cand_cx - last_cx, cand_cy - last_cy)
-        if jump > self.jump_switch_threshold_px and self.consecutive_detections > 0:
+        jump_thresh = max(self.jump_switch_threshold_px, 2.0 * radius)
+        if jump > jump_thresh and self.consecutive_detections > 0:
             if self.pending_canon is not None:
                 pd = math.hypot(cand_cx - self.pending_canon[0], cand_cy - self.pending_canon[1])
                 if pd <= 8.0:
@@ -614,24 +655,37 @@ class SlotTracker:
                 self.pending_canon = None
                 self.pending_hits = 0
                 self.state_reason = "switch_confirmed"
+                self.n_switches += 1
+                # Reset velocity on confirmed jump.
+                self.vx = 0.0
+                self.vy = 0.0
         else:
             self.pending_canon = None
             self.pending_hits = 0
 
-        # Smooth with deadzone + max-step clamp (in canonical_px).
+        # Smooth toward observation. Step budget scales with motion budget.
         dx = cand_cx - last_cx
         dy = cand_cy - last_cy
         dist = math.hypot(dx, dy)
+        step_budget = max(self.max_center_step_px, radius)
         if dist > self.center_deadzone_px:
-            if dist > self.max_center_step_px:
-                scale = self.max_center_step_px / max(1e-6, dist)
+            if dist > step_budget:
+                scale = step_budget / max(1e-6, dist)
                 dx *= scale
                 dy *= scale
             new_cx = last_cx + dx * self.center_smoothing_alpha
             new_cy = last_cy + dy * self.center_smoothing_alpha
+            # Update EMA velocity from the smoothed move.
+            if self.last_seen_t is not None and (t_now - self.last_seen_t) > 1e-3:
+                inst_vx = (new_cx - last_cx) / (t_now - self.last_seen_t)
+                inst_vy = (new_cy - last_cy) / (t_now - self.last_seen_t)
+                self.vx = self.velocity_alpha * inst_vx + (1 - self.velocity_alpha) * self.vx
+                self.vy = self.velocity_alpha * inst_vy + (1 - self.velocity_alpha) * self.vy
             self.canonical_px = (new_cx, new_cy)
         self.last_frame_px = (det_fx, det_fy)
         self.state = "tracked"
+        self.canonical_px_stale = False
+        self.last_seen_t = t_now
         if self.state_reason != "switch_confirmed":
             self.state_reason = "detected"
         self.confidence = min(1.0, self.confidence * 0.6 + 0.4 + 0.0)
@@ -648,8 +702,15 @@ class SlotTracker:
         if self.lost_frames > 5:
             # Slowly expand ROI to recover.
             self.roi_expand_px = min(self.max_roi_expand_px, self.roi_expand_px + self.roi_expand_step_px)
-        if self.state != "lost":
+        # Mark canonical position stale so it is not redrawn as "current".
+        self.canonical_px_stale = True
+        if self.state == "lost":
+            return
+        # 1st miss → low_conf; >1 miss → coast (no real observation for a while).
+        if self.lost_frames <= 1:
             self.state = "low_conf"
+        else:
+            self.state = "coast"
 
     def _snapshot(self) -> dict:
         return {
@@ -973,11 +1034,12 @@ def main():
                 slot_snaps: list[dict] = []
                 for t in teams:
                     st = slot_trackers[t.id]
-                    snap = st.update(frame, H)
+                    snap = st.update(frame, H, t_now=t_now)
                     if snap is None:
                         continue
                     slot_snaps.append(snap)
-                    if st.canonical_px is not None and st.state in ("tracked", "hold", "low_conf"):
+                    # Only emit world detections for actually observed states.
+                    if st.canonical_px is not None and st.state == "tracked":
                         wx, wy = map_point(cmap.px_to_world, st.canonical_px)
                         world_dets.append({
                             "team_id": t.id,
@@ -985,6 +1047,16 @@ def main():
                             "score": st.last_score,
                             "angle_world_deg": None,
                         })
+                    # Telemetry.
+                    s = snap.get("state", "")
+                    if s == "tracked":   st.n_tracked += 1
+                    elif s == "low_conf": st.n_low_conf += 1
+                    elif s == "hold":     st.n_hold += 1
+                    elif s == "coast":    st.n_coast += 1
+                    elif s == "lost":     st.n_lost += 1
+                    if s == "tracked":
+                        st.score_sum += st.last_score
+                        st.score_n += 1
                 # WorldTracker остаётся только для wipe-логики (длительное отсутствие).
                 # Feed it only confirmed (tracked) detections to avoid wipe-resets on hold.
                 tracked_dets = [d for d in world_dets if any(
@@ -999,10 +1071,18 @@ def main():
                     if tr is not None and tr.wiped_at_t is not None:
                         snap["state"] = "lost"
                         snap["state_reason"] = f"wiped@{tr.wiped_at_t}"
+                        slot_trackers[snap["team_id"]].wiped = True
                     # world coord (from current canonical)
-                    if snap.get("canonical_px") is not None:
+                    # Don't expose stale positions as if they were observations.
+                    st_obj = slot_trackers.get(snap["team_id"])
+                    if (snap.get("canonical_px") is not None
+                            and snap.get("state") == "tracked"
+                            and st_obj is not None
+                            and not st_obj.canonical_px_stale):
                         wx, wy = map_point(cmap.px_to_world, snap["canonical_px"])
                         snap["world"] = [round(wx, 2), round(wy, 2)]
+                    else:
+                        snap["world"] = None
                     tracks_world.append(snap)
 
             record = {
@@ -1064,6 +1144,14 @@ def main():
         encoding="utf-8",
     )
     print(f"[ok] processed {processed} frames -> {out_path}")
+    # Per-slot tracking summary (compare runs at a glance).
+    print("\n[summary] per-slot state distribution")
+    print(f"{'slot':<10}{'tracked':>9}{'low_conf':>10}{'hold':>7}{'coast':>7}{'lost':>7}{'switch':>8}{'avg_sc':>8}")
+    for t in teams:
+        st = slot_trackers[t.id]
+        avg = (st.score_sum / st.score_n) if st.score_n else 0.0
+        print(f"{t.id:<10}{st.n_tracked:>9}{st.n_low_conf:>10}{st.n_hold:>7}"
+              f"{st.n_coast:>7}{st.n_lost:>7}{st.n_switches:>8}{avg:>8.2f}")
 
 
 if __name__ == "__main__":

@@ -77,15 +77,21 @@
             "type": "array",
             "items": {
               "type": "object",
-              "required": ["team_id", "world", "state"],
+              "required": ["team_id", "state"],
               "properties": {
               "team_id": { "type": "string" },
               "slot_id": { "type": "string", "description": "Stable per-match identity; matches meta.slots[].slot_id" },
-                "world": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+                "world": {
+                  "description": "World/canonical-world XY. null when state != 'tracked' (no fresh observation).",
+                  "oneOf": [
+                    { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+                    { "type": "null" }
+                  ]
+                },
                 "canonical_px": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
                 "frame_px": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
                 "angle_world_deg": { "type": "number" },
-                "state": { "type": "string", "enum": ["tracked", "hold", "low_conf", "lost", "alive", "init"] },
+                "state": { "type": "string", "enum": ["tracked", "hold", "low_conf", "coast", "lost", "alive", "init"] },
                 "state_reason": { "type": "string" },
                 "mask_mode": { "type": "string", "enum": ["hsv+lab", "hsv_only_fallback"] },
                 "confidence": { "type": "number" },
