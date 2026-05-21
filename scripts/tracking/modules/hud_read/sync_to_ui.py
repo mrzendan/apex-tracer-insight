@@ -13,7 +13,16 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
+import sys
 from pathlib import Path
+
+# Windows PowerShell defaults to cp1251/cp866 and crashes on Unicode (e.g. '→').
+# Force UTF-8 on stdout/stderr so prints never raise UnicodeEncodeError.
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 
 MODULE_DIR = Path(__file__).resolve().parent
 REPO_ROOT = MODULE_DIR.parents[3]
