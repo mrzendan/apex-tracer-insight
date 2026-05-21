@@ -23,4 +23,8 @@ slot_tracker: { roi_size: 220, min_tracked_for_active: 20, min_tracked_ratio_for
                 near_anchor_radius_canonical_px: 120.0 }
 tracking: { max_gap_frames: 30, gating_world_dist: 50.0, process_noise: 1.0, measurement_noise: 4.0 }
 
-da_debug_near_miss: true
+da_debug_near_miss: true  # init-warmup: до приземления (~30c) не создаём треки в кромке карты
+  # и игнорим слабые детекты — фикс для команд, "стартующих в углу".
+  init_warmup_sec: 30.0
+  init_reject_world_margin: 30.0
+  init_min_score: 0.4

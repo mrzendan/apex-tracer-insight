@@ -38,4 +38,8 @@ tracking:
 
 output:
   include_frame_px: true
-  include_canonical_px: true
+  include_canonical_px: true  # init-warmup: до приземления (~30c) не создаём треки в кромке карты
+  # и игнорим слабые детекты — фикс для команд, "стартующих в углу".
+  init_warmup_sec: 30.0
+  init_reject_world_margin: 30.0
+  init_min_score: 0.4
