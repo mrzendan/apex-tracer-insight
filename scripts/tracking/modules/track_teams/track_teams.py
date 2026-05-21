@@ -847,8 +847,8 @@ class WorldTracker:
             by_team.setdefault(d["team_id"], []).append(d)
         for team_id, dets in by_team.items():
             tr = self.tracks.get(team_id)
-            if tr is not None and tr.wiped_at_t is not None:
-                # команда официально выбита — игнорим ложные детекции
+            if tr is not None and tr.wiped_at_t is not None and t >= tr.wiped_at_t:
+                # команда уже выбита по HUD/absence — игнорим ложные детекции
                 continue
             chosen = None
             if tr is not None and tr.state != "lost":
