@@ -28,6 +28,10 @@ def main() -> int:
     ap.add_argument("--ring-geometry", type=Path, default=None,
                     help="Опц. ring_geometry.json из ring_locator — "
                          "будет вмёржен в rings.json как поле 'geometry'.")
+    ap.add_argument("--tracks-reports", type=Path, default=None,
+                    help="Опц. путь к scripts/tracking/modules/track_teams/reports — "
+                         "копирует tracks.json и tracks.slots.json в --out. "
+                         "Пусто или 'auto' → стандартное расположение в репо.")
     args = ap.parse_args()
 
     args.out.mkdir(parents=True, exist_ok=True)
@@ -42,6 +46,21 @@ def main() -> int:
         shutil.copy2(src, dst)
         copied.append(name)
         print(f"[sync_to_ui] {src} → {dst}")
+
+    # tracks.json / tracks.slots.json из track_teams (опц.)
+    tracks_dir = args.tracks_reports
+    if tracks_dir is not None:
+        if str(tracks_dir).lower() == "auto":
+            tracks_dir = REPO_ROOT / "scripts" / "tracking" / "modules" / "track_teams" / "reports"
+        for name in ("tracks.json", "tracks.slots.json"):
+            src = tracks_dir / name
+            if not src.exists():
+                print(f"[sync_to_ui] пропускаю {name} — не найден в {tracks_dir}")
+                continue
+            dst = args.out / name
+            shutil.copy2(src, dst)
+            copied.append(name)
+            print(f"[sync_to_ui] {src} → {dst}")
 
     # Мердж геометрии колец в rings.json (если есть).
     if args.ring_geometry and args.ring_geometry.exists():
