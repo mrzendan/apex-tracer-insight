@@ -135,6 +135,26 @@ def preprocess_for_ocr(crop: np.ndarray) -> np.ndarray:
     return pad(th1), pad(th2)
 
 
+def preprocess_for_ocr_strong(crop: np.ndarray) -> tuple[np.ndarray, ...]:
+    """Агрессивный фолбэк для крошечных цифр (team_20.pts и т.п.):
+    апскейл x6, лёгкий blur + Otsu, инверсия, дополнительно adaptive threshold.
+    Возвращает несколько вариантов препроцесса для прогона через tesseract."""
+    if crop.size == 0:
+        return ()
+    h, w = crop.shape[:2]
+    scale = 6
+    big = cv2.resize(crop, (w * scale, h * scale), interpolation=cv2.INTER_CUBIC)
+    gray = cv2.cvtColor(big, cv2.COLOR_BGR2GRAY) if big.ndim == 3 else big
+    blur = cv2.GaussianBlur(gray, (3, 3), 0)
+    _, ot = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    ot_inv = cv2.bitwise_not(ot)
+    ad = cv2.adaptiveThreshold(blur, 255, cv2.ADAPTIVE_THRESH_MEAN_C,
+                               cv2.THRESH_BINARY, 25, 8)
+    pad = lambda im: cv2.copyMakeBorder(im, 12, 12, 12, 12,
+                                        cv2.BORDER_CONSTANT, value=255)
+    return pad(ot), pad(ot_inv), pad(ad)
+
+
 def ocr(crop: np.ndarray, lang: str, digits_only: bool, alnum_only: bool = False,
         calib_key: Optional[tuple[str, str]] = None) -> str:
     if pytesseract is None or crop.size == 0:
@@ -162,16 +182,23 @@ def ocr(crop: np.ndarray, lang: str, digits_only: bool, alnum_only: bool = False
             cfg = f"--psm {psm} --oem 1"
             if whitelist:
                 cfg += f" -c tessedit_char_whitelist={whitelist}"
-            return pytesseract.image_to_string(prep, lang=lang, config=cfg).strip()
+            locked_txt = pytesseract.image_to_string(prep, lang=lang, config=cfg).strip()
         except Exception as e:  # pragma: no cover
             msg = str(e)
             if msg not in _OCR_ERRORS_SEEN:
                 _OCR_ERRORS_SEEN.add(msg)
                 print(f"[hud_read] tesseract error: {msg}", file=sys.stderr)
             return ""
-    best = ""
+        if locked_txt or not digits_only:
+            return locked_txt
+        # digits_only + пусто → проваливаемся в strong-фолбэк ниже
+        best = ""
+    else:
+        best = ""
     best_combo: Optional[tuple[int, int]] = None
     for prep_i, prep in enumerate(preps):
+        if locked is not None:
+            break  # уже пробовали залоченную комбу — сразу к strong-фолбэку
         for psm_i, psm in enumerate(psms):
             cfg = f"--psm {psm} --oem 1"
             if whitelist:
@@ -189,6 +216,21 @@ def ocr(crop: np.ndarray, lang: str, digits_only: bool, alnum_only: bool = False
                 best_combo = (psm_i, prep_i)
     if calib_key is not None and best and best_combo is not None:
         _OCR_CALIB[calib_key] = best_combo
+    # Фолбэк для крошечных цифр (например, team_20.pts): если основной
+    # проход вернул пустоту для digits_only — пробуем сильный препроцесс
+    # (×6 апскейл + Otsu/adaptive) с psm=10/8/13. Калибровку не трогаем.
+    if digits_only and not best:
+        strong = preprocess_for_ocr_strong(crop)
+        wl = whitelist or "0123456789"
+        for psm in (10, 8, 13):
+            cfg = f"--psm {psm} --oem 1 -c tessedit_char_whitelist={wl}"
+            for prep in strong:
+                try:
+                    txt = pytesseract.image_to_string(prep, lang=lang, config=cfg).strip()
+                except Exception:
+                    txt = ""
+                if txt:
+                    return txt
     return best
 
 

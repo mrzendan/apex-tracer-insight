@@ -35,6 +35,10 @@ tracking:
   gating_world_dist: 50.0
   process_noise: 1.0
   measurement_noise: 4.0
+  init_warmup_sec: 30.0
+  init_reject_world_margin: 30.0
+  init_min_score: 0.4
+
 
 output:
   include_frame_px: true

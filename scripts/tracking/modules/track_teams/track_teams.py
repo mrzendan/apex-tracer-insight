@@ -1348,6 +1348,23 @@ class WorldTracker:
         self.new_wipes: list[dict] = []
         # HUD-confirmed alive team_ids — absence-based wipe MUST NOT fire for these.
         self.hud_alive_protected: set[str] = set()
+        # init-warmup: пока t < init_warmup_sec, не создаём новые треки в углах
+        # карты и со слабым score (фикс для THUG в углу до приземления).
+        self.init_warmup_sec = float(cfg.get("init_warmup_sec", 0.0))
+        self.init_reject_world_margin = float(cfg.get("init_reject_world_margin", 0.0))
+        self.init_min_score = float(cfg.get("init_min_score", 0.0))
+        self.canonical_size: tuple[float, float] | None = None
+
+    def set_canonical_size(self, size: tuple[float, float]):
+        self.canonical_size = (float(size[0]), float(size[1]))
+
+    def _in_warmup_edge(self, x: float, y: float) -> bool:
+        """True если точка в запретной кромке карты во время warmup."""
+        if self.canonical_size is None or self.init_reject_world_margin <= 0:
+            return False
+        W, H = self.canonical_size
+        m = self.init_reject_world_margin
+        return x < m or y < m or x > (W - m) or y > (H - m)
 
     def set_anchors(self, anchors: dict[str, dict]):
         self.slot_anchors = anchors or {}
@@ -1404,6 +1421,14 @@ class WorldTracker:
             angle = chosen.get("angle_world_deg")
             if tr is None or tr.state == "lost":
                 anchor = self.slot_anchors.get(team_id, {})
+                # init-warmup: фильтруем заведомо мусорные старты
+                if (self.init_warmup_sec > 0
+                        and t < self.init_warmup_sec):
+                    score = float(chosen.get("score", 1.0) or 0.0)
+                    if score < self.init_min_score:
+                        continue
+                    if self._in_warmup_edge(mx, my):
+                        continue
                 self.tracks[team_id] = Track(
                     team_id=team_id, x=mx, y=my, angle=angle,
                     last_conf=chosen.get("score", 1.0),
@@ -1505,6 +1530,7 @@ def main():
     reg = FrameRegistrar(cmap, cfg.get("registration", {}))
     det_cfg = cfg.get("detection", {})
     trk = WorldTracker(cfg.get("tracking", {}))
+    trk.set_canonical_size((cmap.size[0], cmap.size[1]))
     anchors_map: dict[str, dict] = {}
     if anchors_path:
         mini_affine = load_minimap_affine(cmap.name, canonical_dir)
