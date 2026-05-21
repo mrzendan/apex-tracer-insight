@@ -447,7 +447,8 @@ class SlotTracker:
     Состояние хранится в canonical_px (потому что кадр двигается, а карта — нет).
     """
 
-    def __init__(self, team: TeamCfg, slot_cfg: dict, init_canonical_px: Optional[tuple[float, float]]):
+    def __init__(self, team: TeamCfg, slot_cfg: dict, init_canonical_px: Optional[tuple[float, float]],
+                 elim_t: Optional[float] = None):
         self.team = team
         self.canonical_px: Optional[tuple[float, float]] = init_canonical_px
         self.last_frame_px: Optional[tuple[float, float]] = None
@@ -485,12 +486,16 @@ class SlotTracker:
         self.last_seen_t: Optional[float] = None
         self.canonical_px_stale: bool = init_canonical_px is None
         self.wiped: bool = False
+        # Authoritative wipe time from HUD (eliminations.json). When t_now >= elim_t,
+        # the slot is force-wiped — no more detection work, not counted as `lost`.
+        self.elim_t: Optional[float] = elim_t
         # Telemetry counters (filled by run loop).
         self.n_tracked = 0
         self.n_low_conf = 0
         self.n_hold = 0
         self.n_coast = 0
         self.n_lost = 0
+        self.n_wiped = 0
         self.n_switches = 0
         self.score_sum = 0.0
         self.score_n = 0
