@@ -1,7 +1,7 @@
 {
   "video": "scripts\\tracking\\game.mp4",
   "fps": 59.94005994005994,
-  "mode": "scout",
+  "mode": "two-pass",
   "reverse_step": 1800,
   "refine_budget": 10,
   "refine_linear": 4,
