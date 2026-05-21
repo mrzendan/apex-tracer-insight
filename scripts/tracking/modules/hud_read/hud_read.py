@@ -33,6 +33,14 @@ IMAGE_NAMES = {"logo", "hero 1", "hero 2", "hero 3"}
 # Поля, состоящие только из цифр.
 DIGIT_NAMES = {"pts", "game number", "number of teams alive", "number of players alive"}
 
+# Зоны, которые НЕ должны OCR-иться (используются только как геометрия).
+# Например, minimap.camera roi нужна ring_locator/track_teams; OCR по ней
+# даёт длинные «стихи» названий команд внутри миникарты и сильно засоряет
+# отчёт + замедляет проход.
+OCR_SKIP_ZONES: set[tuple[str, str]] = {
+    ("minimap", "camera roi"),
+}
+
 # Поля, которые в матче не меняются — достаточно зафиксировать первые стабильные значения.
 # Для команд "name"/"logo" и для HUD "map name"/"game number".
 STATIC_TEAM_NAMES = {"name", "logo"}
@@ -282,8 +290,9 @@ def parse_field(tag: str, name: str, text: str) -> Any:
             v = int(m.group(0))
         except ValueError:
             return None
-        # Apex score: 0..100 в матче. Всё за пределами — мусор от тёмной/мелкой плашки.
-        if v < 0 or v > 100:
+        # Apex score: реально 0..~120 в матче. Берём 0..199 как мягкий sanity-фильтр —
+        # отсекаем явный OCR-мусор, но не теряем валидные значения.
+        if v < 0 or v > 199:
             return None
         return v
     if name == "eliminated":
