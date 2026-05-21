@@ -1,115 +1,104 @@
 
-# Рефакторинг track_teams.py: «detect-first → associate»
+## Контекст и приоритеты
 
-Прежде чем кодить — фиксируем архитектуру, чтобы не сломать существующий формат `tracks.json` и интеграции (`hud_read`, post-hoc, UI).
+Сейчас держим в работе только Storm Point (`game_sp.mp4` = текущий `game.mp4`). `game_we.mp4`, `game_ed.mp4`, `game_ol.mp4` уезжают в test-set, но трогаем их только когда SP стабилизируется. Это согласуется с твоей просьбой «добить одну карту до идеала».
 
-## Текущая логика (что меняем)
+План разделён на 3 волны. Каждая волна заканчивается прогоном matrix-а и сравнением. На SP считаем «идеалом», когда **все 20 слотов ≥ 95% tracked-кадров** и **HUD-теги совпадают с VOD на 100%**.
 
-Сейчас `SlotTracker.update()` вызывается **по очереди для каждого слота**:
-- проецирует canonical → frame через `H`, ищет цвет своей команды в ROI вокруг прошлой точки,
-- если не нашёл — coast / hold / lost.
+---
 
-Проблема: seed «прилипает» к чужой плашке или HUD-зоне → фантом стоит почти неподвижно, и его не убрать ratio-фильтром, если HUD говорит «жив».
+## Волна 1 — OCR/HUD: чистый алфанумерик и фикс slot→tag
 
-## Новая логика
+Цель: убрать мусор вида `JDDG`, `EE`, `HH`, `820`, `OBVN`, чтобы карта команд соответствовала VOD-у.
 
-Каждый кадр:
+1. **Жёсткий alphanumeric для тегов команд.**
+   - В `hud_read.py::parse_field("name", ...)`: уже стоит `[^A-Z0-9 ]` — расширяем до `[^A-Z0-9]` (даже пробел уберём, теги в Apex без пробелов) и обрезаем по длине ≥2 и ≤5.
+   - В `ocr(...)` для зон `team/name` форсируем `alnum_only=True` (сейчас, судя по логике, для `name` идёт обычный текст). Это блокирует Tesseract на `-`, `'`, `.`, `«`, `1` вместо `I` и т.п.
+   - Добавим **post-snap к словарю известных тегов матча**: рядом с `KNOWN_MAPS` заводим `KNOWN_TEAMS_OVERRIDE: dict[match_id, list[str]]`, читается из `configs/teams.<match>.json`. Для m-test заполним руками по VOD (BB, CINO, SRC, S2, JDG, GMBL, ELITE, STAL, THUG, FREE, OBVN, NIPC, FXI, CRT, DKK, MR, REV, ROC, SRO, TL — что увидим). Levenshtein с `max_dist=1` для теги длиной 2–3 и `max_dist=2` для 4–5. Без override — fallback на текущий путь.
+   - **Голосование по кадрам**: тег команды в матче не меняется (`STATIC_TEAM_NAMES`). Сейчас, похоже, берётся «первое стабильное» — заменим на mode по N≥10 первым валидным OCR-чтениям, чтобы единичный мусорный кадр не фиксировался навечно.
 
-```text
-1. detect_all(frame, H, teams)
-     для КАЖДОГО slot'а строим HSV-маску → находим все кандидаты в minimap-ROI
-     возвращаем плоский список {slot_hint, frame_px, world_px, area, mask_quality, color_score}
+2. **Sync to UI: пересобрать `src/data/m-test-g1/slot-to-tag.json` из обновлённого `hud_read/reports/eliminations.json`.** Поправит `HH→BB`, `EE→…`, `820→S2`, `JDG→GMBL`, `JDDG→JDG`, `OBVN/SRC` перепутаны (см. твой комментарий).
 
-2. associate(candidates, prev_slot_state, anchors, t)
-     стоимость = α·color_dist + β·world_dist_to_prediction + γ·shape_penalty
-     - Венгерский алгоритм (scipy.optimize.linear_sum_assignment)
-     - один кандидат → максимум один slot
-     - предсказание = последняя tracked точка + калмановское движение
-     - для незаассайненных slot'ов: hold/coast/lost как раньше
+3. **Лог OCR-конфликтов.** В `hud_read.py` дополнительно писать `reports/team_tags_raw.json` — для каждого слота: top-3 OCR-кандидата с числом кадров. Это даёт быструю верификацию вручную.
 
-3. validate(assignments)
-     - motion-gate: если v < min_v И recent_movement_score низкий → low_conf
-     - conflict-gate: если два slot'а стабильно в одной точке — оба low_conf, retire худшего
-```
+Артефакты Волны 1: обновлённый `eliminations.json`, новый `team_tags_raw.json`, новый `slot-to-tag.json` в UI. Шанс что нужны переноcы зон в `/admin/zones` — отдельный шаг, делаем только если OCR падает из-за обрезки кропа (проверим по `team_tags_raw.json`).
 
-Сохраняем без изменений:
-- `FrameRegistrar`, homography
-- HSV-загрузка из `hsv_presets.storm-point.json`
-- `load_anchors` + seed
-- HUD eliminations и `hud_alive_slots`
-- Формат `tracks.json` (schema_version: 2) и `slot-to-tag`
-- Post-hoc retire (как страховка, но с новыми порогами)
-- Telemetry: `n_tracked / n_wiped / state_reason / v_peak`
+---
 
-## Что меняется в коде
+## Волна 2 — DA: Hungarian + фикс init-фазы (THUG, STAL, OBVN)
 
-`scripts/tracking/modules/track_teams/track_teams.py`:
+Проблема: команды стартуют в углах карты / сливаются в одну. Это происходит в первые ~60 кадров, когда motion-anchors ещё пусты и DA выбирает первый попавшийся blob нужного hue.
 
-| секция | действие |
-|---|---|
-| `class SlotTracker` (450–917) | оставляем как **состояние слота** (Kalman, EMA HSV, счётчики), но `update()` больше не ищет — принимает готовый detection |
-| `SlotTracker._find_in_roi`, `_recover_global` | удаляем (их работу делает новый detector) |
-| **новый** `class FrameDetector` | строит HSV-маски всех 20 команд за один проход на minimap-ROI, возвращает candidates |
-| **новый** `def associate_hungarian(...)` | строит cost-матрицу slots×candidates, scipy `linear_sum_assignment` |
-| `main()` loop (1259–1388) | вместо цикла `for t in teams: st.update(...)` → `dets = detector.detect(frame, H); assigns = associate(dets, slot_trackers, t_now); for slot, det in assigns: st.accept(det) or st.miss()` |
-| post-hoc filter | оставляем, но снижаем порог `min_v_peak_for_alive=1.0 px/s`, retire HUD-alive если `v_peak < 1.0 AND tracked < 30` |
+1. **`da.hungarian.yaml`** — копия `da.color_first.yaml` + `assignment.method: hungarian` (scipy теперь есть). В matrix добавим как 2-й после baseline. Ожидаем +1–3% на «pink-red» кластере (slot_5/6/7/8).
 
-`requirements.txt`: добавить `scipy` (если ещё нет, для `linear_sum_assignment`).
+2. **Init-якоря из HUD-killfeed/баннера.** В первых 30 секундах матча Apex показывает интро-баннеры (команда + позиция). Сейчас этот сигнал не используется. Минимальный шаг: в `track_teams` ввести `init_warmup_frames: 120` параметр — пока он не пройден, **разрешаем active-state только для слотов с подтверждённым motion-anchor ≥ 5 кадров**. Это убирает призрачные старты в углах карты.
 
-`scripts/tracking/modules/track_teams/configs/`:
-- `da.baseline.yaml` — копия текущего конфига (контроль)
-- `da.color_first.yaml` — высокий вес color_dist
-- `da.motion_first.yaml` — высокий вес world_dist (доверяем калману)
-- `da.strict_shape.yaml` — узкий size-gate из `team_profiles.json`
-- `da.aggressive_retire.yaml` — низкий порог motion-gate, лёгкая retire
+3. **GT-anchors на старт.** В `scripts/tracking/modules/track_teams/assets/gt_anchors.json` есть пустой шаблон. Один раз руками проставим стартовые позиции по VOD на t=0 для всех 20 слотов SP (одна сетка точек). DA получает мощный prior на init-фазе.
 
-## 5 параллельных тестов
+4. **Прогон matrix:** baseline / color_first / hybrid / **hungarian** / **hungarian_init_anchors** / detect_first / motion_first. Сравнить через `compare_matrix.py`. Лидера — в UI.
 
-`scripts/tracking/modules/track_teams/run_matrix.ps1` — запускает 5 прогонов на одно видео в отдельные `tracks_<tag>.json` + `run_<tag>.log`. Видео read-only, конфликта нет.
+---
 
-| tag | конфиг | гипотеза проверяет |
-|---|---|---|
-| `baseline` | текущая логика (без detect-first) | контроль, чтобы знать «стало лучше или хуже» |
-| `color_first` | α=2.0 β=0.5 γ=0.3 | помогает ли приоритет цвета на похожих оттенках |
-| `motion_first` | α=0.5 β=2.0 γ=0.3 | помогает ли доверие к калману (для slot_4/10 с малым движением) |
-| `strict_shape` | size-gate ±20% от `team_profiles` | убирает ли строгая фильтрация по размеру плашки HUD-шум |
-| `aggressive_retire` | post-hoc `min_v_peak=2.0, min_tracked=40, ratio<0.30` | сколько ложно-живых слотов уйдёт в retire |
+## Волна 3 — Сортировка по цвету + per-slot тюнинг
 
-Скрипт после прогонов автоматически печатает сравнительную таблицу:
+1. **UI: сортировка списка команд по slot color.** Уже сделали базово (sort by slot id). Дополнительно — в `src/components/MatchViewer.tsx` цвет команды брать не из `TEAM_PALETTE`, а из `scripts/tracking/configs/hsv_presets.storm-point.json::hex`. Тогда фишки на карте и плашки в списке = HUD VOD. Слот 1 → `#11758e`, слот 2 → `#1e4262` и т.д. Делается один раз, общий для всех карт (для каждой карты — свой `hsv_presets.<map>.json`).
 
-```
-slot    baseline  color  motion  shape  aggro
-slot_4    12.6%   34.1%  41.2%   28.0%  retired
-slot_9    28.6%   55.0%  60.3%   48.1%  35.0%
-...
-```
+2. **Per-slot configs — только для проблемных слотов.** Заводим формат `configs/slot_overrides.storm_point.yaml`:
+   ```yaml
+   defaults: { eps: 0.4, gate_radius_mult: 1.2, color_delta: 5 }
+   overrides:
+     "10": { color_delta: 3, min_tracked_for_active: 10 }   # тусклый dark-red
+     "11": { color_delta: 7, min_tracked_for_active: 8 }    # сливается с фоном
+     "5":  { gate_radius_mult: 0.9 }                        # pink-red ban
+   ```
+   `track_teams.py` мержит override поверх dataclass-конфига на слот. Это и есть твой «индивидуальный паттерн для цвета» — без распиливания на 20 скриптов. Включаем только когда volna 2 покажет, какие слоты остались проблемными.
 
-## Что писать в `tracks.json`
+3. **Финальная метрика SP:** `compare_matrix.py` + ручная сверка 4–6 ключевых таймстампов с VOD (старт, ring2 closing, последний wipe, финал).
 
-Формат не ломаем. В `meta` добавляется поле `da_strategy: "detect_first"`, в каждом snapshot слота — `det_source: "hungarian" | "predicted" | "anchor_recovery"` для диагностики. UI игнорирует неизвестные поля.
+---
 
-## Порядок реализации
+## Волна 4 — Test-set из других карт (только после идеала на SP)
 
-1. Добавить `scipy` в `requirements.txt`, проверить импорт.
-2. Написать `FrameDetector` + unit-тест на одном кадре (`--debug-frame`).
-3. Написать `associate_hungarian` + симуляция: 20 фейковых dets vs 20 slots.
-4. Срезать `SlotTracker.update()` до `accept(det) / miss()`, переключить main loop.
-5. Прогон baseline + новой версии на коротком окне (60 сек), глазами сверить.
-6. Подкрутить пороги, добавить motion-gate в post-hoc.
-7. Написать `run_matrix.ps1` + конфиги 5 тестов.
-8. Запустить матрицу на полном VOD, прислать тебе сравнительный отчёт.
+1. Запустить `find_cuts` + `hud_read` + `motion_detect` + `track_teams` пайплайн на `game_we.mp4`, `game_ed.mp4`, `game_ol.mp4`. Каждая карта получает свой `hsv_presets.<map>.json` (worlds-edge уже есть, e-district и olympus — собрать через `/admin/hsv` от 2–3 кадров каждой).
+2. Сверять: совпадают ли «победители» из matrix между картами. Если `hungarian + init_anchors` стабильно top-1 на 3+ картах — фиксируем как default; если конфиги-победители разные → нужен per-map preset (`da.<map>.yaml`).
+3. На этом этапе становится понятно, нужны ли per-slot overrides на других картах или достаточно общего конфига.
 
-## Технические заметки
+---
 
-- `scipy.optimize.linear_sum_assignment` — O(n³), для 20×~40 кандидатов это <1мс на кадр.
-- Cost ∈ [0, 1]; недопустимые пары (вне ROI / цвет совсем не тот) = `inf` → не ассайнятся.
-- При <20 кандидатов часть slot'ов остаётся неассайненной → fallback на старую логику (hold/coast/lost).
-- HUD-alive больше не даёт иммунитет от retire; даёт только защиту от **absence-based wipe** (это уже есть).
+## Что НЕ делаем сейчас
 
-## Риски
+- Per-color отдельные скрипты (20 файлов) — overkill. Используем overrides YAML.
+- Менять зоны `/admin/zones` — только если волна 1 покажет, что причина OCR-ошибок в обрезке кропа.
+- Трогать `ring_locator` / `motion_detect` — они вне scope этой итерации.
 
-- Сломать формат `tracks.json` → UI перестанет рисовать треки. Mitigation: schema_version=2 не трогаем, новые поля только добавляем.
-- Венгерский ассайн может «прыгать» между похожими по цвету командами при близких dets. Mitigation: гистерезис — пред. ассайн получает бонус -0.2 к стоимости.
-- 5 тестов прогоняются последовательно (PowerShell foreach), не параллельно — на одной машине параллельный SIFT упрётся в CPU. Уточни: хочешь параллельно (нужно 5×RAM/CPU) или последовательно (≈30 мин × 5 = 2.5ч)?
+---
 
-Подтверди план — начинаю с шага 1.
+## Технические детали (для меня в build-режиме)
+
+**Файлы Волны 1:**
+- `scripts/tracking/modules/hud_read/hud_read.py` — правка `parse_field("name")`, форс `alnum_only=True` для зон team/name, добавить `KNOWN_TEAMS_OVERRIDE` + snap, voting по кадрам, дамп `team_tags_raw.json`.
+- `scripts/tracking/modules/hud_read/configs/teams.m-test.json` — новый, словарь известных тегов из VOD.
+- `src/data/m-test-g1/slot-to-tag.json` — регенерация через `sync_to_ui.py`.
+
+**Файлы Волны 2:**
+- `scripts/tracking/modules/track_teams/configs/da.hungarian.yaml` — новый.
+- `scripts/tracking/modules/track_teams/configs/da.hungarian_init_anchors.yaml` — новый.
+- `scripts/tracking/modules/track_teams/track_teams.py` — `assignment.method: hungarian|greedy`, `init_warmup_frames`, чтение `gt_anchors.json` при старте.
+- `scripts/tracking/modules/track_teams/assets/gt_anchors.json` — наполнить вручную.
+- `scripts/tracking/modules/track_teams/run_matrix.ps1` — +2 тега.
+
+**Файлы Волны 3:**
+- `src/components/MatchViewer.tsx` — цвет команды из `hsv_presets.<map>.json::hex` вместо `TEAM_PALETTE`.
+- `src/data/m-test-g1/` — экспорт hex-палитры (новый JSON или поле в slot-to-tag).
+- `scripts/tracking/modules/track_teams/configs/slot_overrides.storm_point.yaml` — новый, формат описан выше.
+- `track_teams.py` — merge overrides per slot.
+
+**Решение о Hungarian:** scipy установлен → `scipy.optimize.linear_sum_assignment` на матрице стоимостей DA. Замена точечная: одна функция в `track_teams.py`. Greedy остаётся как fallback.
+
+---
+
+## Открытый вопрос (нужен ответ до старта)
+
+Один — остальное укладывается само:
+
+- **Словарь команд m-test:** перечисли актуальные теги команд из VOD (20 шт, как видишь их в HUD-баннерах). Без этого `KNOWN_TEAMS_OVERRIDE` пустой и snap не работает. Можно списком через запятую, привязка к слотам не нужна — slot↔tag разрулит сама OCR + сверка с твоими комментариями (BB не HH, GMBL не JDG, SRC не CINO, S2 не 820 …).
