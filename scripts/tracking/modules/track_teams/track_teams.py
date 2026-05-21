@@ -752,7 +752,7 @@ class SlotTracker:
                     self.roi_expand_px = 0
                     self.n_recovered += 1
                     self.ever_detected = True
-                    self._note_near_anchor_hit(rcx, rcy)
+                    self._note_near_anchor_hit(rccx, rccy)
                     return self._snapshot()
             self._on_miss()
             return self._snapshot()
@@ -835,7 +835,8 @@ class SlotTracker:
         self.consecutive_detections += 1
         self.lost_frames = 0
         self.ever_detected = True
-        self._note_near_anchor_hit(det_fx, det_fy)
+        # cand_cx/cand_cy = detection projected back to canonical (computed above).
+        self._note_near_anchor_hit(cand_cx, cand_cy)
         # Gradually shrink expanded ROI back.
         self.roi_expand_px = max(0, self.roi_expand_px - 20)
         return self._snapshot()
@@ -873,15 +874,17 @@ class SlotTracker:
             self.state = "inactive"
             self.state_reason = f"never_detected_{self.lost_frames}f"
 
-    def _note_near_anchor_hit(self, det_fx: float, det_fy: float) -> None:
-        """Detection at (det_fx, det_fy) succeeded. If it's close enough to the
-        original anchor placard position, count it toward the activation streak.
-        Far-away hits (chasing some other team's placard) reset the streak."""
-        if self.init_frame_px is None:
-            # No anchor frame_px → fall back to any-detection counting.
+    def _note_near_anchor_hit(self, cand_cx: float, cand_cy: float) -> None:
+        """Detection projected to canonical (cand_cx, cand_cy) succeeded.
+        If it's close enough to the seed anchor, count it toward the
+        activation streak. Far hits (chasing some other team's placard
+        whose canonical projection is elsewhere on the map) reset the streak."""
+        if self.init_canonical_px is None:
+            # No seed → fall back to any-detection counting.
             self.near_anchor_consecutive += 1
         else:
-            d = math.hypot(det_fx - self.init_frame_px[0], det_fy - self.init_frame_px[1])
+            d = math.hypot(cand_cx - self.init_canonical_px[0],
+                           cand_cy - self.init_canonical_px[1])
             if d <= self.near_anchor_radius_px:
                 self.near_anchor_consecutive += 1
             else:
