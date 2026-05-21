@@ -1071,6 +1071,10 @@ def main():
                     if s == "tracked":
                         st.score_sum += st.last_score
                         st.score_n += 1
+                    # Record dominant state_reason (strip numeric tails for grouping).
+                    rr = snap.get("state_reason", "") or ""
+                    rr_key = rr.split("(")[0].split("@")[0] or "?"
+                    st.reason_hist[rr_key] = st.reason_hist.get(rr_key, 0) + 1
                 # WorldTracker остаётся только для wipe-логики (длительное отсутствие).
                 # Feed it only confirmed (tracked) detections to avoid wipe-resets on hold.
                 tracked_dets = [d for d in world_dets if any(
