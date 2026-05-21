@@ -20,7 +20,15 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
+
+# Windows PowerShell defaults to cp1251/cp866 and crashes on Unicode (e.g. '→').
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 
 
 def main() -> int:
