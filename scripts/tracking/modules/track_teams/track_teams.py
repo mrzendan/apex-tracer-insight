@@ -585,9 +585,18 @@ class SlotTracker:
     # ---- main update -----------------------------------------------------
     def update(self, frame_bgr: np.ndarray, H: np.ndarray, t_now: float = 0.0) -> Optional[dict]:
         """Run one frame. Returns dict with canonical_px / frame_px / state, or None if untrackable yet."""
+        # HUD-authoritative wipe: as soon as the elimination timestamp is reached,
+        # the slot is permanently wiped — skip all detection work to keep the report
+        # clean and avoid burning CPU on a team that no longer exists on the map.
+        if not self.wiped and self.elim_t is not None and t_now >= self.elim_t:
+            self.wiped = True
+            self.state = "wiped"
+            self.state_reason = f"hud_wiped@{self.elim_t}"
+            return self._snapshot()
         if self.wiped:
-            self.state = "lost"
-            self.state_reason = "wiped"
+            self.state = "wiped"
+            if not self.state_reason.startswith("hud_wiped") and not self.state_reason.startswith("wiped"):
+                self.state_reason = "wiped"
             return self._snapshot()
         if self.canonical_px is None:
             self.state = "lost"
