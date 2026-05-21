@@ -1463,6 +1463,31 @@ def main():
         print(f"[info] anchors: {sum(1 for a in anchors_map.values() if a.get('conf') in ('HIGH','MED'))} HIGH/MED, {sum(1 for a in anchors_map.values() if a.get('conf') == 'LOW')} LOW")
     frame_step = int(args.frame_step or cfg.get("frame_step", 3))
 
+    # ---- Detect-first → associate (new pipeline, opt-in) --------------------
+    da_strategy = str(cfg.get("da_strategy", "per_slot_roi")).lower()
+    da_weights = cfg.get("da_weights", {}) or {}
+    minimap_bbox = None
+    if da_strategy == "detect_first":
+        zones_cfg_path = cfg.get("zones_file")
+        if zones_cfg_path:
+            zones_path = (args.config.parent / zones_cfg_path).resolve()
+        else:
+            # default: shared zones.vod.json
+            zones_path = (Path(__file__).resolve().parents[2]
+                          / "configs" / "zones.vod.json")
+        minimap_bbox = load_minimap_roi_bbox(zones_path)
+        if minimap_bbox is None:
+            print(f"[warn] da_strategy=detect_first но minimap-ROI не найдена "
+                  f"({zones_path}) — буду сканировать весь кадр")
+        else:
+            print(f"[info] da_strategy=detect_first, minimap-ROI={minimap_bbox} "
+                  f"(zones={zones_path})")
+        if _hungarian is None:
+            print("[warn] scipy не установлен — fallback на жадный ассайн "
+                  "(`pip install scipy`)")
+    else:
+        print(f"[info] da_strategy={da_strategy} (старая логика)")
+
     # ---- HUD eliminations (authoritative wipe times) -------------------------
     elim_path = args.eliminations
     if elim_path is None and cfg.get("eliminations_file"):
@@ -1619,12 +1644,30 @@ def main():
                 t_now = (frame_idx - start_frame) / fps
                 world_dets: list[dict] = []
                 slot_snaps: list[dict] = []
+                if da_strategy == "detect_first":
+                    candidates = detect_candidates_in_minimap_roi(
+                        frame, teams, minimap_bbox, H, det_cfg)
+                    assigns = associate_hungarian(
+                        candidates, slot_trackers, t_now, da_weights)
+                    for t in teams:
+                        st = slot_trackers[t.id]
+                        det = assigns.get(t.id)
+                        if det is not None:
+                            snap = st.accept_observation(det, t_now)
+                        else:
+                            snap = st.note_miss(t_now)
+                        if snap is None:
+                            continue
+                        slot_snaps.append(snap)
+                else:
+                    for t in teams:
+                        st = slot_trackers[t.id]
+                        snap = st.update(frame, H, t_now=t_now)
+                        if snap is None:
+                            continue
+                        slot_snaps.append(snap)
                 for t in teams:
                     st = slot_trackers[t.id]
-                    snap = st.update(frame, H, t_now=t_now)
-                    if snap is None:
-                        continue
-                    slot_snaps.append(snap)
                     # Only emit world detections for actually observed states.
                     if st.canonical_px is not None and st.state == "tracked":
                         wx, wy = map_point(cmap.px_to_world, st.canonical_px)
@@ -1634,6 +1677,9 @@ def main():
                             "score": st.last_score,
                             "angle_world_deg": None,
                         })
+                # Telemetry pass on slot_snaps.
+                for snap in slot_snaps:
+                    st = slot_trackers[snap["team_id"]]
                     # Telemetry.
                     s = snap.get("state", "")
                     if s == "tracked":   st.n_tracked += 1
