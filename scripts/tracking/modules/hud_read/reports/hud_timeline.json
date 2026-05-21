@@ -1279,7 +1279,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f21cf",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -4900,7 +4900,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f21cf",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -5326,7 +5326,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f21cf",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -6391,7 +6391,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f21cf",
-          "pts": null,
+          "pts": 0,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -8734,7 +8734,7 @@
           "hero_1": "878fade5a6a6be9e",
           "hero_2": "0f1f97bead6d2e91",
           "hero_3": "0c0e010e8f8f21cf",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": false
         }
@@ -11716,7 +11716,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555557d6e51",
           "hero_3": "7c6e5858580b23cf",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -13420,7 +13420,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555557d6e51",
           "hero_3": "3c6e5958580f218f",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -13633,7 +13633,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "7c6e5958590f218f",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -14272,7 +14272,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "7c6e5958580b29cb",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -15337,7 +15337,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "7c6e5958580f21cb",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -15763,7 +15763,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555557d6e51",
           "hero_3": "fc6e5858580b29cf",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -16189,7 +16189,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "eedf6555555d6e51",
           "hero_3": "3c6e5958580b21cb",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -16402,7 +16402,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555557d6e51",
           "hero_3": "3c6e5958584f21cf",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -16615,7 +16615,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "7c6e5958580b218f",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -17041,7 +17041,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "7c6e5858580f238b",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -17893,7 +17893,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "3c6e5958580f29cf",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -18532,7 +18532,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "3c6e5958590f21cb",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -18958,7 +18958,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "7c6e5958580b21cb",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -19384,7 +19384,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555557d6e51",
           "hero_3": "3c6e5958590b218b",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -19597,7 +19597,7 @@
           "hero_1": "e6efe5e6f6a6be9e",
           "hero_2": "6edf6555557d6e51",
           "hero_3": "3c6e5858584f29cb",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -20023,7 +20023,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "3c6e5858580f218f",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -20236,7 +20236,7 @@
           "hero_1": "e6efe5e6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "3c6e5958580f21cb",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -20875,7 +20875,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "3c6e5858580b218b",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -21088,7 +21088,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555557d6e51",
           "hero_3": "3c6e5958580f23cb",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -21514,7 +21514,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555557d6e51",
           "hero_3": "7c6e5958580b21cf",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -22153,7 +22153,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555557d6e51",
           "hero_3": "7c6e5958580b21cb",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -22579,7 +22579,7 @@
           "hero_1": "e6efe5e6f6a6be9e",
           "hero_2": "6edf6555557d6e51",
           "hero_3": "7cee5958594b21cf",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -22792,7 +22792,7 @@
           "hero_1": "e6efe5e6f6a6be9e",
           "hero_2": "6edf6555557d6e51",
           "hero_3": "7c6e5858584b21cb",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -23005,7 +23005,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "7c6e5858580f218f",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -24070,7 +24070,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555557d6e51",
           "hero_3": "7c6e5858580f238f",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -24496,7 +24496,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "eedf6555555d6e51",
           "hero_3": "bc6e5958580b218f",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -25135,7 +25135,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555557d6e51",
           "hero_3": "3c6e5958580f23cf",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": true
         }
@@ -25561,7 +25561,7 @@
           "hero_1": "e6efe5f6f6a6be9e",
           "hero_2": "6edf6555555d6e51",
           "hero_3": "3c6e5958580b21cf",
-          "pts": 0,
+          "pts": null,
           "logo": "3030303028282828",
           "eliminated": true
         }
