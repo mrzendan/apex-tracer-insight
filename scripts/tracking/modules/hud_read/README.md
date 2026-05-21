@@ -161,3 +161,27 @@ powershell -ExecutionPolicy Bypass -File scripts\tracking\modules\hud_read\run.p
 `hud_read` параллелен `track_teams`: даёт «что показывает HUD в момент
 `t`», тогда как `track_teams` даёт «где команды на карте в момент `t`».
 Сшивка по таймстампу.
+
+## Sync в UI (`sync_to_ui.py`)
+
+**Структурное правило:** `hud_read.py` всегда пишет в свой `reports/`
+(нельзя `--out src/data/...` — это теперь явная ошибка). Перенос данных
+на сайт делает `sync_to_ui.py` — он копирует `eliminations.json`,
+`rings.json`, `hud_timeline.json` из `hud_read/reports/`, а также
+`tracks.json` и `tracks.slots.json` из `track_teams/reports/`.
+
+Канонический one-liner после прогона `hud_read` + `track_teams`:
+
+```powershell
+python scripts/tracking/modules/hud_read/sync_to_ui.py `
+  --ring-geometry scripts/tracking/modules/ring_locator/reports/ring_geometry_v2.json
+```
+
+Флаги:
+
+| Флаг                | Дефолт | Что делает                                |
+|---------------------|--------|-------------------------------------------|
+| `--reports`         | `hud_read/reports/` | откуда берём HUD-отчёты      |
+| `--out`             | `src/data/m-test-g1/` | куда кладём                |
+| `--ring-geometry`   | —      | merge геометрии колец в `rings.json`      |
+| `--tracks-reports`  | `auto` | `auto` → `track_teams/reports/`; `skip` — выключить копирование tracks |
