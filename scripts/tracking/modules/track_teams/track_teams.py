@@ -1790,8 +1790,14 @@ def main():
                 if da_strategy == "detect_first":
                     candidates = detect_candidates_in_minimap_roi(
                         frame, teams, minimap_bbox, H, det_cfg)
+                    dyn_shrink, lg_info = compute_late_game_gate_shrink(
+                        slot_trackers, t_now, late_game_cfg)
+                    if lg_info is not None:
+                        late_game_events.append(lg_info)
+                    da_weights_dyn = dict(da_weights)
+                    da_weights_dyn["_dyn_gate_shrink"] = dyn_shrink
                     assigns = associate_hungarian(
-                        candidates, slot_trackers, t_now, da_weights,
+                        candidates, slot_trackers, t_now, da_weights_dyn,
                         near_miss=near_miss_counter)
                     for t in teams:
                         st = slot_trackers[t.id]
