@@ -1168,6 +1168,7 @@ def main():
                     # hasn't been told by HUD that the slot is gone. If SlotTracker
                     # already marked wiped (via elim_t), keep its "wiped" state.
                     if (tr is not None and tr.wiped_at_t is not None
+                            and t_now >= tr.wiped_at_t
                             and snap.get("state") != "wiped"):
                         snap["state"] = "wiped"
                         snap["state_reason"] = f"wiped@{tr.wiped_at_t}"
