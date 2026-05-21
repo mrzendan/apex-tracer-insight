@@ -1,0 +1,191 @@
+{
+  "video": "scripts\\tracking\\game.mp4",
+  "fps": 59.94005994005994,
+  "scout_step": 600,
+  "refine_budget": 10,
+  "refine_linear": 4,
+  "ring_start_sec": 0.0,
+  "transitions": [
+    {
+      "f": 6944,
+      "t": 115.849,
+      "to": {
+        "ring": 1,
+        "state": "CLOSING"
+      },
+      "confidence": "medium",
+      "refine_method": "rollback"
+    },
+    {
+      "f": 23133,
+      "t": 385.936,
+      "to": {
+        "ring": 2,
+        "state": "COUNTDOWN"
+      },
+      "confidence": "high",
+      "refine_method": "rollback"
+    },
+    {
+      "f": 30920,
+      "t": 515.849,
+      "to": {
+        "ring": 2,
+        "state": "CLOSING"
+      },
+      "confidence": "high",
+      "refine_method": "rollback"
+    },
+    {
+      "f": 38117,
+      "t": 635.919,
+      "to": {
+        "ring": 3,
+        "state": "COUNTDOWN"
+      },
+      "confidence": "high",
+      "refine_method": "rollback"
+    },
+    {
+      "f": 44378,
+      "t": 740.373,
+      "to": {
+        "ring": 3,
+        "state": "CLOSING"
+      },
+      "confidence": "medium",
+      "refine_method": "rollback"
+    },
+    {
+      "f": 47362,
+      "t": 790.156,
+      "to": {
+        "ring": 4,
+        "state": "COUNTDOWN"
+      },
+      "confidence": "medium",
+      "refine_method": "rollback"
+    },
+    {
+      "f": 53099,
+      "t": 885.868,
+      "to": {
+        "ring": 4,
+        "state": "CLOSING"
+      },
+      "confidence": "high",
+      "refine_method": "rollback"
+    },
+    {
+      "f": 56098,
+      "t": 935.902,
+      "to": {
+        "ring": 5,
+        "state": "COUNTDOWN"
+      },
+      "confidence": "high",
+      "refine_method": "rollback"
+    },
+    {
+      "f": 60895,
+      "t": 1015.932,
+      "to": {
+        "ring": 5,
+        "state": "CLOSING"
+      },
+      "confidence": "high",
+      "refine_method": "rollback"
+    },
+    {
+      "f": 63892,
+      "t": 1065.932,
+      "to": {
+        "ring": 6,
+        "state": "COUNTDOWN"
+      },
+      "confidence": "high",
+      "refine_method": "rollback"
+    },
+    {
+      "f": 68088,
+      "t": 1135.935,
+      "to": {
+        "ring": 6,
+        "state": "CLOSING"
+      },
+      "confidence": "high",
+      "refine_method": "rollback"
+    }
+  ],
+  "phases": [
+    {
+      "ring": 1,
+      "countdown_start_f": null,
+      "t_countdown_start": null,
+      "closing_start_f": 6944,
+      "t_closing_start": 115.849,
+      "closed_f": null,
+      "t_closed": null,
+      "confidence": {
+        "CLOSING": "medium"
+      }
+    },
+    {
+      "ring": 2,
+      "countdown_start_f": 23133,
+      "t_countdown_start": 385.936,
+      "closing_start_f": 30920,
+      "t_closing_start": 515.849,
+      "closed_f": null,
+      "t_closed": null
+    },
+    {
+      "ring": 3,
+      "countdown_start_f": 38117,
+      "t_countdown_start": 635.919,
+      "closing_start_f": 44378,
+      "t_closing_start": 740.373,
+      "closed_f": null,
+      "t_closed": null,
+      "confidence": {
+        "CLOSING": "medium"
+      }
+    },
+    {
+      "ring": 4,
+      "countdown_start_f": 47362,
+      "t_countdown_start": 790.156,
+      "closing_start_f": 53099,
+      "t_closing_start": 885.868,
+      "closed_f": null,
+      "t_closed": null,
+      "confidence": {
+        "COUNTDOWN": "medium"
+      }
+    },
+    {
+      "ring": 5,
+      "countdown_start_f": 56098,
+      "t_countdown_start": 935.902,
+      "closing_start_f": 60895,
+      "t_closing_start": 1015.932,
+      "closed_f": null,
+      "t_closed": null
+    },
+    {
+      "ring": 6,
+      "countdown_start_f": 63892,
+      "t_countdown_start": 1065.932,
+      "closing_start_f": 68088,
+      "t_closing_start": 1135.935,
+      "closed_f": null,
+      "t_closed": null
+    }
+  ],
+  "derived": {
+    "closing_durations": [],
+    "countdown_durations": [],
+    "median_closing": null,
+    "median_countdown": null
+  }
+}
