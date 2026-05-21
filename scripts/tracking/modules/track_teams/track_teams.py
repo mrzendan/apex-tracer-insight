@@ -1223,12 +1223,16 @@ def main():
     print(f"[ok] processed {processed} frames -> {out_path}")
     # Per-slot tracking summary (compare runs at a glance).
     print("\n[summary] per-slot state distribution")
-    print(f"{'slot':<10}{'tracked':>9}{'low_conf':>10}{'hold':>7}{'coast':>7}{'lost':>7}{'switch':>8}{'avg_sc':>8}")
+    print(f"{'slot':<10}{'tracked':>9}{'low_conf':>10}{'hold':>7}{'coast':>7}{'lost':>7}"
+          f"{'wiped':>7}{'alive%':>8}{'switch':>8}{'avg_sc':>8}")
     for t in teams:
         st = slot_trackers[t.id]
         avg = (st.score_sum / st.score_n) if st.score_n else 0.0
+        alive = st.n_tracked + st.n_low_conf + st.n_hold + st.n_coast + st.n_lost
+        alive_pct = (100.0 * (st.n_tracked + st.n_low_conf) / alive) if alive else 0.0
         print(f"{t.id:<10}{st.n_tracked:>9}{st.n_low_conf:>10}{st.n_hold:>7}"
-              f"{st.n_coast:>7}{st.n_lost:>7}{st.n_switches:>8}{avg:>8.2f}")
+              f"{st.n_coast:>7}{st.n_lost:>7}{st.n_wiped:>7}{alive_pct:>7.1f}%"
+              f"{st.n_switches:>8}{avg:>8.2f}")
     # Dominant state_reason per slot — what is actually failing where.
     print("\n[summary] dominant state_reason per slot (top 3)")
     print(f"{'slot':<10}{'v_peak_px/s':>13}  reasons")
