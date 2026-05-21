@@ -543,6 +543,59 @@ def detect_candidates_in_minimap_roi(
     return out
 
 
+def _eff_w(base: dict, overrides: dict, slot_int) -> dict:
+    """Merge per-slot weight overrides on top of base weights.
+
+    overrides format: { "slot_11": {delta_color_mismatch: 10.0, ...}, ... }.
+    Unknown slot or missing block → returns base unchanged.
+    """
+    if not overrides or slot_int is None:
+        return base
+    ov = overrides.get(f"slot_{int(slot_int)}")
+    if not ov:
+        return base
+    merged = dict(base)
+    merged.update(ov)
+    return merged
+
+
+def compute_late_game_gate_shrink(slot_trackers: dict, t_now: float,
+                                   cfg: dict) -> tuple[float, dict | None]:
+    """Late-game collision protection: when live tracks slip into a tiny ring,
+    shrink everyone's gate so the Hungarian solver stops snatching neighbours.
+
+    Trigger: median pairwise canonical_px distance between live trackers
+    drops below `cluster_threshold_px` AND t_now >= t_min_sec. Returns
+    multiplier in (0, 1] applied uniformly to every slot's gate_radius_mult.
+    """
+    if not cfg or not cfg.get("enabled", False):
+        return 1.0, None
+    if t_now < float(cfg.get("t_min_sec", 300.0)):
+        return 1.0, None
+    pts = []
+    for st in slot_trackers.values():
+        if st.state in ("wiped", "inactive") or st.wiped:
+            continue
+        if st.canonical_px is None:
+            continue
+        pts.append(st.canonical_px)
+    if len(pts) < 4:
+        return 1.0, None
+    dists = []
+    for i in range(len(pts)):
+        for j in range(i + 1, len(pts)):
+            dists.append(math.hypot(pts[i][0] - pts[j][0], pts[i][1] - pts[j][1]))
+    dists.sort()
+    median_d = dists[len(dists) // 2]
+    thresh = float(cfg.get("cluster_threshold_px", 250.0))
+    if median_d >= thresh:
+        return 1.0, None
+    shrink = float(cfg.get("gate_shrink", 0.4))
+    info = {"t": round(t_now, 1), "median_d": round(median_d, 1),
+            "thresh": thresh, "shrink": shrink, "n_live": len(pts)}
+    return shrink, info
+
+
 def associate_hungarian(
     candidates: list[dict],
     slot_trackers: dict,
