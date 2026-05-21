@@ -9,6 +9,7 @@ import slotToTagRaw from "@/data/m-test-g1/slot-to-tag.json";
 import tracksRaw from "@/data/m-test-g1/tracks.json";
 import hudTimelineRaw from "@/data/m-test-g1/hud_timeline.json";
 import type { GameEvent, RingPhase, Team } from "./mock-match";
+import { SLOT_COLORS } from "./team-colors";
 
 type ElimTeam = {
   f_first_dead: number | null;
@@ -239,13 +240,8 @@ export const testGameEvents: GameEvent[] = (() => {
   return out.sort((a, b) => a.t - b.t);
 })();
 
-/** Палитра цветов для команд из реального матча. */
-const TEAM_PALETTE = [
-  "#ff5b12", "#22c4f5", "#ffd23f", "#e879f9", "#a78bfa",
-  "#fb923c", "#60a5fa", "#f87171", "#86efac", "#38bdf8",
-  "#34d399", "#facc15", "#fca5a5", "#fde68a", "#22d3ee",
-  "#f472b6", "#84cc16", "#c084fc", "#fb7185", "#5eead4",
-];
+/** Палитра цветов = HUD VOD по слотам (см. src/lib/team-colors.ts). */
+const TEAM_PALETTE = SLOT_COLORS;
 
 export const testGameTeams: Team[] = (() => {
   const slots = Object.keys(elim.teams).sort((a, b) => Number(a) - Number(b));
@@ -264,11 +260,14 @@ export const testGameTeams: Team[] = (() => {
   return slots.map((slot, idx) => {
     const tag = slotToTag[slot] ?? `T${slot}`;
     const dead = elim.teams[slot].t_first_dead != null;
+    // Цвет берём по slot (1..20), а не по порядку команд — чтобы плашка
+    // совпадала с фишкой на карте и с HUD VOD.
+    const slotIdx = Math.max(0, Number(slot) - 1);
     return {
       id: `t-test-${slot}`,
       tag,
       name: tag,
-      color: TEAM_PALETTE[idx % TEAM_PALETTE.length],
+      color: TEAM_PALETTE[slotIdx % TEAM_PALETTE.length],
       players: [],
       placement: placementBySlot.get(slot) ?? Number(slot),
       kills: 0,
