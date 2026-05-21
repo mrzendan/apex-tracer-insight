@@ -229,6 +229,10 @@ def main():
                     help="через запятую: 2,4,11. Пусто = автовыбор WARN.")
     ap.add_argument("--per-slot", type=int, default=6)
     ap.add_argument("--roi-size", type=int, default=220)
+    ap.add_argument("--full-frame", action="store_true",
+                    help="К каждому событию добавить FULL-кадр + HSV-маска по всему кадру + ROI bbox.")
+    ap.add_argument("--anchors-preview", action="store_true",
+                    help="Только нарисовать кадр 0 со всеми anchors (slot+цвет+label) и выйти.")
     ap.add_argument("--out", type=Path,
                     default=THIS.parent / "reports" / "debug_masks")
     args = ap.parse_args()
@@ -250,6 +254,36 @@ def main():
     teams = build_teams(args.config, anchors_path)
     teams_by_slot_id = {t.slot_id: t for t in teams}
 
+    args.out.mkdir(parents=True, exist_ok=True)
+    cap = cv2.VideoCapture(str(args.video))
+    if not cap.isOpened():
+        sys.exit(f"[err] cannot open video: {args.video}")
+
+    # --- Anchors preview ---------------------------------------------------
+    if args.anchors_preview:
+        first_frame_idx = int(frames[0]["frame"])
+        cap.set(cv2.CAP_PROP_POS_FRAMES, first_frame_idx)
+        ok, frame = cap.read()
+        if not ok:
+            sys.exit("[err] cannot read first frame")
+        for tr in frames[0].get("tracks", []):
+            sid = tr.get("slot_id") or tr.get("team_id")
+            fp = tr.get("frame_px")
+            if fp is None: continue
+            team = teams_by_slot_id.get(sid)
+            hex_s = (team.color_hex if team else "#ffffff").lstrip("#")
+            color = (int(hex_s[4:6], 16), int(hex_s[2:4], 16), int(hex_s[0:2], 16))
+            x, y = int(fp[0]), int(fp[1])
+            cv2.circle(frame, (x, y), 14, color, 3)
+            cv2.circle(frame, (x, y), 4, (255, 255, 255), -1)
+            cv2.putText(frame, sid.replace("slot_", "#"), (x + 16, y + 6),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
+        out = args.out / "anchors_frame0.png"
+        cv2.imwrite(str(out), frame)
+        print(f"[debug_masks] anchors preview -> {out}")
+        cap.release()
+        return
+
     all_slot_ids = sorted({tr.get("slot_id") or tr.get("team_id")
                            for f in frames for tr in f.get("tracks", [])
                            if (tr.get("slot_id") or tr.get("team_id"))})
@@ -260,13 +294,9 @@ def main():
         print(f"[debug_masks] auto WARN slots: {wanted}")
     if not wanted:
         print("[debug_masks] nothing to do — no WARN slots and no --slots")
+        cap.release()
         return
 
-    args.out.mkdir(parents=True, exist_ok=True)
-
-    cap = cv2.VideoCapture(str(args.video))
-    if not cap.isOpened():
-        sys.exit(f"[err] cannot open video: {args.video}")
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     print(f"[debug_masks] video frames={total_frames}, will process {len(wanted)} slots")
 
@@ -315,6 +345,22 @@ def main():
                                  float(ev["t"]), fidx, ev.get("state", "?"),
                                  ev.get("state_reason", "?"), mode,
                                  (fx - x0, fy - y0))
+            if args.full_frame:
+                full_panel = render_fullframe(frame, team, morph, min_a, max_a,
+                                              (x0, y0, x1, y1), (fx, fy),
+                                              float(ev["t"]), fidx,
+                                              ev.get("state", "?"),
+                                              ev.get("state_reason", "?"))
+                # paste full_panel under ROI panel (after padding widths)
+                w_ff = full_panel.shape[1]
+                w_roi = panel.shape[1]
+                W = max(w_ff, w_roi)
+                def _pad(img, W):
+                    if img.shape[1] >= W: return img
+                    pad = np.full((img.shape[0], W - img.shape[1], 3), 30, dtype=np.uint8)
+                    return np.hstack([img, pad])
+                sep = np.full((6, W, 3), 60, dtype=np.uint8)
+                panel = np.vstack([_pad(panel, W), sep, _pad(full_panel, W)])
             reason_tag = (ev.get("state_reason") or "x").replace("/", "_").replace(" ", "_")[:24]
             out_name = f"{i:02d}_t{float(ev['t']):07.1f}_{ev.get('state','?')}_{reason_tag}.png"
             cv2.imwrite(str(sdir / out_name), panel)
