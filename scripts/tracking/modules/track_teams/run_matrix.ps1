@@ -21,11 +21,11 @@ Set-Location $repo
 
 $matrix = @(
   @{ tag = "baseline";          config = "scripts/tracking/modules/track_teams/configs/da.baseline.yaml" },
-  @{ tag = "detect_first";      config = "scripts/tracking/modules/track_teams/configs/da.detect_first.yaml" },
   @{ tag = "color_first";       config = "scripts/tracking/modules/track_teams/configs/da.color_first.yaml" },
+  @{ tag = "hybrid";            config = "scripts/tracking/modules/track_teams/configs/da.hybrid.yaml" },
+  @{ tag = "detect_first";      config = "scripts/tracking/modules/track_teams/configs/da.detect_first.yaml" },
   @{ tag = "motion_first";      config = "scripts/tracking/modules/track_teams/configs/da.motion_first.yaml" },
-  @{ tag = "strict_shape";      config = "scripts/tracking/modules/track_teams/configs/da.strict_shape.yaml" },
-  @{ tag = "aggressive_retire"; config = "scripts/tracking/modules/track_teams/configs/da.aggressive_retire.yaml" }
+  @{ tag = "strict_shape";      config = "scripts/tracking/modules/track_teams/configs/da.strict_shape.yaml" }
 )
 
 $outDir = "scripts/tracking/modules/track_teams/reports/matrix"

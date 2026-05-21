@@ -1,7 +1,5 @@
-# === NEW BASELINE (победитель прогона 0-600s: 11384 tracked frames) ===
-# Detect-first, COLOR-приоритет: запрещаем кросс-цветовой ассайн,
-# доверяем цветовой принадлежности кандидата сильнее, чем калману.
-# Особо силён на slot_10 (+20pp vs detect_first).
+# Hybrid: COLOR-блок из color_first (δ=5) + усиленный hysteresis из motion_first (eps=0.4).
+# Цель: сохранить выигрыш color_first на slot_10 и поднять восстановление slot_11 после wipe.
 canonical_map: storm_point
 frame_step: 60
 anchors_file: ../../motion_detect/reports/motion_tracks.json
@@ -10,12 +8,12 @@ zones_file: ../../../configs/zones.vod.json
 
 da_strategy: detect_first
 da_weights:
-  beta_world: 0.5
+  beta_world: 1.0           # средний вес расстояния (компромисс color/motion)
   gamma_shape: 0.3
-  delta_color_mismatch: 5.0   # фактически блокирует чужой цвет
-  eps_hysteresis: 0.3
-  gate_radius_mult: 1.4
-  fallback_gate_canonical_px: 250.0
+  delta_color_mismatch: 5.0 # блокируем кросс-цвет (из color_first)
+  eps_hysteresis: 0.4       # повышенная инерция прежнего ассайна (из motion_first)
+  gate_radius_mult: 1.2
+  fallback_gate_canonical_px: 220.0
 
 registration: { detector: sift, max_features: 4000, clahe: true, canonical_target_w: 1600,
                 match_ratio: 0.75, ransac_reproj_px: 5.0, min_inliers: 15,
