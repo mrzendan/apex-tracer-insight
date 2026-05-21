@@ -832,6 +832,7 @@ class SlotTracker:
         self.consecutive_detections += 1
         self.lost_frames = 0
         self.ever_detected = True
+        self._note_near_anchor_hit(det_fx, det_fy)
         # Gradually shrink expanded ROI back.
         self.roi_expand_px = max(0, self.roi_expand_px - 20)
         return self._snapshot()
@@ -839,6 +840,8 @@ class SlotTracker:
     def _on_miss(self) -> None:
         self.lost_frames += 1
         self.consecutive_detections = 0
+        # A single miss breaks the "consecutive near-anchor hits" streak.
+        self.near_anchor_consecutive = 0
         self.confidence = max(0.1, self.confidence - 0.07)
         # Slowly forget old peak so a one-off rocket ride doesn't keep gate huge forever.
         self.v_observed_peak_px_s *= self.v_observed_decay
@@ -855,7 +858,10 @@ class SlotTracker:
         else:
             self.state = "coast"
         # Active-slot filter: never seen on screen + not protected -> retire.
-        if (not self.ever_detected
+        # Tightened: use `activated` (requires K consecutive near-anchor hits),
+        # not just any single detection. Lone false positives on other teams'
+        # placards no longer keep a fantom slot alive forever.
+        if (not self.activated
                 and self.inactive_after_misses > 0
                 and self.lost_frames >= self.inactive_after_misses
                 and self.anchor_conf not in ("HIGH", "MED")
@@ -863,6 +869,23 @@ class SlotTracker:
                 and not self.wiped):
             self.state = "inactive"
             self.state_reason = f"never_detected_{self.lost_frames}f"
+
+    def _note_near_anchor_hit(self, det_fx: float, det_fy: float) -> None:
+        """Detection at (det_fx, det_fy) succeeded. If it's close enough to the
+        original anchor placard position, count it toward the activation streak.
+        Far-away hits (chasing some other team's placard) reset the streak."""
+        if self.init_frame_px is None:
+            # No anchor frame_px → fall back to any-detection counting.
+            self.near_anchor_consecutive += 1
+        else:
+            d = math.hypot(det_fx - self.init_frame_px[0], det_fy - self.init_frame_px[1])
+            if d <= self.near_anchor_radius_px:
+                self.near_anchor_consecutive += 1
+            else:
+                self.near_anchor_consecutive = 0
+        if (not self.activated
+                and self.near_anchor_consecutive >= self.min_consecutive_for_active):
+            self.activated = True
 
     def _snapshot(self) -> dict:
         return {
