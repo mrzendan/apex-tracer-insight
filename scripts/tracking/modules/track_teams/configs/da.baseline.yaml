@@ -39,34 +39,6 @@ tracking:
   init_reject_world_margin: 30.0
   init_min_score: 0.4
 
-# Per-slot weight overrides + late-game gate shrink.
-# (baseline uses per_slot_roi strategy, so da_weights/slot_overrides
-# only kick in if you flip da_strategy=detect_first — kept here for
-# reproducibility with detect_first presets below.)
-da_weights:
-  slot_overrides:
-    # slot_11: 6 id-switches в матрице baseline (179/300/420/540s) —
-    # путается с slot_9/12/15/17. Узкий gate + блок кросс-цвета.
-    slot_11:
-      delta_color_mismatch: 10.0
-      gate_radius_mult: 0.7
-      eps_hysteresis: 0.5
-    # slot_20: 6 id-switches (300/419s) — путается со slot_6/7.
-    slot_20:
-      delta_color_mismatch: 10.0
-      gate_radius_mult: 0.7
-      eps_hysteresis: 0.5
-
-# Late-game collision protection: когда live-треки слиплись в малом круге
-# (median pairwise canonical_px distance < cluster_threshold_px), временно
-# режем gate всем слотам в gate_shrink раз. Фикс эпизода ~660s в baseline.
-late_game:
-  enabled: true
-  t_min_sec: 300.0
-  cluster_threshold_px: 250.0
-  gate_shrink: 0.4
-
-
 output:
   include_frame_px: true
   include_canonical_px: true
