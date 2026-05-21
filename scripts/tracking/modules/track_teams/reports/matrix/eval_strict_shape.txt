@@ -1,72 +1,65 @@
-GT points:        116
-Coverage:         76.7%
-px error median:  41.9
-px error p95:     161.7
-ID-switches total:44
-
-     slot_20  switches=11
-     slot_11  switches=7
+[ok] 116 GT pts | coverage=78.4% | id_switches=41 | px_med=51.6
+[ok] -> reports/matrix/eval_strict_shape.json
+[ok] -> reports/matrix/eval_strict_shape.txt
+switches=8
      slot_10  switches=5
      slot_18  switches=3
-     slot_19  switches=3
+      slot_1  switches=2
       slot_3  switches=2
-      slot_4  switches=2
       slot_9  switches=2
-     slot_13  switches=2
-     slot_15  switches=2
-      slot_1  switches=1
+      slot_4  switches=1
       slot_5  switches=1
      slot_12  switches=1
+     slot_13  switches=1
      slot_14  switches=1
      slot_17  switches=1
+     slot_19  switches=1
       slot_2  switches=0
       slot_6  switches=0
       slot_7  switches=0
       slot_8  switches=0
+     slot_15  switches=0
      slot_16  switches=0
 
 Switch events:
-  t=  660.7      slot_1  slot_1 -> slot_20
-  t=  120.1      slot_3  slot_3 -> slot_6
-  t=  660.7      slot_3  slot_6 -> slot_3
-  t=  660.7      slot_4  slot_4 -> slot_8
-  t=  660.7      slot_4  slot_8 -> slot_4
-  t=  660.7      slot_5  slot_13 -> slot_6
-  t=  660.7      slot_9  slot_8 -> slot_1
-  t=  660.7      slot_9  slot_1 -> slot_9
-  t=  300.3     slot_10  slot_17 -> slot_12
-  t=  300.3     slot_10  slot_12 -> slot_17
-  t=  300.3     slot_10  slot_17 -> slot_12
-  t=  660.7     slot_10  slot_12 -> slot_16
-  t=  660.7     slot_10  slot_16 -> slot_1
-  t=  300.3     slot_11  slot_9 -> slot_12
-  t=  419.4     slot_11  slot_12 -> slot_8
-  t=  419.4     slot_11  slot_8 -> slot_13
-  t=  419.4     slot_11  slot_13 -> slot_8
-  t=  540.5     slot_11  slot_8 -> slot_20
-  t=  540.5     slot_11  slot_20 -> slot_6
-  t=  540.5     slot_11  slot_6 -> slot_8
-  t=  660.7     slot_12  slot_12 -> slot_6
-  t=  120.1     slot_13  slot_13 -> slot_18
-  t=  660.7     slot_13  slot_18 -> slot_17
-  t=  660.7     slot_14  slot_14 -> slot_15
-  t=  120.1     slot_15  slot_16 -> slot_8
-  t=  660.7     slot_15  slot_8 -> slot_1
-  t=  660.7     slot_17  slot_17 -> slot_14
-  t=  120.1     slot_18  slot_4 -> slot_3
-  t=  660.7     slot_18  slot_3 -> slot_18
-  t=  660.7     slot_18  slot_18 -> slot_6
-  t=  660.7     slot_19  slot_19 -> slot_4
-  t=  660.7     slot_19  slot_4 -> slot_19
-  t=  660.7     slot_19  slot_19 -> slot_9
-  t=  120.1     slot_20  slot_20 -> slot_10
-  t=  179.2     slot_20  slot_10 -> slot_20
+  t=  120.1      slot_1  slot_1 -> slot_2
+  t=  660.7      slot_1  slot_2 -> slot_1
+  t=  120.1      slot_3  slot_3 -> slot_12
+  t=  660.7      slot_3  slot_12 -> slot_8
+  t=  660.7      slot_4  slot_4 -> slot_17
+  t=  660.7      slot_5  slot_7 -> slot_5
+  t=  660.7      slot_9  slot_7 -> slot_16
+  t=  660.7      slot_9  slot_16 -> slot_20
+  t=  300.3     slot_10  slot_17 -> slot_11
+  t=  300.3     slot_10  slot_11 -> slot_17
+  t=  300.3     slot_10  slot_17 -> slot_11
+  t=  660.7     slot_10  slot_11 -> slot_13
+  t=  660.7     slot_10  slot_13 -> slot_16
+  t=  300.3     slot_11  slot_9 -> slot_11
+  t=  419.4     slot_11  slot_11 -> slot_16
+  t=  419.4     slot_11  slot_16 -> slot_6
+  t=  419.4     slot_11  slot_6 -> slot_16
+  t=  419.4     slot_11  slot_16 -> slot_6
+  t=  540.5     slot_11  slot_6 -> slot_20
+  t=  540.5     slot_11  slot_20 -> slot_2
+  t=  540.5     slot_11  slot_2 -> slot_13
+  t=  660.7     slot_12  slot_12 -> slot_3
+  t=  660.7     slot_13  slot_13 -> slot_15
+  t=  660.7     slot_14  slot_14 -> slot_13
+  t=  660.7     slot_17  slot_17 -> slot_8
+  t=  120.1     slot_18  slot_4 -> slot_11
+  t=  660.7     slot_18  slot_11 -> slot_18
+  t=  660.7     slot_18  slot_18 -> slot_5
+  t=  660.7     slot_19  slot_19 -> slot_6
+  t=  120.1     slot_20  slot_20 -> slot_9
+  t=  179.2     slot_20  slot_9 -> slot_20
   t=  179.2     slot_20  slot_20 -> slot_9
-  t=  300.3     slot_20  slot_9 -> slot_7
-  t=  300.3     slot_20  slot_7 -> slot_20
-  t=  300.3     slot_20  slot_20 -> slot_9
+  t=  179.2     slot_20  slot_9 -> slot_20
+  t=  300.3     slot_20  slot_20 -> slot_12
+  t=  300.3     slot_20  slot_12 -> slot_9
   t=  300.3     slot_20  slot_9 -> slot_20
-  t=  419.4     slot_20  slot_20 -> slot_9
-  t=  419.4     slot_20  slot_9 -> slot_3
-  t=  419.4     slot_20  slot_3 -> slot_20
-  t=  419.4     slot_20  slot_20 -> slot_3
+  t=  300.3     slot_20  slot_20 -> slot_9
+  t=  419.4     slot_20  slot_9 -> slot_13
+  t=  419.4     slot_20  slot_13 -> slot_12
+  t=  419.4     slot_20  slot_12 -> slot_20
+  t=  419.4     slot_20  slot_20 -> slot_12
