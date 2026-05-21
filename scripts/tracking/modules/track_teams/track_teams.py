@@ -449,7 +449,8 @@ class SlotTracker:
 
     def __init__(self, team: TeamCfg, slot_cfg: dict, init_canonical_px: Optional[tuple[float, float]],
                  elim_t: Optional[float] = None,
-                 anchor_conf: str = "MISS", hud_alive: bool = False):
+                 anchor_conf: str = "MISS", hud_alive: bool = False,
+                 init_frame_px: Optional[tuple[float, float]] = None):
         self.team = team
         self.canonical_px: Optional[tuple[float, float]] = init_canonical_px
         self.last_frame_px: Optional[tuple[float, float]] = None
@@ -507,6 +508,20 @@ class SlotTracker:
         self.inactive_after_misses: int = int(slot_cfg.get("inactive_after_misses", 60))
         self.ever_detected: bool = False
         self.n_inactive: int = 0
+        # Strict active-slot criteria (anti-fantom slots).
+        # `activated` flips True only when K consecutive detections land within
+        # `near_anchor_radius_px` of the original anchor frame position
+        # (motion_detect placard). Lone false positives on other teams'
+        # placards do NOT count, so colors-not-in-this-match retire cleanly.
+        self.init_frame_px: Optional[tuple[float, float]] = init_frame_px
+        self.near_anchor_radius_px: float = float(slot_cfg.get("near_anchor_radius_px", 300.0))
+        self.min_consecutive_for_active: int = int(slot_cfg.get("min_consecutive_for_active", 3))
+        self.near_anchor_consecutive: int = 0
+        self.activated: bool = False
+        # Post-hoc cleanup threshold: if a slot finished the run with fewer than
+        # this many `tracked` frames AND was never activated, all its entries
+        # are rewritten to `inactive` in tracks.json.
+        self.min_tracked_for_active: int = int(slot_cfg.get("min_tracked_for_active", 8))
         # Telemetry counters (filled by run loop).
         self.n_tracked = 0
         self.n_low_conf = 0
