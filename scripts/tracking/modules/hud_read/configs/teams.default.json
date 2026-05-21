@@ -1,0 +1,9 @@
+{
+  "_doc": "Словарь известных тегов команд матча. Используется hud_read для snap OCR-результатов (Левенштейн). Только A-Z0-9, 2..5 символов. Передаётся флагом --teams-vocab или авто-подхватывается из этого файла.",
+  "_match": "m-test (Storm Point VOD)",
+  "teams": [
+    "BB", "CINO", "SRC", "S2", "JDG", "GMBL",
+    "ELTE", "STAL", "THUG", "FREE", "OBVN", "NIPC",
+    "FXI", "CRT", "DKK", "MR", "REV", "ROC", "SRO", "TL"
+  ]
+}
