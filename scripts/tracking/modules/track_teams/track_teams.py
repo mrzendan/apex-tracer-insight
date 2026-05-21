@@ -976,6 +976,15 @@ def main():
         guess = (Path(__file__).resolve().parents[1] / "hud_read" / "reports" / "eliminations.json")
         if guess.exists():
             elim_path = guess
+    if elim_path is None:
+        # Fallback: synced UI copy (src/data/<match>/eliminations.json) — useful
+        # when hud_read was run with --out pointing into src/data and the
+        # canonical reports/ slot is empty.
+        repo_root = Path(__file__).resolve().parents[3]
+        for guess in sorted((repo_root / "src" / "data").glob("*/eliminations.json")):
+            if guess.exists():
+                elim_path = guess
+                break
     elim_by_slot: dict[int, float] = {}
     if elim_path and Path(elim_path).exists():
         try:
