@@ -44,6 +44,11 @@ KNOWN_MAPS = [
     "OLYMPUS", "BROKEN MOON", "E-DISTRICT",
 ]
 
+# Словарь известных тегов команд для конкретного матча.
+# Заполняется из configs/teams.<match-id>.json через --teams-vocab.
+# Используется как snap-цель для OCR (Левенштейн, max_dist зависит от длины).
+KNOWN_TEAMS: list[str] = []
+
 RE_MATCH = re.compile(r"MATCH\s+(\d+)", re.I)
 RE_TEAMS = re.compile(r"(\d+)\s*TEAMS?", re.I)
 RE_PLAYERS = re.compile(r"(\d+)\s*PLAYERS?", re.I)
@@ -236,7 +241,18 @@ def parse_field(tag: str, name: str, text: str) -> Any:
         snapped = snap_to_known(cleaned, KNOWN_MAPS, max_dist=3)
         return snapped or (cleaned or None)
     if name == "name":  # team tag, e.g. "TSM"
-        return re.sub(r"[^A-Z0-9 ]", "", text.upper()).strip() or None
+        cleaned = re.sub(r"[^A-Z0-9]", "", text.upper()).strip()
+        if not cleaned:
+            return None
+        # Apex теги: 2..5 символов. Всё остальное — почти всегда OCR-мусор.
+        if not (2 <= len(cleaned) <= 5):
+            return None
+        if KNOWN_TEAMS:
+            max_dist = 1 if len(cleaned) <= 3 else 2
+            snapped = snap_to_known(cleaned, KNOWN_TEAMS, max_dist=max_dist)
+            if snapped:
+                return snapped
+        return cleaned
     return text or None
 
 
