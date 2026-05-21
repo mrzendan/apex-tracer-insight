@@ -1,5 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { MatchViewer } from "@/components/MatchViewer";
+import { MTestDataIO } from "@/components/MTestDataIO";
 import { matches, parseGameId, matchSeedExtras, getGames } from "@/lib/mock-match";
 
 export const Route = createFileRoute("/games/$gameId")({
@@ -24,5 +25,10 @@ export const Route = createFileRoute("/games/$gameId")({
 
 function GamePage() {
   const { gameId } = Route.useParams();
-  return <MatchViewer initialGameId={gameId} />;
+  return (
+    <>
+      <MatchViewer initialGameId={gameId} />
+      {gameId === "m-test-g1" && <MTestDataIO />}
+    </>
+  );
 }
