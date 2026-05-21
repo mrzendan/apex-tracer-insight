@@ -543,6 +543,59 @@ def detect_candidates_in_minimap_roi(
     return out
 
 
+def _eff_w(base: dict, overrides: dict, slot_int) -> dict:
+    """Merge per-slot weight overrides on top of base weights.
+
+    overrides format: { "slot_11": {delta_color_mismatch: 10.0, ...}, ... }.
+    Unknown slot or missing block → returns base unchanged.
+    """
+    if not overrides or slot_int is None:
+        return base
+    ov = overrides.get(f"slot_{int(slot_int)}")
+    if not ov:
+        return base
+    merged = dict(base)
+    merged.update(ov)
+    return merged
+
+
+def compute_late_game_gate_shrink(slot_trackers: dict, t_now: float,
+                                   cfg: dict) -> tuple[float, dict | None]:
+    """Late-game collision protection: when live tracks slip into a tiny ring,
+    shrink everyone's gate so the Hungarian solver stops snatching neighbours.
+
+    Trigger: median pairwise canonical_px distance between live trackers
+    drops below `cluster_threshold_px` AND t_now >= t_min_sec. Returns
+    multiplier in (0, 1] applied uniformly to every slot's gate_radius_mult.
+    """
+    if not cfg or not cfg.get("enabled", False):
+        return 1.0, None
+    if t_now < float(cfg.get("t_min_sec", 300.0)):
+        return 1.0, None
+    pts = []
+    for st in slot_trackers.values():
+        if st.state in ("wiped", "inactive") or st.wiped:
+            continue
+        if st.canonical_px is None:
+            continue
+        pts.append(st.canonical_px)
+    if len(pts) < 4:
+        return 1.0, None
+    dists = []
+    for i in range(len(pts)):
+        for j in range(i + 1, len(pts)):
+            dists.append(math.hypot(pts[i][0] - pts[j][0], pts[i][1] - pts[j][1]))
+    dists.sort()
+    median_d = dists[len(dists) // 2]
+    thresh = float(cfg.get("cluster_threshold_px", 250.0))
+    if median_d >= thresh:
+        return 1.0, None
+    shrink = float(cfg.get("gate_shrink", 0.4))
+    info = {"t": round(t_now, 1), "median_d": round(median_d, 1),
+            "thresh": thresh, "shrink": shrink, "n_live": len(pts)}
+    return shrink, info
+
+
 def associate_hungarian(
     candidates: list[dict],
     slot_trackers: dict,
@@ -582,18 +635,22 @@ def associate_hungarian(
     INF = 1e6
     cost = np.full((n_slots, n_cands), INF, dtype=np.float64)
 
-    beta = float(weights.get("beta_world", 1.0))
-    gamma = float(weights.get("gamma_shape", 0.3))
-    delta = float(weights.get("delta_color_mismatch", 0.5))
-    eps = float(weights.get("eps_hysteresis", 0.2))
-    gate_mult = float(weights.get("gate_radius_mult", 1.0))
-    fallback_gate_px = float(weights.get("fallback_gate_canonical_px", 200.0))
+    # Per-slot weight overrides + dynamic late-game gate shrink (see _eff_w).
+    overrides = weights.get("slot_overrides") or {}
+    dyn_gate_shrink = float(weights.get("_dyn_gate_shrink", 1.0))
 
     for i, st in enumerate(slots):
         if st.state in ("wiped", "inactive"):
             continue
         if st.wiped:
             continue
+        w = _eff_w(weights, overrides, getattr(st.team, "slot", None))
+        beta = float(w.get("beta_world", 1.0))
+        gamma = float(w.get("gamma_shape", 0.3))
+        delta = float(w.get("delta_color_mismatch", 0.5))
+        eps = float(w.get("eps_hysteresis", 0.2))
+        gate_mult = float(w.get("gate_radius_mult", 1.0)) * dyn_gate_shrink
+        fallback_gate_px = float(w.get("fallback_gate_canonical_px", 200.0))
         # Prediction in canonical px.
         if st.canonical_px is not None and st.last_seen_t is not None:
             dt = min(getattr(st, "dt_cap_s", 20.0),
@@ -668,19 +725,22 @@ def _associate_greedy(candidates, slot_trackers, t_now, weights,
     даже когда scipy не установлен."""
     assigned_cands: set[int] = set()
     result: dict[str, dict] = {}
-    beta = float(weights.get("beta_world", 1.0))
-    gamma = float(weights.get("gamma_shape", 0.3))
-    delta = float(weights.get("delta_color_mismatch", 0.5))
-    eps = float(weights.get("eps_hysteresis", 0.2))
-    gate_mult = float(weights.get("gate_radius_mult", 1.0))
-    fallback_gate_px = float(weights.get("fallback_gate_canonical_px", 200.0))
-    # δ ≥ 1.0 — фактически запрет кросс-цвета (как color_first.yaml).
-    allow_cross_color = delta < 1.0
+    overrides = weights.get("slot_overrides") or {}
+    dyn_gate_shrink = float(weights.get("_dyn_gate_shrink", 1.0))
     # Считаем (cost, slot, cand_j) по всем парам, сортируем и жадно назначаем.
     pairs: list[tuple[float, "SlotTracker", int]] = []
     for st in slot_trackers.values():
         if st.state in ("wiped", "inactive") or st.wiped:
             continue
+        w = _eff_w(weights, overrides, getattr(st.team, "slot", None))
+        beta = float(w.get("beta_world", 1.0))
+        gamma = float(w.get("gamma_shape", 0.3))
+        delta = float(w.get("delta_color_mismatch", 0.5))
+        eps = float(w.get("eps_hysteresis", 0.2))
+        gate_mult = float(w.get("gate_radius_mult", 1.0)) * dyn_gate_shrink
+        fallback_gate_px = float(w.get("fallback_gate_canonical_px", 200.0))
+        # δ ≥ 1.0 — фактически запрет кросс-цвета (как color_first.yaml).
+        allow_cross_color = delta < 1.0
         if st.canonical_px is not None:
             pred = st.canonical_px
             radius = min(getattr(st, "gate_cap_px", 450.0),
@@ -1544,6 +1604,8 @@ def main():
     da_weights = cfg.get("da_weights", {}) or {}
     da_debug_near_miss = bool(cfg.get("da_debug_near_miss", False))
     near_miss_counter: Counter = Counter() if da_debug_near_miss else None
+    late_game_cfg = cfg.get("late_game", {}) or {}
+    late_game_events: list[dict] = []
     minimap_bbox = None
     if da_strategy == "detect_first":
         zones_cfg_path = cfg.get("zones_file")
@@ -1728,8 +1790,14 @@ def main():
                 if da_strategy == "detect_first":
                     candidates = detect_candidates_in_minimap_roi(
                         frame, teams, minimap_bbox, H, det_cfg)
+                    dyn_shrink, lg_info = compute_late_game_gate_shrink(
+                        slot_trackers, t_now, late_game_cfg)
+                    if lg_info is not None:
+                        late_game_events.append(lg_info)
+                    da_weights_dyn = dict(da_weights)
+                    da_weights_dyn["_dyn_gate_shrink"] = dyn_shrink
                     assigns = associate_hungarian(
-                        candidates, slot_trackers, t_now, da_weights,
+                        candidates, slot_trackers, t_now, da_weights_dyn,
                         near_miss=near_miss_counter)
                     for t in teams:
                         st = slot_trackers[t.id]
@@ -1878,6 +1946,16 @@ def main():
         for (winner, loser), n in near_miss_counter.most_common(20):
             print(f"  slot_{slot_by_id.get(winner)} <- "
                   f"slot_{slot_by_id.get(loser)}  ({winner} <- {loser})  n={n}")
+    # ---- Late-game gate-shrink diagnostics ------------------------------
+    if late_game_events:
+        print(f"[late-game] gate-shrink triggered on {len(late_game_events)} frames "
+              f"(cluster_threshold_px={late_game_cfg.get('cluster_threshold_px')}, "
+              f"shrink={late_game_cfg.get('gate_shrink')}):")
+        for ev in late_game_events[:10]:
+            print(f"  t={ev['t']:>7.1f}  median_d={ev['median_d']:>5.1f}  "
+                  f"n_live={ev['n_live']}")
+        if len(late_game_events) > 10:
+            print(f"  ... +{len(late_game_events) - 10} more")
     # ---- Post-hoc active-slot cleanup ----------------------------------
     # A slot is "fantom" if after the full run:
     #   * never activated (no streak of K near-anchor detections), AND

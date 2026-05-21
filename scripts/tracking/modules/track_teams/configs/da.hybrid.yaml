@@ -14,6 +14,15 @@ da_weights:
   eps_hysteresis: 0.4       # повышенная инерция прежнего ассайна (из motion_first)
   gate_radius_mult: 1.2
   fallback_gate_canonical_px: 220.0
+  slot_overrides:
+    slot_11:
+      delta_color_mismatch: 10.0
+      gate_radius_mult: 0.6
+      eps_hysteresis: 0.6
+    slot_20:
+      delta_color_mismatch: 10.0
+      gate_radius_mult: 0.6
+      eps_hysteresis: 0.6
 
 registration: { detector: sift, max_features: 4000, clahe: true, canonical_target_w: 1600,
                 match_ratio: 0.75, ransac_reproj_px: 5.0, min_inliers: 15,
@@ -31,5 +40,11 @@ tracking:
   init_warmup_sec: 30.0
   init_reject_world_margin: 30.0
   init_min_score: 0.4
+
+late_game:
+  enabled: true
+  t_min_sec: 300.0
+  cluster_threshold_px: 250.0
+  gate_shrink: 0.4
 
 da_debug_near_miss: true
