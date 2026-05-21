@@ -171,6 +171,68 @@ def render_panel(roi_bgr: np.ndarray, m_hsv, m_lab, mask, passed, rejected,
     return np.vstack([cap, canvas])
 
 
+def render_fullframe(frame_bgr: np.ndarray, team: TeamCfg, morph: int,
+                     min_a: float, max_a: float,
+                     roi_box: tuple[int, int, int, int],
+                     pred_xy: tuple[float, float],
+                     t_sec: float, frame_idx: int, state: str, reason: str,
+                     scale: float = 0.5) -> np.ndarray:
+    """Полный кадр (даунскейл) | full-frame HSV-маска | overlay с ROI-боксом
+    и всеми блобами цвета команды (зелёные / красные по shape-фильтру)."""
+    fh, fw = frame_bgr.shape[:2]
+    # full-frame HSV+LAB mask (без LAB — слишком широко, оставим только HSV для наглядности)
+    hsv = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2HSV)
+    m = cv2.inRange(hsv, team.hsv_lower, team.hsv_upper)
+    if team.hsv_lower2 is not None and team.hsv_upper2 is not None:
+        m |= cv2.inRange(hsv, team.hsv_lower2, team.hsv_upper2)
+    k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (morph, morph))
+    m = cv2.morphologyEx(m, cv2.MORPH_OPEN, k)
+    kclose = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,
+                                       (max(7, morph + 4),) * 2)
+    m = cv2.morphologyEx(m, cv2.MORPH_CLOSE, kclose)
+    passed_full, rejected_full = find_contours(m, min_a, max_a)
+
+    overlay = frame_bgr.copy()
+    bgr_hex = team.color_hex.lstrip("#")
+    tint = (int(bgr_hex[4:6], 16), int(bgr_hex[2:4], 16), int(bgr_hex[0:2], 16))
+    overlay[m > 0] = (0.5 * overlay[m > 0] + 0.5 * np.array(tint)).astype(np.uint8)
+    for x, y, w, h, area, _r in passed_full:
+        cv2.rectangle(overlay, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        cv2.putText(overlay, f"{int(area)}", (x, max(12, y - 4)),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+    for x, y, w, h, area, r in rejected_full:
+        cv2.rectangle(overlay, (x, y), (x + w, y + h), (0, 0, 255), 1)
+    # ROI box (yellow) + prediction crosshair
+    x0, y0, x1, y1 = roi_box
+    cv2.rectangle(overlay, (x0, y0), (x1, y1), (0, 255, 255), 3)
+    px, py = int(pred_xy[0]), int(pred_xy[1])
+    cv2.drawMarker(overlay, (px, py), (255, 255, 0), cv2.MARKER_CROSS, 28, 3)
+
+    def _scale(img):
+        return cv2.resize(img, (int(fw * scale), int(fh * scale)),
+                          interpolation=cv2.INTER_AREA)
+    panels = [_scale(frame_bgr),
+              _scale(cv2.cvtColor(m, cv2.COLOR_GRAY2BGR)),
+              _scale(overlay)]
+    labels = ["FULL frame", "FULL HSV mask", "overlay + ROI(yellow)"]
+    h, w = panels[0].shape[:2]
+    pad = 28
+    out_w = (w + 4) * len(panels)
+    canvas = np.full((h + pad, out_w, 3), 30, dtype=np.uint8)
+    for i, (p, lab) in enumerate(zip(panels, labels)):
+        xs = i * (w + 4)
+        canvas[pad:pad + h, xs:xs + w] = p
+        cv2.putText(canvas, lab, (xs + 4, 20), cv2.FONT_HERSHEY_SIMPLEX,
+                    0.5, (220, 220, 220), 1)
+    cap_h = 38
+    cap = np.full((cap_h, out_w, 3), 18, dtype=np.uint8)
+    line = (f"FULL  slot_{team.slot}  t={t_sec:.1f}s  frame={frame_idx}  "
+            f"state={state}  reason={reason}  full_blobs: passed={len(passed_full)} "
+            f"rejected={len(rejected_full)}")
+    cv2.putText(cap, line, (8, 24), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (255, 255, 255), 1)
+    return np.vstack([cap, canvas])
+
+
 def pick_events(frames: list[dict], slot_id: str, per_slot: int) -> list[dict]:
     """Pick up to `per_slot` representative events for a slot."""
     bad = []
