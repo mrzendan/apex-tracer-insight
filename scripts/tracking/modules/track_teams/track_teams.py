@@ -1422,20 +1422,20 @@ def main():
     fantom_team_ids: set[str] = set()
     for t in teams:
         st = slot_trackers[t.id]
-        if st.activated:
-            continue
-        below_abs = st.n_tracked < st.min_tracked_for_active
         denom = st.n_tracked + st.n_wiped
         ratio = (st.n_tracked / denom) if denom > 0 else 0.0
         below_ratio = denom >= 30 and ratio < st.min_tracked_ratio_for_active
-        # Для HUD-alive слотов оставляем только ratio-критерий
-        # (below_abs может ложно срабатывать на коротких записях).
-        if st.hud_alive:
-            if not below_ratio:
-                continue
-        elif not (below_abs or below_ratio):
+        below_abs = st.n_tracked < st.min_tracked_for_active
+        # Сильный сигнал: соотношение tracked/(tracked+wiped) катастрофически
+        # низкое. Срабатывает независимо от `activated` / hud_alive — у живой
+        # команды ratio всегда >> 0.5, а у фантома (трек висит на чужой
+        # плашке) ratio ~0.1 потому что absence-wipe постоянно стирает точку.
+        if below_ratio:
+            fantom_team_ids.add(t.id)
             continue
-        fantom_team_ids.add(t.id)
+        # Слабый сигнал: команда так и не активировалась и почти нет детекций.
+        if not st.activated and not st.hud_alive and below_abs:
+            fantom_team_ids.add(t.id)
     if fantom_team_ids:
         print(f"[post-hoc] retiring {len(fantom_team_ids)} fantom slot(s): "
               + ", ".join(sorted(slot_trackers[tid].team.slot_id or tid
