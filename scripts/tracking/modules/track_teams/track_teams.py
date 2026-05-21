@@ -29,6 +29,10 @@ import cv2
 import numpy as np
 import yaml
 from tqdm import tqdm
+try:
+    from scipy.optimize import linear_sum_assignment as _hungarian
+except ImportError:  # pragma: no cover
+    _hungarian = None
 
 
 # ----------------------------- Config & maps -----------------------------
