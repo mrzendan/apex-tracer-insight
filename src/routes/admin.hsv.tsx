@@ -822,6 +822,80 @@ mask  = cv2.inRange(hsv, lower, upper)`}
               </div>
             )}
           </div>
+
+          {/* Compare colors tool */}
+          <div className="hud-panel mt-4">
+            <button
+              onClick={() => setCompareOpen((v) => !v)}
+              className="flex w-full items-center justify-between px-4 py-3 text-left">
+              <span className="label-eyebrow text-xs">Compare colors — side-by-side masks & auto-tune</span>
+              <span className="text-mono text-xs text-muted-foreground">{compareOpen ? "▾ hide" : "▸ show"}</span>
+            </button>
+            {compareOpen && (
+              <div className="border-t border-border p-4">
+                <div className="mb-3 flex flex-wrap items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="label-eyebrow text-xs">A</span>
+                    <span className="h-5 w-5 rounded-sm ring-1 ring-border" style={{ backgroundColor: teamSwatch(team.id) }} />
+                    <span className="text-xs font-semibold">{team.displayName}</span>
+                  </div>
+                  <span className="text-muted-foreground">vs</span>
+                  <div className="flex items-center gap-2">
+                    <span className="label-eyebrow text-xs">B</span>
+                    <select
+                      value={otherId}
+                      onChange={(e) => setOtherId(e.target.value)}
+                      className="rounded-sm border border-border bg-surface-2 px-2 py-1 text-xs">
+                      {otherCandidates.map((t) => (
+                        <option key={t.id} value={t.id}>{t.displayName}</option>
+                      ))}
+                    </select>
+                    <span className="h-5 w-5 rounded-sm ring-1 ring-border" style={{ backgroundColor: teamSwatch(otherId || team.id) }} />
+                  </div>
+
+                  <button
+                    disabled={tuning || !savCache}
+                    onClick={runAutoTune}
+                    className="ml-auto rounded-sm border border-primary/50 bg-primary/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary hover:bg-primary/20 disabled:opacity-50">
+                    {tuning ? "Tuning…" : `Auto-tune ${team.displayName} (scan all shades)`}
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+                  <div>
+                    <div className="label-eyebrow mb-1 text-[10px]">Mask A · {compareStats.a.toLocaleString()} px</div>
+                    <canvas ref={compareARef} className="block w-full rounded-sm border border-border bg-background" />
+                  </div>
+                  <div>
+                    <div className="label-eyebrow mb-1 text-[10px]">Mask B · {compareStats.b.toLocaleString()} px</div>
+                    <canvas ref={compareBRef} className="block w-full rounded-sm border border-border bg-background" />
+                  </div>
+                  <div>
+                    <div className="label-eyebrow mb-1 text-[10px]">
+                      Overlap (red) · {compareStats.overlap.toLocaleString()} px
+                      {compareStats.a + compareStats.b > 0 && (
+                        <span className="ml-1 text-muted-foreground">
+                          ({Math.round((compareStats.overlap * 100) / Math.max(1, Math.min(compareStats.a || 1, compareStats.b || 1)))}%)
+                        </span>
+                      )}
+                    </div>
+                    <canvas ref={compareOverlapRef} className="block w-full rounded-sm border border-border bg-background" />
+                  </div>
+                </div>
+
+                {tuneReport && (
+                  <p className="text-mono mt-3 rounded-sm border border-border bg-surface-2 p-2 text-[11px] text-muted-foreground">
+                    {tuneReport}
+                  </p>
+                )}
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Auto-tune greedily searches H/S/V cuboids around the seed color to maximize own-pixels
+                  and minimize overlap with all other teams. Result is applied to the active preset —
+                  click <span className="font-semibold">Save preset</span> above to lock it in.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
