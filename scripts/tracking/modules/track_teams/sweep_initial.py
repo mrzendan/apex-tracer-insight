@@ -342,7 +342,7 @@ def main() -> int:
     lines = []
     lines.append(f"sweep_initial: {len(variants)} variants, end={args.end}s, "
                  f"match_px={args.match_px}, jobs={args.jobs}, total={total_dt}s")
-    lines.append(f"GT points: {len(gt_pts)}\n")
+    lines.append(f"GT points: {len(gt_raw)} raw, {len(gt_pts)} grouped\n")
     lines.append("TOP-10 by (correct desc, d_med asc):")
     lines.append(f"  {'rank':>4} {'correct':>8} {'d_med':>7} {'d_mean':>7}  tag")
     for i, r in enumerate(report["top10"], 1):
@@ -351,7 +351,7 @@ def main() -> int:
     lines.append("")
     lines.append("PER-SLOT BEST (минимальный d_px среди вариантов где slot правильный):")
     lines.append(f"  {'slot':<10} {'d_px':>7}  best_variant")
-    for sid in sorted(slot_ids, key=lambda s: int(s.split("_")[-1])):
+    for sid in sorted(slot_ids, key=slot_sort_key):
         b = per_slot_best.get(sid)
         if b is None:
             lines.append(f"  {sid:<10} {'—':>7}  (никто не справился)")
@@ -362,7 +362,7 @@ def main() -> int:
         lines.append(f"WINNER (overall): {winner['tag']}")
         ps = winner["eval"]["per_slot"]
         lines.append("  per-slot breakdown:")
-        for sid in sorted(slot_ids, key=lambda s: int(s.split("_")[-1])):
+        for sid in sorted(slot_ids, key=slot_sort_key):
             d = ps.get(sid, {})
             mark = "OK " if d.get("ok") else "BAD"
             extra = ""
@@ -375,20 +375,21 @@ def main() -> int:
     lines.append(f"  anchors file t=[{anchors_diag['t_min']:.1f}..{anchors_diag['t_max']:.1f}]s, "
                  f"total_pts={anchors_diag['total_pts']}")
     lines.append(f"  {'slot':<10} {'pts<=200px':>11}  {'nearest_pt_px':>14}")
-    for sid in sorted(slot_ids, key=lambda s: int(s.split("_")[-1])):
-        d = anchors_diag["per_slot"].get(sid, {"n_near": 0, "nearest_px": None})
+    for sid in sorted(slot_ids, key=slot_sort_key):
+        base_sid = sid.split("@")[0]
+        d = anchors_diag["per_slot"].get(base_sid, {"n_near": 0, "nearest_px": None})
         nx = "—" if d["nearest_px"] is None else f"{d['nearest_px']:.1f}"
         lines.append(f"  {sid:<10} {d['n_near']:>11}  {nx:>14}")
     if anchors_diag["t_max"] < args.end:
         lines.append(f"  [WARN] anchors заканчиваются на {anchors_diag['t_max']:.1f}s — "
-                     f"пересобери motion_tracks с -StartSec 0 -Window {int(args.end*60)+60}")
+                     f"пересобери motion_tracks с -StartSec 0 -Window {anchors_diag.get('suggested_window_step5', 390)} -Step 5")
 
     # ── CONFUSION (по победителю) ──
     if winner:
         lines.append("")
         lines.append("CONFUSION (по winner): ближайший ЛЮБОЙ трек к GT каждого слота")
         lines.append(f"  {'gt_slot':<10} {'nearest_slot':<14} {'d_px':>8}")
-        for sid in sorted(slot_ids, key=lambda s: int(s.split("_")[-1])):
+        for sid in sorted(slot_ids, key=slot_sort_key):
             d = ps.get(sid, {})
             lines.append(f"  {sid:<10} {str(d.get('nearest_slot')):<14} {str(d.get('nearest_d')):>8}")
 
