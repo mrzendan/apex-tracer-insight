@@ -909,11 +909,18 @@ class SlotTracker:
         self.center_deadzone_px: float = float(slot_cfg.get("center_deadzone_px", 2.0))
         self.max_center_step_px: float = float(slot_cfg.get("max_center_step_px", 24.0))
         self.center_smoothing_alpha: float = float(slot_cfg.get("center_smoothing_alpha", 0.35))
-        # Anti-jump
-        self.jump_switch_threshold_px: float = float(slot_cfg.get("jump_switch_threshold_px", 30.0))
-        self.switch_confirm_frames: int = int(slot_cfg.get("switch_confirm_frames", 3))
+        # Anti-jump (PR-4: defaults bumped — 30/3 was too lax, swaps slipped through).
+        self.jump_switch_threshold_px: float = float(slot_cfg.get("jump_switch_threshold_px", 80.0))
+        self.switch_confirm_frames: int = int(slot_cfg.get("switch_confirm_frames", 6))
+        # PR-4: TTL on pending hypothesis. If we sit in switch_wait for too
+        # many frames without confirming, drop the hypothesis entirely so the
+        # slot can re-attach to whatever is actually nearby instead of getting
+        # stuck in limbo.
+        self.pending_ttl_frames: int = int(slot_cfg.get(
+            "pending_ttl_frames", max(8, self.switch_confirm_frames * 2)))
         self.pending_canon: Optional[tuple[float, float]] = None
         self.pending_hits: int = 0
+        self.pending_age: int = 0
         # Full-frame recovery: если ROI промахивается N+ кадров подряд,
         # каждые `recover_interval` кадров ищем плашку по всему кадру
         # в окрестности предсказания (`recover_gate_px` каноники).
@@ -1289,6 +1296,14 @@ class SlotTracker:
         self.consecutive_detections = 0
         # A single miss breaks the "consecutive near-anchor hits" streak.
         self.near_anchor_consecutive = 0
+        # PR-4: a miss is also evidence that the pending switch hypothesis
+        # was wrong — don't keep counting toward confirmation across gaps.
+        if self.pending_canon is not None:
+            self.pending_age += 1
+            if self.pending_age > self.pending_ttl_frames:
+                self.pending_canon = None
+                self.pending_hits = 0
+                self.pending_age = 0
         self.confidence = max(0.1, self.confidence - 0.07)
         # Slowly forget old peak so a one-off rocket ride doesn't keep gate huge forever.
         self.v_observed_peak_px_s *= self.v_observed_decay
@@ -1392,12 +1407,15 @@ class SlotTracker:
                                     cand_cy - self.pending_canon[1])
                     if pd < jump_thresh:
                         self.pending_hits += 1
+                        self.pending_age = 0
                     else:
                         self.pending_canon = (cand_cx, cand_cy)
                         self.pending_hits = 1
+                        self.pending_age = 0
                 else:
                     self.pending_canon = (cand_cx, cand_cy)
                     self.pending_hits = 1
+                    self.pending_age = 0
                 if self.pending_hits < self.switch_confirm_frames:
                     # Не двигаем canonical_px, держим прошлый якорь.
                     self.state_reason = f"switch_wait_{self.pending_hits}/{self.switch_confirm_frames}"
@@ -1407,9 +1425,11 @@ class SlotTracker:
                 # Подтверждено — сбрасываем и принимаем как обычно.
                 self.pending_canon = None
                 self.pending_hits = 0
+                self.pending_age = 0
             else:
                 self.pending_canon = None
                 self.pending_hits = 0
+                self.pending_age = 0
             step_budget = max(self.max_center_step_px, 200.0)
             if dist > self.center_deadzone_px:
                 if dist > step_budget:
@@ -1921,10 +1941,39 @@ def main():
                     assigns = associate_hungarian(
                         candidates, slot_trackers, t_now, da_weights_dyn,
                         near_miss=near_miss_counter)
+                    # PR-4: frame-level sanity gate. Если на одном кадре сразу
+                    # >= N слотов получили детекцию, скакнувшую дальше
+                    # jump_switch_threshold_px от прошлой канонической позиции,
+                    # — это не таргет-свитч, а глобальное событие (cut/killcam/
+                    # сорванная гомография). Кадр отбрасываем целиком: все
+                    # слоты идут в note_miss, никаких accept_observation.
+                    frame_jump_thresh = float(da_weights.get(
+                        "frame_sanity_jump_px", 120.0))
+                    frame_jump_max = int(da_weights.get(
+                        "frame_sanity_max_jumps", 4))
+                    bad_jumps = 0
+                    for t in teams:
+                        det = assigns.get(t.id)
+                        if det is None:
+                            continue
+                        st = slot_trackers[t.id]
+                        if st.canonical_px is None:
+                            continue
+                        dx = det["canonical_px"][0] - st.canonical_px[0]
+                        dy = det["canonical_px"][1] - st.canonical_px[1]
+                        if (dx * dx + dy * dy) > (frame_jump_thresh * frame_jump_thresh):
+                            bad_jumps += 1
+                    frame_dropped = bad_jumps >= frame_jump_max
+                    if frame_dropped:
+                        cam["frame_sanity_drop"] = {
+                            "bad_jumps": bad_jumps,
+                            "threshold_px": frame_jump_thresh,
+                            "max_jumps": frame_jump_max,
+                        }
                     for t in teams:
                         st = slot_trackers[t.id]
                         det = assigns.get(t.id)
-                        if det is not None:
+                        if det is not None and not frame_dropped:
                             snap = st.accept_observation(det, t_now)
                         else:
                             snap = st.note_miss(t_now)
