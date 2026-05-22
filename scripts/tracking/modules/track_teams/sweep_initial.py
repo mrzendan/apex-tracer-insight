@@ -236,7 +236,7 @@ def main() -> int:
     ap.add_argument("--gt", default=str(MOD / "assets" / "gt_anchors.json"))
     ap.add_argument("--end", type=float, default=30.0, help="секунд видео анализировать")
     ap.add_argument("--gt-cutoff", type=float, default=30.5)
-    ap.add_argument("--match-px", type=float, default=100.0, help="d_px <= этого = «корректно»")
+    ap.add_argument("--match-px", type=float, default=150.0, help="d_px <= этого = «корректно»")
     ap.add_argument("--jobs", type=int, default=8, help="параллельные процессы (1..15)")
     ap.add_argument("--max-variants", type=int, default=60)
     ap.add_argument("--out-dir", default=str(MOD / "reports" / "sweep_initial"))
@@ -257,6 +257,23 @@ def main() -> int:
     gt_all = json.loads(Path(args.gt).read_text(encoding="utf-8"))["points"]
     gt_pts = [p for p in gt_all if float(p["t"]) <= args.gt_cutoff]
     print(f"[sweep] GT в окне [0..{args.gt_cutoff}s]: {len(gt_pts)} точек")
+
+    # ───── диагностика анкеров: для каждого GT-слота — сколько moving-точек в [0..end] ─────
+    anchors_diag = {}
+    try:
+        anc_doc = json.loads(Path(args.anchors).read_text(encoding="utf-8"))
+        fps = float(anc_doc.get("fps") or 60.0)
+        end_frame = int(args.gt_cutoff * fps)
+        for r in anc_doc.get("results", []):
+            sid = f"slot_{r.get('slot')}"
+            cnt = 0
+            for mv in r.get("moving", []):
+                for p in mv.get("points", []):
+                    if p and p[0] is not None and p[0] <= end_frame:
+                        cnt += 1
+            anchors_diag[sid] = cnt
+    except Exception as e:
+        print(f"[warn] anchors diag failed: {e}")
 
     variants = gen_variants(args.max_variants)
     print(f"[sweep] вариантов: {len(variants)}, jobs={args.jobs}")
@@ -300,6 +317,27 @@ def main() -> int:
                 best = {"variant": r["tag"], "d_px": ps["own_d"]}
         per_slot_best[sid] = best  # None если ни один не справился
 
+    # ───── confusion: для каждого GT-слота — кто чаще всех оказывается «ближайшим» ─────
+    from collections import Counter
+    confusion = {}
+    nearest_d_stats = {}
+    for sid in slot_ids:
+        c = Counter()
+        d_list = []
+        for r in results:
+            ps = (r.get("eval") or {}).get("per_slot", {}).get(sid)
+            if not ps: continue
+            ns = ps.get("nearest_slot")
+            nd = ps.get("nearest_d")
+            if ns: c[ns] += 1
+            if nd is not None: d_list.append(nd)
+        confusion[sid] = c.most_common(5)
+        if d_list:
+            nearest_d_stats[sid] = {
+                "median": round(statistics.median(d_list), 1),
+                "min": round(min(d_list), 1),
+            }
+
     report = {
         "video": args.video,
         "end_sec": args.end,
@@ -308,6 +346,9 @@ def main() -> int:
         "variants_total": len(variants),
         "total_duration_s": total_dt,
         "winner": winner["tag"] if winner else None,
+        "anchors_in_window": anchors_diag,
+        "confusion_top": confusion,
+        "nearest_d_stats": nearest_d_stats,
         "top10": [
             {"tag": r["tag"], **{k: r["eval"].get(k) for k in ("correct", "total", "score_pct", "d_med", "d_mean")}}
             for r in results[:10] if r.get("eval", {}).get("ok")
@@ -329,6 +370,12 @@ def main() -> int:
     lines.append(f"sweep_initial: {len(variants)} variants, end={args.end}s, "
                  f"match_px={args.match_px}, jobs={args.jobs}, total={total_dt}s")
     lines.append(f"GT points: {len(gt_pts)}\n")
+    lines.append("ANCHORS IN WINDOW (motion_tracks moving-points per slot in [0..end]):")
+    for sid in sorted(slot_ids, key=lambda s: int(s.split("_")[-1])):
+        n = anchors_diag.get(sid, 0)
+        flag = "" if n > 0 else "  <<< NO ANCHORS"
+        lines.append(f"  {sid:<10} pts={n}{flag}")
+    lines.append("")
     lines.append("TOP-10 by (correct desc, d_med asc):")
     lines.append(f"  {'rank':>4} {'correct':>8} {'d_med':>7} {'d_mean':>7}  tag")
     for i, r in enumerate(report["top10"], 1):
@@ -343,6 +390,13 @@ def main() -> int:
             lines.append(f"  {sid:<10} {'—':>7}  (никто не справился)")
         else:
             lines.append(f"  {sid:<10} {b['d_px']:>7}  {b['variant']}")
+    lines.append("")
+    lines.append("CONFUSION (кого чаще всего видим на месте GT-слота — top-3, counts по вариантам):")
+    lines.append(f"  {'gt_slot':<10} {'near_med':>9} {'near_min':>9}  top_seen")
+    for sid in sorted(slot_ids, key=lambda s: int(s.split("_")[-1])):
+        st = nearest_d_stats.get(sid, {})
+        top = ", ".join(f"{s}×{n}" for s, n in (confusion.get(sid, [])[:3]))
+        lines.append(f"  {sid:<10} {str(st.get('median','—')):>9} {str(st.get('min','—')):>9}  {top}")
     if winner:
         lines.append("")
         lines.append(f"WINNER (overall): {winner['tag']}")
