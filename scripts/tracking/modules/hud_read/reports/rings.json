@@ -1,0 +1,16 @@
+{
+  "video": "scripts\\tracking\\game_sp.mp4",
+  "fps": 59.94005994005994,
+  "scout_step": 600,
+  "refine_budget": 10,
+  "refine_linear": 4,
+  "ring_start_sec": 0.0,
+  "transitions": [],
+  "phases": [],
+  "derived": {
+    "closing_durations": [],
+    "countdown_durations": [],
+    "median_closing": null,
+    "median_countdown": null
+  }
+}
