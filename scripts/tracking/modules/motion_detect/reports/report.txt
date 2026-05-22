@@ -1,28 +1,28 @@
-motion_detect: 1860 frames, window=1860, step=5
+motion_detect: 390 frames, window=390, step=5
 methods: M1=hsv_strict (static<3.0px) M2=motion_diff (diff>12, hue<12) M3=hsv_loose (h±5, sv-30, static<1.0px)
 agree_radius=120px, link_dist=80px
 
 slot       hex  M1  M2  M3  agree  conf        cx,cy  name
 ----------------------------------------------------------------------
-   3   #325bcc 112 128 103    3/3  HIGH    515,331    Team 3
-   6   #ad2f55 190 541 951    3/3  HIGH    448,136    Team 6
-  12   #704205  25 143 424    3/3  HIGH    509,524    Team 12
-  20   #145a47  56 759 825    3/3  HIGH    795,567    Team 20
-   1   #11758e 425 232 1418    2/3   MED    788,36     Team 1
-   4   #402d56  91 674 864    2/3   MED    750,351    Team 4
-   5   #7a4278   0 260 184    2/2   MED    377,416    Team 5
-   7   #b12f8e 318 127 1046    2/3   MED    617,671    Team 7
-  10   #742519  10 127 1652    2/3   MED    316,264    Team 10
-  13   #b37d37 260 256 328    2/3   MED    584,84     Team 13
-  14   #8b6e0f   3 101 588    2/3   MED    386,744    Team 14
-  16   #484e14  21 184 1053    2/3   MED    172,747    Team 16
-  17   #718746 107 403 1371    2/3   MED    291,111    Team 17
-  18   #38773b 323 101 884    2/3   MED    635,268    Team 18
-  19   #2d4f1c 314 504 538    2/3   MED    101,261    Team 19
-   2   #194061 1089 260 2343    0/3   LOW    930,55     Team 2
-   8   #c12210  36 753 563    0/3   LOW    169,794    Team 8
-   9   #cf512b   3  11 513    0/3   LOW    371,697    Team 9
-  11   #974312   0  31 1439    0/2   LOW    533,561    Team 11
-  15   #51530a  27  54 2523    0/3   LOW    180,800    Team 15
+   3   #325bcc  29  22  30    3/3  HIGH    517,379    Team 3
+   4   #402d56   2 186 239    3/3  HIGH    797,355    Team 4
+   6   #ad2f55  62 169 247    3/3  HIGH    374,161    Team 6
+  12   #704205   2  40 136    3/3  HIGH    527,520    Team 12
+  20   #145a47  18 169 215    3/3  HIGH    784,618    Team 20
+   1   #11758e 117  64 361    2/3   MED    849,49     Team 1
+   2   #194061 290 103 623    2/3   MED    175,586    Team 2
+   5   #7a4278   0  91  62    2/2   MED    364,434    Team 5
+   7   #b12f8e  71  34 236    2/3   MED    320,288    Team 7
+   8   #c12210   8 185  98    2/3   MED    298,307    Team 8
+  10   #742519   0  42 361    2/2   MED    584,634    Team 10
+  13   #b37d37  59  85  76    2/3   MED    541,83     Team 13
+  15   #51530a   3  14 631    2/3   MED    345,777    Team 15
+  18   #38773b  80  32 257    2/3   MED    690,263    Team 18
+  19   #2d4f1c  81 124 125    2/3   MED    136,247    Team 19
+   9   #cf512b   1   3  70    0/3   LOW    371,697    Team 9
+  11   #974312   0  10 327    0/2   LOW    494,576    Team 11
+  14   #8b6e0f   0  22 176    0/2   LOW    362,728    Team 14
+  16   #484e14   0  65 281    0/2   LOW    211,129    Team 16
+  17   #718746  24 119 356    0/3   LOW    206,402    Team 17
 
-summary: HIGH=4 MED=11 LOW=5 MISS=0 (total 20)
+summary: HIGH=5 MED=10 LOW=5 MISS=0 (total 20)

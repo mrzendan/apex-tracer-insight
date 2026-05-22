@@ -1,505 +1,108 @@
-sweep_initial: 150 variants, end=30.0s, match_px=150.0, jobs=15, total=935.2s
-GT points: 119
+sweep_initial: 150 variants, end=30.0s, match_px=150.0, jobs=15, total=1048.2s
+GT points: 119 raw, 20 grouped
 
 TOP-10 by (correct desc, d_med asc):
   rank  correct   d_med  d_mean  tag
-     1  52/119    91.9    87.6  ds=color_fs=15_bw=1.0_gr=1.6_dc=2_iw=10_im=0.3_ma=3_mi=80_mk=1_na=400
-     2  52/119    91.9    87.6  ds=color_fs=15_bw=1.0_gr=1.6_dc=10_iw=0_im=0.3_ma=10_mi=80_mk=1_na=250
-     3  52/119    91.9    87.6  ds=color_fs=15_bw=2.0_gr=1.6_dc=5_iw=10_im=0.1_ma=3_mi=40_mk=1_na=400
-     4  52/119    91.9    87.6  ds=color_fs=15_bw=1.0_gr=2.5_dc=5_iw=0_im=0.1_ma=3_mi=80_mk=1_na=120
-     5  52/119    91.9    87.6  ds=color_fs=15_bw=2.0_gr=2.5_dc=2_iw=0_im=0.1_ma=10_mi=40_mk=1_na=250
-     6  52/119    91.9    87.6  ds=color_fs=15_bw=2.0_gr=2.5_dc=5_iw=10_im=0.3_ma=3_mi=40_mk=1_na=120
-     7  52/119    91.9    87.6  ds=color_fs=30_bw=2.0_gr=0.8_dc=2_iw=0_im=0.1_ma=10_mi=80_mk=1_na=120
-     8  52/119    91.9    87.6  ds=color_fs=30_bw=1.0_gr=2.5_dc=5_iw=10_im=0.1_ma=3_mi=80_mk=1_na=250
-     9  52/119    91.9    87.6  ds=color_fs=30_bw=1.0_gr=1.6_dc=10_iw=10_im=0.3_ma=10_mi=80_mk=1_na=400
-    10  52/119    91.9    87.6  ds=color_fs=60_bw=0.3_gr=0.8_dc=2_iw=10_im=0.3_ma=10_mi=40_mk=1_na=120
+     1  13/20     50.8    52.9  ds=color_fs=15_bw=0.3_gr=0.8_dc=5_iw=10_im=0.1_ma=3_mi=15_mk=3_na=120
+     2  13/20     50.8    52.9  ds=color_fs=15_bw=1.0_gr=0.8_dc=2_iw=10_im=0.1_ma=3_mi=80_mk=3_na=250
+     3  13/20     50.8    52.9  ds=color_fs=15_bw=1.0_gr=0.8_dc=10_iw=0_im=0.1_ma=10_mi=80_mk=3_na=120
+     4  13/20     50.8    52.9  ds=color_fs=15_bw=0.3_gr=2.5_dc=5_iw=10_im=0.3_ma=10_mi=80_mk=3_na=400
+     5  13/20     50.8    52.9  ds=color_fs=15_bw=2.0_gr=0.8_dc=10_iw=10_im=0.3_ma=10_mi=40_mk=3_na=120
+     6  13/20     50.8    52.9  ds=color_fs=15_bw=2.0_gr=0.8_dc=5_iw=0_im=0.3_ma=3_mi=40_mk=3_na=250
+     7  13/20     50.8    52.9  ds=color_fs=15_bw=1.0_gr=2.5_dc=10_iw=10_im=0.1_ma=10_mi=40_mk=3_na=400
+     8  13/20     50.8    52.9  ds=color_fs=30_bw=0.3_gr=0.8_dc=2_iw=0_im=0.3_ma=10_mi=15_mk=3_na=400
+     9  13/20     50.8    52.9  ds=color_fs=30_bw=0.3_gr=0.8_dc=10_iw=0_im=0.1_ma=3_mi=15_mk=3_na=250
+    10  13/20     50.8    52.9  ds=color_fs=30_bw=0.3_gr=1.6_dc=2_iw=10_im=0.1_ma=10_mi=15_mk=3_na=120
 
 PER-SLOT BEST (минимальный d_px среди вариантов где slot правильный):
   slot          d_px  best_variant
-  slot_1       137.7  ds=color_fs=15_bw=1.0_gr=1.6_dc=2_iw=10_im=0.3_ma=3_mi=80_mk=1_na=400
-  slot_1       137.7  ds=color_fs=15_bw=1.0_gr=1.6_dc=2_iw=10_im=0.3_ma=3_mi=80_mk=1_na=400
-  slot_1       137.7  ds=color_fs=15_bw=1.0_gr=1.6_dc=2_iw=10_im=0.3_ma=3_mi=80_mk=1_na=400
-  slot_1       137.7  ds=color_fs=15_bw=1.0_gr=1.6_dc=2_iw=10_im=0.3_ma=3_mi=80_mk=1_na=400
-  slot_1       137.7  ds=color_fs=15_bw=1.0_gr=1.6_dc=2_iw=10_im=0.3_ma=3_mi=80_mk=1_na=400
-  slot_1       137.7  ds=color_fs=15_bw=1.0_gr=1.6_dc=2_iw=10_im=0.3_ma=3_mi=80_mk=1_na=400
-  slot_2           —  (никто не справился)
-  slot_2           —  (никто не справился)
-  slot_2           —  (никто не справился)
-  slot_2           —  (никто не справился)
-  slot_2           —  (никто не справился)
-  slot_3        88.6  ds=detect_fs=15_bw=1.0_gr=0.8_dc=10_iw=0_im=0.3_ma=3_mi=40_mk=3_na=400
-  slot_3        88.6  ds=detect_fs=15_bw=1.0_gr=0.8_dc=10_iw=0_im=0.3_ma=3_mi=40_mk=3_na=400
-  slot_3        88.6  ds=detect_fs=15_bw=1.0_gr=0.8_dc=10_iw=0_im=0.3_ma=3_mi=40_mk=3_na=400
-  slot_3        88.6  ds=detect_fs=15_bw=1.0_gr=0.8_dc=10_iw=0_im=0.3_ma=3_mi=40_mk=3_na=400
-  slot_3        88.6  ds=detect_fs=15_bw=1.0_gr=0.8_dc=10_iw=0_im=0.3_ma=3_mi=40_mk=3_na=400
-  slot_4        88.5  ds=detect_fs=15_bw=2.0_gr=0.8_dc=5_iw=0_im=0.3_ma=10_mi=40_mk=1_na=120
-  slot_4        88.5  ds=detect_fs=15_bw=2.0_gr=0.8_dc=5_iw=0_im=0.3_ma=10_mi=40_mk=1_na=120
-  slot_4        88.5  ds=detect_fs=15_bw=2.0_gr=0.8_dc=5_iw=0_im=0.3_ma=10_mi=40_mk=1_na=120
-  slot_4        88.5  ds=detect_fs=15_bw=2.0_gr=0.8_dc=5_iw=0_im=0.3_ma=10_mi=40_mk=1_na=120
-  slot_4        88.5  ds=detect_fs=15_bw=2.0_gr=0.8_dc=5_iw=0_im=0.3_ma=10_mi=40_mk=1_na=120
-  slot_5           —  (никто не справился)
-  slot_5           —  (никто не справился)
-  slot_5           —  (никто не справился)
-  slot_5           —  (никто не справился)
-  slot_5           —  (никто не справился)
+  slot_1        38.8  ds=color_fs=15_bw=0.3_gr=1.6_dc=2_iw=0_im=0.1_ma=10_mi=15_mk=1_na=400
+  slot_2        94.1  ds=color_fs=15_bw=0.3_gr=0.8_dc=5_iw=10_im=0.1_ma=3_mi=15_mk=3_na=120
+  slot_3        33.6  ds=detect_fs=15_bw=0.3_gr=0.8_dc=5_iw=10_im=0.1_ma=3_mi=80_mk=3_na=400
+  slot_4        20.4  ds=detect_fs=15_bw=1.0_gr=0.8_dc=2_iw=10_im=0.1_ma=10_mi=80_mk=1_na=120
+  slot_5        84.8  ds=color_fs=15_bw=0.3_gr=0.8_dc=5_iw=10_im=0.1_ma=3_mi=15_mk=3_na=120
   slot_6           —  (никто не справился)
-  slot_6           —  (никто не справился)
-  slot_6           —  (никто не справился)
-  slot_6           —  (никто не справился)
-  slot_6           —  (никто не справился)
-  slot_7           —  (никто не справился)
-  slot_7           —  (никто не справился)
-  slot_7           —  (никто не справился)
-  slot_7           —  (никто не справился)
-  slot_7           —  (никто не справился)
-  slot_7           —  (никто не справился)
-  slot_8           —  (никто не справился)
-  slot_8           —  (никто не справился)
-  slot_8           —  (никто не справился)
-  slot_8           —  (никто не справился)
+  slot_7        84.6  ds=color_fs=15_bw=0.3_gr=0.8_dc=5_iw=10_im=0.1_ma=3_mi=15_mk=3_na=120
   slot_8           —  (никто не справился)
   slot_9           —  (никто не справился)
-  slot_9           —  (никто не справился)
-  slot_9           —  (никто не справился)
-  slot_9           —  (никто не справился)
-  slot_9           —  (никто не справился)
-  slot_10          —  (никто не справился)
-  slot_10          —  (никто не справился)
-  slot_10          —  (никто не справился)
-  slot_10          —  (никто не справился)
-  slot_10          —  (никто не справился)
-  slot_10          —  (никто не справился)
   slot_10          —  (никто не справился)
   slot_11          —  (никто не справился)
-  slot_11          —  (никто не справился)
-  slot_11          —  (никто не справился)
-  slot_11          —  (никто не справился)
-  slot_11          —  (никто не справился)
-  slot_11          —  (никто не справился)
-  slot_12          —  (никто не справился)
-  slot_12          —  (никто не справился)
-  slot_12          —  (никто не справился)
-  slot_12          —  (никто не справился)
-  slot_12          —  (никто не справился)
-  slot_12          —  (никто не справился)
-  slot_12          —  (никто не справился)
-  slot_12          —  (никто не справился)
-  slot_13          —  (никто не справился)
-  slot_13          —  (никто не справился)
-  slot_13          —  (никто не справился)
-  slot_13          —  (никто не справился)
-  slot_13          —  (никто не справился)
-  slot_13          —  (никто не справился)
-  slot_13          —  (никто не справился)
-  slot_14      112.4  ds=detect_fs=15_bw=2.0_gr=0.8_dc=5_iw=0_im=0.3_ma=10_mi=40_mk=1_na=120
-  slot_14      112.4  ds=detect_fs=15_bw=2.0_gr=0.8_dc=5_iw=0_im=0.3_ma=10_mi=40_mk=1_na=120
-  slot_14      112.4  ds=detect_fs=15_bw=2.0_gr=0.8_dc=5_iw=0_im=0.3_ma=10_mi=40_mk=1_na=120
-  slot_14      112.4  ds=detect_fs=15_bw=2.0_gr=0.8_dc=5_iw=0_im=0.3_ma=10_mi=40_mk=1_na=120
-  slot_14      112.4  ds=detect_fs=15_bw=2.0_gr=0.8_dc=5_iw=0_im=0.3_ma=10_mi=40_mk=1_na=120
-  slot_14      112.4  ds=detect_fs=15_bw=2.0_gr=0.8_dc=5_iw=0_im=0.3_ma=10_mi=40_mk=1_na=120
+  slot_12       26.0  ds=detect_fs=15_bw=0.3_gr=0.8_dc=2_iw=0_im=0.1_ma=3_mi=15_mk=1_na=120
+  slot_13       44.7  ds=color_fs=15_bw=0.3_gr=1.6_dc=2_iw=0_im=0.1_ma=10_mi=15_mk=1_na=400
+  slot_14        8.6  ds=color_fs=15_bw=0.3_gr=1.6_dc=2_iw=0_im=0.1_ma=10_mi=15_mk=1_na=400
   slot_15          —  (никто не справился)
-  slot_15          —  (никто не справился)
-  slot_15          —  (никто не справился)
-  slot_15          —  (никто не справился)
-  slot_15          —  (никто не справился)
-  slot_15          —  (никто не справился)
-  slot_16      115.2  ds=detect_fs=15_bw=1.0_gr=0.8_dc=10_iw=0_im=0.3_ma=3_mi=40_mk=3_na=400
-  slot_16      115.2  ds=detect_fs=15_bw=1.0_gr=0.8_dc=10_iw=0_im=0.3_ma=3_mi=40_mk=3_na=400
-  slot_16      115.2  ds=detect_fs=15_bw=1.0_gr=0.8_dc=10_iw=0_im=0.3_ma=3_mi=40_mk=3_na=400
-  slot_16      115.2  ds=detect_fs=15_bw=1.0_gr=0.8_dc=10_iw=0_im=0.3_ma=3_mi=40_mk=3_na=400
-  slot_16      115.2  ds=detect_fs=15_bw=1.0_gr=0.8_dc=10_iw=0_im=0.3_ma=3_mi=40_mk=3_na=400
-  slot_16      115.2  ds=detect_fs=15_bw=1.0_gr=0.8_dc=10_iw=0_im=0.3_ma=3_mi=40_mk=3_na=400
-  slot_16      115.2  ds=detect_fs=15_bw=1.0_gr=0.8_dc=10_iw=0_im=0.3_ma=3_mi=40_mk=3_na=400
-  slot_17          —  (никто не справился)
-  slot_17          —  (никто не справился)
-  slot_17          —  (никто не справился)
-  slot_17          —  (никто не справился)
-  slot_17          —  (никто не справился)
-  slot_17          —  (никто не справился)
-  slot_18       73.9  ds=color_fs=15_bw=0.3_gr=0.8_dc=5_iw=10_im=0.1_ma=3_mi=15_mk=3_na=120
-  slot_18       73.9  ds=color_fs=15_bw=0.3_gr=0.8_dc=5_iw=10_im=0.1_ma=3_mi=15_mk=3_na=120
-  slot_18       73.9  ds=color_fs=15_bw=0.3_gr=0.8_dc=5_iw=10_im=0.1_ma=3_mi=15_mk=3_na=120
-  slot_18       73.9  ds=color_fs=15_bw=0.3_gr=0.8_dc=5_iw=10_im=0.1_ma=3_mi=15_mk=3_na=120
-  slot_18       73.9  ds=color_fs=15_bw=0.3_gr=0.8_dc=5_iw=10_im=0.1_ma=3_mi=15_mk=3_na=120
-  slot_18       73.9  ds=color_fs=15_bw=0.3_gr=0.8_dc=5_iw=10_im=0.1_ma=3_mi=15_mk=3_na=120
-  slot_19      148.6  ds=color_fs=15_bw=0.3_gr=0.8_dc=5_iw=10_im=0.1_ma=3_mi=15_mk=3_na=120
-  slot_19      148.6  ds=color_fs=15_bw=0.3_gr=0.8_dc=5_iw=10_im=0.1_ma=3_mi=15_mk=3_na=120
-  slot_19      148.6  ds=color_fs=15_bw=0.3_gr=0.8_dc=5_iw=10_im=0.1_ma=3_mi=15_mk=3_na=120
-  slot_19      148.6  ds=color_fs=15_bw=0.3_gr=0.8_dc=5_iw=10_im=0.1_ma=3_mi=15_mk=3_na=120
-  slot_19      148.6  ds=color_fs=15_bw=0.3_gr=0.8_dc=5_iw=10_im=0.1_ma=3_mi=15_mk=3_na=120
-  slot_19      148.6  ds=color_fs=15_bw=0.3_gr=0.8_dc=5_iw=10_im=0.1_ma=3_mi=15_mk=3_na=120
-  slot_20       43.8  ds=color_fs=15_bw=0.3_gr=0.8_dc=5_iw=10_im=0.1_ma=3_mi=15_mk=3_na=120
-  slot_20       43.8  ds=color_fs=15_bw=0.3_gr=0.8_dc=5_iw=10_im=0.1_ma=3_mi=15_mk=3_na=120
-  slot_20       43.8  ds=color_fs=15_bw=0.3_gr=0.8_dc=5_iw=10_im=0.1_ma=3_mi=15_mk=3_na=120
-  slot_20       43.8  ds=color_fs=15_bw=0.3_gr=0.8_dc=5_iw=10_im=0.1_ma=3_mi=15_mk=3_na=120
-  slot_20       43.8  ds=color_fs=15_bw=0.3_gr=0.8_dc=5_iw=10_im=0.1_ma=3_mi=15_mk=3_na=120
-  slot_20       43.8  ds=color_fs=15_bw=0.3_gr=0.8_dc=5_iw=10_im=0.1_ma=3_mi=15_mk=3_na=120
-  slot_20       43.8  ds=color_fs=15_bw=0.3_gr=0.8_dc=5_iw=10_im=0.1_ma=3_mi=15_mk=3_na=120
+  slot_16          —  (никто не справился)
+  slot_17       13.0  ds=color_fs=15_bw=0.3_gr=1.6_dc=2_iw=0_im=0.1_ma=10_mi=15_mk=1_na=400
+  slot_18       45.6  ds=color_fs=15_bw=0.3_gr=0.8_dc=5_iw=10_im=0.1_ma=3_mi=15_mk=3_na=120
+  slot_19       29.5  ds=detect_fs=15_bw=1.0_gr=0.8_dc=10_iw=0_im=0.3_ma=3_mi=40_mk=3_na=400
+  slot_20       41.5  ds=detect_fs=15_bw=0.3_gr=0.8_dc=5_iw=10_im=0.1_ma=3_mi=80_mk=3_na=400
 
-WINNER (overall): ds=color_fs=15_bw=1.0_gr=1.6_dc=2_iw=10_im=0.3_ma=3_mi=80_mk=1_na=400
+WINNER (overall): ds=color_fs=15_bw=0.3_gr=0.8_dc=5_iw=10_im=0.1_ma=3_mi=15_mk=3_na=120
   per-slot breakdown:
-    slot_1     OK   own_d=137.7
-    slot_1     OK   own_d=137.7
-    slot_1     OK   own_d=137.7
-    slot_1     OK   own_d=137.7
-    slot_1     OK   own_d=137.7
-    slot_1     OK   own_d=137.7
-    slot_2     BAD  own_d=1736.0  (nearest=slot_9 @ 219.4px)
-    slot_2     BAD  own_d=1736.0  (nearest=slot_9 @ 219.4px)
-    slot_2     BAD  own_d=1736.0  (nearest=slot_9 @ 219.4px)
-    slot_2     BAD  own_d=1736.0  (nearest=slot_9 @ 219.4px)
-    slot_2     BAD  own_d=1736.0  (nearest=slot_9 @ 219.4px)
-    slot_3     OK   own_d=107.4
-    slot_3     OK   own_d=107.4
-    slot_3     OK   own_d=107.4
-    slot_3     OK   own_d=107.4
-    slot_3     OK   own_d=107.4
-    slot_4     OK   own_d=102.8
-    slot_4     OK   own_d=102.8
-    slot_4     OK   own_d=102.8
-    slot_4     OK   own_d=102.8
-    slot_4     OK   own_d=102.8
-    slot_5     BAD  own_d=196.4  (nearest=slot_12 @ 164.5px)
-    slot_5     BAD  own_d=196.4  (nearest=slot_12 @ 164.5px)
-    slot_5     BAD  own_d=196.4  (nearest=slot_12 @ 164.5px)
-    slot_5     BAD  own_d=196.4  (nearest=slot_12 @ 164.5px)
-    slot_5     BAD  own_d=196.4  (nearest=slot_12 @ 164.5px)
-    slot_6     BAD  own_d=897.8  (nearest=slot_2 @ 308.4px)
-    slot_6     BAD  own_d=897.8  (nearest=slot_2 @ 308.4px)
-    slot_6     BAD  own_d=897.8  (nearest=slot_2 @ 308.4px)
-    slot_6     BAD  own_d=897.8  (nearest=slot_2 @ 308.4px)
-    slot_6     BAD  own_d=897.8  (nearest=slot_2 @ 308.4px)
-    slot_7     BAD  own_d=1007.0  (nearest=slot_10 @ 135.1px)
-    slot_7     BAD  own_d=1007.0  (nearest=slot_10 @ 135.1px)
-    slot_7     BAD  own_d=1007.0  (nearest=slot_10 @ 135.1px)
-    slot_7     BAD  own_d=1007.0  (nearest=slot_10 @ 135.1px)
-    slot_7     BAD  own_d=1007.0  (nearest=slot_10 @ 135.1px)
-    slot_7     BAD  own_d=1007.0  (nearest=slot_10 @ 135.1px)
-    slot_8     BAD  own_d=1394.7  (nearest=slot_20 @ 378.1px)
-    slot_8     BAD  own_d=1394.7  (nearest=slot_20 @ 378.1px)
-    slot_8     BAD  own_d=1394.7  (nearest=slot_20 @ 378.1px)
-    slot_8     BAD  own_d=1394.7  (nearest=slot_20 @ 378.1px)
-    slot_8     BAD  own_d=1394.7  (nearest=slot_20 @ 378.1px)
-    slot_9     BAD  own_d=723.7  (nearest=slot_5 @ 165.0px)
-    slot_9     BAD  own_d=723.7  (nearest=slot_5 @ 165.0px)
-    slot_9     BAD  own_d=723.7  (nearest=slot_5 @ 165.0px)
-    slot_9     BAD  own_d=723.7  (nearest=slot_5 @ 165.0px)
-    slot_9     BAD  own_d=723.7  (nearest=slot_5 @ 165.0px)
-    slot_10    BAD  own_d=1357.1  (nearest=slot_7 @ 374.8px)
-    slot_10    BAD  own_d=1357.1  (nearest=slot_7 @ 374.8px)
-    slot_10    BAD  own_d=1357.1  (nearest=slot_7 @ 374.8px)
-    slot_10    BAD  own_d=1357.1  (nearest=slot_7 @ 374.8px)
-    slot_10    BAD  own_d=1357.1  (nearest=slot_7 @ 374.8px)
-    slot_10    BAD  own_d=1357.1  (nearest=slot_7 @ 374.8px)
-    slot_10    BAD  own_d=1357.1  (nearest=slot_7 @ 374.8px)
-    slot_11    BAD  own_d=293.1  (nearest=slot_7 @ 123.9px)
-    slot_11    BAD  own_d=293.1  (nearest=slot_7 @ 123.9px)
-    slot_11    BAD  own_d=293.1  (nearest=slot_7 @ 123.9px)
-    slot_11    BAD  own_d=293.1  (nearest=slot_7 @ 123.9px)
-    slot_11    BAD  own_d=293.1  (nearest=slot_7 @ 123.9px)
-    slot_11    BAD  own_d=293.1  (nearest=slot_7 @ 123.9px)
-    slot_12    BAD  own_d=157.4  (nearest=slot_12 @ 157.4px)
-    slot_12    BAD  own_d=157.4  (nearest=slot_12 @ 157.4px)
-    slot_12    BAD  own_d=157.4  (nearest=slot_12 @ 157.4px)
-    slot_12    BAD  own_d=157.4  (nearest=slot_12 @ 157.4px)
-    slot_12    BAD  own_d=157.4  (nearest=slot_12 @ 157.4px)
-    slot_12    BAD  own_d=157.4  (nearest=slot_12 @ 157.4px)
-    slot_12    BAD  own_d=157.4  (nearest=slot_12 @ 157.4px)
-    slot_12    BAD  own_d=157.4  (nearest=slot_12 @ 157.4px)
-    slot_13    BAD  own_d=182.5  (nearest=slot_13 @ 182.5px)
-    slot_13    BAD  own_d=182.5  (nearest=slot_13 @ 182.5px)
-    slot_13    BAD  own_d=182.5  (nearest=slot_13 @ 182.5px)
-    slot_13    BAD  own_d=182.5  (nearest=slot_13 @ 182.5px)
-    slot_13    BAD  own_d=182.5  (nearest=slot_13 @ 182.5px)
-    slot_13    BAD  own_d=182.5  (nearest=slot_13 @ 182.5px)
-    slot_13    BAD  own_d=182.5  (nearest=slot_13 @ 182.5px)
-    slot_14    OK   own_d=135.2
-    slot_14    OK   own_d=135.2
-    slot_14    OK   own_d=135.2
-    slot_14    OK   own_d=135.2
-    slot_14    OK   own_d=135.2
-    slot_14    OK   own_d=135.2
-    slot_15    BAD  own_d=1292.6  (nearest=slot_17 @ 97.1px)
-    slot_15    BAD  own_d=1292.6  (nearest=slot_17 @ 97.1px)
-    slot_15    BAD  own_d=1292.6  (nearest=slot_17 @ 97.1px)
-    slot_15    BAD  own_d=1292.6  (nearest=slot_17 @ 97.1px)
-    slot_15    BAD  own_d=1292.6  (nearest=slot_17 @ 97.1px)
-    slot_15    BAD  own_d=1292.6  (nearest=slot_17 @ 97.1px)
-    slot_16    OK   own_d=145.8
-    slot_16    OK   own_d=145.8
-    slot_16    OK   own_d=145.8
-    slot_16    OK   own_d=145.8
-    slot_16    OK   own_d=145.8
-    slot_16    OK   own_d=145.8
-    slot_16    OK   own_d=145.8
-    slot_17    BAD  own_d=653.3  (nearest=slot_19 @ 333.7px)
-    slot_17    BAD  own_d=653.3  (nearest=slot_19 @ 333.7px)
-    slot_17    BAD  own_d=653.3  (nearest=slot_19 @ 333.7px)
-    slot_17    BAD  own_d=653.3  (nearest=slot_19 @ 333.7px)
-    slot_17    BAD  own_d=653.3  (nearest=slot_19 @ 333.7px)
-    slot_17    BAD  own_d=653.3  (nearest=slot_19 @ 333.7px)
-    slot_18    OK   own_d=92.0
-    slot_18    OK   own_d=92.0
-    slot_18    OK   own_d=92.0
-    slot_18    OK   own_d=92.0
-    slot_18    OK   own_d=92.0
-    slot_18    OK   own_d=92.0
-    slot_19    OK   own_d=149.9
-    slot_19    OK   own_d=149.9
-    slot_19    OK   own_d=149.9
-    slot_19    OK   own_d=149.9
-    slot_19    OK   own_d=149.9
-    slot_19    OK   own_d=149.9
-    slot_20    OK   own_d=56.8
-    slot_20    OK   own_d=56.8
-    slot_20    OK   own_d=56.8
-    slot_20    OK   own_d=56.8
-    slot_20    OK   own_d=56.8
-    slot_20    OK   own_d=56.8
-    slot_20    OK   own_d=56.8
+    slot_1     OK   own_d=58.4
+    slot_2     OK   own_d=94.1
+    slot_3     OK   own_d=36.1
+    slot_4     OK   own_d=24.7
+    slot_5     OK   own_d=84.8
+    slot_6     BAD  own_d=863.9  (nearest=slot_4 @ 185.6px)
+    slot_7     OK   own_d=84.6
+    slot_8     BAD  own_d=1353.2  (nearest=slot_20 @ 255.4px)
+    slot_9     BAD  own_d=723.7  (nearest=slot_8 @ 40.7px)
+    slot_10    BAD  own_d=371.8  (nearest=slot_10 @ 371.8px)
+    slot_11    BAD  own_d=210.5  (nearest=slot_10 @ 77.8px)
+    slot_12    OK   own_d=41.5
+    slot_13    OK   own_d=50.8
+    slot_14    OK   own_d=25.5
+    slot_15    BAD  own_d=1154.2  (nearest=slot_16 @ 46.2px)
+    slot_16    BAD  own_d=1063.0  (nearest=slot_2 @ 180.8px)
+    slot_17    OK   own_d=15.9
+    slot_18    OK   own_d=45.6
+    slot_19    OK   own_d=57.1
+    slot_20    OK   own_d=68.9
 
 ANCHORS IN WINDOW [0..30.0s] (motion-points в радиусе 200px от GT):
-  anchors file t=[0.0..0.0]s, total_pts=0
+  anchors file t=[0.0..32.4]s, total_pts=163758
   slot        pts<=200px   nearest_pt_px
-  slot_1               0               —
-  slot_1               0               —
-  slot_1               0               —
-  slot_1               0               —
-  slot_1               0               —
-  slot_1               0               —
-  slot_2               0               —
-  slot_2               0               —
-  slot_2               0               —
-  slot_2               0               —
-  slot_2               0               —
-  slot_3               0               —
-  slot_3               0               —
-  slot_3               0               —
-  slot_3               0               —
-  slot_3               0               —
-  slot_4               0               —
-  slot_4               0               —
-  slot_4               0               —
-  slot_4               0               —
-  slot_4               0               —
-  slot_5               0               —
-  slot_5               0               —
-  slot_5               0               —
-  slot_5               0               —
-  slot_5               0               —
-  slot_6               0               —
-  slot_6               0               —
-  slot_6               0               —
-  slot_6               0               —
-  slot_6               0               —
-  slot_7               0               —
-  slot_7               0               —
-  slot_7               0               —
-  slot_7               0               —
-  slot_7               0               —
-  slot_7               0               —
-  slot_8               0               —
-  slot_8               0               —
-  slot_8               0               —
-  slot_8               0               —
-  slot_8               0               —
-  slot_9               0               —
-  slot_9               0               —
-  slot_9               0               —
-  slot_9               0               —
-  slot_9               0               —
-  slot_10              0               —
-  slot_10              0               —
-  slot_10              0               —
-  slot_10              0               —
-  slot_10              0               —
-  slot_10              0               —
-  slot_10              0               —
-  slot_11              0               —
-  slot_11              0               —
-  slot_11              0               —
-  slot_11              0               —
-  slot_11              0               —
-  slot_11              0               —
-  slot_12              0               —
-  slot_12              0               —
-  slot_12              0               —
-  slot_12              0               —
-  slot_12              0               —
-  slot_12              0               —
-  slot_12              0               —
-  slot_12              0               —
-  slot_13              0               —
-  slot_13              0               —
-  slot_13              0               —
-  slot_13              0               —
-  slot_13              0               —
-  slot_13              0               —
-  slot_13              0               —
-  slot_14              0               —
-  slot_14              0               —
-  slot_14              0               —
-  slot_14              0               —
-  slot_14              0               —
-  slot_14              0               —
-  slot_15              0               —
-  slot_15              0               —
-  slot_15              0               —
-  slot_15              0               —
-  slot_15              0               —
-  slot_15              0               —
-  slot_16              0               —
-  slot_16              0               —
-  slot_16              0               —
-  slot_16              0               —
-  slot_16              0               —
-  slot_16              0               —
-  slot_16              0               —
-  slot_17              0               —
-  slot_17              0               —
-  slot_17              0               —
-  slot_17              0               —
-  slot_17              0               —
-  slot_17              0               —
-  slot_18              0               —
-  slot_18              0               —
-  slot_18              0               —
-  slot_18              0               —
-  slot_18              0               —
-  slot_18              0               —
-  slot_19              0               —
-  slot_19              0               —
-  slot_19              0               —
-  slot_19              0               —
-  slot_19              0               —
-  slot_19              0               —
-  slot_20              0               —
-  slot_20              0               —
-  slot_20              0               —
-  slot_20              0               —
-  slot_20              0               —
-  slot_20              0               —
-  slot_20              0               —
-  [WARN] anchors заканчиваются на 0.0s — пересобери motion_tracks с -StartSec 0 -Window 1860
+  slot_1            5378             3.8
+  slot_2            6003             5.4
+  slot_3            4708             2.5
+  slot_4           12989             1.2
+  slot_5            7912             1.0
+  slot_6            8790             2.0
+  slot_7           12482             0.6
+  slot_8            7277             1.1
+  slot_9           12061             0.6
+  slot_10           9355             1.0
+  slot_11          15156             0.9
+  slot_12          13335             0.6
+  slot_13          10346             0.9
+  slot_14           6110             3.5
+  slot_15          15928             1.0
+  slot_16           9910             0.5
+  slot_17           5718             0.4
+  slot_18          10625             0.4
+  slot_19          15227             0.9
+  slot_20          14440             1.3
 
 CONFUSION (по winner): ближайший ЛЮБОЙ трек к GT каждого слота
   gt_slot    nearest_slot       d_px
-  slot_1     slot_1            137.7
-  slot_1     slot_1            137.7
-  slot_1     slot_1            137.7
-  slot_1     slot_1            137.7
-  slot_1     slot_1            137.7
-  slot_1     slot_1            137.7
-  slot_2     slot_9            219.4
-  slot_2     slot_9            219.4
-  slot_2     slot_9            219.4
-  slot_2     slot_9            219.4
-  slot_2     slot_9            219.4
-  slot_3     slot_3            107.4
-  slot_3     slot_3            107.4
-  slot_3     slot_3            107.4
-  slot_3     slot_3            107.4
-  slot_3     slot_3            107.4
-  slot_4     slot_4            102.8
-  slot_4     slot_4            102.8
-  slot_4     slot_4            102.8
-  slot_4     slot_4            102.8
-  slot_4     slot_4            102.8
-  slot_5     slot_12           164.5
-  slot_5     slot_12           164.5
-  slot_5     slot_12           164.5
-  slot_5     slot_12           164.5
-  slot_5     slot_12           164.5
-  slot_6     slot_2            308.4
-  slot_6     slot_2            308.4
-  slot_6     slot_2            308.4
-  slot_6     slot_2            308.4
-  slot_6     slot_2            308.4
-  slot_7     slot_10           135.1
-  slot_7     slot_10           135.1
-  slot_7     slot_10           135.1
-  slot_7     slot_10           135.1
-  slot_7     slot_10           135.1
-  slot_7     slot_10           135.1
-  slot_8     slot_20           378.1
-  slot_8     slot_20           378.1
-  slot_8     slot_20           378.1
-  slot_8     slot_20           378.1
-  slot_8     slot_20           378.1
-  slot_9     slot_5            165.0
-  slot_9     slot_5            165.0
-  slot_9     slot_5            165.0
-  slot_9     slot_5            165.0
-  slot_9     slot_5            165.0
-  slot_10    slot_7            374.8
-  slot_10    slot_7            374.8
-  slot_10    slot_7            374.8
-  slot_10    slot_7            374.8
-  slot_10    slot_7            374.8
-  slot_10    slot_7            374.8
-  slot_10    slot_7            374.8
-  slot_11    slot_7            123.9
-  slot_11    slot_7            123.9
-  slot_11    slot_7            123.9
-  slot_11    slot_7            123.9
-  slot_11    slot_7            123.9
-  slot_11    slot_7            123.9
-  slot_12    slot_12           157.4
-  slot_12    slot_12           157.4
-  slot_12    slot_12           157.4
-  slot_12    slot_12           157.4
-  slot_12    slot_12           157.4
-  slot_12    slot_12           157.4
-  slot_12    slot_12           157.4
-  slot_12    slot_12           157.4
-  slot_13    slot_13           182.5
-  slot_13    slot_13           182.5
-  slot_13    slot_13           182.5
-  slot_13    slot_13           182.5
-  slot_13    slot_13           182.5
-  slot_13    slot_13           182.5
-  slot_13    slot_13           182.5
-  slot_14    slot_14           135.2
-  slot_14    slot_14           135.2
-  slot_14    slot_14           135.2
-  slot_14    slot_14           135.2
-  slot_14    slot_14           135.2
-  slot_14    slot_14           135.2
-  slot_15    slot_17            97.1
-  slot_15    slot_17            97.1
-  slot_15    slot_17            97.1
-  slot_15    slot_17            97.1
-  slot_15    slot_17            97.1
-  slot_15    slot_17            97.1
-  slot_16    slot_16           145.8
-  slot_16    slot_16           145.8
-  slot_16    slot_16           145.8
-  slot_16    slot_16           145.8
-  slot_16    slot_16           145.8
-  slot_16    slot_16           145.8
-  slot_16    slot_16           145.8
-  slot_17    slot_19           333.7
-  slot_17    slot_19           333.7
-  slot_17    slot_19           333.7
-  slot_17    slot_19           333.7
-  slot_17    slot_19           333.7
-  slot_17    slot_19           333.7
-  slot_18    slot_18            92.0
-  slot_18    slot_18            92.0
-  slot_18    slot_18            92.0
-  slot_18    slot_18            92.0
-  slot_18    slot_18            92.0
-  slot_18    slot_18            92.0
-  slot_19    slot_19           149.9
-  slot_19    slot_19           149.9
-  slot_19    slot_19           149.9
-  slot_19    slot_19           149.9
-  slot_19    slot_19           149.9
-  slot_19    slot_19           149.9
-  slot_20    slot_20            56.8
-  slot_20    slot_20            56.8
-  slot_20    slot_20            56.8
-  slot_20    slot_20            56.8
-  slot_20    slot_20            56.8
-  slot_20    slot_20            56.8
-  slot_20    slot_20            56.8
+  slot_1     slot_1             58.4
+  slot_2     slot_2             94.1
+  slot_3     slot_3             36.1
+  slot_4     slot_4             24.7
+  slot_5     slot_5             84.8
+  slot_6     slot_4            185.6
+  slot_7     slot_6             74.1
+  slot_8     slot_20           255.4
+  slot_9     slot_8             40.7
+  slot_10    slot_10           371.8
+  slot_11    slot_10            77.8
+  slot_12    slot_11            19.9
+  slot_13    slot_13            50.8
+  slot_14    slot_14            25.5
+  slot_15    slot_16            46.2
+  slot_16    slot_2            180.8
+  slot_17    slot_17            15.9
+  slot_18    slot_18            45.6
+  slot_19    slot_19            57.1
+  slot_20    slot_20            68.9
