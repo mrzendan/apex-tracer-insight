@@ -410,6 +410,7 @@ def load_anchors(path: Path,
 def detect_team_blobs(frame_bgr: np.ndarray, teams: list[TeamCfg], det_cfg: dict):
     """Возвращает [{team_id, frame_px:(x,y), bbox, angle_frame_deg}]."""
     hsv = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2HSV)
+    lab = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2LAB)
     k = int(det_cfg.get("morph_kernel", 3))
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k))
     min_a = float(det_cfg.get("min_area_px", 60))
@@ -419,9 +420,24 @@ def detect_team_blobs(frame_bgr: np.ndarray, teams: list[TeamCfg], det_cfg: dict
 
     out = []
     for t in teams:
-        mask = cv2.inRange(hsv, t.hsv_lower, t.hsv_upper)
+        m_hsv = cv2.inRange(hsv, t.hsv_lower, t.hsv_upper)
         if t.hsv_lower2 is not None and t.hsv_upper2 is not None:
-            mask |= cv2.inRange(hsv, t.hsv_lower2, t.hsv_upper2)
+            m_hsv |= cv2.inRange(hsv, t.hsv_lower2, t.hsv_upper2)
+        # PR-1: HSV ∩ LAB with soft fallback to HSV-only when intersection is too sparse.
+        if t.lab_lower is None:
+            t.lab_lower, t.lab_upper = build_lab_range_from_hsv(t.hsv_lower, t.hsv_upper)
+        m_lab = cv2.inRange(lab, t.lab_lower, t.lab_upper)
+        mask = cv2.bitwise_and(m_hsv, m_lab)
+        if cv2.countNonZero(mask) < 8:
+            mask = m_hsv
+        # per-team area/morph overrides
+        tmin = float(t.min_area) if t.min_area is not None else min_a
+        tmax = float(t.max_area) if t.max_area is not None else max_a
+        tk = int(t.morph_kernel) if t.morph_kernel is not None else k
+        if tk != k:
+            kernel_t = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (tk, tk))
+        else:
+            kernel_t = kernel
         mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
         cnts, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
