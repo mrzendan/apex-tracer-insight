@@ -155,6 +155,16 @@ def teams_from_anchors(path: Path, h_tol: int = 10,
             else:
                 lo = np.array([h_low,  s_lo, v_lo], dtype=np.uint8)
                 hi = np.array([h_high, 255, 255], dtype=np.uint8)
+        # Optional per-team detection overrides from the preset.
+        ov_min_area = ov_max_area = ov_morph = None
+        if hsv_preset and slot_int in hsv_preset:
+            p = hsv_preset[slot_int]
+            if p.get("min_area") is not None:
+                ov_min_area = float(p["min_area"])
+            if p.get("max_area") is not None:
+                ov_max_area = float(p["max_area"])
+            if p.get("morph_kernel") is not None:
+                ov_morph = int(p["morph_kernel"])
         out.append(TeamCfg(
             id=f"slot_{slot_int}",
             name=str(r.get("team_name") or f"Team {slot_int}"),
@@ -163,6 +173,9 @@ def teams_from_anchors(path: Path, h_tol: int = 10,
             color_hex=hex_str,
             slot=slot_int,
             slot_id=f"slot_{slot_int}",
+            min_area=ov_min_area,
+            max_area=ov_max_area,
+            morph_kernel=ov_morph,
         ))
     if hsv_preset:
         used = sum(1 for r in results if r.get("slot") is not None and int(r["slot"]) in hsv_preset)
