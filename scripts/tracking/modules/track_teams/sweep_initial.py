@@ -37,6 +37,8 @@ import time
 from copy import deepcopy
 from pathlib import Path
 
+from anchor_diagnostics import group_gt_points, slot_sort_key, summarize_anchor_coverage
+
 try:
     sys.stdout.reconfigure(encoding="utf-8")
 except Exception:
@@ -115,57 +117,6 @@ def set_path(d: dict, path: str, value):
     for p in parts[:-1]:
         d = d.setdefault(p, {})
     d[parts[-1]] = value
-
-
-def diagnose_anchors(anchors_path: Path, gt_pts: list[dict], end_sec: float) -> dict:
-    """Считает: (a) временной охват anchors-файла, (b) сколько motion-точек в радиусе
-    200px вокруг каждой GT-позиции в окне [0..end_sec]. Если для слота n_near=0,
-    то ни один параметр track_teams не поможет — данных просто нет."""
-    out = {"t_min": 0.0, "t_max": 0.0, "total_pts": 0, "per_slot": {}}
-    try:
-        doc = json.loads(anchors_path.read_text(encoding="utf-8"))
-    except Exception as e:
-        out["error"] = f"parse:{e}"
-        return out
-    fps = float(doc.get("fps") or 60.0)
-    start_sec = float(doc.get("start_sec") or 0.0)
-    # Собираем все (t_sec, x, y) точки из всех известных форматов.
-    pts = []  # list[(t, x, y)]
-    # формат motion_detect: results -> [{frame, points:[{xy:[x,y], ...}]}] либо аналогичный
-    results = doc.get("results") or []
-    for item in results:
-        fr = item.get("frame")
-        t = (fr / fps) if isinstance(fr, (int, float)) else item.get("t")
-        if t is None: continue
-        for k in ("points", "moving", "tracks", "detections"):
-            for p in (item.get(k) or []):
-                xy = p.get("xy") or p.get("canonical_px") or p.get("world") or p.get("pos")
-                if xy and len(xy) >= 2:
-                    pts.append((float(t), float(xy[0]), float(xy[1])))
-    # формат с верхним "tracks": [{points:[{t,xy}]}]
-    for tr in (doc.get("tracks") or doc.get("moving") or []):
-        for p in (tr.get("points") or []):
-            t = p.get("t"); xy = p.get("xy") or p.get("canonical_px")
-            if t is not None and xy:
-                pts.append((float(t), float(xy[0]), float(xy[1])))
-    if pts:
-        out["t_min"] = min(p[0] for p in pts)
-        out["t_max"] = max(p[0] for p in pts)
-    else:
-        out["t_min"] = start_sec
-        out["t_max"] = start_sec
-    # Учитываем только точки внутри окна оценки.
-    win_pts = [p for p in pts if 0.0 <= p[0] <= end_sec]
-    out["total_pts"] = len(win_pts)
-    for gp in gt_pts:
-        sid = gp["slot_id"]; gx, gy = gp["world_xy"]
-        near = [math.hypot(p[1] - gx, p[2] - gy) for p in win_pts]
-        n_near = sum(1 for d in near if d <= 200.0)
-        out["per_slot"][sid] = {
-            "n_near": n_near,
-            "nearest_px": min(near) if near else None,
-        }
-    return out
 
 
 def gen_variants(max_n: int) -> list[dict]:
