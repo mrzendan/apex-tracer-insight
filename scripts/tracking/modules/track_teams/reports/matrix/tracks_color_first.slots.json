@@ -7,11 +7,7 @@
       "name": "Team 1",
       "color": "#11758e",
       "anchor_conf": "MED",
-<<<<<<< HEAD
-      "wiped_at_t": 1035.53
-=======
-      "wiped_at_t": 1148.15
->>>>>>> 59d01949 (ignore matrix run artifacts)
+      "wiped_at_t": 962.96
     },
     {
       "slot_id": "slot_2",
@@ -20,7 +16,7 @@
       "name": "Team 2",
       "color": "#194061",
       "anchor_conf": "LOW",
-      "wiped_at_t": 969.97
+      "wiped_at_t": 970.97
     },
     {
       "slot_id": "slot_3",
@@ -29,11 +25,7 @@
       "name": "Team 3",
       "color": "#325bcc",
       "anchor_conf": "HIGH",
-<<<<<<< HEAD
-      "wiped_at_t": 950.9
-=======
-      "wiped_at_t": 969.97
->>>>>>> 59d01949 (ignore matrix run artifacts)
+      "wiped_at_t": 961.96
     },
     {
       "slot_id": "slot_4",
@@ -42,7 +34,7 @@
       "name": "Team 4",
       "color": "#402d56",
       "anchor_conf": "HIGH",
-      "wiped_at_t": null
+      "wiped_at_t": 970.97
     },
     {
       "slot_id": "slot_5",
@@ -51,7 +43,7 @@
       "name": "Team 5",
       "color": "#7a4278",
       "anchor_conf": "LOW",
-      "wiped_at_t": 969.97
+      "wiped_at_t": 958.96
     },
     {
       "slot_id": "slot_6",
@@ -60,11 +52,7 @@
       "name": "Team 6",
       "color": "#ad2f55",
       "anchor_conf": "HIGH",
-<<<<<<< HEAD
-      "wiped_at_t": 580.58
-=======
-      "wiped_at_t": 969.97
->>>>>>> 59d01949 (ignore matrix run artifacts)
+      "wiped_at_t": 962.96
     },
     {
       "slot_id": "slot_7",
@@ -73,11 +61,7 @@
       "name": "Team 7",
       "color": "#b12f8e",
       "anchor_conf": "LOW",
-<<<<<<< HEAD
-      "wiped_at_t": 594.59
-=======
       "wiped_at_t": 969.97
->>>>>>> 59d01949 (ignore matrix run artifacts)
     },
     {
       "slot_id": "slot_8",
@@ -86,7 +70,7 @@
       "name": "Team 8",
       "color": "#c12210",
       "anchor_conf": "MED",
-      "wiped_at_t": 976.09
+      "wiped_at_t": 969.97
     },
     {
       "slot_id": "slot_9",
@@ -95,7 +79,7 @@
       "name": "Team 9",
       "color": "#cf512b",
       "anchor_conf": "MED",
-      "wiped_at_t": null
+      "wiped_at_t": 959.96
     },
     {
       "slot_id": "slot_10",
@@ -104,7 +88,7 @@
       "name": "Team 10",
       "color": "#742519",
       "anchor_conf": "LOW",
-      "wiped_at_t": null
+      "wiped_at_t": 961.96
     },
     {
       "slot_id": "slot_11",
@@ -113,11 +97,7 @@
       "name": "Team 11",
       "color": "#974312",
       "anchor_conf": "LOW",
-<<<<<<< HEAD
-      "wiped_at_t": 375.38
-=======
-      "wiped_at_t": 970.97
->>>>>>> 59d01949 (ignore matrix run artifacts)
+      "wiped_at_t": 961.96
     },
     {
       "slot_id": "slot_12",
@@ -126,11 +106,7 @@
       "name": "Team 12",
       "color": "#704205",
       "anchor_conf": "HIGH",
-<<<<<<< HEAD
-      "wiped_at_t": 1166.77
-=======
-      "wiped_at_t": 969.97
->>>>>>> 59d01949 (ignore matrix run artifacts)
+      "wiped_at_t": 959.96
     },
     {
       "slot_id": "slot_13",
@@ -139,7 +115,7 @@
       "name": "Team 13",
       "color": "#b37d37",
       "anchor_conf": "MED",
-      "wiped_at_t": 1055.97
+      "wiped_at_t": 962.96
     },
     {
       "slot_id": "slot_14",
@@ -148,7 +124,7 @@
       "name": "Team 14",
       "color": "#8b6e0f",
       "anchor_conf": "LOW",
-      "wiped_at_t": null
+      "wiped_at_t": 962.96
     },
     {
       "slot_id": "slot_15",
@@ -157,11 +133,7 @@
       "name": "Team 15",
       "color": "#51530a",
       "anchor_conf": "MED",
-<<<<<<< HEAD
-      "wiped_at_t": 750.25
-=======
       "wiped_at_t": 969.97
->>>>>>> 59d01949 (ignore matrix run artifacts)
     },
     {
       "slot_id": "slot_16",
@@ -170,7 +142,7 @@
       "name": "Team 16",
       "color": "#484e14",
       "anchor_conf": "LOW",
-      "wiped_at_t": null
+      "wiped_at_t": 959.96
     },
     {
       "slot_id": "slot_17",
@@ -179,7 +151,7 @@
       "name": "Team 17",
       "color": "#718746",
       "anchor_conf": "LOW",
-      "wiped_at_t": 969.97
+      "wiped_at_t": 962.96
     },
     {
       "slot_id": "slot_18",
@@ -188,11 +160,7 @@
       "name": "Team 18",
       "color": "#38773b",
       "anchor_conf": "MED",
-<<<<<<< HEAD
-      "wiped_at_t": 900.9
-=======
-      "wiped_at_t": 969.97
->>>>>>> 59d01949 (ignore matrix run artifacts)
+      "wiped_at_t": 962.96
     },
     {
       "slot_id": "slot_19",
@@ -201,7 +169,7 @@
       "name": "Team 19",
       "color": "#2d4f1c",
       "anchor_conf": "HIGH",
-      "wiped_at_t": 1065.06
+      "wiped_at_t": 959.96
     },
     {
       "slot_id": "slot_20",
@@ -210,11 +178,7 @@
       "name": "Team 20",
       "color": "#145a47",
       "anchor_conf": "HIGH",
-<<<<<<< HEAD
-      "wiped_at_t": 723.91
-=======
-      "wiped_at_t": 970.97
->>>>>>> 59d01949 (ignore matrix run artifacts)
+      "wiped_at_t": 961.96
     }
   ]
 }
