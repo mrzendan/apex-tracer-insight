@@ -97,13 +97,16 @@ AXES = [
                                                  ("ds=color",  "color_first"),
                                                  ("ds=hybrid", "hybrid")]),
     ("frame_step",                             [("fs=15", 15), ("fs=30", 30), ("fs=60", 60)]),
-    ("da_weights.gate_radius_mult",            [("gr=0.8", 0.8), ("gr=1.2", 1.2), ("gr=1.6", 1.6)]),
-    ("da_weights.delta_color_mismatch",        [("dc=3", 3.0), ("dc=5", 5.0), ("dc=8", 8.0)]),
-    ("tracking.init_warmup_sec",               [("iw=0", 0.0), ("iw=10", 10.0), ("iw=30", 30.0)]),
-    ("tracking.init_min_score",                [("im=0.2", 0.2), ("im=0.4", 0.4)]),
-    ("slot_tracker.min_tracked_for_active",    [("ma=5", 5), ("ma=15", 15)]),
+    ("da_weights.beta_world",                  [("bw=0.3", 0.3), ("bw=1.0", 1.0), ("bw=2.0", 2.0)]),
+    ("da_weights.gate_radius_mult",            [("gr=0.8", 0.8), ("gr=1.6", 1.6), ("gr=2.5", 2.5)]),
+    ("da_weights.delta_color_mismatch",        [("dc=2", 2.0), ("dc=5", 5.0), ("dc=10", 10.0)]),
+    ("tracking.init_warmup_sec",               [("iw=0", 0.0), ("iw=10", 10.0)]),
+    ("tracking.init_min_score",                [("im=0.1", 0.1), ("im=0.3", 0.3)]),
+    ("slot_tracker.min_tracked_for_active",    [("ma=3", 3), ("ma=10", 10)]),
+    ("detection.min_area_px",                  [("mi=15", 15), ("mi=40", 40), ("mi=80", 80)]),
+    ("detection.morph_kernel",                 [("mk=1", 1), ("mk=3", 3)]),
     ("slot_tracker.near_anchor_radius_canonical_px",
-                                                [("na=80", 80.0), ("na=120", 120.0), ("na=200", 200.0)]),
+                                                [("na=120", 120.0), ("na=250", 250.0), ("na=400", 400.0)]),
 ]
 
 
@@ -235,7 +238,7 @@ def main() -> int:
     ap.add_argument("--gt-cutoff", type=float, default=30.5)
     ap.add_argument("--match-px", type=float, default=100.0, help="d_px <= этого = «корректно»")
     ap.add_argument("--jobs", type=int, default=8, help="параллельные процессы (1..15)")
-    ap.add_argument("--max-variants", type=int, default=60)
+    ap.add_argument("--max-variants", type=int, default=120)
     ap.add_argument("--out-dir", default=str(MOD / "reports" / "sweep_initial"))
     ap.add_argument("--keep-intermediate", action="store_true",
                     help="не удалять _tracks/_configs/_logs после прогона")
