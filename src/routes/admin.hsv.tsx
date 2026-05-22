@@ -295,6 +295,116 @@ function HsvAdmin() {
   const importInputRef = useRef<HTMLInputElement>(null);
   const [imgReady, setImgReady] = useState(false);
 
+  // ---- Compare-colors tool state ----
+  const [compareOpen, setCompareOpen] = useState(false);
+  const otherCandidates = useMemo(() => teamList.filter((t) => t.id !== teamId), [teamList, teamId]);
+  const [otherId, setOtherId] = useState<string>(otherCandidates[0]?.id ?? "");
+  useEffect(() => {
+    if (!otherCandidates.some((t) => t.id === otherId)) setOtherId(otherCandidates[0]?.id ?? "");
+  }, [otherCandidates, otherId]);
+  const compareARef = useRef<HTMLCanvasElement>(null);
+  const compareBRef = useRef<HTMLCanvasElement>(null);
+  const compareOverlapRef = useRef<HTMLCanvasElement>(null);
+  const [compareStats, setCompareStats] = useState<{ a: number; b: number; overlap: number }>({ a: 0, b: 0, overlap: 0 });
+  const [savCache, setSavCache] = useState<{ frameId: string; sav: Int32Array; src: ImageData } | null>(null);
+  const [tuning, setTuning] = useState(false);
+  const [tuneReport, setTuneReport] = useState<string>("");
+
+  // Build SAV once per frame (used by Compare & Auto-tune).
+  useEffect(() => {
+    if (!imgReady) return;
+    const off = sampleCanvasRef.current; if (!off) return;
+    const ctx = off.getContext("2d")!;
+    const src = ctx.getImageData(0, 0, off.width, off.height);
+    setSavCache({ frameId: frame.id, sav: buildHsvVolume(src), src });
+  }, [imgReady, frame.id]);
+
+  // Re-render comparison panel when inputs change.
+  useEffect(() => {
+    if (!compareOpen || !savCache || !otherId) return;
+    const other = teamList.find((t) => t.id === otherId);
+    if (!other) return;
+    const pA = preset;
+    const pB = presets[presetKey(other.id, frame.id)] ?? presetFromColor(other.color);
+    const cA = compareARef.current, cB = compareBRef.current, cO = compareOverlapRef.current;
+    const off = sampleCanvasRef.current;
+    if (!cA || !cB || !cO || !off) return;
+    [cA, cB, cO].forEach((c) => { c.width = off.width; c.height = off.height; });
+    const [ra, ga, ba] = hexToRgb(teamSwatch(team.id));
+    const [rb, gb, bb] = hexToRgb(teamSwatch(other.id));
+    const aPx = renderMask(savCache.src, cA, pA, [ra, ga, ba]);
+    const bPx = renderMask(savCache.src, cB, pB, [rb, gb, bb]);
+    // overlap mask: pixels matched by BOTH
+    const ctx = cO.getContext("2d")!;
+    const out = ctx.createImageData(cO.width, cO.height);
+    let overlap = 0;
+    const src = savCache.src;
+    for (let i = 0; i < src.data.length; i += 4) {
+      const [h, s, v] = rgbToHsvCv(src.data[i], src.data[i + 1], src.data[i + 2]);
+      const inA = h >= pA.h[0] && h <= pA.h[1] && s >= pA.s[0] && s <= pA.s[1] && v >= pA.v[0] && v <= pA.v[1];
+      const inB = h >= pB.h[0] && h <= pB.h[1] && s >= pB.s[0] && s <= pB.s[1] && v >= pB.v[0] && v <= pB.v[1];
+      if (inA && inB) { out.data[i] = 240; out.data[i + 1] = 80; out.data[i + 2] = 80; overlap++; }
+      else if (inA)    { out.data[i] = ra;  out.data[i + 1] = ga;  out.data[i + 2] = ba; }
+      else if (inB)    { out.data[i] = rb;  out.data[i + 1] = gb;  out.data[i + 2] = bb; }
+      else             { out.data[i] = 12;  out.data[i + 1] = 12;  out.data[i + 2] = 12; }
+      out.data[i + 3] = 255;
+    }
+    ctx.putImageData(out, 0, 0);
+    setCompareStats({ a: aPx, b: bPx, overlap });
+  }, [compareOpen, savCache, otherId, presets, preset, frame.id, teamId, teamList, savedColors]);
+
+  const runAutoTune = () => {
+    if (!savCache) return;
+    setTuning(true);
+    setTuneReport("Scanning HSV cuboids…");
+    // Build rival SAV by accumulating all OTHER teams' counts into one combined SAV
+    // → cheap "any-other-team" overlap proxy. We just sum per-team querySAV at scoring time.
+    // For O(1) per candidate, we instead compute rivalSav by re-using main sav with a mask:
+    // since per-team masks are disjoint cuboids in HSV space, sum of querySAV over other
+    // teams equals the count of image pixels matched by ANY other team — but those teams
+    // may overlap, so it's a (conservative) upper bound, which is what we want to minimize.
+    setTimeout(() => {
+      const seed = preset;
+      // Score against ALL other teams as rivals — combine cuboids by querying each.
+      const rivals = teamList.filter((t) => t.id !== teamId).map((t) =>
+        presets[presetKey(t.id, frame.id)] ?? presetFromColor(t.color));
+      const sav = savCache.sav;
+      // Custom search that scores per-candidate against all rivals.
+      const hC = (seed.h[0] + seed.h[1]) / 2;
+      const sC = (seed.s[0] + seed.s[1]) / 2;
+      const vC = (seed.v[0] + seed.v[1]) / 2;
+      const hWs = [4, 6, 8, 10];
+      const sWs = [40, 60, 80];
+      const vWs = [40, 60, 80];
+      const hOff = [-6, -3, 0, 3, 6];
+      const sOff = [-30, 0, 30];
+      const vOff = [-30, 0, 30];
+      let bestScore = -Infinity, best: Preset = seed, bestOwn = 0, bestRival = 0, tested = 0;
+      for (const hW of hWs) for (const hO of hOff)
+      for (const sW of sWs) for (const sO of sOff)
+      for (const vW of vWs) for (const vO of vOff) {
+        const p: Preset = {
+          h: [Math.max(0, Math.round(hC + hO - hW)), Math.min(179, Math.round(hC + hO + hW))],
+          s: [Math.max(0, Math.round(sC + sO - sW)), Math.min(255, Math.round(sC + sO + sW))],
+          v: [Math.max(40, Math.round(vC + vO - vW)), Math.min(255, Math.round(vC + vO + vW))],
+        };
+        const own = querySAV(sav, p);
+        if (own < 20) continue;
+        let rival = 0;
+        for (const r of rivals) rival += querySAV(sav, r) > 0 ? querySAV(sav, intersect(p, r)) : 0;
+        const score = own - 3 * rival;
+        tested++;
+        if (score > bestScore) { bestScore = score; best = p; bestOwn = own; bestRival = rival; }
+      }
+      setPresets((prev) => ({ ...prev, [k]: best }));
+      setTuneReport(
+        `Tested ${tested.toLocaleString()} cuboids · own=${bestOwn} px · rival overlap=${bestRival} px ` +
+        `· H[${best.h[0]}–${best.h[1]}] S[${best.s[0]}–${best.s[1]}] V[${best.v[0]}–${best.v[1]}]`,
+      );
+      setTuning(false);
+    }, 0);
+  };
+
   useEffect(() => {
     setImgReady(false);
     const img = new Image();
