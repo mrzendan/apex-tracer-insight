@@ -809,6 +809,8 @@ def _associate_greedy(candidates, slot_trackers, t_now, weights,
         gamma = float(w.get("gamma_shape", 0.3))
         delta = float(w.get("delta_color_mismatch", 0.5))
         eps = float(w.get("eps_hysteresis", 0.2))
+        eps_iou = float(w.get("eps_iou_bonus", 0.6))
+        iou_gate = float(w.get("iou_gate", 0.10))
         gate_mult = float(w.get("gate_radius_mult", 1.0)) * dyn_gate_shrink
         fallback_gate_px = float(w.get("fallback_gate_canonical_px", 200.0))
         # δ ≥ 1.0 — фактически запрет кросс-цвета (как color_first.yaml).
@@ -840,6 +842,12 @@ def _associate_greedy(candidates, slot_trackers, t_now, weights,
                 cfx, cfy = cand["frame_px"]
                 if math.hypot(cfx - lfp[0], cfy - lfp[1]) < 25.0:
                     c -= eps
+            prev_bb = getattr(st, "last_bbox", None)
+            cand_bb = cand.get("bbox")
+            if prev_bb is not None and cand_bb is not None:
+                iou = _bbox_iou_xywh(prev_bb, cand_bb)
+                if iou >= iou_gate:
+                    c -= eps_iou * iou
             pairs.append((max(0.0, c), st, j))
     pairs.sort(key=lambda p: p[0])
     # Для near-miss: для каждого cand_j собираем минимальный cost каждого слота.
