@@ -438,12 +438,12 @@ def detect_team_blobs(frame_bgr: np.ndarray, teams: list[TeamCfg], det_cfg: dict
             kernel_t = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (tk, tk))
         else:
             kernel_t = kernel
-        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
-        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel_t)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel_t)
         cnts, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         for c in cnts:
             area = cv2.contourArea(c)
-            if area < min_a or area > max_a:
+            if area < tmin or area > tmax:
                 continue
             x, y, w, h = cv2.boundingRect(c)
             M = cv2.moments(c)
