@@ -30,6 +30,19 @@ $env:PYTHONUTF8 = "1"
 $repo = (git rev-parse --show-toplevel).Trim()
 Set-Location $repo
 
+function Resolve-ExistingPath($label, $path) {
+  if ($path -eq "" -or -not (Test-Path -LiteralPath $path)) {
+    Write-Host "[matrix] $label не найден: $path" -ForegroundColor Red
+    Write-Host "[matrix] Передайте корректный путь, например: -Video C:\path\to\game.mp4" -ForegroundColor Yellow
+    exit 2
+  }
+  return (Resolve-Path -LiteralPath $path).Path
+}
+
+$Video = Resolve-ExistingPath "video" $Video
+$Anchors = Resolve-ExistingPath "anchors" $Anchors
+$Eliminations = Resolve-ExistingPath "eliminations" $Eliminations
+
 $matrix = @(
   @{ tag = "baseline";          config = "scripts/tracking/modules/track_teams/configs/da.baseline.yaml" },
   @{ tag = "color_first";       config = "scripts/tracking/modules/track_teams/configs/da.color_first.yaml" },
@@ -55,8 +68,18 @@ if ($Only -ne "") {
   if (-not $matrix) { Write-Host "[matrix] -Only '$Only' не совпало ни с одним тегом" -ForegroundColor Red; exit 2 }
 }
 
+foreach ($m in $matrix) {
+  $m.config = Resolve-ExistingPath "config '$($m.tag)'" $m.config
+}
+
 $outDir = "scripts/tracking/modules/track_teams/reports/matrix"
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
+
+foreach ($m in $matrix) {
+  Remove-Item -LiteralPath "$outDir/tracks_$($m.tag).json" -ErrorAction SilentlyContinue
+  Remove-Item -LiteralPath "$outDir/tracks_$($m.tag).slots.json" -ErrorAction SilentlyContinue
+  Remove-Item -LiteralPath "$outDir/run_$($m.tag).log" -ErrorAction SilentlyContinue
+}
 
 function Invoke-One($tag, $config) {
   $out = "$outDir/tracks_$tag.json"
