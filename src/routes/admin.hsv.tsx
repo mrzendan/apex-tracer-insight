@@ -156,6 +156,7 @@ function buildHsvVolume(src: ImageData): Int32Array {
   return sav;
 }
 function querySAV(sav: Int32Array, p: Preset): number {
+  if (p.h[0] > p.h[1] || p.s[0] > p.s[1] || p.v[0] > p.v[1]) return 0;
   // Convert HSV ranges (inclusive) to bin indices.
   const h0 = Math.max(0, Math.min(HB - 1, (p.h[0] / 5) | 0));
   const h1 = Math.max(0, Math.min(HB - 1, (p.h[1] / 5) | 0));
