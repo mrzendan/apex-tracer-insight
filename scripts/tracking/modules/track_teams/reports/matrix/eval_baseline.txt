@@ -1,18 +1,22 @@
-[ok] 116 GT pts | coverage=87.9% | id_switches=27 | px_med=63.0
-[ok] -> reports/matrix/eval_baseline.json
-[ok] -> reports/matrix/eval_baseline.txt
-ot_19  switches=3
+GT points:        116
+Coverage:         87.9%
+px error median:  54.8
+px error p95:     150.4
+ID-switches total:27
+
+     slot_11  switches=6
+     slot_20  switches=6
       slot_4  switches=2
-      slot_9  switches=2
      slot_10  switches=2
-     slot_12  switches=2
      slot_14  switches=2
      slot_18  switches=2
-     slot_20  switches=2
       slot_5  switches=1
       slot_8  switches=1
+      slot_9  switches=1
+     slot_12  switches=1
      slot_15  switches=1
      slot_17  switches=1
+     slot_19  switches=1
       slot_1  switches=0
       slot_2  switches=0
       slot_3  switches=0
@@ -22,14 +26,13 @@ ot_19  switches=3
      slot_16  switches=0
 
 Switch events:
-  t=  660.7      slot_4  slot_4 -> slot_20
-  t=  660.7      slot_4  slot_20 -> slot_4
+  t=  660.7      slot_4  slot_4 -> slot_7
+  t=  660.7      slot_4  slot_7 -> slot_4
   t=  660.7      slot_5  slot_3 -> slot_6
   t=  660.7      slot_8  slot_20 -> slot_4
-  t=  660.7      slot_9  slot_7 -> slot_4
-  t=  660.7      slot_9  slot_4 -> slot_9
+  t=  660.7      slot_9  slot_7 -> slot_9
   t=  660.7     slot_10  slot_9 -> slot_14
-  t=  660.7     slot_10  slot_14 -> slot_20
+  t=  660.7     slot_10  slot_14 -> slot_15
   t=  179.2     slot_11  slot_9 -> slot_12
   t=  179.2     slot_11  slot_12 -> slot_17
   t=  300.3     slot_11  slot_17 -> slot_12
@@ -37,15 +40,16 @@ Switch events:
   t=  540.5     slot_11  slot_15 -> slot_12
   t=  540.5     slot_11  slot_12 -> slot_20
   t=  660.7     slot_12  slot_12 -> slot_6
-  t=  660.7     slot_12  slot_6 -> slot_3
   t=  120.1     slot_14  slot_14 -> slot_15
   t=  660.7     slot_14  slot_15 -> slot_14
   t=  660.7     slot_15  slot_16 -> slot_15
-  t=  660.7     slot_17  slot_17 -> slot_7
+  t=  660.7     slot_17  slot_17 -> slot_3
   t=  120.1     slot_18  slot_4 -> slot_18
-  t=  660.7     slot_18  slot_18 -> slot_6
-  t=  660.7     slot_19  slot_19 -> slot_4
-  t=  660.7     slot_19  slot_4 -> slot_19
-  t=  660.7     slot_19  slot_19 -> slot_4
+  t=  660.7     slot_18  slot_18 -> slot_3
+  t=  660.7     slot_19  slot_19 -> slot_9
   t=  300.3     slot_20  slot_20 -> slot_7
   t=  300.3     slot_20  slot_7 -> slot_20
+  t=  300.3     slot_20  slot_20 -> slot_7
+  t=  300.3     slot_20  slot_7 -> slot_20
+  t=  419.4     slot_20  slot_20 -> slot_6
+  t=  419.4     slot_20  slot_6 -> slot_20
