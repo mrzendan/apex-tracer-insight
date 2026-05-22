@@ -123,9 +123,17 @@ if ($Parallel) {
   Write-Host "[matrix] queued $($jobs.Count) jobs - waiting for completion..." -ForegroundColor Yellow
   $jobs | Wait-Job | Out-Null
   $jobs | Receive-Job
+  $failed = @($jobs | Where-Object { $_.State -ne 'Completed' })
   $jobs | Remove-Job
 } else {
   foreach ($m in $matrix) { Invoke-One $m.tag $m.config }
+}
+
+$missing = @($matrix | Where-Object { -not (Test-Path -LiteralPath "$outDir/tracks_$($_.tag).json") })
+if ($missing.Count -gt 0) {
+  Write-Host "[matrix] failed/missing outputs: $($missing.tag -join ', ')" -ForegroundColor Red
+  Write-Host "[matrix] смотрите run_<tag>.log в $outDir" -ForegroundColor Yellow
+  exit 1
 }
 
 # Summary table.
