@@ -1407,12 +1407,15 @@ class SlotTracker:
                                     cand_cy - self.pending_canon[1])
                     if pd < jump_thresh:
                         self.pending_hits += 1
+                        self.pending_age = 0
                     else:
                         self.pending_canon = (cand_cx, cand_cy)
                         self.pending_hits = 1
+                        self.pending_age = 0
                 else:
                     self.pending_canon = (cand_cx, cand_cy)
                     self.pending_hits = 1
+                    self.pending_age = 0
                 if self.pending_hits < self.switch_confirm_frames:
                     # Не двигаем canonical_px, держим прошлый якорь.
                     self.state_reason = f"switch_wait_{self.pending_hits}/{self.switch_confirm_frames}"
@@ -1422,9 +1425,11 @@ class SlotTracker:
                 # Подтверждено — сбрасываем и принимаем как обычно.
                 self.pending_canon = None
                 self.pending_hits = 0
+                self.pending_age = 0
             else:
                 self.pending_canon = None
                 self.pending_hits = 0
+                self.pending_age = 0
             step_budget = max(self.max_center_step_px, 200.0)
             if dist > self.center_deadzone_px:
                 if dist > step_budget:
