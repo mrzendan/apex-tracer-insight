@@ -692,6 +692,8 @@ def associate_hungarian(
         gamma = float(w.get("gamma_shape", 0.3))
         delta = float(w.get("delta_color_mismatch", 0.5))
         eps = float(w.get("eps_hysteresis", 0.2))
+        eps_iou = float(w.get("eps_iou_bonus", 0.6))   # PR-2: bonus for IoU≥iou_gate with prev bbox
+        iou_gate = float(w.get("iou_gate", 0.10))
         gate_mult = float(w.get("gate_radius_mult", 1.0)) * dyn_gate_shrink
         fallback_gate_px = float(w.get("fallback_gate_canonical_px", 200.0))
         # Prediction in canonical px.
@@ -731,6 +733,15 @@ def associate_hungarian(
                 cfx, cfy = cand["frame_px"]
                 if math.hypot(cfx - lfx, cfy - lfy) < 25.0:
                     c -= eps
+            # PR-2: identity anchor — если кандидат сильно перекрывается с прошлым bbox
+            # этого слота, даём ему скидку (предотвращает "перепрыг" на чужую плашку
+            # того же цвета в массовых сценах вроде final-battle).
+            prev_bb = getattr(st, "last_bbox", None)
+            cand_bb = cand.get("bbox")
+            if prev_bb is not None and cand_bb is not None:
+                iou = _bbox_iou_xywh(prev_bb, cand_bb)
+                if iou >= iou_gate:
+                    c -= eps_iou * iou
             cost[i, j] = max(0.0, c)
 
     # Pad to square so unmatched rows/cols are allowed.
