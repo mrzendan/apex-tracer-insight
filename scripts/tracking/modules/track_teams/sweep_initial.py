@@ -177,7 +177,7 @@ def run_one(args, variant, out_dir: Path) -> dict:
 
 
 def evaluate(tracks_file: Path, gt_points: list[dict], match_px: float) -> dict:
-    """Для каждой GT точки находим трек с тем же slot_id в ближайшем по времени кадре,
+    """Для каждой GT-группы находим трек с тем же slot_id в ближайшем по времени кадре,
     считаем d_px. Также находим АБСОЛЮТНО ближайший трек — это «реально кого распознали»."""
     if not tracks_file.exists():
         return {"ok": False, "reason": "no_tracks_file"}
@@ -196,14 +196,15 @@ def evaluate(tracks_file: Path, gt_points: list[dict], match_px: float) -> dict:
     d_list = []
     for gp in gt_points:
         sid = gp["slot_id"]
-        gx, gy = gp["world_xy"]
+        label = gp.get("label", sid)
+        gt_xy = gp.get("points") or [gp["world_xy"]]
         f = nearest(float(gp["t"]))
         own = None; own_d = None
         nearest_tr = None; nearest_d = float("inf")
         for tr in f.get("tracks", []):
             xy = tr.get("canonical_px") or tr.get("world")
             if not xy: continue
-            d = math.hypot(xy[0] - gx, xy[1] - gy)
+            d = min(math.hypot(xy[0] - gx, xy[1] - gy) for gx, gy in gt_xy)
             if d < nearest_d:
                 nearest_d, nearest_tr = d, tr
             if (tr.get("slot_id") or tr.get("team_id")) == sid:
@@ -213,7 +214,7 @@ def evaluate(tracks_file: Path, gt_points: list[dict], match_px: float) -> dict:
         if ok:
             correct += 1
             d_list.append(own_d)
-        per_slot[sid] = {
+        per_slot[label] = {
             "own_d": round(own_d, 1) if own_d is not None else None,
             "ok": ok,
             "nearest_slot": (nearest_tr.get("slot_id") or nearest_tr.get("team_id")) if nearest_tr else None,
