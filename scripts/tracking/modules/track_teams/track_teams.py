@@ -1296,6 +1296,14 @@ class SlotTracker:
         self.consecutive_detections = 0
         # A single miss breaks the "consecutive near-anchor hits" streak.
         self.near_anchor_consecutive = 0
+        # PR-4: a miss is also evidence that the pending switch hypothesis
+        # was wrong — don't keep counting toward confirmation across gaps.
+        if self.pending_canon is not None:
+            self.pending_age += 1
+            if self.pending_age > self.pending_ttl_frames:
+                self.pending_canon = None
+                self.pending_hits = 0
+                self.pending_age = 0
         self.confidence = max(0.1, self.confidence - 0.07)
         # Slowly forget old peak so a one-off rocket ride doesn't keep gate huge forever.
         self.v_observed_peak_px_s *= self.v_observed_decay
