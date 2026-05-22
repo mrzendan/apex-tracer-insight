@@ -1,5 +1,5 @@
 {
-  "tracks_file": "reports/matrix/tracks_color_first.json",
+  "tracks_file": "reports/matrix/tracks_cf_block_color.json",
   "gt_file": "assets/gt_anchors.json",
   "gt_points": 116,
   "coverage_pct": 82.8,
