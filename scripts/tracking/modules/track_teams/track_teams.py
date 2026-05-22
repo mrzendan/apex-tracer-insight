@@ -155,6 +155,16 @@ def teams_from_anchors(path: Path, h_tol: int = 10,
             else:
                 lo = np.array([h_low,  s_lo, v_lo], dtype=np.uint8)
                 hi = np.array([h_high, 255, 255], dtype=np.uint8)
+        # Optional per-team detection overrides from the preset.
+        ov_min_area = ov_max_area = ov_morph = None
+        if hsv_preset and slot_int in hsv_preset:
+            p = hsv_preset[slot_int]
+            if p.get("min_area") is not None:
+                ov_min_area = float(p["min_area"])
+            if p.get("max_area") is not None:
+                ov_max_area = float(p["max_area"])
+            if p.get("morph_kernel") is not None:
+                ov_morph = int(p["morph_kernel"])
         out.append(TeamCfg(
             id=f"slot_{slot_int}",
             name=str(r.get("team_name") or f"Team {slot_int}"),
@@ -163,6 +173,9 @@ def teams_from_anchors(path: Path, h_tol: int = 10,
             color_hex=hex_str,
             slot=slot_int,
             slot_id=f"slot_{slot_int}",
+            min_area=ov_min_area,
+            max_area=ov_max_area,
+            morph_kernel=ov_morph,
         ))
     if hsv_preset:
         used = sum(1 for r in results if r.get("slot") is not None and int(r["slot"]) in hsv_preset)
@@ -397,6 +410,7 @@ def load_anchors(path: Path,
 def detect_team_blobs(frame_bgr: np.ndarray, teams: list[TeamCfg], det_cfg: dict):
     """Возвращает [{team_id, frame_px:(x,y), bbox, angle_frame_deg}]."""
     hsv = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2HSV)
+    lab = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2LAB)
     k = int(det_cfg.get("morph_kernel", 3))
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k))
     min_a = float(det_cfg.get("min_area_px", 60))
@@ -406,15 +420,30 @@ def detect_team_blobs(frame_bgr: np.ndarray, teams: list[TeamCfg], det_cfg: dict
 
     out = []
     for t in teams:
-        mask = cv2.inRange(hsv, t.hsv_lower, t.hsv_upper)
+        m_hsv = cv2.inRange(hsv, t.hsv_lower, t.hsv_upper)
         if t.hsv_lower2 is not None and t.hsv_upper2 is not None:
-            mask |= cv2.inRange(hsv, t.hsv_lower2, t.hsv_upper2)
-        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
-        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+            m_hsv |= cv2.inRange(hsv, t.hsv_lower2, t.hsv_upper2)
+        # PR-1: HSV ∩ LAB with soft fallback to HSV-only when intersection is too sparse.
+        if t.lab_lower is None:
+            t.lab_lower, t.lab_upper = build_lab_range_from_hsv(t.hsv_lower, t.hsv_upper)
+        m_lab = cv2.inRange(lab, t.lab_lower, t.lab_upper)
+        mask = cv2.bitwise_and(m_hsv, m_lab)
+        if cv2.countNonZero(mask) < 8:
+            mask = m_hsv
+        # per-team area/morph overrides
+        tmin = float(t.min_area) if t.min_area is not None else min_a
+        tmax = float(t.max_area) if t.max_area is not None else max_a
+        tk = int(t.morph_kernel) if t.morph_kernel is not None else k
+        if tk != k:
+            kernel_t = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (tk, tk))
+        else:
+            kernel_t = kernel
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel_t)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel_t)
         cnts, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         for c in cnts:
             area = cv2.contourArea(c)
-            if area < min_a or area > max_a:
+            if area < tmin or area > tmax:
                 continue
             x, y, w, h = cv2.boundingRect(c)
             M = cv2.moments(c)
@@ -505,22 +534,36 @@ def detect_candidates_in_minimap_roi(
         return []
     roi = frame_bgr[y0:y1, x0:x1]
     hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+    lab = cv2.cvtColor(roi, cv2.COLOR_BGR2LAB)
     k = int(det_cfg.get("morph_kernel", 3))
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k))
+    base_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k))
     min_a = float(det_cfg.get("min_area_px", 40))
     max_a = float(det_cfg.get("max_area_px", 2400))
     out: list[dict] = []
     for t in teams:
-        mask = cv2.inRange(hsv, t.hsv_lower, t.hsv_upper)
+        m_hsv = cv2.inRange(hsv, t.hsv_lower, t.hsv_upper)
         if t.hsv_lower2 is not None and t.hsv_upper2 is not None:
-            mask |= cv2.inRange(hsv, t.hsv_lower2, t.hsv_upper2)
-        if k > 1:
+            m_hsv |= cv2.inRange(hsv, t.hsv_lower2, t.hsv_upper2)
+        # PR-1: HSV ∩ LAB with soft fallback to HSV-only when intersection is too sparse.
+        if t.lab_lower is None:
+            t.lab_lower, t.lab_upper = build_lab_range_from_hsv(t.hsv_lower, t.hsv_upper)
+        m_lab = cv2.inRange(lab, t.lab_lower, t.lab_upper)
+        mask = cv2.bitwise_and(m_hsv, m_lab)
+        if cv2.countNonZero(mask) < 8:
+            mask = m_hsv
+        # per-team area/morph overrides
+        tmin = float(t.min_area) if t.min_area is not None else min_a
+        tmax = float(t.max_area) if t.max_area is not None else max_a
+        tk = int(t.morph_kernel) if t.morph_kernel is not None else k
+        kernel = base_kernel if tk == k else cv2.getStructuringElement(
+            cv2.MORPH_ELLIPSE, (tk, tk))
+        if tk > 1:
             mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
             mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
         cnts, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         for c in cnts:
             area = float(cv2.contourArea(c))
-            if area < min_a or area > max_a:
+            if area < tmin or area > tmax:
                 continue
             x, y, w, h = cv2.boundingRect(c)
             M = cv2.moments(c)
@@ -557,6 +600,24 @@ def _eff_w(base: dict, overrides: dict, slot_int) -> dict:
     merged = dict(base)
     merged.update(ov)
     return merged
+
+
+def _bbox_iou_xywh(a: tuple, b: tuple) -> float:
+    """IoU of two bboxes in (x, y, w, h) form. PR-2 identity anchor."""
+    if not a or not b:
+        return 0.0
+    ax, ay, aw, ah = a
+    bx, by, bw, bh = b
+    a_x2, a_y2 = ax + aw, ay + ah
+    b_x2, b_y2 = bx + bw, by + bh
+    ix1 = max(ax, bx); iy1 = max(ay, by)
+    ix2 = min(a_x2, b_x2); iy2 = min(a_y2, b_y2)
+    iw = max(0, ix2 - ix1); ih = max(0, iy2 - iy1)
+    inter = float(iw * ih)
+    if inter <= 0:
+        return 0.0
+    union = float(aw * ah + bw * bh - inter)
+    return inter / union if union > 1e-6 else 0.0
 
 
 def compute_late_game_gate_shrink(slot_trackers: dict, t_now: float,
@@ -649,6 +710,8 @@ def associate_hungarian(
         gamma = float(w.get("gamma_shape", 0.3))
         delta = float(w.get("delta_color_mismatch", 0.5))
         eps = float(w.get("eps_hysteresis", 0.2))
+        eps_iou = float(w.get("eps_iou_bonus", 0.6))   # PR-2: bonus for IoU≥iou_gate with prev bbox
+        iou_gate = float(w.get("iou_gate", 0.10))
         gate_mult = float(w.get("gate_radius_mult", 1.0)) * dyn_gate_shrink
         fallback_gate_px = float(w.get("fallback_gate_canonical_px", 200.0))
         # Prediction in canonical px.
@@ -688,6 +751,15 @@ def associate_hungarian(
                 cfx, cfy = cand["frame_px"]
                 if math.hypot(cfx - lfx, cfy - lfy) < 25.0:
                     c -= eps
+            # PR-2: identity anchor — если кандидат сильно перекрывается с прошлым bbox
+            # этого слота, даём ему скидку (предотвращает "перепрыг" на чужую плашку
+            # того же цвета в массовых сценах вроде final-battle).
+            prev_bb = getattr(st, "last_bbox", None)
+            cand_bb = cand.get("bbox")
+            if prev_bb is not None and cand_bb is not None:
+                iou = _bbox_iou_xywh(prev_bb, cand_bb)
+                if iou >= iou_gate:
+                    c -= eps_iou * iou
             cost[i, j] = max(0.0, c)
 
     # Pad to square so unmatched rows/cols are allowed.
@@ -737,6 +809,8 @@ def _associate_greedy(candidates, slot_trackers, t_now, weights,
         gamma = float(w.get("gamma_shape", 0.3))
         delta = float(w.get("delta_color_mismatch", 0.5))
         eps = float(w.get("eps_hysteresis", 0.2))
+        eps_iou = float(w.get("eps_iou_bonus", 0.6))
+        iou_gate = float(w.get("iou_gate", 0.10))
         gate_mult = float(w.get("gate_radius_mult", 1.0)) * dyn_gate_shrink
         fallback_gate_px = float(w.get("fallback_gate_canonical_px", 200.0))
         # δ ≥ 1.0 — фактически запрет кросс-цвета (как color_first.yaml).
@@ -768,6 +842,12 @@ def _associate_greedy(candidates, slot_trackers, t_now, weights,
                 cfx, cfy = cand["frame_px"]
                 if math.hypot(cfx - lfp[0], cfy - lfp[1]) < 25.0:
                     c -= eps
+            prev_bb = getattr(st, "last_bbox", None)
+            cand_bb = cand.get("bbox")
+            if prev_bb is not None and cand_bb is not None:
+                iou = _bbox_iou_xywh(prev_bb, cand_bb)
+                if iou >= iou_gate:
+                    c -= eps_iou * iou
             pairs.append((max(0.0, c), st, j))
     pairs.sort(key=lambda p: p[0])
     # Для near-miss: для каждого cand_j собираем минимальный cost каждого слота.
@@ -813,6 +893,9 @@ class SlotTracker:
         # placard motion_detect originally locked onto.
         self.init_canonical_px: Optional[tuple[float, float]] = init_canonical_px
         self.last_frame_px: Optional[tuple[float, float]] = None
+        # PR-2: last bbox in frame px (from detect-first candidate), used as
+        # identity anchor in the association cost.
+        self.last_bbox: Optional[tuple[int, int, int, int]] = None
         # ROI / detection
         self.roi_size: int = int(slot_cfg.get("roi_size", 220))
         self.min_roi: int = int(slot_cfg.get("min_roi", 120))
@@ -1299,6 +1382,34 @@ class SlotTracker:
             dx = cand_cx - last_cx
             dy = cand_cy - last_cy
             dist = math.hypot(dx, dy)
+            # PR-2: pending-switch hysteresis. Если кандидат скакнул дальше
+            # jump_switch_threshold_px от прошлого центра — НЕ принимаем сразу,
+            # требуем switch_confirm_frames подряд таких же скачков рядом.
+            jump_thresh = max(self.jump_switch_threshold_px, 2.0 * self.max_center_step_px)
+            if dist > jump_thresh:
+                if self.pending_canon is not None:
+                    pd = math.hypot(cand_cx - self.pending_canon[0],
+                                    cand_cy - self.pending_canon[1])
+                    if pd < jump_thresh:
+                        self.pending_hits += 1
+                    else:
+                        self.pending_canon = (cand_cx, cand_cy)
+                        self.pending_hits = 1
+                else:
+                    self.pending_canon = (cand_cx, cand_cy)
+                    self.pending_hits = 1
+                if self.pending_hits < self.switch_confirm_frames:
+                    # Не двигаем canonical_px, держим прошлый якорь.
+                    self.state_reason = f"switch_wait_{self.pending_hits}/{self.switch_confirm_frames}"
+                    self.confidence = max(0.3, self.confidence * 0.85)
+                    # Возвращаем snapshot без обновления позиции.
+                    return self._snapshot()
+                # Подтверждено — сбрасываем и принимаем как обычно.
+                self.pending_canon = None
+                self.pending_hits = 0
+            else:
+                self.pending_canon = None
+                self.pending_hits = 0
             step_budget = max(self.max_center_step_px, 200.0)
             if dist > self.center_deadzone_px:
                 if dist > step_budget:
@@ -1320,6 +1431,10 @@ class SlotTracker:
             self.canonical_px = (cand_cx, cand_cy)
 
         self.last_frame_px = (det_fx, det_fy)
+        # PR-2: запомнить bbox кандидата как identity-якорь для следующих кадров.
+        cand_bb = det.get("bbox")
+        if cand_bb is not None:
+            self.last_bbox = tuple(int(v) for v in cand_bb)
         self.state = "tracked"
         self.canonical_px_stale = False
         self.last_seen_t = t_now
@@ -1562,11 +1677,18 @@ def main():
             if cand.exists():
                 try:
                     raw_preset = json.loads(cand.read_text(encoding="utf-8"))
-                    hsv_preset = {
-                        int(t["slot"]): {"h": t["h"], "s": t["s"], "v": t["v"]}
-                        for t in raw_preset.get("teams", [])
-                        if t.get("slot") is not None and "h" in t and "s" in t and "v" in t
-                    }
+                    hsv_preset = {}
+                    for t in raw_preset.get("teams", []):
+                        if t.get("slot") is None or "h" not in t or "s" not in t or "v" not in t:
+                            continue
+                        entry: dict = {"h": t["h"], "s": t["s"], "v": t["v"]}
+                        # PR-1: per-team detection overrides (good_tracker parity).
+                        for k in ("min_area", "max_area", "morph_kernel",
+                                  "morph_kernel_size", "outlier_threshold_ratio"):
+                            if k in t and t[k] is not None:
+                                key = "morph_kernel" if k == "morph_kernel_size" else k
+                                entry[key] = t[k]
+                        hsv_preset[int(t["slot"])] = entry
                     preset_src = cand
                     break
                 except Exception as e:
