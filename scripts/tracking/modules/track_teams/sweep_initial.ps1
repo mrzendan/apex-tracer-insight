@@ -1,4 +1,5 @@
 # PowerShell wrapper для sweep_initial.py.
+# (resync)
 # Пример:
 #   powershell -ExecutionPolicy Bypass -File scripts\tracking\modules\track_teams\sweep_initial.ps1 `
 #     -Video "D:\path\game.mp4" -Jobs 10 -MaxVariants 80
