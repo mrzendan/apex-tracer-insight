@@ -37,6 +37,8 @@ import time
 from copy import deepcopy
 from pathlib import Path
 
+from anchor_diagnostics import group_gt_points, slot_sort_key, summarize_anchor_coverage
+
 try:
     sys.stdout.reconfigure(encoding="utf-8")
 except Exception:
@@ -117,57 +119,6 @@ def set_path(d: dict, path: str, value):
     d[parts[-1]] = value
 
 
-def diagnose_anchors(anchors_path: Path, gt_pts: list[dict], end_sec: float) -> dict:
-    """Считает: (a) временной охват anchors-файла, (b) сколько motion-точек в радиусе
-    200px вокруг каждой GT-позиции в окне [0..end_sec]. Если для слота n_near=0,
-    то ни один параметр track_teams не поможет — данных просто нет."""
-    out = {"t_min": 0.0, "t_max": 0.0, "total_pts": 0, "per_slot": {}}
-    try:
-        doc = json.loads(anchors_path.read_text(encoding="utf-8"))
-    except Exception as e:
-        out["error"] = f"parse:{e}"
-        return out
-    fps = float(doc.get("fps") or 60.0)
-    start_sec = float(doc.get("start_sec") or 0.0)
-    # Собираем все (t_sec, x, y) точки из всех известных форматов.
-    pts = []  # list[(t, x, y)]
-    # формат motion_detect: results -> [{frame, points:[{xy:[x,y], ...}]}] либо аналогичный
-    results = doc.get("results") or []
-    for item in results:
-        fr = item.get("frame")
-        t = (fr / fps) if isinstance(fr, (int, float)) else item.get("t")
-        if t is None: continue
-        for k in ("points", "moving", "tracks", "detections"):
-            for p in (item.get(k) or []):
-                xy = p.get("xy") or p.get("canonical_px") or p.get("world") or p.get("pos")
-                if xy and len(xy) >= 2:
-                    pts.append((float(t), float(xy[0]), float(xy[1])))
-    # формат с верхним "tracks": [{points:[{t,xy}]}]
-    for tr in (doc.get("tracks") or doc.get("moving") or []):
-        for p in (tr.get("points") or []):
-            t = p.get("t"); xy = p.get("xy") or p.get("canonical_px")
-            if t is not None and xy:
-                pts.append((float(t), float(xy[0]), float(xy[1])))
-    if pts:
-        out["t_min"] = min(p[0] for p in pts)
-        out["t_max"] = max(p[0] for p in pts)
-    else:
-        out["t_min"] = start_sec
-        out["t_max"] = start_sec
-    # Учитываем только точки внутри окна оценки.
-    win_pts = [p for p in pts if 0.0 <= p[0] <= end_sec]
-    out["total_pts"] = len(win_pts)
-    for gp in gt_pts:
-        sid = gp["slot_id"]; gx, gy = gp["world_xy"]
-        near = [math.hypot(p[1] - gx, p[2] - gy) for p in win_pts]
-        n_near = sum(1 for d in near if d <= 200.0)
-        out["per_slot"][sid] = {
-            "n_near": n_near,
-            "nearest_px": min(near) if near else None,
-        }
-    return out
-
-
 def gen_variants(max_n: int) -> list[dict]:
     """Генерируем сетку. Стратегия: берём первые max_n из cartesian (детерминированно)."""
     combos = list(itertools.product(*[ax[1] for ax in AXES]))
@@ -226,7 +177,7 @@ def run_one(args, variant, out_dir: Path) -> dict:
 
 
 def evaluate(tracks_file: Path, gt_points: list[dict], match_px: float) -> dict:
-    """Для каждой GT точки находим трек с тем же slot_id в ближайшем по времени кадре,
+    """Для каждой GT-группы находим трек с тем же slot_id в ближайшем по времени кадре,
     считаем d_px. Также находим АБСОЛЮТНО ближайший трек — это «реально кого распознали»."""
     if not tracks_file.exists():
         return {"ok": False, "reason": "no_tracks_file"}
@@ -245,14 +196,15 @@ def evaluate(tracks_file: Path, gt_points: list[dict], match_px: float) -> dict:
     d_list = []
     for gp in gt_points:
         sid = gp["slot_id"]
-        gx, gy = gp["world_xy"]
+        label = gp.get("label", sid)
+        gt_xy = gp.get("points") or [gp["world_xy"]]
         f = nearest(float(gp["t"]))
         own = None; own_d = None
         nearest_tr = None; nearest_d = float("inf")
         for tr in f.get("tracks", []):
             xy = tr.get("canonical_px") or tr.get("world")
             if not xy: continue
-            d = math.hypot(xy[0] - gx, xy[1] - gy)
+            d = min(math.hypot(xy[0] - gx, xy[1] - gy) for gx, gy in gt_xy)
             if d < nearest_d:
                 nearest_d, nearest_tr = d, tr
             if (tr.get("slot_id") or tr.get("team_id")) == sid:
@@ -262,7 +214,7 @@ def evaluate(tracks_file: Path, gt_points: list[dict], match_px: float) -> dict:
         if ok:
             correct += 1
             d_list.append(own_d)
-        per_slot[sid] = {
+        per_slot[label] = {
             "own_d": round(own_d, 1) if own_d is not None else None,
             "ok": ok,
             "nearest_slot": (nearest_tr.get("slot_id") or nearest_tr.get("team_id")) if nearest_tr else None,
@@ -306,16 +258,18 @@ def main() -> int:
             print(f"[err] {label} не найден: {p}", file=sys.stderr); return 2
 
     gt_all = json.loads(Path(args.gt).read_text(encoding="utf-8"))["points"]
-    gt_pts = [p for p in gt_all if float(p["t"]) <= args.gt_cutoff]
-    print(f"[sweep] GT в окне [0..{args.gt_cutoff}s]: {len(gt_pts)} точек")
+    gt_raw = [p for p in gt_all if float(p["t"]) <= args.gt_cutoff]
+    gt_pts = group_gt_points(gt_raw)
+    print(f"[sweep] GT в окне [0..{args.gt_cutoff}s]: {len(gt_raw)} точек, "
+          f"{len(gt_pts)} групп для оценки")
 
     # ── INPUT SANITY: проверяем, что anchors покрывают окно оценки ──
-    anchors_diag = diagnose_anchors(Path(args.anchors), gt_pts, args.end)
+    anchors_diag = summarize_anchor_coverage(Path(args.anchors), gt_raw, args.end)
     print(f"[sweep] anchors окно: t=[{anchors_diag['t_min']:.1f}..{anchors_diag['t_max']:.1f}]s, "
           f"всего точек={anchors_diag['total_pts']}")
     if anchors_diag["t_max"] < args.end or anchors_diag["t_min"] > 0.5:
         print(f"[WARN] anchors НЕ покрывают [0..{args.end}]s — пересобери motion_tracks "
-              f"с -StartSec 0 -Window {int(args.end*60)+60}!", file=sys.stderr)
+              f"с -StartSec 0 -Window {anchors_diag.get('suggested_window_step5', 390)} -Step 5!", file=sys.stderr)
 
     variants = gen_variants(args.max_variants)
     print(f"[sweep] вариантов: {len(variants)}, jobs={args.jobs}")
@@ -348,7 +302,7 @@ def main() -> int:
     winner = results[0] if results and results[0].get("eval", {}).get("ok") else None
 
     # Per-slot: для каждого слота — лучший вариант (минимальный own_d среди ok=True).
-    slot_ids = [gp["slot_id"] for gp in gt_pts]
+    slot_ids = [gp["label"] for gp in gt_pts]
     per_slot_best = {}
     for sid in slot_ids:
         best = None
@@ -363,6 +317,7 @@ def main() -> int:
         "video": args.video,
         "end_sec": args.end,
         "match_px": args.match_px,
+        "gt_points_raw": len(gt_raw),
         "gt_points": len(gt_pts),
         "variants_total": len(variants),
         "total_duration_s": total_dt,
@@ -387,7 +342,7 @@ def main() -> int:
     lines = []
     lines.append(f"sweep_initial: {len(variants)} variants, end={args.end}s, "
                  f"match_px={args.match_px}, jobs={args.jobs}, total={total_dt}s")
-    lines.append(f"GT points: {len(gt_pts)}\n")
+    lines.append(f"GT points: {len(gt_raw)} raw, {len(gt_pts)} grouped\n")
     lines.append("TOP-10 by (correct desc, d_med asc):")
     lines.append(f"  {'rank':>4} {'correct':>8} {'d_med':>7} {'d_mean':>7}  tag")
     for i, r in enumerate(report["top10"], 1):
@@ -396,7 +351,7 @@ def main() -> int:
     lines.append("")
     lines.append("PER-SLOT BEST (минимальный d_px среди вариантов где slot правильный):")
     lines.append(f"  {'slot':<10} {'d_px':>7}  best_variant")
-    for sid in sorted(slot_ids, key=lambda s: int(s.split("_")[-1])):
+    for sid in sorted(slot_ids, key=slot_sort_key):
         b = per_slot_best.get(sid)
         if b is None:
             lines.append(f"  {sid:<10} {'—':>7}  (никто не справился)")
@@ -407,7 +362,7 @@ def main() -> int:
         lines.append(f"WINNER (overall): {winner['tag']}")
         ps = winner["eval"]["per_slot"]
         lines.append("  per-slot breakdown:")
-        for sid in sorted(slot_ids, key=lambda s: int(s.split("_")[-1])):
+        for sid in sorted(slot_ids, key=slot_sort_key):
             d = ps.get(sid, {})
             mark = "OK " if d.get("ok") else "BAD"
             extra = ""
@@ -420,20 +375,21 @@ def main() -> int:
     lines.append(f"  anchors file t=[{anchors_diag['t_min']:.1f}..{anchors_diag['t_max']:.1f}]s, "
                  f"total_pts={anchors_diag['total_pts']}")
     lines.append(f"  {'slot':<10} {'pts<=200px':>11}  {'nearest_pt_px':>14}")
-    for sid in sorted(slot_ids, key=lambda s: int(s.split("_")[-1])):
-        d = anchors_diag["per_slot"].get(sid, {"n_near": 0, "nearest_px": None})
+    for sid in sorted(slot_ids, key=slot_sort_key):
+        base_sid = sid.split("@")[0]
+        d = anchors_diag["per_slot"].get(base_sid, {"n_near": 0, "nearest_px": None})
         nx = "—" if d["nearest_px"] is None else f"{d['nearest_px']:.1f}"
         lines.append(f"  {sid:<10} {d['n_near']:>11}  {nx:>14}")
     if anchors_diag["t_max"] < args.end:
         lines.append(f"  [WARN] anchors заканчиваются на {anchors_diag['t_max']:.1f}s — "
-                     f"пересобери motion_tracks с -StartSec 0 -Window {int(args.end*60)+60}")
+                     f"пересобери motion_tracks с -StartSec 0 -Window {anchors_diag.get('suggested_window_step5', 390)} -Step 5")
 
     # ── CONFUSION (по победителю) ──
     if winner:
         lines.append("")
         lines.append("CONFUSION (по winner): ближайший ЛЮБОЙ трек к GT каждого слота")
         lines.append(f"  {'gt_slot':<10} {'nearest_slot':<14} {'d_px':>8}")
-        for sid in sorted(slot_ids, key=lambda s: int(s.split("_")[-1])):
+        for sid in sorted(slot_ids, key=slot_sort_key):
             d = ps.get(sid, {})
             lines.append(f"  {sid:<10} {str(d.get('nearest_slot')):<14} {str(d.get('nearest_d')):>8}")
 
