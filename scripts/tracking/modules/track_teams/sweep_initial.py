@@ -258,16 +258,18 @@ def main() -> int:
             print(f"[err] {label} не найден: {p}", file=sys.stderr); return 2
 
     gt_all = json.loads(Path(args.gt).read_text(encoding="utf-8"))["points"]
-    gt_pts = [p for p in gt_all if float(p["t"]) <= args.gt_cutoff]
-    print(f"[sweep] GT в окне [0..{args.gt_cutoff}s]: {len(gt_pts)} точек")
+    gt_raw = [p for p in gt_all if float(p["t"]) <= args.gt_cutoff]
+    gt_pts = group_gt_points(gt_raw)
+    print(f"[sweep] GT в окне [0..{args.gt_cutoff}s]: {len(gt_raw)} точек, "
+          f"{len(gt_pts)} групп для оценки")
 
     # ── INPUT SANITY: проверяем, что anchors покрывают окно оценки ──
-    anchors_diag = diagnose_anchors(Path(args.anchors), gt_pts, args.end)
+    anchors_diag = summarize_anchor_coverage(Path(args.anchors), gt_raw, args.end)
     print(f"[sweep] anchors окно: t=[{anchors_diag['t_min']:.1f}..{anchors_diag['t_max']:.1f}]s, "
           f"всего точек={anchors_diag['total_pts']}")
     if anchors_diag["t_max"] < args.end or anchors_diag["t_min"] > 0.5:
         print(f"[WARN] anchors НЕ покрывают [0..{args.end}]s — пересобери motion_tracks "
-              f"с -StartSec 0 -Window {int(args.end*60)+60}!", file=sys.stderr)
+              f"с -StartSec 0 -Window {anchors_diag.get('suggested_window_step5', 390)} -Step 5!", file=sys.stderr)
 
     variants = gen_variants(args.max_variants)
     print(f"[sweep] вариантов: {len(variants)}, jobs={args.jobs}")
@@ -300,7 +302,7 @@ def main() -> int:
     winner = results[0] if results and results[0].get("eval", {}).get("ok") else None
 
     # Per-slot: для каждого слота — лучший вариант (минимальный own_d среди ok=True).
-    slot_ids = [gp["slot_id"] for gp in gt_pts]
+    slot_ids = [gp["label"] for gp in gt_pts]
     per_slot_best = {}
     for sid in slot_ids:
         best = None
@@ -315,6 +317,7 @@ def main() -> int:
         "video": args.video,
         "end_sec": args.end,
         "match_px": args.match_px,
+        "gt_points_raw": len(gt_raw),
         "gt_points": len(gt_pts),
         "variants_total": len(variants),
         "total_duration_s": total_dt,
