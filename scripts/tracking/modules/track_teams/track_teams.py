@@ -909,11 +909,18 @@ class SlotTracker:
         self.center_deadzone_px: float = float(slot_cfg.get("center_deadzone_px", 2.0))
         self.max_center_step_px: float = float(slot_cfg.get("max_center_step_px", 24.0))
         self.center_smoothing_alpha: float = float(slot_cfg.get("center_smoothing_alpha", 0.35))
-        # Anti-jump
-        self.jump_switch_threshold_px: float = float(slot_cfg.get("jump_switch_threshold_px", 30.0))
-        self.switch_confirm_frames: int = int(slot_cfg.get("switch_confirm_frames", 3))
+        # Anti-jump (PR-4: defaults bumped — 30/3 was too lax, swaps slipped through).
+        self.jump_switch_threshold_px: float = float(slot_cfg.get("jump_switch_threshold_px", 80.0))
+        self.switch_confirm_frames: int = int(slot_cfg.get("switch_confirm_frames", 6))
+        # PR-4: TTL on pending hypothesis. If we sit in switch_wait for too
+        # many frames without confirming, drop the hypothesis entirely so the
+        # slot can re-attach to whatever is actually nearby instead of getting
+        # stuck in limbo.
+        self.pending_ttl_frames: int = int(slot_cfg.get(
+            "pending_ttl_frames", max(8, self.switch_confirm_frames * 2)))
         self.pending_canon: Optional[tuple[float, float]] = None
         self.pending_hits: int = 0
+        self.pending_age: int = 0
         # Full-frame recovery: если ROI промахивается N+ кадров подряд,
         # каждые `recover_interval` кадров ищем плашку по всему кадру
         # в окрестности предсказания (`recover_gate_px` каноники).
