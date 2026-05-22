@@ -1374,6 +1374,34 @@ class SlotTracker:
             dx = cand_cx - last_cx
             dy = cand_cy - last_cy
             dist = math.hypot(dx, dy)
+            # PR-2: pending-switch hysteresis. Если кандидат скакнул дальше
+            # jump_switch_threshold_px от прошлого центра — НЕ принимаем сразу,
+            # требуем switch_confirm_frames подряд таких же скачков рядом.
+            jump_thresh = max(self.jump_switch_threshold_px, 2.0 * self.max_center_step_px)
+            if dist > jump_thresh:
+                if self.pending_canon is not None:
+                    pd = math.hypot(cand_cx - self.pending_canon[0],
+                                    cand_cy - self.pending_canon[1])
+                    if pd < jump_thresh:
+                        self.pending_hits += 1
+                    else:
+                        self.pending_canon = (cand_cx, cand_cy)
+                        self.pending_hits = 1
+                else:
+                    self.pending_canon = (cand_cx, cand_cy)
+                    self.pending_hits = 1
+                if self.pending_hits < self.switch_confirm_frames:
+                    # Не двигаем canonical_px, держим прошлый якорь.
+                    self.state_reason = f"switch_wait_{self.pending_hits}/{self.switch_confirm_frames}"
+                    self.confidence = max(0.3, self.confidence * 0.85)
+                    # Возвращаем snapshot без обновления позиции.
+                    return self._snapshot()
+                # Подтверждено — сбрасываем и принимаем как обычно.
+                self.pending_canon = None
+                self.pending_hits = 0
+            else:
+                self.pending_canon = None
+                self.pending_hits = 0
             step_budget = max(self.max_center_step_px, 200.0)
             if dist > self.center_deadzone_px:
                 if dist > step_budget:
@@ -1395,6 +1423,10 @@ class SlotTracker:
             self.canonical_px = (cand_cx, cand_cy)
 
         self.last_frame_px = (det_fx, det_fy)
+        # PR-2: запомнить bbox кандидата как identity-якорь для следующих кадров.
+        cand_bb = det.get("bbox")
+        if cand_bb is not None:
+            self.last_bbox = tuple(int(v) for v in cand_bb)
         self.state = "tracked"
         self.canonical_px_stale = False
         self.last_seen_t = t_now
