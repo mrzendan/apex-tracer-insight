@@ -104,6 +104,13 @@ function rangeOverlap(a: Range3, b: Range3): number {
 function rangeWidth(a: Range3): number {
   return Math.max(1, a[1] - a[0]);
 }
+function intersect(a: Preset, b: Preset): Preset {
+  return {
+    h: [Math.max(a.h[0], b.h[0]), Math.min(a.h[1], b.h[1])],
+    s: [Math.max(a.s[0], b.s[0]), Math.min(a.s[1], b.s[1])],
+    v: [Math.max(a.v[0], b.v[0]), Math.min(a.v[1], b.v[1])],
+  };
+}
 /** Volumetric overlap of two HSV cuboids, as % of the smaller one. */
 function presetOverlap(a: Preset, b: Preset): number {
   const oh = rangeOverlap(a.h, b.h);
