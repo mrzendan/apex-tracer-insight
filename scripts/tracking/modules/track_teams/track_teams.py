@@ -885,6 +885,9 @@ class SlotTracker:
         # placard motion_detect originally locked onto.
         self.init_canonical_px: Optional[tuple[float, float]] = init_canonical_px
         self.last_frame_px: Optional[tuple[float, float]] = None
+        # PR-2: last bbox in frame px (from detect-first candidate), used as
+        # identity anchor in the association cost.
+        self.last_bbox: Optional[tuple[int, int, int, int]] = None
         # ROI / detection
         self.roi_size: int = int(slot_cfg.get("roi_size", 220))
         self.min_roi: int = int(slot_cfg.get("min_roi", 120))
