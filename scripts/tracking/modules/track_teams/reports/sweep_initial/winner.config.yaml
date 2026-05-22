@@ -8,9 +8,9 @@
   "da_weights": {
     "beta_world": 1.0,
     "gamma_shape": 0.3,
-    "delta_color_mismatch": 5.0,
+    "delta_color_mismatch": 2.0,
     "eps_hysteresis": 0.3,
-    "gate_radius_mult": 0.8,
+    "gate_radius_mult": 1.6,
     "fallback_gate_canonical_px": 250.0,
     "frame_sanity_jump_px": 150.0,
     "frame_sanity_max_jumps": 6
@@ -31,24 +31,24 @@
     ]
   },
   "detection": {
-    "min_area_px": 40,
+    "min_area_px": 80,
     "max_area_px": 2400,
-    "morph_kernel": 3
+    "morph_kernel": 1
   },
   "slot_tracker": {
     "roi_size": 220,
-    "min_tracked_for_active": 5,
+    "min_tracked_for_active": 3,
     "min_tracked_ratio_for_active": 0.2,
-    "near_anchor_radius_canonical_px": 80.0
+    "near_anchor_radius_canonical_px": 400.0
   },
   "tracking": {
     "max_gap_frames": 30,
     "gating_world_dist": 50.0,
     "process_noise": 1.0,
     "measurement_noise": 4.0,
-    "init_warmup_sec": 0.0,
+    "init_warmup_sec": 10.0,
     "init_reject_world_margin": 30.0,
-    "init_min_score": 0.2
+    "init_min_score": 0.3
   },
   "output": {
     "include_frame_px": true,

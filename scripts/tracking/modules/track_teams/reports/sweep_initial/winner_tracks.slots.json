@@ -33,7 +33,7 @@
       "team_id": "slot_4",
       "name": "Team 4",
       "color": "#402d56",
-      "anchor_conf": "HIGH",
+      "anchor_conf": "MED",
       "wiped_at_t": null
     },
     {
@@ -42,7 +42,7 @@
       "team_id": "slot_5",
       "name": "Team 5",
       "color": "#7a4278",
-      "anchor_conf": "LOW",
+      "anchor_conf": "MED",
       "wiped_at_t": null
     },
     {
@@ -60,7 +60,7 @@
       "team_id": "slot_7",
       "name": "Team 7",
       "color": "#b12f8e",
-      "anchor_conf": "LOW",
+      "anchor_conf": "MED",
       "wiped_at_t": null
     },
     {
@@ -69,7 +69,7 @@
       "team_id": "slot_8",
       "name": "Team 8",
       "color": "#c12210",
-      "anchor_conf": "MED",
+      "anchor_conf": "LOW",
       "wiped_at_t": null
     },
     {
@@ -78,7 +78,7 @@
       "team_id": "slot_9",
       "name": "Team 9",
       "color": "#cf512b",
-      "anchor_conf": "MED",
+      "anchor_conf": "LOW",
       "wiped_at_t": null
     },
     {
@@ -87,7 +87,7 @@
       "team_id": "slot_10",
       "name": "Team 10",
       "color": "#742519",
-      "anchor_conf": "LOW",
+      "anchor_conf": "MED",
       "wiped_at_t": null
     },
     {
@@ -123,7 +123,7 @@
       "team_id": "slot_14",
       "name": "Team 14",
       "color": "#8b6e0f",
-      "anchor_conf": "LOW",
+      "anchor_conf": "MED",
       "wiped_at_t": null
     },
     {
@@ -132,7 +132,7 @@
       "team_id": "slot_15",
       "name": "Team 15",
       "color": "#51530a",
-      "anchor_conf": "MED",
+      "anchor_conf": "LOW",
       "wiped_at_t": null
     },
     {
@@ -141,7 +141,7 @@
       "team_id": "slot_16",
       "name": "Team 16",
       "color": "#484e14",
-      "anchor_conf": "LOW",
+      "anchor_conf": "MED",
       "wiped_at_t": null
     },
     {
@@ -150,7 +150,7 @@
       "team_id": "slot_17",
       "name": "Team 17",
       "color": "#718746",
-      "anchor_conf": "LOW",
+      "anchor_conf": "MED",
       "wiped_at_t": null
     },
     {
@@ -168,7 +168,7 @@
       "team_id": "slot_19",
       "name": "Team 19",
       "color": "#2d4f1c",
-      "anchor_conf": "HIGH",
+      "anchor_conf": "MED",
       "wiped_at_t": null
     },
     {

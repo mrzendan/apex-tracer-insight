@@ -1,0 +1,934 @@
+{
+  "_note": "GT anchors for ID-switch evaluation. Merge into scripts/tracking/modules/track_teams/assets/gt_anchors.json",
+  "video": "game_sp.mp4",
+  "points": [
+    {
+      "t": 0,
+      "slot_id": "slot_1",
+      "world_xy": [
+        1569,
+        187
+      ]
+    },
+    {
+      "t": 0,
+      "slot_id": "slot_2",
+      "world_xy": [
+        519,
+        1201
+      ]
+    },
+    {
+      "t": 0,
+      "slot_id": "slot_3",
+      "world_xy": [
+        1024,
+        739
+      ]
+    },
+    {
+      "t": 0,
+      "slot_id": "slot_4",
+      "world_xy": [
+        1548,
+        775
+      ]
+    },
+    {
+      "t": 0,
+      "slot_id": "slot_5",
+      "world_xy": [
+        735,
+        966
+      ]
+    },
+    {
+      "t": 0,
+      "slot_id": "slot_6",
+      "world_xy": [
+        1648,
+        500
+      ]
+    },
+    {
+      "t": 0,
+      "slot_id": "slot_7",
+      "world_xy": [
+        780,
+        464
+      ]
+    },
+    {
+      "t": 0,
+      "slot_id": "slot_8",
+      "world_xy": [
+        1636,
+        1540
+      ]
+    },
+    {
+      "t": 0,
+      "slot_id": "slot_9",
+      "world_xy": [
+        639,
+        646
+      ]
+    },
+    {
+      "t": 0,
+      "slot_id": "slot_10",
+      "world_xy": [
+        1287,
+        1682
+      ]
+    },
+    {
+      "t": 0,
+      "slot_id": "slot_11",
+      "world_xy": [
+        1237,
+        1354
+      ]
+    },
+    {
+      "t": 0,
+      "slot_id": "slot_12",
+      "world_xy": [
+        969,
+        1107
+      ]
+    },
+    {
+      "t": 0,
+      "slot_id": "slot_13",
+      "world_xy": [
+        1127,
+        273
+      ]
+    },
+    {
+      "t": 0,
+      "slot_id": "slot_14",
+      "world_xy": [
+        682,
+        1473
+      ]
+    },
+    {
+      "t": 0,
+      "slot_id": "slot_15",
+      "world_xy": [
+        481,
+        289
+      ]
+    },
+    {
+      "t": 0,
+      "slot_id": "slot_16",
+      "world_xy": [
+        381,
+        1418
+      ]
+    },
+    {
+      "t": 0,
+      "slot_id": "slot_17",
+      "world_xy": [
+        275,
+        976
+      ]
+    },
+    {
+      "t": 0,
+      "slot_id": "slot_18",
+      "world_xy": [
+        1388,
+        718
+      ]
+    },
+    {
+      "t": 0,
+      "slot_id": "slot_19",
+      "world_xy": [
+        335,
+        627
+      ]
+    },
+    {
+      "t": 0,
+      "slot_id": "slot_20",
+      "world_xy": [
+        1565,
+        1263
+      ]
+    },
+    {
+      "t": 120.12,
+      "slot_id": "slot_20",
+      "world_xy": [
+        1660,
+        1122
+      ]
+    },
+    {
+      "t": 120.12,
+      "slot_id": "slot_19",
+      "world_xy": [
+        311,
+        615
+      ]
+    },
+    {
+      "t": 120.12,
+      "slot_id": "slot_18",
+      "world_xy": [
+        1062,
+        529
+      ]
+    },
+    {
+      "t": 120.12,
+      "slot_id": "slot_17",
+      "world_xy": [
+        146,
+        1017
+      ]
+    },
+    {
+      "t": 120.12,
+      "slot_id": "slot_15",
+      "world_xy": [
+        529,
+        352
+      ]
+    },
+    {
+      "t": 120.12,
+      "slot_id": "slot_16",
+      "world_xy": [
+        359,
+        1619
+      ]
+    },
+    {
+      "t": 120.12,
+      "slot_id": "slot_14",
+      "world_xy": [
+        775,
+        1502
+      ]
+    },
+    {
+      "t": 120.12,
+      "slot_id": "slot_13",
+      "world_xy": [
+        1112,
+        385
+      ]
+    },
+    {
+      "t": 120.12,
+      "slot_id": "slot_12",
+      "world_xy": [
+        840,
+        1177
+      ]
+    },
+    {
+      "t": 120.12,
+      "slot_id": "slot_11",
+      "world_xy": [
+        1079,
+        1275
+      ]
+    },
+    {
+      "t": 120.12,
+      "slot_id": "slot_10",
+      "world_xy": [
+        1103,
+        1746
+      ]
+    },
+    {
+      "t": 120.12,
+      "slot_id": "slot_10",
+      "world_xy": [
+        1170,
+        1674
+      ]
+    },
+    {
+      "t": 120.12,
+      "slot_id": "slot_9",
+      "world_xy": [
+        634,
+        620
+      ]
+    },
+    {
+      "t": 120.12,
+      "slot_id": "slot_8",
+      "world_xy": [
+        1469,
+        1454
+      ]
+    },
+    {
+      "t": 120.12,
+      "slot_id": "slot_6",
+      "world_xy": [
+        1667,
+        478
+      ]
+    },
+    {
+      "t": 120.12,
+      "slot_id": "slot_5",
+      "world_xy": [
+        816,
+        428
+      ]
+    },
+    {
+      "t": 120.12,
+      "slot_id": "slot_4",
+      "world_xy": [
+        1206,
+        756
+      ]
+    },
+    {
+      "t": 120.12,
+      "slot_id": "slot_4",
+      "world_xy": [
+        1278,
+        797
+      ]
+    },
+    {
+      "t": 120.12,
+      "slot_id": "slot_3",
+      "world_xy": [
+        892,
+        474
+      ]
+    },
+    {
+      "t": 120.12,
+      "slot_id": "slot_1",
+      "world_xy": [
+        1352,
+        146
+      ]
+    },
+    {
+      "t": 120.12,
+      "slot_id": "slot_1",
+      "world_xy": [
+        1165,
+        127
+      ]
+    },
+    {
+      "t": 660.66,
+      "slot_id": "slot_1",
+      "world_xy": [
+        718,
+        263
+      ]
+    },
+    {
+      "t": 660.66,
+      "slot_id": "slot_3",
+      "world_xy": [
+        761,
+        519
+      ]
+    },
+    {
+      "t": 660.66,
+      "slot_id": "slot_4",
+      "world_xy": [
+        701,
+        471
+      ]
+    },
+    {
+      "t": 660.66,
+      "slot_id": "slot_4",
+      "world_xy": [
+        615,
+        519
+      ]
+    },
+    {
+      "t": 660.66,
+      "slot_id": "slot_5",
+      "world_xy": [
+        840,
+        426
+      ]
+    },
+    {
+      "t": 660.66,
+      "slot_id": "slot_8",
+      "world_xy": [
+        639,
+        445
+      ]
+    },
+    {
+      "t": 660.66,
+      "slot_id": "slot_9",
+      "world_xy": [
+        565,
+        426
+      ]
+    },
+    {
+      "t": 660.66,
+      "slot_id": "slot_9",
+      "world_xy": [
+        526,
+        399
+      ]
+    },
+    {
+      "t": 660.66,
+      "slot_id": "slot_10",
+      "world_xy": [
+        687,
+        727
+      ]
+    },
+    {
+      "t": 660.66,
+      "slot_id": "slot_12",
+      "world_xy": [
+        759,
+        431
+      ]
+    },
+    {
+      "t": 660.66,
+      "slot_id": "slot_13",
+      "world_xy": [
+        933,
+        309
+      ]
+    },
+    {
+      "t": 660.66,
+      "slot_id": "slot_14",
+      "world_xy": [
+        548,
+        696
+      ]
+    },
+    {
+      "t": 660.66,
+      "slot_id": "slot_14",
+      "world_xy": [
+        591,
+        622
+      ]
+    },
+    {
+      "t": 660.66,
+      "slot_id": "slot_14",
+      "world_xy": [
+        689,
+        663
+      ]
+    },
+    {
+      "t": 660.66,
+      "slot_id": "slot_15",
+      "world_xy": [
+        617,
+        392
+      ]
+    },
+    {
+      "t": 660.66,
+      "slot_id": "slot_16",
+      "world_xy": [
+        479,
+        737
+      ]
+    },
+    {
+      "t": 660.66,
+      "slot_id": "slot_17",
+      "world_xy": [
+        861,
+        588
+      ]
+    },
+    {
+      "t": 660.66,
+      "slot_id": "slot_18",
+      "world_xy": [
+        1050,
+        567
+      ]
+    },
+    {
+      "t": 660.66,
+      "slot_id": "slot_19",
+      "world_xy": [
+        500,
+        502
+      ]
+    },
+    {
+      "t": 660.66,
+      "slot_id": "slot_19",
+      "world_xy": [
+        455,
+        569
+      ]
+    },
+    {
+      "t": 660.66,
+      "slot_id": "slot_19",
+      "world_xy": [
+        529,
+        457
+      ]
+    },
+    {
+      "t": 660.66,
+      "slot_id": "slot_18",
+      "world_xy": [
+        823,
+        435
+      ]
+    },
+    {
+      "t": 660.66,
+      "slot_id": "slot_12",
+      "world_xy": [
+        775,
+        445
+      ]
+    },
+    {
+      "t": 660.66,
+      "slot_id": "slot_10",
+      "world_xy": [
+        615,
+        414
+      ]
+    },
+    {
+      "t": 660.66,
+      "slot_id": "slot_9",
+      "world_xy": [
+        541,
+        368
+      ]
+    },
+    {
+      "t": 660.66,
+      "slot_id": "slot_8",
+      "world_xy": [
+        632,
+        450
+      ]
+    },
+    {
+      "t": 660.66,
+      "slot_id": "slot_4",
+      "world_xy": [
+        656,
+        519
+      ]
+    },
+    {
+      "t": 660.66,
+      "slot_id": "slot_3",
+      "world_xy": [
+        778,
+        517
+      ]
+    },
+    {
+      "t": 660.66,
+      "slot_id": "slot_1",
+      "world_xy": [
+        720,
+        261
+      ]
+    },
+    {
+      "t": 179.18,
+      "slot_id": "slot_10",
+      "world_xy": [
+        785,
+        1139
+      ]
+    },
+    {
+      "t": 179.18,
+      "slot_id": "slot_10",
+      "world_xy": [
+        806,
+        1182
+      ]
+    },
+    {
+      "t": 179.18,
+      "slot_id": "slot_10",
+      "world_xy": [
+        902,
+        1153
+      ]
+    },
+    {
+      "t": 179.18,
+      "slot_id": "slot_10",
+      "world_xy": [
+        991,
+        1143
+      ]
+    },
+    {
+      "t": 179.18,
+      "slot_id": "slot_10",
+      "world_xy": [
+        924,
+        1213
+      ]
+    },
+    {
+      "t": 179.18,
+      "slot_id": "slot_11",
+      "world_xy": [
+        730,
+        1009
+      ]
+    },
+    {
+      "t": 179.18,
+      "slot_id": "slot_11",
+      "world_xy": [
+        809,
+        959
+      ]
+    },
+    {
+      "t": 179.18,
+      "slot_id": "slot_11",
+      "world_xy": [
+        656,
+        964
+      ]
+    },
+    {
+      "t": 179.18,
+      "slot_id": "slot_11",
+      "world_xy": [
+        739,
+        959
+      ]
+    },
+    {
+      "t": 179.18,
+      "slot_id": "slot_20",
+      "world_xy": [
+        1789,
+        942
+      ]
+    },
+    {
+      "t": 179.18,
+      "slot_id": "slot_20",
+      "world_xy": [
+        1732,
+        952
+      ]
+    },
+    {
+      "t": 179.18,
+      "slot_id": "slot_20",
+      "world_xy": [
+        1677,
+        971
+      ]
+    },
+    {
+      "t": 179.18,
+      "slot_id": "slot_20",
+      "world_xy": [
+        1713,
+        1000
+      ]
+    },
+    {
+      "t": 179.18,
+      "slot_id": "slot_20",
+      "world_xy": [
+        1754,
+        995
+      ]
+    },
+    {
+      "t": 179.18,
+      "slot_id": "slot_20",
+      "world_xy": [
+        1605,
+        976
+      ]
+    },
+    {
+      "t": 300.3,
+      "slot_id": "slot_20",
+      "world_xy": [
+        1251,
+        579
+      ]
+    },
+    {
+      "t": 300.3,
+      "slot_id": "slot_20",
+      "world_xy": [
+        1340,
+        579
+      ]
+    },
+    {
+      "t": 300.3,
+      "slot_id": "slot_20",
+      "world_xy": [
+        1428,
+        588
+      ]
+    },
+    {
+      "t": 300.3,
+      "slot_id": "slot_20",
+      "world_xy": [
+        1306,
+        622
+      ]
+    },
+    {
+      "t": 300.3,
+      "slot_id": "slot_20",
+      "world_xy": [
+        1397,
+        631
+      ]
+    },
+    {
+      "t": 300.3,
+      "slot_id": "slot_20",
+      "world_xy": [
+        1356,
+        677
+      ]
+    },
+    {
+      "t": 300.3,
+      "slot_id": "slot_11",
+      "world_xy": [
+        701,
+        710
+      ]
+    },
+    {
+      "t": 300.3,
+      "slot_id": "slot_11",
+      "world_xy": [
+        751,
+        691
+      ]
+    },
+    {
+      "t": 300.3,
+      "slot_id": "slot_11",
+      "world_xy": [
+        737,
+        744
+      ]
+    },
+    {
+      "t": 300.3,
+      "slot_id": "slot_11",
+      "world_xy": [
+        684,
+        775
+      ]
+    },
+    {
+      "t": 300.3,
+      "slot_id": "slot_11",
+      "world_xy": [
+        759,
+        794
+      ]
+    },
+    {
+      "t": 300.3,
+      "slot_id": "slot_10",
+      "world_xy": [
+        656,
+        933
+      ]
+    },
+    {
+      "t": 300.3,
+      "slot_id": "slot_10",
+      "world_xy": [
+        730,
+        916
+      ]
+    },
+    {
+      "t": 300.3,
+      "slot_id": "slot_10",
+      "world_xy": [
+        802,
+        902
+      ]
+    },
+    {
+      "t": 300.3,
+      "slot_id": "slot_10",
+      "world_xy": [
+        703,
+        976
+      ]
+    },
+    {
+      "t": 300.3,
+      "slot_id": "slot_10",
+      "world_xy": [
+        797,
+        959
+      ]
+    },
+    {
+      "t": 419.42,
+      "slot_id": "slot_11",
+      "world_xy": [
+        548,
+        576
+      ]
+    },
+    {
+      "t": 419.42,
+      "slot_id": "slot_11",
+      "world_xy": [
+        613,
+        576
+      ]
+    },
+    {
+      "t": 419.42,
+      "slot_id": "slot_11",
+      "world_xy": [
+        682,
+        574
+      ]
+    },
+    {
+      "t": 419.42,
+      "slot_id": "slot_11",
+      "world_xy": [
+        582,
+        615
+      ]
+    },
+    {
+      "t": 419.42,
+      "slot_id": "slot_11",
+      "world_xy": [
+        641,
+        615
+      ]
+    },
+    {
+      "t": 419.42,
+      "slot_id": "slot_11",
+      "world_xy": [
+        696,
+        624
+      ]
+    },
+    {
+      "t": 419.42,
+      "slot_id": "slot_20",
+      "world_xy": [
+        878,
+        469
+      ]
+    },
+    {
+      "t": 419.42,
+      "slot_id": "slot_20",
+      "world_xy": [
+        931,
+        464
+      ]
+    },
+    {
+      "t": 419.42,
+      "slot_id": "slot_20",
+      "world_xy": [
+        995,
+        462
+      ]
+    },
+    {
+      "t": 419.42,
+      "slot_id": "slot_20",
+      "world_xy": [
+        1002,
+        500
+      ]
+    },
+    {
+      "t": 419.42,
+      "slot_id": "slot_20",
+      "world_xy": [
+        933,
+        505
+      ]
+    },
+    {
+      "t": 419.42,
+      "slot_id": "slot_20",
+      "world_xy": [
+        885,
+        512
+      ]
+    },
+    {
+      "t": 540.54,
+      "slot_id": "slot_11",
+      "world_xy": [
+        639,
+        397
+      ]
+    },
+    {
+      "t": 540.54,
+      "slot_id": "slot_11",
+      "world_xy": [
+        730,
+        388
+      ]
+    },
+    {
+      "t": 540.54,
+      "slot_id": "slot_11",
+      "world_xy": [
+        694,
+        433
+      ]
+    }
+  ]
+}
