@@ -1,0 +1,34 @@
+# detect_plates: OpenCV-детектор плашек на миникарте + temporal recovery.
+#   powershell -ExecutionPolicy Bypass -File scripts\tracking\modules\detect_plates\run.ps1 -Video scripts\tracking\game_sp.mp4
+param(
+  [Parameter(Mandatory=$true)][string]$Video,
+  [string]$Hsv     = "scripts/tracking/configs/hsv_presets.storm-point.json",
+  [string]$Zones   = "scripts/tracking/configs/zones.vod.json",
+  [string]$Out     = "scripts/tracking/modules/detect_plates/reports",
+  [double]$SampleFps = 1.0,
+  [int]$MaxFrames  = 0,
+  [switch]$NoRecovery
+)
+$ErrorActionPreference = "Stop"
+chcp 65001 > $null
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$env:PYTHONUTF8 = "1"
+$repo = (git rev-parse --show-toplevel).Trim()
+Set-Location $repo
+
+$pyArgs = @(
+  "scripts/tracking/modules/detect_plates/detect_plates.py",
+  "--video", $Video,
+  "--hsv-presets", $Hsv,
+  "--zones", $Zones,
+  "--out", $Out,
+  "--sample-fps", $SampleFps,
+  "--h-tol", 1, "--s-tol", 6, "--v-tol", 14,
+  "--loose-h-extra", 1, "--loose-s-extra", 12, "--loose-v-extra", 20,
+  "--ignore-bottom-px", 105, "--target-plate-height", 30,
+  "--max-expand-x", 22, "--max-width", 220
+)
+if ($MaxFrames -gt 0) { $pyArgs += @("--max-frames", $MaxFrames) }
+if (-not $NoRecovery) { $pyArgs += "--recovery" }
+
+python @pyArgs
