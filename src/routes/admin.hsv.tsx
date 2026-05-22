@@ -116,6 +116,122 @@ function presetOverlap(a: Preset, b: Preset): number {
   return Math.round((vol / Math.min(va, vb)) * 100);
 }
 
+/** Build a 3D histogram + summed-area-volume of the current frame's HSV pixels.
+ *  Bins: H=36 (×5), S=32 (×8), V=32 (×8). Used by Compare tool / Auto-tune
+ *  to evaluate any HSV cuboid in O(1). */
+const HB = 36, SB = 32, VB = 32;
+function buildHsvVolume(src: ImageData): Int32Array {
+  const hist = new Int32Array(HB * SB * VB);
+  const d = src.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const [h, s, v] = rgbToHsvCv(d[i], d[i + 1], d[i + 2]);
+    const hi = Math.min(HB - 1, (h / 5) | 0);
+    const si = Math.min(SB - 1, (s / 8) | 0);
+    const vi = Math.min(VB - 1, (v / 8) | 0);
+    hist[hi * SB * VB + si * VB + vi]++;
+  }
+  // 3D prefix-sum (summed area volume).
+  const sav = new Int32Array(HB * SB * VB);
+  const idx = (h: number, s: number, v: number) => h * SB * VB + s * VB + v;
+  for (let h = 0; h < HB; h++)
+    for (let s = 0; s < SB; s++)
+      for (let v = 0; v < VB; v++) {
+        let val = hist[idx(h, s, v)];
+        if (h > 0) val += sav[idx(h - 1, s, v)];
+        if (s > 0) val += sav[idx(h, s - 1, v)];
+        if (v > 0) val += sav[idx(h, s, v - 1)];
+        if (h > 0 && s > 0) val -= sav[idx(h - 1, s - 1, v)];
+        if (h > 0 && v > 0) val -= sav[idx(h - 1, s, v - 1)];
+        if (s > 0 && v > 0) val -= sav[idx(h, s - 1, v - 1)];
+        if (h > 0 && s > 0 && v > 0) val += sav[idx(h - 1, s - 1, v - 1)];
+        sav[idx(h, s, v)] = val;
+      }
+  return sav;
+}
+function querySAV(sav: Int32Array, p: Preset): number {
+  // Convert HSV ranges (inclusive) to bin indices.
+  const h0 = Math.max(0, Math.min(HB - 1, (p.h[0] / 5) | 0));
+  const h1 = Math.max(0, Math.min(HB - 1, (p.h[1] / 5) | 0));
+  const s0 = Math.max(0, Math.min(SB - 1, (p.s[0] / 8) | 0));
+  const s1 = Math.max(0, Math.min(SB - 1, (p.s[1] / 8) | 0));
+  const v0 = Math.max(0, Math.min(VB - 1, (p.v[0] / 8) | 0));
+  const v1 = Math.max(0, Math.min(VB - 1, (p.v[1] / 8) | 0));
+  const idx = (h: number, s: number, v: number) => h * SB * VB + s * VB + v;
+  const at = (h: number, s: number, v: number) =>
+    h < 0 || s < 0 || v < 0 ? 0 : sav[idx(h, s, v)];
+  return (
+    at(h1, s1, v1) -
+    at(h0 - 1, s1, v1) - at(h1, s0 - 1, v1) - at(h1, s1, v0 - 1) +
+    at(h0 - 1, s0 - 1, v1) + at(h0 - 1, s1, v0 - 1) + at(h1, s0 - 1, v0 - 1) -
+    at(h0 - 1, s0 - 1, v0 - 1)
+  );
+}
+/** Brute-force search over HSV cuboids around `seed`, maximizing
+ *  (own_pixels - λ * overlap_with_other_team). */
+function autoTunePreset(
+  sav: Int32Array,
+  seed: Preset,
+  rivalSav: Int32Array | null,
+  lambda = 2.0,
+): { best: Preset; ownPx: number; rivalPx: number; tested: number } {
+  // Seed center.
+  const hC = (seed.h[0] + seed.h[1]) / 2;
+  const sC = (seed.s[0] + seed.s[1]) / 2;
+  const vC = (seed.v[0] + seed.v[1]) / 2;
+  const hWs = [4, 6, 8, 10, 12];
+  const sWs = [40, 60, 80, 100];
+  const vWs = [40, 60, 80, 100];
+  const hOffsets = [-6, -3, 0, 3, 6];
+  const sOffsets = [-30, 0, 30];
+  const vOffsets = [-30, 0, 30];
+  let best: Preset = seed;
+  let bestScore = -Infinity;
+  let bestOwn = 0, bestRival = 0, tested = 0;
+  for (const hW of hWs) for (const hO of hOffsets)
+  for (const sW of sWs) for (const sO of sOffsets)
+  for (const vW of vWs) for (const vO of vOffsets) {
+    const p: Preset = {
+      h: [Math.max(0, Math.round(hC + hO - hW)), Math.min(179, Math.round(hC + hO + hW))],
+      s: [Math.max(0, Math.round(sC + sO - sW)), Math.min(255, Math.round(sC + sO + sW))],
+      v: [Math.max(40, Math.round(vC + vO - vW)), Math.min(255, Math.round(vC + vO + vW))],
+    };
+    const own = querySAV(sav, p);
+    if (own < 20) continue; // too narrow / dead
+    const rival = rivalSav ? querySAV(rivalSav, p) : 0;
+    const score = own - lambda * rival;
+    tested++;
+    if (score > bestScore) {
+      bestScore = score; best = p; bestOwn = own; bestRival = rival;
+    }
+  }
+  return { best, ownPx: bestOwn, rivalPx: bestRival, tested };
+}
+
+/** Render an HSV mask of `p` onto canvas `dst`, using `tint` for matched pixels. */
+function renderMask(
+  src: ImageData,
+  dst: HTMLCanvasElement,
+  p: Preset,
+  tint: [number, number, number],
+): number {
+  const ctx = dst.getContext("2d")!;
+  const out = ctx.createImageData(dst.width, dst.height);
+  let detected = 0;
+  for (let i = 0; i < src.data.length; i += 4) {
+    const [h, s, v] = rgbToHsvCv(src.data[i], src.data[i + 1], src.data[i + 2]);
+    const ok = h >= p.h[0] && h <= p.h[1] && s >= p.s[0] && s <= p.s[1] && v >= p.v[0] && v <= p.v[1];
+    if (ok) {
+      out.data[i] = tint[0]; out.data[i + 1] = tint[1]; out.data[i + 2] = tint[2];
+      detected++;
+    } else {
+      out.data[i] = 12; out.data[i + 1] = 12; out.data[i + 2] = 12;
+    }
+    out.data[i + 3] = 255;
+  }
+  ctx.putImageData(out, 0, 0);
+  return detected;
+}
+
 function HsvAdmin() {
   const teamList = useMemo(
     () => teams.map((t, i) => ({ ...t, displayName: `Team ${i + 1}` })),
