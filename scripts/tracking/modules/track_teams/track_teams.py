@@ -1575,11 +1575,18 @@ def main():
             if cand.exists():
                 try:
                     raw_preset = json.loads(cand.read_text(encoding="utf-8"))
-                    hsv_preset = {
-                        int(t["slot"]): {"h": t["h"], "s": t["s"], "v": t["v"]}
-                        for t in raw_preset.get("teams", [])
-                        if t.get("slot") is not None and "h" in t and "s" in t and "v" in t
-                    }
+                    hsv_preset = {}
+                    for t in raw_preset.get("teams", []):
+                        if t.get("slot") is None or "h" not in t or "s" not in t or "v" not in t:
+                            continue
+                        entry: dict = {"h": t["h"], "s": t["s"], "v": t["v"]}
+                        # PR-1: per-team detection overrides (good_tracker parity).
+                        for k in ("min_area", "max_area", "morph_kernel",
+                                  "morph_kernel_size", "outlier_threshold_ratio"):
+                            if k in t and t[k] is not None:
+                                key = "morph_kernel" if k == "morph_kernel_size" else k
+                                entry[key] = t[k]
+                        hsv_preset[int(t["slot"])] = entry
                     preset_src = cand
                     break
                 except Exception as e:
