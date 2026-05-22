@@ -133,17 +133,18 @@
             "name": "Team 8",
             "hex": "#b30533",
             "h": [
-                164,
+                170,
                 180
             ],
             "s": [
-                190,
+                200,
                 255
             ],
             "v": [
                 115,
-                230
-            ]
+                180
+            ],
+            "_note": "Plan A: narrowed H/V to separate from slot 9 (#c35331, h=[3,12], v up to 235)"
         },
         {
             "slot": 9,
@@ -151,17 +152,18 @@
             "name": "Team 9",
             "hex": "#c35331",
             "h": [
-                3,
+                5,
                 12
             ],
             "s": [
-                150,
+                170,
                 230
             ],
             "v": [
-                140,
+                160,
                 235
-            ]
+            ],
+            "_note": "Plan A: lifted V/S floor to separate from slot 8 (#b30533, deep red)"
         },
         {
             "slot": 10,
@@ -170,16 +172,17 @@
             "hex": "#6e1c16",
             "h": [
                 0,
-                4
+                3
             ],
             "s": [
-                163,
+                180,
                 230
             ],
             "v": [
                 72,
-                137
-            ]
+                120
+            ],
+            "_note": "Plan A: shrunk H/V upper bound to separate from slot 11 (#8b3b13)"
         },
         {
             "slot": 11,
@@ -187,18 +190,18 @@
             "name": "Team 11",
             "hex": "#8b3b13",
             "h": [
-                12,
-                15
+                13,
+                17
             ],
             "s": [
-                160,
+                170,
                 250
             ],
             "v": [
-                75,
-                205
+                100,
+                180
             ],
-            "_note": "PR-4: narrowed H to avoid overlap with slot 9 (#c35331, h=[3,12])"
+            "_note": "Plan A: lifted V floor and shifted H to separate from slot 10 (#6e1c16) and slot 9 (#c35331)"
         },
         {
             "slot": 12,
@@ -261,16 +264,17 @@
             "hex": "#6f7a0f",
             "h": [
                 27,
-                38
+                33
             ],
             "s": [
-                170,
+                200,
                 255
             ],
             "v": [
-                95,
-                150
-            ]
+                110,
+                160
+            ],
+            "_note": "Plan A: narrowed H upper and lifted V/S to separate from slot 16 (#434e0d)"
         },
         {
             "slot": 16,
@@ -278,17 +282,18 @@
             "name": "Team 16",
             "hex": "#434e0d",
             "h": [
-                30,
-                40
+                34,
+                42
             ],
             "s": [
-                150,
+                170,
                 255
             ],
             "v": [
                 55,
-                135
-            ]
+                105
+            ],
+            "_note": "Plan A: shifted H floor up and capped V to separate from slot 15 (#6f7a0f)"
         },
         {
             "slot": 17,
