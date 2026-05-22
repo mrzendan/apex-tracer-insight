@@ -1941,10 +1941,39 @@ def main():
                     assigns = associate_hungarian(
                         candidates, slot_trackers, t_now, da_weights_dyn,
                         near_miss=near_miss_counter)
+                    # PR-4: frame-level sanity gate. Если на одном кадре сразу
+                    # >= N слотов получили детекцию, скакнувшую дальше
+                    # jump_switch_threshold_px от прошлой канонической позиции,
+                    # — это не таргет-свитч, а глобальное событие (cut/killcam/
+                    # сорванная гомография). Кадр отбрасываем целиком: все
+                    # слоты идут в note_miss, никаких accept_observation.
+                    frame_jump_thresh = float(da_weights.get(
+                        "frame_sanity_jump_px", 120.0))
+                    frame_jump_max = int(da_weights.get(
+                        "frame_sanity_max_jumps", 4))
+                    bad_jumps = 0
+                    for t in teams:
+                        det = assigns.get(t.id)
+                        if det is None:
+                            continue
+                        st = slot_trackers[t.id]
+                        if st.canonical_px is None:
+                            continue
+                        dx = det["canonical_px"][0] - st.canonical_px[0]
+                        dy = det["canonical_px"][1] - st.canonical_px[1]
+                        if (dx * dx + dy * dy) > (frame_jump_thresh * frame_jump_thresh):
+                            bad_jumps += 1
+                    frame_dropped = bad_jumps >= frame_jump_max
+                    if frame_dropped:
+                        cam["frame_sanity_drop"] = {
+                            "bad_jumps": bad_jumps,
+                            "threshold_px": frame_jump_thresh,
+                            "max_jumps": frame_jump_max,
+                        }
                     for t in teams:
                         st = slot_trackers[t.id]
                         det = assigns.get(t.id)
-                        if det is not None:
+                        if det is not None and not frame_dropped:
                             snap = st.accept_observation(det, t_now)
                         else:
                             snap = st.note_miss(t_now)
