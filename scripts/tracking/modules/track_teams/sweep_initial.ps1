@@ -8,9 +8,9 @@ param(
   [string]$Anchors = "scripts/tracking/modules/motion_detect/reports/motion_tracks.json",
   [string]$Eliminations = "scripts/tracking/modules/hud_read/reports/eliminations.json",
   [double]$End = 30.0,
-  [double]$MatchPx = 100.0,
+  [double]$MatchPx = 150.0,
   [int]$Jobs = 8,
-  [int]$MaxVariants = 60,
+  [int]$MaxVariants = 150,
   [switch]$KeepIntermediate
 )
 $ErrorActionPreference = "Stop"
