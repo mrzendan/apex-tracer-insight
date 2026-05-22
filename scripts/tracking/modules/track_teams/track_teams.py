@@ -602,6 +602,24 @@ def _eff_w(base: dict, overrides: dict, slot_int) -> dict:
     return merged
 
 
+def _bbox_iou_xywh(a: tuple, b: tuple) -> float:
+    """IoU of two bboxes in (x, y, w, h) form. PR-2 identity anchor."""
+    if not a or not b:
+        return 0.0
+    ax, ay, aw, ah = a
+    bx, by, bw, bh = b
+    a_x2, a_y2 = ax + aw, ay + ah
+    b_x2, b_y2 = bx + bw, by + bh
+    ix1 = max(ax, bx); iy1 = max(ay, by)
+    ix2 = min(a_x2, b_x2); iy2 = min(a_y2, b_y2)
+    iw = max(0, ix2 - ix1); ih = max(0, iy2 - iy1)
+    inter = float(iw * ih)
+    if inter <= 0:
+        return 0.0
+    union = float(aw * ah + bw * bh - inter)
+    return inter / union if union > 1e-6 else 0.0
+
+
 def compute_late_game_gate_shrink(slot_trackers: dict, t_now: float,
                                    cfg: dict) -> tuple[float, dict | None]:
     """Late-game collision protection: when live tracks slip into a tiny ring,
